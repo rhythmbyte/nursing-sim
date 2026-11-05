@@ -34,6 +34,13 @@ Read `SPEC.md` before starting any work. It is the source of truth for the data 
 - No build step. Plain ES modules so GitHub Pages serves the repo as-is.
 - Keep files small and single-purpose. If a file passes ~300 lines, split it.
 
+## Suggestions and feedback
+
+- Proactively suggest improvements to features, UX, and the sim design. Label them clearly as suggestions, and don't build them without asking.
+- Say plainly when a request isn't possible (or isn't practical) in the static GitHub Pages prototype. Explain what it would take instead, and whether it should wait for the full build.
+- Call out anything that would hurt modularity or make the move to the real website harder (hard-coded content, logic in screens, direct `localStorage` use, tight coupling), and propose the fix.
+- This prototype will become a real website with logins, a backend, and multi-device realtime. Make design choices that carry over to that, and record anything that will need to change in SPEC.md §13 ("Full-build migration notes").
+
 ## Clinical content
 
 - Any field or object with `"review": "proposed"` was drafted by AI, not the instructor. Never remove that tag; only the instructor approves content. The instructor UI shows these with a "Needs review" badge.

@@ -287,3 +287,21 @@ Commit and push at the end of every phase at minimum (see CLAUDE.md).
 - Patient 5: her content through 0700 vitals; the rest is drafted (`review: "partial"`).
 - Patient 6: fully drafted (`review: "proposed"`).
 - All order tiers, intervention mappings, and the optional code branch are proposed and need her review.
+
+---
+
+## 13. Full-build migration notes
+
+Things in the prototype that will need to change for the real website (logins, backend, multi-device realtime). Add to this list whenever a prototype choice won't carry over as-is.
+
+| Prototype | Full build | Where |
+|---|---|---|
+| `data/manifest.json` lists every data file because GitHub Pages can't list folders | Backend API lists and serves patients/scenarios/catalogs; manifest goes away | `js/data-loader.js` (only file that reads it) |
+| Data loader `fetch`es static JSON | Same function signature, backed by API calls; returns the same shape | `js/data-loader.js` |
+| Schemas validated in the browser only | Same JSON schemas also validated on the server before saving (never trust the client) | `data/schemas/`, `js/validate.js` |
+| `storage.js` writes to `localStorage` (per browser, per device) | Backend client; sim state and logs are server-owned and shared across devices | `js/storage.js` |
+| One page with a tab per role; anyone can open any tab | Each user sees only their role's screens after login; role comes from the auth session, not a tab | `js/screens/shell.js`, `js/main.js` |
+| Instructor-only content (`debrief.shouldRecognize`, review notes) ships to every browser in the patient JSON | Server strips instructor-only fields before sending patient data to students | data loader / API |
+| Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` (phase 2) |
+| Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |
+| Join codes and student "joins" are simulated per tab | Real join flow tied to student accounts | `js/engine/assignment.js` (phase 6) |
