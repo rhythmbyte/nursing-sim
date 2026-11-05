@@ -1,0 +1,75 @@
+{
+  "review": "proposed",
+  "categories": [
+    { "id": "assessment", "label": "Assessment" },
+    { "id": "monitoring", "label": "Monitoring" },
+    { "id": "meds", "label": "Medications" },
+    { "id": "iv", "label": "IV / Lines" },
+    { "id": "resp", "label": "Respiratory" },
+    { "id": "cardiac", "label": "Cardiac" },
+    { "id": "diagnostics", "label": "Diagnostics" },
+    { "id": "procedures", "label": "Procedures" },
+    { "id": "safety", "label": "Safety / Mobility" },
+    { "id": "comfort", "label": "Comfort" },
+    { "id": "education", "label": "Education / Discharge" },
+    { "id": "communication", "label": "Communication / Escalation" }
+  ],
+  "interventions": [
+    { "id": "assess-focused", "category": "assessment", "label": "Focused assessment", "chartFields": ["system", "findings"], "delegableTo": [] },
+    { "id": "assess-full", "category": "assessment", "label": "Head-to-toe assessment", "chartFields": ["findings"], "delegableTo": [] },
+    { "id": "assess-pain", "category": "assessment", "label": "Pain assessment", "chartFields": ["score", "location", "quality"], "delegableTo": [] },
+    { "id": "assess-neuro", "category": "assessment", "label": "Neuro check (GCS / pupils)", "chartFields": ["gcs", "pupils", "orientation"], "delegableTo": [] },
+    { "id": "assess-nv", "category": "assessment", "label": "Neurovascular check", "chartFields": ["extremity", "pulses", "capRefill", "sensation", "movement"], "delegableTo": ["LPN"] },
+    { "id": "assess-wound", "category": "assessment", "label": "Dressing / wound check", "chartFields": ["site", "appearance", "drainage"], "delegableTo": ["LPN"] },
+    { "id": "reassess", "category": "assessment", "label": "Reassess after intervention", "chartFields": ["intervention", "response"], "delegableTo": [] },
+
+    { "id": "vs-full", "category": "monitoring", "label": "Full vital signs", "chartFields": ["bp", "hr", "rr", "tempF", "spo2", "pain"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "vs-bp", "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "monitor-cycle", "category": "monitoring", "label": "Set monitor cycle", "chartFields": ["intervalMin"], "delegableTo": [] },
+    { "id": "tele", "category": "monitoring", "label": "Place on telemetry / cardiac monitor", "chartFields": [], "delegableTo": ["LPN"] },
+    { "id": "pulse-ox-cont", "category": "monitoring", "label": "Continuous pulse oximetry", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+    { "id": "io", "category": "monitoring", "label": "Intake & output", "chartFields": ["intakeMl", "outputMl"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "weight", "category": "monitoring", "label": "Weight", "chartFields": ["kg"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "glucose-poc", "category": "monitoring", "label": "Point-of-care glucose", "chartFields": ["mgdl"], "delegableTo": ["LPN"] },
+
+    { "id": "med-give", "category": "meds", "label": "Administer medication (MAR)", "chartFields": ["med", "dose", "route", "time"], "delegableTo": ["LPN"] },
+    { "id": "med-hold", "category": "meds", "label": "Hold medication", "chartFields": ["med", "reason"], "delegableTo": [] },
+    { "id": "med-rec", "category": "meds", "label": "Medication reconciliation", "chartFields": ["notes"], "delegableTo": [] },
+
+    { "id": "iv-start", "category": "iv", "label": "Start peripheral IV", "chartFields": ["site", "gauge"], "delegableTo": ["LPN"] },
+    { "id": "iv-check", "category": "iv", "label": "Verify / maintain IV access", "chartFields": ["site", "patent"], "delegableTo": ["LPN"] },
+    { "id": "iv-fluids", "category": "iv", "label": "Start IV fluids / bolus", "chartFields": ["fluid", "volumeMl", "rate"], "delegableTo": [] },
+    { "id": "blood-cultures", "category": "iv", "label": "Draw blood cultures", "chartFields": ["sets", "sites"], "delegableTo": ["LPN"] },
+
+    { "id": "o2-apply", "category": "resp", "label": "Apply / titrate oxygen", "chartFields": ["device", "lpm", "targetSpo2"], "delegableTo": [] },
+    { "id": "position-hob", "category": "resp", "label": "Elevate HOB / high Fowler's", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+    { "id": "incentive-spiro", "category": "resp", "label": "Incentive spirometry", "chartFields": ["volumeMl"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "cdb", "category": "resp", "label": "Cough & deep breathe", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+
+    { "id": "ecg-12lead", "category": "cardiac", "label": "12-lead ECG", "chartFields": ["interpretation"], "delegableTo": ["LPN"] },
+    { "id": "cardioversion-prep", "category": "cardiac", "label": "Prep for synchronized cardioversion", "chartFields": [], "delegableTo": [] },
+    { "id": "pads-on", "category": "cardiac", "label": "Apply defib pads", "chartFields": [], "delegableTo": [] },
+
+    { "id": "lab-draw", "category": "diagnostics", "label": "Draw / send labs", "chartFields": ["labs"], "delegableTo": ["LPN"] },
+    { "id": "imaging-request", "category": "diagnostics", "label": "Arrange imaging (CT / CXR)", "chartFields": ["study"], "delegableTo": [] },
+
+    { "id": "foley", "category": "procedures", "label": "Insert Foley catheter", "chartFields": ["size", "returnMl"], "delegableTo": ["LPN"] },
+    { "id": "sq-injection", "category": "procedures", "label": "Subcutaneous injection", "chartFields": ["med", "site"], "delegableTo": ["LPN"] },
+
+    { "id": "fall-precautions", "category": "safety", "label": "Fall precautions / bed alarm", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+    { "id": "ambulate", "category": "safety", "label": "Ambulate patient", "chartFields": ["assist", "device", "distance"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "stay-with-pt", "category": "safety", "label": "Remain with patient", "chartFields": [], "delegableTo": [] },
+
+    { "id": "ice", "category": "comfort", "label": "Apply ice", "chartFields": ["site"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "reposition", "category": "comfort", "label": "Reposition", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+
+    { "id": "teach", "category": "education", "label": "Patient education", "chartFields": ["topic", "method"], "delegableTo": [] },
+    { "id": "teach-back", "category": "education", "label": "Teach-back", "chartFields": ["topic", "understood"], "delegableTo": [] },
+    { "id": "discharge", "category": "education", "label": "Discharge patient", "chartFields": ["criteriaMet", "notes"], "delegableTo": [] },
+
+    { "id": "notify-provider", "category": "communication", "label": "Notify provider (SBAR)", "chartFields": ["sbar"], "delegableTo": [] },
+    { "id": "rapid-response", "category": "communication", "label": "Call rapid response", "chartFields": [], "delegableTo": [] },
+    { "id": "notify-charge", "category": "communication", "label": "Notify charge nurse", "chartFields": ["reason"], "delegableTo": [] },
+    { "id": "code-respond", "category": "communication", "label": "Respond to code", "chartFields": ["role"], "delegableTo": [] }
+  ]
+}

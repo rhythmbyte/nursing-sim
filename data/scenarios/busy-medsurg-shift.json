@@ -1,0 +1,28 @@
+{
+  "id": "sc-busy-medsurg-shift",
+  "name": "The Busy Med-Surg Shift",
+  "source": "Instructor case (LPN-to-RN Bridge Program)",
+  "description": "Students function as the RN responsible for a full med-surg assignment: receive shift report, review H&Ps and orders, assess, administer meds, respond to changes, delegate appropriately, and manage an unexpected admission.",
+  "startClock": "07:00",
+  "endClock": "15:00",
+  "speed": 1,
+  "settings": {
+    "handoffMode": "once",
+    "chargeNurse": "instructor",
+    "showTagsToStudents": false,
+    "vitalsCycleDefaultMin": 5
+  },
+  "staffAvailable": ["lpn", "cna", "charge", "provider"],
+  "assignment": "random",
+  "groups": [
+    {
+      "id": "g1",
+      "name": "Rooms 201–206",
+      "studentCount": 1,
+      "patients": ["p1-robert-miller", "p2-margaret-wilson", "p3-harold-thompson", "p4-linda-garcia", "p5-dorothy-evans"],
+      "admissions": ["p6-james-carter"]
+    }
+  ],
+  "events": [],
+  "notes": "Her original case is one RN with five patients plus one admission. To run it with 3 students, duplicate this group or use tag counts (this library has red x4, yellow x1, green x1)."
+}

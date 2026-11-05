@@ -1,0 +1,94 @@
+{
+  "id": "p2-margaret-wilson",
+  "review": "approved",
+  "reviewNotes": [
+    "Handoff (SBAR), order tiers, intervention mappings, and event vitals are proposed — not in the original case.",
+    "Case gives no vitals for the 0900 change; pain 8/10 is the only scripted change."
+  ],
+  "source": "Instructor case: The Busy Med-Surg Shift — Patient 2",
+  "demographics": { "name": "Margaret Wilson", "age": 74, "sex": "F", "room": "202" },
+  "tag": "yellow",
+  "priorityLabel": "Moderate priority – pain and mobility management",
+  "admittingDx": "Osteoarthritis, status post right total knee arthroplasty",
+  "codeStatus": "Full code",
+  "allergies": [{ "agent": "Sulfa medications", "reaction": "" }],
+  "hpi": "Margaret underwent a right total knee replacement yesterday morning due to severe osteoarthritis. Her postoperative course has been uncomplicated so far. She reports pain at the surgical site, especially with movement. She has been able to ambulate short distances with physical therapy and a walker. Her medical history includes hypertension, hypothyroidism, and osteoarthritis.",
+  "pmh": ["Hypertension", "Hypothyroidism", "Osteoarthritis", "Obesity"],
+  "homeMeds": [
+    { "name": "Levothyroxine", "dose": "75 mcg", "freq": "daily" },
+    { "name": "Amlodipine", "dose": "5 mg", "freq": "daily" },
+    { "name": "Acetaminophen", "dose": "", "freq": "as needed" }
+  ],
+  "handoff": {
+    "review": "proposed",
+    "situation": "74F, POD 1 right total knee arthroplasty.",
+    "background": "HTN, hypothyroidism, OA, obesity. Sulfa allergy. Full code.",
+    "assessment": "Pain 6/10 with movement, 3/10 at rest. Dressing intact, minimal drainage. NV intact. Ambulating short distances with walker and PT.",
+    "recommendation": "Pain control before PT. NV checks q4h. Enoxaparin due today. Fall precautions."
+  },
+  "vitals": {
+    "baseline": { "bp": "136/78", "hr": 88, "rr": 18, "tempF": 99.1, "spo2": 96, "o2": "RA", "pain": "6/10 with movement, 3/10 at rest" },
+    "keyframes": [
+      { "atMin": 120, "eventId": "e-p2-pain", "values": { "pain": "8/10" } }
+    ]
+  },
+  "findings": {
+    "baseline": [
+      "Alert and oriented x4",
+      "Surgical dressing intact with minimal expected postoperative drainage",
+      "Right knee with expected postoperative swelling",
+      "Pedal pulses palpable bilaterally",
+      "Capillary refill less than 3 seconds",
+      "Able to move toes",
+      "Sensation intact in operative extremity",
+      "Pain increases with movement",
+      "Requires assistance with ambulation",
+      "Lungs clear",
+      "No signs of acute respiratory distress"
+    ],
+    "changes": [
+      { "eventId": "e-p2-pain", "findings": ["Reports pain 8/10", "States she does not want to get out of bed because it hurts too much"] }
+    ]
+  },
+  "labs": [
+    { "code": "wbc", "value": "11.8", "status": "resulted" },
+    { "code": "hgb", "value": "10.8", "status": "resulted" },
+    { "code": "hct", "value": "32", "status": "resulted" },
+    { "code": "plt", "value": "220", "status": "resulted" },
+    { "code": "na", "value": "138", "status": "resulted" },
+    { "code": "k", "value": "4.0", "status": "resulted" },
+    { "code": "cr", "value": "0.9", "status": "resulted" },
+    { "code": "glu", "value": "142", "status": "resulted" }
+  ],
+  "orders": [
+    { "id": "o-p2-vs", "text": "Vital signs every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
+    { "id": "o-p2-nv", "text": "Neurovascular checks to right lower extremity every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["assess-nv"], "delegable": true },
+    { "id": "o-p2-dressing", "text": "Assess surgical dressing every shift and as needed", "type": "scheduled", "frequencyMin": 480, "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["assess-wound"], "delegable": true },
+    { "id": "o-p2-pt", "text": "Physical therapy evaluation and treatment", "type": "once", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": [], "delegable": true },
+    { "id": "o-p2-ambulate", "text": "Ambulate with walker and one-person assistance", "type": "scheduled", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["ambulate"], "delegable": true },
+    { "id": "o-p2-wbat", "text": "Weight bearing as tolerated to right lower extremity", "type": "continuous", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": [], "delegable": true },
+    { "id": "o-p2-apap", "text": "Acetaminophen 650 mg PO every 6 hours as needed for mild pain", "type": "prn", "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Acetaminophen 650 mg PO", "prn": { "intervalMin": 360 }, "delegable": true },
+    { "id": "o-p2-oxy", "text": "Oxycodone 5 mg PO every 4 hours as needed for moderate to severe pain", "type": "prn", "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Oxycodone 5 mg PO", "prn": { "intervalMin": 240, "requiresBefore": ["assess-pain"] }, "delegable": true },
+    { "id": "o-p2-enox", "text": "Enoxaparin 40 mg subcutaneous daily for DVT prophylaxis, subject to bleeding risk and renal function assessment", "type": "scheduled", "frequencyMin": 1440, "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["sq-injection", "med-give"], "med": "Enoxaparin 40 mg SQ", "delegable": true },
+    { "id": "o-p2-ice", "text": "Apply ice to operative knee as needed", "type": "prn", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["ice"], "delegable": true },
+    { "id": "o-p2-is", "text": "Incentive spirometry every hour while awake", "type": "scheduled", "frequencyMin": 60, "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["incentive-spiro"], "delegable": true },
+    { "id": "o-p2-notify", "text": "Notify provider for increased bleeding, changes in neurovascular status, uncontrolled pain, or signs of DVT", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "parameter": { "watch": "instructor", "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
+  ],
+  "events": [
+    { "id": "e-p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "Margaret is requesting pain medication. Reports pain 8/10 and says she doesn't want to get out of bed because it hurts too much." } },
+    { "id": "e-p2-pain-vitals", "type": "vitals-change", "atMin": 120, "payload": { "keyframe": "e-p2-pain" } },
+    { "id": "e-p2-pain-findings", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } }
+  ],
+  "outcome": { "mode": "survive", "notes": "" },
+  "codeBranch": null,
+  "debrief": {
+    "shouldRecognize": [
+      "Pain needs to be assessed and treated before mobility.",
+      "Medication selection should account for pain severity, sedation, respiratory status, allergies, and prior medication administration.",
+      "Reassessment after pain medication is necessary.",
+      "Mobility and fall precautions remain important.",
+      "Students should assess for complications rather than assuming all postoperative swelling and pain are expected."
+    ],
+    "instructorNotes": []
+  }
+}

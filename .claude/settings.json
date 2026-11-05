@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)",
+      "Write(**/.env)",
+      "Write(**/.env.*)",
+      "Bash(cat .env*)",
+      "Bash(cat *.env*)",
+      "Bash(less .env*)",
+      "Bash(less *.env*)",
+      "Bash(head .env*)",
+      "Bash(head *.env*)",
+      "Bash(tail .env*)",
+      "Bash(tail *.env*)",
+      "Bash(grep .env*)",
+      "Bash(grep *.env*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/autosave.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

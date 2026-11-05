@@ -1,0 +1,93 @@
+{
+  "id": "p1-robert-miller",
+  "review": "approved",
+  "reviewNotes": [
+    "Glucose transcribed as 168 — photo slightly blurry, please confirm.",
+    "Handoff (SBAR), order tiers, intervention mappings, and lab delays are proposed — not in the original case."
+  ],
+  "source": "Instructor case: The Busy Med-Surg Shift — Patient 1",
+  "demographics": { "name": "Robert Miller", "age": 68, "sex": "M", "room": "201" },
+  "tag": "red",
+  "priorityLabel": "High priority – immediate assessment",
+  "admittingDx": "Chest pain, rule out acute coronary syndrome (ACS)",
+  "codeStatus": "Full code",
+  "allergies": [{ "agent": "Penicillin", "reaction": "Rash" }],
+  "hpi": "Robert presented to the emergency department at 0430 reporting intermittent chest pressure that began while doing yard work the previous evening. He describes the pain as pressure-like, located in the center of his chest, with radiation into his left arm. He reports associated nausea and shortness of breath. He has a history of hypertension, hyperlipidemia, and coronary artery disease. He had a cardiac stent placed five years ago. He reports that the pain initially improved with rest but returned this morning.",
+  "pmh": ["Coronary artery disease", "Hypertension", "Hyperlipidemia", "Type 2 diabetes"],
+  "homeMeds": [
+    { "name": "Aspirin", "dose": "81 mg", "freq": "daily" },
+    { "name": "Atorvastatin", "dose": "40 mg", "freq": "nightly" },
+    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" },
+    { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" }
+  ],
+  "handoff": {
+    "review": "proposed",
+    "situation": "68M admitted from ED at 0430 for chest pain, rule out ACS. On telemetry.",
+    "background": "CAD with stent 5 years ago, HTN, HLD, T2DM. PCN allergy (rash). Full code.",
+    "assessment": "Intermittent substernal pressure 3/10, mild nausea. BP 148/88, HR 96, SpO2 94% RA. Initial hs-troponin 12, repeat pending.",
+    "recommendation": "Watch for recurrent pain. Nitro SL PRN with BP check first. Follow up repeat troponin."
+  },
+  "vitals": {
+    "baseline": { "bp": "148/88", "hr": 96, "rr": 20, "tempF": 98.6, "spo2": 94, "o2": "RA", "pain": "3/10 intermittent chest pressure" },
+    "keyframes": [
+      { "atMin": 75, "eventId": "e-p1-pain-returns", "values": { "bp": "158/92", "hr": 108, "rr": 24, "spo2": 92, "o2": "RA", "pain": "7/10 radiating to L arm" } }
+    ]
+  },
+  "findings": {
+    "baseline": [
+      "Alert and oriented x4",
+      "Reports intermittent substernal pressure",
+      "Skin slightly pale",
+      "Mild diaphoresis possible during pain episodes",
+      "Heart sounds regular",
+      "Lung sounds clear bilaterally",
+      "Peripheral pulses present",
+      "Capillary refill less than 3 seconds",
+      "Reports mild nausea",
+      "ECG may show nonspecific ST-T changes"
+    ],
+    "changes": [
+      { "eventId": "e-p1-pain-returns", "findings": ["Skin cool and diaphoretic", "Reports pain radiating to left arm", "Chest pain 7/10"] }
+    ]
+  },
+  "labs": [
+    { "code": "wbc", "value": "8.2", "status": "resulted" },
+    { "code": "hgb", "value": "14.1", "status": "resulted" },
+    { "code": "k", "value": "4.2", "status": "resulted" },
+    { "code": "na", "value": "139", "status": "resulted" },
+    { "code": "cr", "value": "1.0", "status": "resulted" },
+    { "code": "glu", "value": "168", "status": "resulted" },
+    { "code": "trop-hs", "label": "Initial hs-troponin", "value": "12", "unit": "ng/L", "status": "resulted" },
+    { "code": "trop-hs", "label": "Repeat hs-troponin", "value": null, "status": "pending", "resultDelayMin": 45, "review": "proposed", "notes": "Case lists this as Pending with no value. Instructor to set the result (rising vs. flat changes the scenario)." }
+  ],
+  "labNote": "For this simulation, use a high-sensitivity troponin reference limit of 19 ng/L or less. Interpret serial values and changes according to the laboratory's actual assay.",
+  "orders": [
+    { "id": "o-p1-tele", "text": "Admit to telemetry", "type": "once", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["tele"], "delegable": true },
+    { "id": "o-p1-cardiac-mon", "text": "Continuous cardiac monitoring", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["tele"], "delegable": true },
+    { "id": "o-p1-vs", "text": "Vital signs every 4 hours and with any change in condition", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
+    { "id": "o-p1-ecg", "text": "Obtain 12-lead ECG immediately for recurrent chest pain and repeat according to chest pain protocol", "type": "prn", "tier": 1, "review": "proposed", "orderSet": "os-p1-admit", "activeOnEvent": "e-p1-pain-returns", "interventionIds": ["ecg-12lead"], "delegable": false },
+    { "id": "o-p1-trop", "text": "Repeat high-sensitivity troponin according to protocol", "type": "once", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["lab-draw"], "labCodes": ["trop-hs"], "delegable": true },
+    { "id": "o-p1-asa", "text": "Aspirin 81 mg PO daily", "type": "scheduled", "frequencyMin": 1440, "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Aspirin 81 mg PO", "delegable": true },
+    { "id": "o-p1-ntg", "text": "Nitroglycerin 0.4 mg sublingual every 5 minutes as needed for chest pain, maximum three doses, with blood pressure and contraindication assessment before administration", "type": "prn", "tier": 1, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Nitroglycerin 0.4 mg SL", "prn": { "max": 3, "intervalMin": 5, "requiresBefore": ["vs-bp"] }, "delegable": false },
+    { "id": "o-p1-o2", "text": "Oxygen as needed to maintain SpO2 90–94%, unless otherwise indicated", "type": "prn", "tier": 1, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["o2-apply"], "delegable": false },
+    { "id": "o-p1-notify", "text": "Notify provider immediately for recurrent or worsening chest pain, concerning ECG changes, hemodynamic instability, or rising troponin", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "parameter": { "watchEvent": "e-p1-pain-returns", "requires": "notify-provider", "withinMin": 10 }, "interventionIds": ["notify-provider"], "delegable": false },
+    { "id": "o-p1-iv", "text": "Maintain IV access", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["iv-check", "iv-start"], "delegable": true }
+  ],
+  "events": [
+    { "id": "e-p1-pain-returns", "type": "call-light", "atMin": 75, "payload": { "message": "Robert is on his call light: his chest pain has returned, now 7/10." } },
+    { "id": "e-p1-pain-vitals", "type": "vitals-change", "atMin": 75, "payload": { "keyframe": "e-p1-pain-returns" } },
+    { "id": "e-p1-pain-findings", "type": "findings-change", "atMin": 75, "payload": { "change": "e-p1-pain-returns" } }
+  ],
+  "outcome": { "mode": "survive", "notes": "No code in the original case." },
+  "codeBranch": null,
+  "debrief": {
+    "shouldRecognize": [
+      "This is a change in patient condition requiring immediate assessment.",
+      "They should not delegate the assessment or clinical decision-making.",
+      "They should obtain an ECG promptly, notify the provider/activate the appropriate escalation pathway, and initiate ordered interventions.",
+      "They should reassess pain, vital signs, and response to interventions.",
+      "They should not leave this patient unattended while symptoms are ongoing."
+    ],
+    "instructorNotes": []
+  }
+}

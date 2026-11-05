@@ -1,0 +1,90 @@
+{
+  "id": "p6-james-carter",
+  "review": "proposed",
+  "reviewNotes": [
+    "ENTIRE PATIENT IS DRAFTED. The instructor's case lists Patient 6 only as 'Acute CHF exacerbation — unexpected admission' with no details. Name, history, vitals, labs, orders, and timing are all proposed."
+  ],
+  "source": "Drafted to fill Patient 6 slot of The Busy Med-Surg Shift",
+  "demographics": { "name": "James Carter", "age": 76, "sex": "M", "room": "206" },
+  "tag": "red",
+  "priorityLabel": "High priority – unexpected admission",
+  "admittingDx": "Acute decompensated heart failure (CHF exacerbation)",
+  "codeStatus": "Full code",
+  "allergies": [],
+  "allergyText": "No known drug allergies",
+  "hpi": "James presented to the emergency department with 4 days of worsening shortness of breath, now short of breath at rest and unable to lie flat. He reports a 4 kg weight gain over the past week and increasing leg swelling. He admits to running out of his furosemide 5 days ago and eating at restaurants over the holiday weekend. He received one dose of furosemide 40 mg IV in the ED with modest urine output and is being admitted to the medical-surgical unit.",
+  "pmh": ["Heart failure with reduced ejection fraction (EF 30%)", "Hypertension", "Type 2 diabetes", "Chronic kidney disease stage 3a"],
+  "homeMeds": [
+    { "name": "Furosemide", "dose": "40 mg", "freq": "daily (ran out 5 days ago)" },
+    { "name": "Metoprolol succinate", "dose": "50 mg", "freq": "daily" },
+    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" },
+    { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" }
+  ],
+  "handoff": {
+    "situation": "76M coming up from ED with CHF exacerbation. Received furosemide 40 mg IV in the ED.",
+    "background": "HFrEF EF 30%, HTN, T2DM, CKD 3a. Ran out of furosemide 5 days ago, high-sodium diet over the weekend. NKDA. Full code.",
+    "assessment": "Dyspneic at rest, can't lie flat. Crackles to mid lung fields, 3+ pitting edema, JVD. SpO2 89% RA, on 4 L NC now 93%. BP 162/94, HR 112.",
+    "recommendation": "Needs reassessment on arrival, admission orders to follow. Watch respiratory status closely."
+  },
+  "vitals": {
+    "baseline": { "bp": "162/94", "hr": 112, "rr": 28, "tempF": 98.2, "spo2": 93, "o2": "4 L NC", "pain": "0/10" },
+    "keyframes": [
+      { "atMin": 0, "relativeTo": "admission", "values": { "spo2": 93, "o2": "4 L NC" } },
+      { "trigger": "furosemide-given-plus-45min", "values": { "bp": "144/86", "hr": 98, "rr": 22, "spo2": 95 }, "notes": "Optional improvement if diuresis started. Engine may implement as instructor-fired." }
+    ]
+  },
+  "findings": {
+    "baseline": [
+      "Alert and oriented x4, anxious",
+      "Speaking in short phrases",
+      "Sitting bolt upright; unable to tolerate lying flat",
+      "Crackles bilaterally to mid lung fields",
+      "Jugular venous distension at 45 degrees",
+      "3+ pitting edema bilateral lower extremities",
+      "S3 heart sound",
+      "Skin cool, slightly diaphoretic",
+      "Urine output 300 mL since ED furosemide"
+    ],
+    "changes": []
+  },
+  "labs": [
+    { "code": "bnp", "value": "1840", "status": "pending", "resultDelayMin": 30 },
+    { "code": "na", "value": "134", "status": "pending", "resultDelayMin": 30 },
+    { "code": "k", "value": "3.4", "status": "pending", "resultDelayMin": 30, "notes": "Low K before more diuretic is a teaching point." },
+    { "code": "cr", "value": "1.6", "status": "pending", "resultDelayMin": 30 },
+    { "code": "mg", "value": "1.7", "status": "pending", "resultDelayMin": 30 },
+    { "code": "trop-hs", "value": "24", "unit": "ng/L", "status": "pending", "resultDelayMin": 45, "notes": "Mild elevation, likely demand — instructor may change." },
+    { "code": "glu", "value": "188", "status": "pending", "resultDelayMin": 30 }
+  ],
+  "orders": [
+    { "id": "o-p6-hob", "text": "Elevate head of bed / high Fowler's", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["position-hob"], "delegable": true },
+    { "id": "o-p6-o2", "text": "Oxygen to maintain SpO2 ≥ 92%", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["o2-apply"], "delegable": false },
+    { "id": "o-p6-assess", "text": "Admission assessment", "type": "once", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["assess-full", "assess-focused"], "delegable": false },
+    { "id": "o-p6-iv", "text": "Maintain IV access", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["iv-check", "iv-start"], "delegable": true },
+    { "id": "o-p6-lasix", "text": "Furosemide 40 mg IV twice daily, first dose now", "type": "scheduled", "frequencyMin": 720, "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["med-give"], "med": "Furosemide 40 mg IV", "delegable": false },
+    { "id": "o-p6-tele", "text": "Continuous telemetry", "type": "continuous", "tier": 2, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["tele"], "delegable": true },
+    { "id": "o-p6-labs", "text": "BMP, magnesium, BNP, troponin", "type": "once", "tier": 2, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["lab-draw"], "labCodes": ["bnp", "na", "k", "cr", "mg", "trop-hs", "glu"], "delegable": true },
+    { "id": "o-p6-cxr", "text": "Portable chest X-ray", "type": "once", "tier": 2, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["imaging-request"], "delegable": true },
+    { "id": "o-p6-io", "text": "Strict intake and output", "type": "continuous", "tier": 3, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["io"], "delegable": true },
+    { "id": "o-p6-weight", "text": "Daily standing weight", "type": "scheduled", "frequencyMin": 1440, "tier": 3, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["weight"], "delegable": true },
+    { "id": "o-p6-fluid", "text": "1.5 L fluid restriction, 2 g sodium diet", "type": "continuous", "tier": 3, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["teach"], "delegable": true },
+    { "id": "o-p6-hold-metformin", "text": "Hold metformin", "type": "once", "tier": 3, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["med-hold"], "delegable": true },
+    { "id": "o-p6-notify", "text": "Notify provider for SpO2 < 90% on oxygen, increasing work of breathing, SBP < 90, K < 3.5, or urine output < 30 mL/hr", "type": "parameter", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "parameter": { "watch": "labs.k", "op": "<", "value": 3.5, "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
+  ],
+  "events": [
+    { "id": "e-p6-admission", "type": "admission", "atMin": 150, "payload": { "message": "ED is sending up an admission to room 206: 76M, CHF exacerbation.", "assignTo": "charge-or-scenario" } },
+    { "id": "e-p6-admit-orders", "type": "new-orders", "atMin": 155, "payload": { "orderSet": "os-p6-admit", "message": "Admission orders for James Carter." } }
+  ],
+  "outcome": { "mode": "survive", "notes": "" },
+  "codeBranch": null,
+  "debrief": {
+    "shouldRecognize": [
+      "An admission arriving in respiratory distress reprioritizes the whole assignment — the RN must decide what can wait or be delegated.",
+      "Airway/breathing first: position upright, oxygen, assess work of breathing before paperwork.",
+      "IV furosemide is a priority, but check potassium and renal function — K 3.4 needs provider notification.",
+      "Delegate appropriate tasks (weight, I&O, vitals) to the CNA; keep assessment and IV meds with the RN.",
+      "Identify the cause (ran out of diuretic, high sodium intake) as a discharge-teaching target later."
+    ],
+    "instructorNotes": []
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "id": "p3-harold-thompson",
+  "review": "approved",
+  "reviewNotes": [
+    "Handoff (SBAR), order tiers, and intervention mappings are proposed — not in the original case."
+  ],
+  "source": "Instructor case: The Busy Med-Surg Shift — Patient 3",
+  "demographics": { "name": "Harold Thompson", "age": 71, "sex": "M", "room": "203" },
+  "tag": "green",
+  "priorityLabel": "Lower priority – discharge planning",
+  "admittingDx": "Community-acquired pneumonia",
+  "codeStatus": "Full code",
+  "allergies": [],
+  "allergyText": "No known drug allergies",
+  "hpi": "Harold was admitted three days ago with fever, productive cough, shortness of breath, and fatigue. Chest X-ray showed right lower lobe pneumonia. He has responded well to antibiotic therapy and is now feeling much better. He is eating and drinking adequately and has been ambulating in the hallway with minimal assistance. He lives at home with his wife, who is available to help him after discharge.",
+  "pmh": ["Hypertension", "Type 2 diabetes", "Hyperlipidemia"],
+  "homeMeds": [
+    { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" },
+    { "name": "Losartan", "dose": "50 mg", "freq": "daily" },
+    { "name": "Atorvastatin", "dose": "20 mg", "freq": "nightly" }
+  ],
+  "handoff": {
+    "review": "proposed",
+    "situation": "71M, hospital day 3 for RLL community-acquired pneumonia, improving.",
+    "background": "HTN, T2DM, HLD. NKDA. Full code. Lives with wife.",
+    "assessment": "Afebrile, SpO2 95% RA, pain 0/10. Mildly diminished RLL, occasional productive cough. Ambulating with minimal assist, eating well.",
+    "recommendation": "Possible discharge today if criteria met. Needs med rec and discharge teaching."
+  },
+  "vitals": {
+    "baseline": { "bp": "128/76", "hr": 78, "rr": 16, "tempF": 98.4, "spo2": 95, "o2": "RA", "pain": "0/10" },
+    "keyframes": []
+  },
+  "findings": {
+    "baseline": [
+      "Alert and oriented x4",
+      "Respirations unlabored",
+      "Lung sounds mildly diminished in right lower lobe",
+      "Occasional productive cough with improving sputum",
+      "No accessory muscle use",
+      "Skin warm and dry",
+      "Ambulates independently or with minimal assistance",
+      "Tolerating oral intake",
+      "Reports improved energy"
+    ],
+    "changes": [
+      { "eventId": "e-p3-ready", "findings": ["States he is ready to go home and asks when he can leave", "Unsure how long he needs to take his antibiotics", "Unsure whether to keep using incentive spirometer at home"] }
+    ]
+  },
+  "labs": [
+    { "code": "wbc", "value": "9.6", "status": "resulted" },
+    { "code": "hgb", "value": "13.2", "status": "resulted" },
+    { "code": "na", "value": "137", "status": "resulted" },
+    { "code": "k", "value": "4.1", "status": "resulted" },
+    { "code": "cr", "value": "1.0", "status": "resulted" },
+    { "code": "glu", "value": "136", "status": "resulted" }
+  ],
+  "orders": [
+    { "id": "o-p3-vs", "text": "Vital signs every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
+    { "id": "o-p3-abx", "text": "Continue prescribed oral antibiotic until course completed", "type": "scheduled", "tier": 2, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Oral antibiotic (per MAR)", "delegable": true },
+    { "id": "o-p3-apap", "text": "Acetaminophen 650 mg PO every 6 hours as needed for fever or pain", "type": "prn", "tier": 3, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Acetaminophen 650 mg PO", "prn": { "intervalMin": 360 }, "delegable": true },
+    { "id": "o-p3-cdb", "text": "Encourage coughing, deep breathing, and incentive spirometry", "type": "continuous", "tier": 3, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": ["cdb", "incentive-spiro"], "delegable": true },
+    { "id": "o-p3-fluids", "text": "Encourage oral fluids as tolerated", "type": "continuous", "tier": 3, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": [], "delegable": true },
+    { "id": "o-p3-ambulate", "text": "Ambulate in hallway as tolerated", "type": "continuous", "tier": 3, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "interventionIds": ["ambulate"], "delegable": true },
+    { "id": "o-p3-dc", "text": "Discharge home today if clinically stable and discharge criteria are met", "type": "once", "tier": 3, "review": "proposed", "orderSet": "os-p3-discharge", "activeFromMin": 0, "interventionIds": ["discharge"], "delegable": false },
+    { "id": "o-p3-medrec", "text": "Complete medication reconciliation", "type": "once", "tier": 2, "review": "proposed", "orderSet": "os-p3-discharge", "activeFromMin": 0, "interventionIds": ["med-rec"], "delegable": false },
+    { "id": "o-p3-teach", "text": "Provide pneumonia discharge education", "type": "once", "tier": 2, "review": "proposed", "orderSet": "os-p3-discharge", "activeFromMin": 0, "interventionIds": ["teach", "teach-back"], "delegable": false },
+    { "id": "o-p3-followup", "text": "Follow up with primary care provider in 1 week", "type": "once", "tier": 3, "review": "proposed", "orderSet": "os-p3-discharge", "activeFromMin": 0, "interventionIds": [], "delegable": true },
+    { "id": "o-p3-notify", "text": "Notify provider for worsening respiratory symptoms, fever, or oxygen desaturation", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p3-routine", "activeFromMin": 0, "parameter": { "watch": "vitals.spo2", "op": "<", "value": 90, "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
+  ],
+  "events": [
+    { "id": "e-p3-ready", "type": "staff-message", "atMin": 90, "payload": { "from": "CNA", "message": "Harold told me he's ready to go home and asked when he can leave. He's not sure how long to take his antibiotics or if he should keep using his incentive spirometer at home." } },
+    { "id": "e-p3-ready-findings", "type": "findings-change", "atMin": 90, "payload": { "change": "e-p3-ready" } }
+  ],
+  "outcome": { "mode": "survive", "notes": "" },
+  "codeBranch": null,
+  "debrief": {
+    "shouldRecognize": [
+      "Discharge planning can be delegated in appropriate portions, but the RN remains accountable for nursing assessment, discharge teaching, and evaluation of understanding.",
+      "Medication reconciliation is essential.",
+      "Teach-back should be used to evaluate patient understanding.",
+      "Ensure the patient meets discharge criteria and that orders are complete.",
+      "Coordinate transportation, follow-up appointments, and prescriptions."
+    ],
+    "instructorNotes": []
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "review": "proposed",
+  "labs": [
+    { "code": "wbc", "name": "WBC", "unit": "×10³/µL", "refRange": "4.5–11.0", "defaultDelayMin": 30 },
+    { "code": "hgb", "name": "Hemoglobin", "unit": "g/dL", "refRange": "12.0–17.5", "defaultDelayMin": 30 },
+    { "code": "hct", "name": "Hematocrit", "unit": "%", "refRange": "36–50", "defaultDelayMin": 30 },
+    { "code": "plt", "name": "Platelets", "unit": "×10³/µL", "refRange": "150–400", "defaultDelayMin": 30 },
+    { "code": "na", "name": "Sodium", "unit": "mEq/L", "refRange": "135–145", "defaultDelayMin": 30 },
+    { "code": "k", "name": "Potassium", "unit": "mEq/L", "refRange": "3.5–5.0", "defaultDelayMin": 30 },
+    { "code": "cr", "name": "Creatinine", "unit": "mg/dL", "refRange": "0.6–1.2", "defaultDelayMin": 30 },
+    { "code": "glu", "name": "Glucose", "unit": "mg/dL", "refRange": "70–99 fasting", "defaultDelayMin": 30 },
+    { "code": "mg", "name": "Magnesium", "unit": "mg/dL", "refRange": "1.7–2.2", "defaultDelayMin": 30 },
+    { "code": "lactate", "name": "Lactate", "unit": "mmol/L", "refRange": "<2.0", "defaultDelayMin": 20 },
+    { "code": "trop-hs", "name": "High-sensitivity troponin", "unit": "ng/L", "refRange": "≤19 (sim reference)", "defaultDelayMin": 45 },
+    { "code": "bnp", "name": "BNP", "unit": "pg/mL", "refRange": "<100", "defaultDelayMin": 45 },
+    { "code": "pt-inr", "name": "PT / INR", "unit": "", "refRange": "INR 0.8–1.2", "defaultDelayMin": 30 },
+    { "code": "bcx", "name": "Blood cultures", "unit": "", "refRange": "No growth", "defaultDelayMin": 9999 }
+  ]
+}

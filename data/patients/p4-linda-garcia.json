@@ -1,0 +1,109 @@
+{
+  "id": "p4-linda-garcia",
+  "review": "approved",
+  "reviewNotes": [
+    "Potassium transcribed as 4.6 — photo slightly blurry, please confirm.",
+    "Handoff (SBAR), order tiers, intervention mappings, the sepsis response order set, and the code branch are proposed — not in the original case."
+  ],
+  "source": "Instructor case: The Busy Med-Surg Shift — Patient 4",
+  "demographics": { "name": "Linda Garcia", "age": 63, "sex": "F", "room": "204" },
+  "tag": "red",
+  "priorityLabel": "High priority – possible clinical deterioration",
+  "admittingDx": "Community-acquired pneumonia",
+  "codeStatus": "Full code",
+  "allergies": [],
+  "allergyText": "No known drug allergies",
+  "hpi": "Linda was admitted yesterday evening with fever, productive cough, shortness of breath, and weakness. Chest X-ray demonstrated bilateral lower lobe infiltrates. She has a history of COPD and type 2 diabetes. She has been receiving IV antibiotics and supplemental oxygen. Overnight, nursing staff reported increasing fatigue and decreased oral intake.",
+  "pmh": ["COPD", "Type 2 diabetes", "Hypertension", "Tobacco use history"],
+  "homeMeds": [
+    { "name": "Albuterol inhaler", "dose": "", "freq": "as needed" },
+    { "name": "Tiotropium inhaler", "dose": "", "freq": "daily" },
+    { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" },
+    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" }
+  ],
+  "handoff": {
+    "review": "proposed",
+    "situation": "63F admitted last evening with bilateral lower lobe CAP. On IV abx and 2 L NC.",
+    "background": "COPD, T2DM, HTN, former smoker. NKDA. Full code.",
+    "assessment": "Fatigued, febrile 101.3, HR 104, RR 24, BP 102/64, SpO2 91% on 2 L. Crackles bilateral bases. Decreased intake and urine output overnight. Lactate 2.8, WBC 17.8, Cr 1.4 (baseline 0.9).",
+    "recommendation": "Watch closely for sepsis. Repeat lactate due. Strict I&O. COPD O2 target 88–92%."
+  },
+  "vitals": {
+    "baseline": { "bp": "102/64", "hr": 104, "rr": 24, "tempF": 101.3, "spo2": 91, "o2": "2 L NC", "pain": "2/10" },
+    "keyframes": [
+      { "atMin": 60, "eventId": "e-p4-worsens", "values": { "bp": "86/52", "hr": 122, "rr": 30, "tempF": 102.2, "spo2": 88, "o2": "2 L NC" } }
+    ]
+  },
+  "findings": {
+    "baseline": [
+      "Alert but fatigued",
+      "Increased work of breathing",
+      "Crackles in bilateral lower lung fields",
+      "Productive cough with yellow sputum",
+      "Skin warm and flushed",
+      "Capillary refill approximately 3 seconds",
+      "Decreased appetite",
+      "Reports weakness",
+      "Urine output decreased overnight"
+    ],
+    "changes": [
+      { "eventId": "e-p4-worsens", "findings": ["New confusion", "Cool extremities", "Capillary refill 4 seconds", "Urine output 15 mL over the last hour"] }
+    ]
+  },
+  "labs": [
+    { "code": "wbc", "value": "17.8", "status": "resulted" },
+    { "code": "hgb", "value": "12.0", "status": "resulted" },
+    { "code": "na", "value": "133", "status": "resulted" },
+    { "code": "k", "value": "4.6", "status": "resulted" },
+    { "code": "cr", "value": "1.4", "status": "resulted", "notes": "Baseline 0.9" },
+    { "code": "glu", "value": "214", "status": "resulted" },
+    { "code": "lactate", "value": "2.8", "unit": "mmol/L", "status": "resulted" },
+    { "code": "lactate", "label": "Repeat lactate", "value": "4.1", "status": "pending", "resultDelayMin": 20, "review": "proposed", "notes": "Value drafted; case only says repeat in 2–4 hours." }
+  ],
+  "orders": [
+    { "id": "o-p4-vs", "text": "Vital signs every 4 hours and as needed", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
+    { "id": "o-p4-spo2", "text": "Continuous pulse oximetry", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["pulse-ox-cont"], "delegable": true },
+    { "id": "o-p4-o2", "text": "Oxygen via nasal cannula, titrate according to prescribed COPD oxygen target of 88–92%", "type": "continuous", "tier": 1, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["o2-apply"], "delegable": false },
+    { "id": "o-p4-ceftriaxone", "text": "Ceftriaxone 1 g IV every 24 hours", "type": "scheduled", "frequencyMin": 1440, "tier": 2, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Ceftriaxone 1 g IV", "delegable": true },
+    { "id": "o-p4-azithro", "text": "Azithromycin 500 mg IV every 24 hours", "type": "scheduled", "frequencyMin": 1440, "tier": 2, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Azithromycin 500 mg IV", "delegable": true },
+    { "id": "o-p4-bcx", "text": "Obtain blood cultures x2 if not already collected, preferably before additional antibiotic administration if this does not delay treatment", "type": "once", "tier": 1, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["blood-cultures"], "delegable": true },
+    { "id": "o-p4-cbc-cmp", "text": "Repeat CBC and CMP in the morning", "type": "once", "tier": 3, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["lab-draw"], "delegable": true },
+    { "id": "o-p4-lactate", "text": "Obtain repeat lactate in 2–4 hours", "type": "once", "tier": 2, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["lab-draw"], "labCodes": ["lactate"], "delegable": true },
+    { "id": "o-p4-io", "text": "Strict intake and output", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["io"], "delegable": true },
+    { "id": "o-p4-notify", "text": "Notify provider for systolic BP below 90, increasing oxygen requirements, worsening mental status, or decreasing urine output", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "parameter": { "watch": "vitals.sbp", "op": "<", "value": 90, "requires": "notify-provider", "withinMin": 5 }, "interventionIds": ["notify-provider"], "delegable": false },
+    { "id": "o-p4-sepsis-eval", "text": "Evaluate for sepsis and escalate care as indicated", "type": "continuous", "tier": 1, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["rapid-response", "notify-provider"], "delegable": false },
+
+    { "id": "o-p4-bolus", "review": "proposed", "text": "Lactated Ringer's 30 mL/kg IV bolus now", "type": "once", "tier": 1, "orderSet": "os-p4-sepsis", "activeOnEvent": "e-p4-sepsis-orders", "interventionIds": ["iv-fluids"], "delegable": false },
+    { "id": "o-p4-second-iv", "review": "proposed", "text": "Establish second large-bore IV", "type": "once", "tier": 1, "orderSet": "os-p4-sepsis", "activeOnEvent": "e-p4-sepsis-orders", "interventionIds": ["iv-start"], "delegable": true },
+    { "id": "o-p4-stat-lactate", "review": "proposed", "text": "Repeat lactate STAT", "type": "once", "tier": 2, "orderSet": "os-p4-sepsis", "activeOnEvent": "e-p4-sepsis-orders", "interventionIds": ["lab-draw"], "labCodes": ["lactate"], "delegable": true },
+    { "id": "o-p4-foley", "review": "proposed", "text": "Insert indwelling urinary catheter for hourly urine output", "type": "once", "tier": 3, "orderSet": "os-p4-sepsis", "activeOnEvent": "e-p4-sepsis-orders", "interventionIds": ["foley"], "delegable": true }
+  ],
+  "events": [
+    { "id": "e-p4-worsens", "type": "vitals-change", "atMin": 60, "payload": { "keyframe": "e-p4-worsens" } },
+    { "id": "e-p4-worsens-findings", "type": "findings-change", "atMin": 60, "payload": { "change": "e-p4-worsens" } },
+    { "id": "e-p4-sepsis-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p4-sepsis", "message": "New orders from provider for Linda Garcia (sepsis bundle).", "note": "Instructor fires this once the student notifies the provider." } }
+  ],
+  "outcome": { "mode": "instructor", "notes": "Instructor decides whether the sepsis branch progresses." },
+  "codeBranch": {
+    "review": "proposed",
+    "enabled": false,
+    "description": "Optional: turns Linda into the black (coding) patient if sepsis isn't escalated.",
+    "trigger": { "ifNotCharted": ["notify-provider", "rapid-response"], "byMin": 90 },
+    "event": { "id": "e-p4-code", "type": "code", "payload": { "rhythm": "PEA", "message": "Linda Garcia is unresponsive. No pulse." } }
+  },
+  "debrief": {
+    "shouldRecognize": [
+      "This patient is deteriorating and may be developing septic shock.",
+      "Immediate reassessment and escalation are needed.",
+      "Activate rapid response according to facility policy.",
+      "Notify the provider immediately.",
+      "Assess airway, breathing, circulation, mental status, and perfusion.",
+      "Anticipate additional orders, including fluid resuscitation, repeat lactate, and possible higher-level care.",
+      "Review the patient's respiratory status and COPD oxygen target while responding to hypoxemia.",
+      "Monitor urine output and renal function."
+    ],
+    "instructorNotes": [
+      "Students should not wait for the next scheduled vital signs or for the provider to round before escalating this change."
+    ]
+  }
+}
