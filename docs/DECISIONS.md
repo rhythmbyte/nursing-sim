@@ -4,6 +4,31 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: A saved session resumes with wall time still counting
+- **Decision:** The session (clock snapshot, fired events, log) is saved through `storage.js` on every change. On reload, a running clock picks up from its wall-time anchor, so time passed while the page was closed counts and due events fire in order on the first tick.
+- **Why:** If the page freezes or reloads mid-sim, the sim keeps its place, matching the real-time feel the instructor runs on. A paused clock stays paused.
+- **Alternatives:** Auto-pause on unload (safer for an accidental close, but then a refresh silently pauses a live class); not persisting at all (a freeze loses the sim). Revisit with the instructor.
+
+## 2026-11-05: Orders active at shift start begin as "acknowledged"
+- **Decision:** Orders with `activeFromMin: 0` start as `acknowledged` (received in shift report). Orders that activate later (by time or event) start as `new` and highlight until acknowledged.
+- **Why:** Otherwise every order flashes "new" at 07:00, which drowns out the ones that really are new.
+- **Alternatives:** Everything starts `new` (noisy). The admitted patient's orders come from their admission order set, so they're `new`.
+
+## 2026-11-05: Interim student-to-group mapping
+- **Decision:** Until phase 6, student tab N is placed into the Nth slot across groups (`studentSlots()` in `engine/assignment.js`).
+- **Why:** Phase 2 needs students to see their patients' call lights before join codes and the randomizer exist.
+- **Alternatives:** Every student sees every patient (would hide grouping bugs until phase 6).
+
+## 2026-11-05: Tick timer lives in main.js; the runner is the only stateful engine piece
+- **Decision:** `session.js` is pure (state in → state out). `runner.js` holds the current state and talks to the store. `main.js` owns the `setInterval`.
+- **Why:** The engine stays testable in Node with a fake `now`. In the full build the server runs the same session functions, and clients receive state instead of ticking themselves.
+- **Alternatives:** A timer inside the engine (untestable without fake timers, and it couldn't move to a server cleanly).
+
+## 2026-11-05: Scenario picker reloads the app for the chosen scenario
+- **Decision:** The header picker saves the choice and tears down and remounts the app (store, runner, tabs). Switching while a sim is running asks for confirmation and clears the session.
+- **Why:** Tabs, student slots and the event list all derive from the scenario. Rebuilding is simpler and safer than patching each screen.
+- **Alternatives:** Keep one session per scenario (more state to explain in a demo).
+
 ## 2026-11-05: Env-file guard hook fails closed
 - **Decision:** `.claude/hooks/block-env.sh` blocks the command (exit 2) if `jq` isn't installed or the hook input can't be parsed. The message says jq is required.
 - **Why:** A guard that silently allows everything when its parser is missing gives a false sense of safety. Failing closed makes a broken setup obvious right away.

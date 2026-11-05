@@ -7,10 +7,18 @@ import { triageChip } from '../shared/triage-chip.js';
 import { countNeedsReview } from '../../review.js';
 import { load, save } from '../../storage.js';
 import { patientDetail } from './library-detail.js';
+import { firstScheduled } from '../../engine/scheduler.js';
+import { formatShiftTime } from '../../engine/time.js';
 
 const SELECTED_KEY = 'ui.library.selected';
 
-function patientCard(p, selected, onSelect) {
+function firstEventLine(p, startClock) {
+  const e = firstScheduled(p.events);
+  if (!e) return h('div', { class: 'card-next muted' }, 'No scheduled events');
+  return h('div', { class: 'card-next' }, `First event ${formatShiftTime(startClock, e.atMin)} · ${e.type.replaceAll('-', ' ')}`);
+}
+
+function patientCard(p, selected, onSelect, startClock) {
   const pending = countNeedsReview(p);
   return h('button', {
     class: `patient-card${selected ? ' selected' : ''}`,
@@ -23,15 +31,16 @@ function patientCard(p, selected, onSelect) {
     ),
     h('div', { class: 'card-name' }, p.demographics.name),
     h('div', { class: 'muted' }, `${p.demographics.age}${p.demographics.sex} · ${p.admittingDx}`),
+    firstEventLine(p, startClock),
     h('div', { class: 'card-badges' },
       pending ? badge(`Needs review (${pending})`, 'review', `${pending} item(s) drafted by AI await instructor approval`) : badge('Approved', 'ok'),
     ),
   );
 }
 
-export function mountLibrary(root, { patients, catalogs, scenarios, problems }) {
+export function mountLibrary(root, { data: { patients, catalogs, problems }, scenario }) {
   const sorted = [...patients].sort((a, b) => a.demographics.room.localeCompare(b.demographics.room, undefined, { numeric: true }));
-  const startClock = scenarios[0]?.startClock || '07:00';
+  const startClock = scenario?.startClock || '07:00';
   let selectedId = load(SELECTED_KEY);
   if (!sorted.some((p) => p.id === selectedId)) selectedId = sorted[0]?.id ?? null;
 
@@ -39,7 +48,7 @@ export function mountLibrary(root, { patients, catalogs, scenarios, problems }) 
   const detail = h('div', { class: 'library-detail' });
 
   function render() {
-    clear(list).append(...sorted.map((p) => patientCard(p, p.id === selectedId, select)));
+    clear(list).append(...sorted.map((p) => patientCard(p, p.id === selectedId, select, startClock)));
     const p = sorted.find((x) => x.id === selectedId);
     clear(detail).append(p ? patientDetail(p, { catalogs, startClock }) : h('p', { class: 'muted' }, 'No patients loaded.'));
   }

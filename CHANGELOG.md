@@ -2,12 +2,21 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
-## Unreleased: Phase 2 (in progress): clock, scheduler, events
-- Sim clock (`js/engine/clock.js`): start, pause, resume, end, and speed 0.5x–8x as a serializable snapshot.
-- Scheduler (`js/engine/scheduler.js`): due events by sim minute, repeats (`repeatEveryMin` / `repeatCount`); `trigger: "manual"` events only fire from "Fire now".
-- Event and rule registries (`js/engine/registry.js`) and eight event types in `js/engine/events/`: new-orders, call-light, vitals-change, findings-change, staff-message, lab-result, code, admission.
-- Action log (`js/engine/log.js`) and alerts (`js/engine/alerts.js`).
-- Still to come in this phase: the session/runner, the instructor live-control screen (clock controls, Fire now, call lights), and student call-light answering.
+## Phase 2: clock, scheduler, events
+- **Sim clock:** start, pause, resume, end, and speed 0.5x–8x, shown everywhere as shift time (e.g. 08:15). It's a serializable snapshot, and the session resumes after a reload.
+- **Scheduler:** fires events at their `atMin`, with repeats (`repeatEveryMin` / `repeatCount`). Events with `trigger: "manual"` only fire from "Fire now".
+- **Eight event types**, one file each, registered through `engine/events/index.js`: new-orders, call-light, vitals-change, findings-change, staff-message, lab-result, code, admission. Orders with `activeOnEvent` activate when their event fires, whatever its type.
+- **Session and runner:** pure session transitions plus a controller that pushes to the store and persists through `storage.js`. Everything is logged with `userId` and `role`.
+- **Instructor → Live control:**
+  - clock controls, speed, and Reset;
+  - a unit strip with live tags (incoming admissions shown dashed);
+  - call lights with time lit;
+  - a recent-activity feed;
+  - an event timeline with "Fire now" for every event, including manual triggers.
+- **Student tab (interim home):** assigned patients, call lights with **Answer** (logs response time), new-order badges, and alerts.
+- **Library cards** show the first scripted event ("First event 08:15 · call light"). Approved suggestion #2.
+- **Scenario picker** in the header. Approved suggestion #3.
+- Tests: 25 passing (engine tests run against the real starter data).
 
 ## Docs and tooling
 - Added `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and this changelog. CLAUDE.md now requires keeping them current.

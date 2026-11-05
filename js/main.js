@@ -1,44 +1,85 @@
-// Boots the app: load + validate data, build the store, mount the tab shell.
+// Boots the app: load + validate data, pick a scenario, create the store and runner, mount the tab shell.
+// The tick timer lives here (UI layer) so the engine stays timer-free.
 
 import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
+import { load, save, remove } from './storage.js';
+import { createRunner } from './engine/runner.js';
+import { studentSlots } from './engine/assignment.js';
 import { mountShell } from './screens/shell.js';
-import { mountLibrary } from './screens/instructor/library.js';
+import { mountInstructor } from './screens/instructor/index.js';
+import { mountStudentHome } from './screens/student/home.js';
 import { placeholder } from './screens/shared/placeholder.js';
 import { h } from './screens/shared/dom.js';
 
-function studentCount(scenario) {
-  const n = (scenario?.groups || []).reduce((sum, g) => sum + g.studentCount, 0);
-  return Math.max(1, n);
-}
+const TICK_MS = 250;
+const SCENARIO_KEY = 'ui.scenario';
+const SESSION_KEY = 'session';
 
-function buildTabs(store) {
-  const data = store.get().data;
-  const scenario = data.scenarios[0];
-  const tabs = [{ id: 'instructor', label: 'Instructor', mount: (root) => mountLibrary(root, data) }];
+// Prototype identities. Full build: these come from the logged-in user (SPEC §13).
+const INSTRUCTOR = { userId: 'instructor', role: 'instructor', name: 'Instructor' };
+const studentUser = (n) => ({ userId: `student-${n}`, role: 'student', name: `Student ${n}` });
 
-  for (let i = 1; i <= studentCount(scenario); i++) {
+function buildTabs(ctx) {
+  const tabs = [{ id: 'instructor', label: 'Instructor', mount: (root) => mountInstructor(root, ctx) }];
+
+  for (const slot of studentSlots(ctx.scenario)) {
     tabs.push({
-      id: `student-${i}`,
-      label: `Student ${i}`,
-      mount: (root) => root.append(placeholder(`Student ${i}`, 3, 'Join form, assigned patients, handoff, and the Epic-lite chart.')),
+      id: `student-${slot.slot}`,
+      label: `Student ${slot.slot}`,
+      mount: (root) => mountStudentHome(root, { ...ctx, slot, user: studentUser(slot.slot) }),
     });
   }
 
-  if (scenario?.settings.chargeNurse !== 'off') {
+  if (ctx.scenario.settings.chargeNurse !== 'off') {
     tabs.push({
       id: 'charge',
       label: 'Charge',
-      mount: (root) => root.append(placeholder('Charge nurse', 7, 'Unit overview and the admissions board.')),
+      mount: (root) => { root.append(placeholder('Charge nurse', 7, 'Unit overview and the admissions board.')); },
     });
   }
 
   tabs.push({
     id: 'debrief',
     label: 'Debrief',
-    mount: (root) => root.append(placeholder('Debrief', 5, 'Per-student timeline, flags, order sequence, response times, CSV export.')),
+    mount: (root) => { root.append(placeholder('Debrief', 5, 'Per-student timeline, flags, order sequence, response times, CSV export.')); },
   });
   return tabs;
+}
+
+function scenarioPicker(scenarios, currentId, onChange) {
+  return h('label', { class: 'inline' }, 'Scenario ',
+    h('select', { 'aria-label': 'Scenario', onchange: (e) => onChange(e.target.value, e.target) },
+      scenarios.map((s) => h('option', { value: s.id, selected: s.id === currentId }, s.name))));
+}
+
+/** Mounts the whole app for one scenario. Returns a teardown function. */
+function startApp(root, data, scenarioId, restart) {
+  const scenario = data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0];
+  const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
+  const store = createStore({ data });
+  const runner = createRunner({
+    store, scenario, templatesById,
+    saved: load(SESSION_KEY),
+    persist: (s) => save(SESSION_KEY, s),
+  });
+
+  const ctx = { store, runner, data, scenario, templatesById, instructorUser: INSTRUCTOR };
+  const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
+    const started = runner.state.clock.status !== 'ready';
+    if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {
+      select.value = scenario.id;
+      return;
+    }
+    save(SCENARIO_KEY, id);
+    remove(SESSION_KEY);
+    restart(id);
+  });
+
+  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: picker });
+  const timer = setInterval(() => runner.tick(), TICK_MS);
+  runner.tick();
+  return () => { clearInterval(timer); teardownShell(); };
 }
 
 async function boot() {
@@ -46,8 +87,13 @@ async function boot() {
   try {
     const data = await loadAll();
     if (data.problems.length) console.warn('Data validation problems:', data.problems);
-    const store = createStore({ data });
-    mountShell(root, buildTabs(store));
+    if (!data.scenarios.length) throw new Error('No valid scenarios loaded.');
+    let teardown = null;
+    const restart = (id) => {
+      if (teardown) teardown();
+      teardown = startApp(root, data, id, restart);
+    };
+    restart(load(SCENARIO_KEY));
   } catch (err) {
     console.error(err);
     root.replaceChildren(h('div', { class: 'banner banner-error', role: 'alert' },

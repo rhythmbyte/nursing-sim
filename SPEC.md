@@ -305,3 +305,7 @@ Things in the prototype that will need to change for the real website (logins, b
 | Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` (phase 2) |
 | Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |
 | Join codes and student "joins" are simulated per tab | Real join flow tied to student accounts | `js/engine/assignment.js` (phase 6) |
+| User identities are hard-coded (`instructor`, `student-N`) in `main.js` | `userId`/`role` come from the auth session; log format is unchanged | `js/main.js` |
+| The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
+| One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
+| Student tab N gets the Nth group slot | Students join with a code; placement is manual or random (SPEC §10) | `js/engine/assignment.js` |

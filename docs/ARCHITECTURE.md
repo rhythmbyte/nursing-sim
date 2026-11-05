@@ -25,6 +25,10 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 5. **Screens (`js/screens/`)** read from the store and call engine functions in response to clicks. They never contain sim rules.
 6. **`storage.js`** saves and loads state. In the full build it becomes a backend client with the same API.
 
+**The live loop:** `main.js` calls `runner.tick()` every 250 ms. The runner asks `session.tick()` for any events due at the current sim minute. If state changed, it calls `store.set({ session })` and persists the session. It always emits `store.emit('tick', simMin)`. Screens subscribe to `set` to re-render, and they use `tick` for cheap updates such as the clock and elapsed times. User actions (Start, Fire now, Answer) call runner methods, which follow the same path.
+
+**Screen lifecycle:** a tab's `mount(root)` may return a cleanup function, which unsubscribes from the store. The shell calls it before mounting the next tab. Any screen that subscribes **must** return a cleanup.
+
 ---
 
 ## 2. Folder map
@@ -34,27 +38,29 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `index.html` | Page shell; loads `css/base.css` and `js/main.js` | built |
 | `css/base.css` | Design tokens (colors, triage colors, spacing), dark mode, shared component styles | built |
 | `css/chart.css` | Epic-style chart look | planned, phase 3 |
-| `js/main.js` | Boots the app: load data → create store → build tabs → mount shell | built |
+| `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms) and the prototype user identities | built |
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`; keys prefixed `nursing-sim:`) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → validate → `{ patients, scenarios, catalogs, problems }` | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
 | `js/engine/time.js` | `parseClock`, `formatShiftTime(startClock, simMin)` | built |
-| `js/engine/clock.js` | Sim clock as a serializable snapshot + pure functions (`start`, `pause`, `resume`, `end`, `setSpeed`, `simMinutes`). `now` is always passed in | in progress |
-| `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats | in progress |
-| `js/engine/registry.js` | Event-type and flag-rule registries | in progress |
-| `js/engine/events/` | One file per event type + `index.js` that registers them all | in progress |
-| `js/engine/alerts.js` | `addAlert()` for alerts raised by events | in progress |
-| `js/engine/log.js` | Append-only action log; every entry has `userId` + `role` | in progress |
-| `js/engine/session.js`, `runner.js` | Live session state + the controller that ties clock, scheduler and store together | planned, phase 2 |
+| `js/engine/clock.js` | Sim clock as a serializable snapshot + pure functions (`start`, `pause`, `resume`, `end`, `setSpeed`, `simMinutes`). `now` is always passed in | built |
+| `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats | built |
+| `js/engine/registry.js` | Event-type and flag-rule registries | built |
+| `js/engine/events/` | One file per event type + `index.js` that registers them all (all SPEC §5 types except `ems-arrival`) | built |
+| `js/engine/alerts.js` | `addAlert()` for alerts raised by events | built |
+| `js/engine/log.js` | Append-only action log; every entry has `userId` + `role` | built |
+| `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow`, `answerCallLight`, `controlClock`) | built |
+| `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule | planned, phase 5 |
 | `js/engine/vitals.js`, `labs.js` | Monitor cycles, lab delays | planned, phase 4 |
-| `js/engine/assignment.js` | Groups, randomizer, join codes | planned, phase 6 |
-| `js/screens/shell.js` | Tab bar + panel; remembers the active tab via storage | built |
-| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `placeholder.js` | built |
-| `js/screens/instructor/` | `library.js` + `library-detail.js` (read-only patient library) | built |
-| `js/screens/student/`, `chart/`, `charge/` | Student home + chart sections, charge nurse screens | planned, phases 3 and 7 |
+| `js/engine/assignment.js` | `studentSlots()`: interim rule where student tab N fills the Nth slot. Randomizer and join codes come in phase 6 | in progress |
+| `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
+| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `placeholder.js` | built |
+| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
+| `js/screens/student/home.js` | Student home: assigned patients, call lights with Answer, alerts | in progress (phase 3 adds chart + handoff) |
+| `js/screens/chart/`, `charge/` | Chart sections, charge nurse screens | planned, phases 3 and 7 |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
