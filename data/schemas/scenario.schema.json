@@ -1,0 +1,51 @@
+{
+  "title": "Sim setup (scenario)",
+  "type": "object",
+  "required": ["id", "name", "startClock", "speed", "settings", "groups", "assignment"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^sc-" },
+    "name": { "type": "string", "minLength": 1 },
+    "startClock": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    "endClock": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+    "speed": { "enum": [0.5, 1, 2, 4, 8] },
+    "settings": {
+      "type": "object",
+      "required": ["handoffMode", "chargeNurse", "showTagsToStudents"],
+      "properties": {
+        "handoffMode": { "enum": ["once", "always", "never"] },
+        "chargeNurse": { "enum": ["student", "instructor", "off"] },
+        "showTagsToStudents": { "type": "boolean" },
+        "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "staffAvailable": { "type": "array", "items": { "type": "string" } },
+    "assignment": { "enum": ["manual", "random"] },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "studentCount"],
+        "anyOf": [{ "required": ["patients"] }, { "required": ["tagCounts"] }],
+        "anyOfMessage": "group needs patients or tagCounts",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "studentCount": { "type": "integer", "minimum": 1 },
+          "patients": { "type": "array", "items": { "type": "string" } },
+          "admissions": { "type": "array", "items": { "type": "string" } },
+          "tagCounts": {
+            "type": "object",
+            "properties": {
+              "red": { "type": "integer", "minimum": 0 },
+              "yellow": { "type": "integer", "minimum": 0 },
+              "green": { "type": "integer", "minimum": 0 },
+              "black": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "manualStudents": { "type": "object" },
+    "events": { "type": "array", "items": { "type": "object" } }
+  }
+}

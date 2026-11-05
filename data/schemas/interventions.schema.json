@@ -1,0 +1,30 @@
+{
+  "title": "Interventions catalog",
+  "type": "object",
+  "required": ["categories", "interventions"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": { "id": { "type": "string" }, "label": { "type": "string" } }
+      }
+    },
+    "interventions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "label", "chartFields", "delegableTo"],
+        "properties": {
+          "id": { "type": "string" },
+          "category": { "type": "string" },
+          "label": { "type": "string" },
+          "chartFields": { "type": "array", "items": { "type": "string" } },
+          "delegableTo": { "type": "array", "items": { "enum": ["LPN", "CNA"] } }
+        }
+      }
+    }
+  }
+}

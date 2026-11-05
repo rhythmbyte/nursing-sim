@@ -1,0 +1,22 @@
+{
+  "title": "Labs catalog",
+  "type": "object",
+  "required": ["labs"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "labs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "name", "defaultDelayMin"],
+        "properties": {
+          "code": { "type": "string" },
+          "name": { "type": "string" },
+          "unit": { "type": "string" },
+          "refRange": { "type": "string" },
+          "defaultDelayMin": { "type": "integer", "minimum": 0 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "GitHub Pages can't list folders, so every data file is listed here. Add new patients/scenarios to this file.",
+  "catalogs": {
+    "interventions": "catalogs/interventions.json",
+    "labs": "catalogs/labs.json",
+    "staff": "catalogs/staff.json"
+  },
+  "patients": [
+    "patients/p1-robert-miller.json",
+    "patients/p2-margaret-wilson.json",
+    "patients/p3-harold-thompson.json",
+    "patients/p4-linda-garcia.json",
+    "patients/p5-dorothy-evans.json",
+    "patients/p6-james-carter.json"
+  ],
+  "scenarios": ["scenarios/busy-medsurg-shift.json"]
+}

@@ -1,0 +1,21 @@
+{
+  "title": "Staff catalog",
+  "type": "object",
+  "required": ["staff"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "staff": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "role": { "type": "string" },
+          "label": { "type": "string" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

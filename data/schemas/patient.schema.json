@@ -1,0 +1,193 @@
+{
+  "title": "Patient template",
+  "type": "object",
+  "required": ["id", "review", "demographics", "tag", "admittingDx", "codeStatus", "allergies", "vitals", "findings", "labs", "orders", "events", "outcome", "debrief"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^p[0-9a-z-]+$" },
+    "review": { "$ref": "#/$defs/review" },
+    "reviewNotes": { "type": "array", "items": { "type": "string" } },
+    "source": { "type": "string" },
+    "demographics": {
+      "type": "object",
+      "required": ["name", "age", "sex", "room"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "age": { "type": "integer", "minimum": 0 },
+        "sex": { "type": "string" },
+        "room": { "type": "string" }
+      }
+    },
+    "tag": { "$ref": "#/$defs/tag" },
+    "priorityLabel": { "type": "string" },
+    "admittingDx": { "type": "string", "minLength": 1 },
+    "codeStatus": { "type": "string" },
+    "allergies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["agent"],
+        "properties": { "agent": { "type": "string" }, "reaction": { "type": "string" } }
+      }
+    },
+    "allergyText": { "type": "string" },
+    "hpi": { "type": "string" },
+    "pmh": { "type": "array", "items": { "type": "string" } },
+    "homeMeds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": { "name": { "type": "string" }, "dose": { "type": "string" }, "freq": { "type": "string" } }
+      }
+    },
+    "handoff": {
+      "type": "object",
+      "properties": {
+        "review": { "$ref": "#/$defs/review" },
+        "situation": { "type": "string" },
+        "background": { "type": "string" },
+        "assessment": { "type": "string" },
+        "recommendation": { "type": "string" }
+      }
+    },
+    "vitals": {
+      "type": "object",
+      "required": ["baseline"],
+      "properties": {
+        "baseline": { "$ref": "#/$defs/vitalValues" },
+        "keyframes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["values"],
+            "properties": {
+              "atMin": { "type": "integer", "minimum": 0 },
+              "eventId": { "type": "string" },
+              "values": { "$ref": "#/$defs/vitalValues" }
+            }
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "required": ["baseline"],
+      "properties": {
+        "baseline": { "type": "array", "items": { "type": "string" } },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["eventId", "findings"],
+            "properties": {
+              "eventId": { "type": "string" },
+              "findings": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "labs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "status"],
+        "properties": {
+          "code": { "type": "string" },
+          "label": { "type": "string" },
+          "value": { "type": ["string", "null"] },
+          "unit": { "type": "string" },
+          "status": { "enum": ["resulted", "pending"] },
+          "resultDelayMin": { "type": "integer", "minimum": 0 },
+          "review": { "$ref": "#/$defs/review" }
+        }
+      }
+    },
+    "orders": { "type": "array", "items": { "$ref": "#/$defs/order" } },
+    "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "outcome": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": { "mode": { "enum": ["survive", "die", "instructor"] }, "notes": { "type": "string" } }
+    },
+    "codeBranch": { "type": ["object", "null"] },
+    "debrief": {
+      "type": "object",
+      "required": ["shouldRecognize"],
+      "properties": {
+        "shouldRecognize": { "type": "array", "items": { "type": "string" } },
+        "instructorNotes": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "tag": { "enum": ["red", "yellow", "green", "black"] },
+    "vitalValues": {
+      "type": "object",
+      "properties": {
+        "bp": { "type": "string", "pattern": "^\\d{2,3}/\\d{2,3}$" },
+        "hr": { "type": "number" },
+        "rr": { "type": "number" },
+        "tempF": { "type": "number" },
+        "spo2": { "type": "number", "minimum": 0, "maximum": 100 },
+        "o2": { "type": "string" },
+        "pain": { "type": "string" }
+      }
+    },
+    "order": {
+      "type": "object",
+      "required": ["id", "text", "type", "tier", "orderSet", "interventionIds", "delegable"],
+      "anyOf": [{ "required": ["activeFromMin"] }, { "required": ["activeOnEvent"] }],
+      "anyOfMessage": "order needs activeFromMin or activeOnEvent",
+      "properties": {
+        "id": { "type": "string", "pattern": "^o-" },
+        "text": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["once", "scheduled", "prn", "continuous", "parameter"] },
+        "tier": { "enum": [1, 2, 3] },
+        "review": { "$ref": "#/$defs/review" },
+        "orderSet": { "type": "string" },
+        "activeFromMin": { "type": "integer", "minimum": 0 },
+        "activeOnEvent": { "type": "string" },
+        "interventionIds": { "type": "array", "items": { "type": "string" } },
+        "frequencyMin": { "type": "integer", "minimum": 1 },
+        "prn": {
+          "type": "object",
+          "properties": {
+            "max": { "type": "integer", "minimum": 1 },
+            "intervalMin": { "type": "integer", "minimum": 0 },
+            "requiresBefore": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "parameter": {
+          "type": "object",
+          "required": ["requires", "withinMin"],
+          "properties": {
+            "watch": { "type": "string" },
+            "watchEvent": { "type": "string" },
+            "op": { "enum": ["<", "<=", ">", ">=", "=="] },
+            "value": { "type": "number" },
+            "requires": { "type": "string" },
+            "withinMin": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "delegable": { "type": "boolean" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["id", "type", "payload"],
+      "anyOf": [{ "required": ["atMin"] }, { "required": ["trigger"] }],
+      "anyOfMessage": "event needs atMin or trigger",
+      "properties": {
+        "id": { "type": "string", "pattern": "^e-" },
+        "type": { "enum": ["new-orders", "call-light", "vitals-change", "findings-change", "staff-message", "lab-result", "code", "admission", "ems-arrival"] },
+        "atMin": { "type": "integer", "minimum": 0 },
+        "repeatEveryMin": { "type": "integer", "minimum": 1 },
+        "repeatCount": { "type": "integer", "minimum": 1 },
+        "review": { "$ref": "#/$defs/review" },
+        "payload": { "type": "object" }
+      }
+    }
+  }
+}
