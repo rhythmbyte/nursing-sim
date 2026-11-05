@@ -267,10 +267,10 @@ Rule file shape: `{ id, label, evaluate(state, logEntry?) → flags[] }`.
 
 1. **Shell + data** — tab shell, storage, state, data loader with schema validation, renders patient library read-only.
 2. **Clock + scheduler + events** — clock with speed/pause, scheduled + fire-now events, call lights.
-3. **Student chart** — home, handoff popup, chart tabs, interventions, log.
+3. **Student chart** — home, handoff popup, chart tabs, interventions, log. Student views read patients through a filter that drops instructor-only fields (UI convenience only, see §13).
 4. **Vitals + labs** — monitor cycle, manual entries, lab delays.
 5. **Rules + debrief** — all §7 rules, debrief screen, CSV export.
-6. **Instructor tools** — patient editor, sim setup wizard, randomizer, join codes, live control.
+6. **Instructor tools** — patient editor, sim setup wizard, randomizer, join codes, live control, review queue (every `proposed`/`partial` item in one list with Approve / Edit).
 7. **Charge nurse + admissions** — unit overview, admission event.
 8. **Polish + GitHub Pages deploy.**
 9. *(Later)* EMS arrival, real auth + backend (Supabase), multi-device realtime.
@@ -301,7 +301,7 @@ Things in the prototype that will need to change for the real website (logins, b
 | Schemas validated in the browser only | Same JSON schemas also validated on the server before saving (never trust the client) | `data/schemas/`, `js/validate.js` |
 | `storage.js` writes to `localStorage` (per browser, per device) | Backend client; sim state and logs are server-owned and shared across devices | `js/storage.js` |
 | One page with a tab per role; anyone can open any tab | Each user sees only their role's screens after login; role comes from the auth session, not a tab | `js/screens/shell.js`, `js/main.js` |
-| Instructor-only content (`debrief.shouldRecognize`, review notes) ships to every browser in the patient JSON | Server strips instructor-only fields before sending patient data to students | data loader / API |
+| Instructor-only content (`debrief`, `reviewNotes`, `teachingNote`, etc.) ships to every browser in the patient JSON. Phase 3 adds a student-view filter, but it is a **UI convenience only, not security**: the full JSON is still downloaded and visible in dev tools | Server strips instructor-only fields before sending patient data to students. This is the real protection | `js/screens/student/` filter (phase 3) → API |
 | Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` (phase 2) |
 | Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |
 | Join codes and student "joins" are simulated per tab | Real join flow tied to student accounts | `js/engine/assignment.js` (phase 6) |

@@ -4,7 +4,7 @@ Read `SPEC.md` before starting any work. It is the source of truth for the data 
 
 ## Secrets (non-negotiable)
 
-- Never look at, open, read, write, edit, or search `.env` files or any `.env.*` variant (`.env.local`, `.env.production`, etc.), and never print their contents. This covers every tool and shell command (`cat`, `less`, `head`, `tail`, `grep`, editors, scripts). `.claude/settings.json` enforces this with deny rules; don't remove them.
+- Never look at, open, read, write, edit, or search `.env` files or any `.env.*` variant (`.env.local`, `.env.production`, etc.), and never print their contents. This covers every tool and shell command (`cat`, `less`, `head`, `tail`, `grep`, editors, scripts). `.claude/settings.json` enforces this with deny rules plus a PreToolUse hook (`.claude/hooks/block-env.sh`) that blocks any Bash command mentioning it; don't remove either.
 
 ## First-run setup (do this before anything else if it isn't done yet)
 
