@@ -7,3 +7,21 @@ Multi-student, multi-patient nursing simulation for prioritization, delegation, 
 - `data/` — patients, scenarios, catalogs (all content is data, not code)
 
 Patient content marked `"review": "proposed"` is drafted and awaits instructor review.
+
+## Run locally
+
+The page loads JSON with `fetch`, so serve the folder instead of opening `index.html` from disk:
+
+```
+python3 -m http.server 8000   # then open http://localhost:8000
+```
+
+New patient or scenario files must also be listed in `data/manifest.json`.
+
+## Tests
+
+```
+node --test tests/
+```
+
+These validate every data file against `data/schemas/` and cover the pure modules. They're dev-only; the site itself has no build step.

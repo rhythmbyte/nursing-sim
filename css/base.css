@@ -1,0 +1,123 @@
+/* Tokens, layout, shared components. Dark mode follows the OS. */
+
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --text: #1b2430;
+  --muted: #5d6b7c;
+  --border: #d5dbe3;
+  --accent: #1f5fa8;
+  --accent-text: #ffffff;
+
+  --triage-red: #c62828;
+  --triage-yellow: #f2b705;
+  --triage-green: #2e7d32;
+  --triage-black: #1a1a1a;
+
+  --ok-bg: #e3f3e6;    --ok-text: #1e5b27;
+  --review-bg: #fff2cc; --review-text: #6b4e00;
+  --pending-bg: #e4ecf8; --pending-text: #23467a;
+  --error-bg: #fde7e7; --error-text: #8a1c1c;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px;
+  --radius: 8px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11161d;
+    --surface: #19202a;
+    --surface-2: #222b37;
+    --text: #e4e9f0;
+    --muted: #9aa7b8;
+    --border: #313c4a;
+    --accent: #5b9be0;
+    --accent-text: #0b1220;
+    --triage-black: #000000;
+    --ok-bg: #173822;    --ok-text: #9fe0ad;
+    --review-bg: #3d3110; --review-text: #f5d77a;
+    --pending-bg: #1c2d47; --pending-text: #a9c6f2;
+    --error-bg: #431b1b; --error-text: #f5b1b1;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 var(--font); }
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+h1 { font-size: 1.25rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+code { font-size: 0.85em; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
+.muted { color: var(--muted); }
+.loading { padding: var(--space-6); }
+
+/* App chrome */
+.app-header { display: flex; align-items: baseline; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); border-bottom: 1px solid var(--border); }
+.tab-bar { display: flex; gap: var(--space-1); padding: var(--space-2) var(--space-4) 0; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab { font: inherit; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: var(--space-2) var(--space-3); cursor: pointer; white-space: nowrap; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-panel { padding: var(--space-4); }
+.screen-header { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-3); flex-wrap: wrap; }
+
+/* Badges and chips */
+.badge { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px; border-radius: 999px; vertical-align: middle; text-transform: none; letter-spacing: 0; }
+.badge-ok { background: var(--ok-bg); color: var(--ok-text); }
+.badge-review { background: var(--review-bg); color: var(--review-text); }
+.badge-pending { background: var(--pending-bg); color: var(--pending-text); }
+.badge-neutral { background: var(--surface-2); color: var(--muted); }
+.triage-chip { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 1px 8px; border-radius: 4px; color: #fff; vertical-align: middle; }
+.triage-red { background: var(--triage-red); }
+.triage-yellow { background: var(--triage-yellow); color: #1a1a1a; }
+.triage-green { background: var(--triage-green); }
+.triage-black { background: var(--triage-black); border: 1px solid var(--border); }
+.tier { font-size: 0.8rem; white-space: nowrap; }
+.tier-1 { color: var(--triage-red); font-weight: 600; }
+
+/* Banners */
+.banner { padding: var(--space-3) var(--space-4); border-radius: var(--radius); margin-bottom: var(--space-3); }
+.banner ul { margin: var(--space-1) 0 0; padding-left: 20px; }
+.banner-error { background: var(--error-bg); color: var(--error-text); }
+.banner-review { background: var(--review-bg); color: var(--review-text); }
+
+/* Patient library */
+.library { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: var(--space-4); align-items: start; }
+.library-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.patient-card { text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); cursor: pointer; display: flex; flex-direction: column; gap: var(--space-1); }
+.patient-card:hover { border-color: var(--accent); }
+.patient-card.selected { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.card-top { display: flex; justify-content: space-between; align-items: center; }
+.room { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+.card-name { font-weight: 600; }
+.card-badges { margin-top: var(--space-1); }
+.library-detail { min-width: 0; }
+
+/* Patient detail */
+.patient-detail { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.chart-banner { display: flex; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-3) var(--space-4); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+.chart-banner h2 { margin-bottom: var(--space-1); }
+.banner-right { text-align: right; display: flex; flex-direction: column; gap: var(--space-1); }
+.patient-detail > .banner { margin: var(--space-3) var(--space-4) 0; }
+.detail-section { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+.detail-section:last-child { border-bottom: 0; }
+.detail-section h3 { margin-bottom: var(--space-2); }
+.detail-section p { margin: 0 0 var(--space-2); }
+.detail-section ul { margin: 0; padding-left: 20px; }
+.vitals, .sbar { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; }
+.vitals dt, .sbar dt { font-weight: 600; color: var(--muted); }
+.vitals dd, .sbar dd { margin: 0; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; display: block; overflow-x: auto; }
+.data-table th, .data-table td { text-align: left; padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+/* Placeholder screens */
+.placeholder { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); padding: var(--space-6); max-width: 640px; }
+.placeholder h2 { margin-bottom: var(--space-2); }
+.placeholder p { margin: var(--space-2) 0 0; }
+
+@media (max-width: 760px) {
+  .library { grid-template-columns: 1fr; }
+  .banner-right { text-align: left; }
+}
