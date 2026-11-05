@@ -4,6 +4,11 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Env-file guard hook fails closed
+- **Decision:** `.claude/hooks/block-env.sh` blocks the command (exit 2) if `jq` isn't installed or the hook input can't be parsed. The message says jq is required.
+- **Why:** A guard that silently allows everything when its parser is missing gives a false sense of safety. Failing closed makes a broken setup obvious right away.
+- **Alternatives:** Fail open (the original version: no jq meant nothing was checked); a grep fallback on the raw input (fragile with JSON escaping). The cost is that `jq` is now a dev requirement (ARCHITECTURE §5).
+
 ## 2026-11-05: Sim clock is a serializable snapshot with injected wall time
 - **Decision:** The clock is a plain object `{ status, speed, baseMs, anchorWall }` with pure functions. Callers pass `now`. Changing speed re-anchors, so time already elapsed keeps the old speed.
 - **Why:** It's testable without timers, it saves to storage and resumes after a reload or freeze, and in the full build the server can own the same snapshot and clients compute sim time from it.

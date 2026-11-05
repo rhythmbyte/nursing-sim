@@ -12,6 +12,7 @@ Newest first. One entry per phase or feature. Update it in the same commit as th
 ## Docs and tooling
 - Added `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and this changelog. CLAUDE.md now requires keeping them current.
 - PreToolUse hook blocks Bash commands that mention env files. `.gitignore` covers `.env.*`.
+- The hook now fails closed: if `jq` is missing or the input can't be parsed, it blocks. `jq` is a dev requirement.
 - CLAUDE.md: "Suggestions and feedback" rules. SPEC §13: full-build migration notes.
 - GitHub Pages is on: https://rhythmbyte.github.io/nursing-sim/
 
