@@ -2,6 +2,12 @@
 
 Read `SPEC.md` before starting any work. It is the source of truth for the data model, folder layout, and screens.
 
+## Project docs
+
+- Start every session by reading `docs/ARCHITECTURE.md` and the latest entries in `docs/DECISIONS.md`.
+- Update `ARCHITECTURE.md` whenever structure changes, add a `DECISIONS.md` entry for any non-obvious choice, and update `CHANGELOG.md`, all in the same commit as the change. Docs going stale counts as a bug.
+- Before changing anything listed as a module boundary in `ARCHITECTURE.md` (§3), explain the change and ask first.
+
 ## Secrets (non-negotiable)
 
 - Never look at, open, read, write, edit, or search `.env` files or any `.env.*` variant (`.env.local`, `.env.production`, etc.), and never print their contents. This covers every tool and shell command (`cat`, `less`, `head`, `tail`, `grep`, editors, scripts). `.claude/settings.json` enforces this with deny rules plus a PreToolUse hook (`.claude/hooks/block-env.sh`) that blocks any Bash command mentioning it; don't remove either.

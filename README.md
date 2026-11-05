@@ -4,6 +4,10 @@ Multi-student, multi-patient nursing simulation for prioritization, delegation, 
 
 - `SPEC.md` — full design (data model, screens, rules, build phases)
 - `CLAUDE.md` — rules for Claude Code (save/push cadence, modularity)
+- `docs/ARCHITECTURE.md` — code structure, module boundaries, how-tos
+- `docs/DECISIONS.md` — design decision log
+- `CHANGELOG.md` — what changed per phase
+- Live demo: https://rhythmbyte.github.io/nursing-sim/
 - `data/` — patients, scenarios, catalogs (all content is data, not code)
 
 Patient content marked `"review": "proposed"` is drafted and awaits instructor review.
