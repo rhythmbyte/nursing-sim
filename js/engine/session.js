@@ -1,0 +1,153 @@
+// Live session state + pure transitions. No DOM, no timers; wall time (`now`) is passed in.
+// Shape (SPEC §4.5):
+// { version, scenarioId, startClock, clock, patients: { id → patientState }, fired: { key → n }, alerts, log }
+// Every transition returns a NEW state; event types mutate a structuredClone draft.
+
+import './events/index.js';
+import { getEventType } from './registry.js';
+import * as clock from './clock.js';
+import { dueEvents } from './scheduler.js';
+import { append, SYSTEM } from './log.js';
+
+export const SESSION_VERSION = 1;
+
+/** Patients in the scenario: [{ id, groupId, admission }]. */
+export function scenarioPatients(scenario) {
+  return scenario.groups.flatMap((g) => [
+    ...(g.patients || []).map((id) => ({ id, groupId: g.id, admission: false })),
+    ...(g.admissions || []).map((id) => ({ id, groupId: g.id, admission: true })),
+  ]);
+}
+
+function initialPatientState(t, groupId, admission) {
+  const orders = {};
+  for (const o of t.orders) {
+    // Orders in place at shift start count as already acknowledged (received in report).
+    if (o.activeFromMin === 0 && !admission) orders[o.id] = { status: 'acknowledged', activeAtMin: 0 };
+  }
+  return {
+    present: !admission,
+    groupId,
+    tag: t.tag,
+    alive: true,
+    vitals: { ...t.vitals.baseline },
+    callLight: null,
+    findingChanges: [],
+    orders,
+    labs: t.labs.map((l) => ({ ...l })),
+    code: null,
+  };
+}
+
+export function createSession(scenario, templatesById) {
+  const patients = {};
+  for (const { id, groupId, admission } of scenarioPatients(scenario)) {
+    const t = templatesById[id];
+    if (!t) {
+      console.warn(`Scenario ${scenario.id} lists unknown patient ${id}; skipped`);
+      continue;
+    }
+    patients[id] = initialPatientState(t, groupId, admission);
+  }
+  return {
+    version: SESSION_VERSION,
+    scenarioId: scenario.id,
+    startClock: scenario.startClock,
+    clock: clock.createClock(scenario.speed),
+    patients,
+    fired: {},
+    alerts: [],
+    log: [],
+  };
+}
+
+export function simMinOf(state, now) {
+  return clock.simMinutes(state.clock, now);
+}
+
+function pendingTimedOrders(state, templatesById, simMin) {
+  const out = [];
+  for (const [pid, ps] of Object.entries(state.patients)) {
+    if (!ps.present) continue;
+    for (const o of templatesById[pid]?.orders || []) {
+      if (typeof o.activeFromMin === 'number' && o.activeFromMin <= simMin && !ps.orders[o.id]) out.push([pid, o]);
+    }
+  }
+  return out;
+}
+
+function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
+  const { patientId, event } = ref;
+  const type = getEventType(event.type);
+  const template = patientId ? templatesById[patientId] : null;
+  if (patientId && !draft.patients[patientId]) {
+    console.warn(`Event ${event.id}: patient ${patientId} is not in this session; skipped`);
+    return;
+  }
+  if (type) {
+    type.apply(draft, event, { simMin, patientId, template });
+  } else {
+    console.warn(`No handler registered for event type "${event.type}" (${event.id}); logged only`);
+  }
+  // activeOnEvent orders activate for ANY event type (see DECISIONS.md).
+  if (template) {
+    const ps = draft.patients[patientId];
+    for (const o of template.orders) {
+      if (o.activeOnEvent === event.id && !ps.orders[o.id]) ps.orders[o.id] = { status: 'new', activeAtMin: simMin };
+    }
+  }
+  draft.fired[ref.key] = (draft.fired[ref.key] || 0) + 1;
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'event-fired', details: { eventId: event.id, type: event.type, source } });
+}
+
+/** Advance to the current sim time: fire due events, activate timed orders. Returns { state, fired }. */
+export function tick(state, { now, refs, templatesById }) {
+  if (state.clock.status !== 'running') return { state, fired: 0 };
+  const simMin = simMinOf(state, now);
+  const due = dueEvents(refs, state.fired, simMin);
+  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length) return { state, fired: 0 };
+
+  const draft = structuredClone(state);
+  for (const { ref, at } of due) fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled' });
+  // Re-check after firing: an admission may have just made a patient present.
+  for (const [pid, o] of pendingTimedOrders(draft, templatesById, simMin)) {
+    draft.patients[pid].orders[o.id] = { status: o.activeFromMin === 0 ? 'acknowledged' : 'new', activeAtMin: o.activeFromMin };
+  }
+  return { state: draft, fired: due.length };
+}
+
+/** Instructor "Fire now": fires one event immediately (counts as its next occurrence). */
+export function fireNow(state, ref, { now, templatesById, user }) {
+  const draft = structuredClone(state);
+  fireInto(draft, ref, { simMin: simMinOf(state, now), now, templatesById, user, source: 'manual' });
+  return draft;
+}
+
+/** Student answers a call light; logs response time in sim minutes. */
+export function answerCallLight(state, patientId, { now, user }) {
+  const light = state.patients[patientId]?.callLight;
+  if (!light) return state;
+  const draft = structuredClone(state);
+  const simMin = simMinOf(state, now);
+  draft.patients[patientId].callLight = null;
+  append(draft, {
+    simMin, wallTime: now, ...user, patientId, action: 'call-light-answered',
+    details: { eventId: light.eventId, litAtMin: light.since, responseMin: Math.round((simMin - light.since) * 100) / 100, rings: light.rings },
+  });
+  return draft;
+}
+
+const CLOCK_ACTIONS = { start: clock.start, pause: clock.pause, resume: clock.resume, end: clock.end };
+
+/** Clock control: 'start' | 'pause' | 'resume' | 'end' | 'speed'. Logged with the acting user. */
+export function controlClock(state, action, { now, user, speed }) {
+  const before = state.clock;
+  let after;
+  if (action === 'speed') after = clock.setSpeed(before, speed, now);
+  else if (CLOCK_ACTIONS[action]) after = CLOCK_ACTIONS[action](before, now);
+  else throw new Error(`Unknown clock action: ${action}`);
+  if (after === before) return state;
+  const draft = { ...state, clock: after, log: [...state.log] };
+  append(draft, { simMin: clock.simMinutes(after, now), wallTime: now, ...user, action: `clock-${action}`, details: action === 'speed' ? { speed } : {} });
+  return draft;
+}
