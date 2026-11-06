@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Admissions go to the charge nurse's board when the role is on
+- **Decision:** With `settings.chargeNurse` not `off`, an admission waits on the admissions board (not present to students) until the charge nurse assigns it to a group or holds it. Decisions are logged with the wait time (`admission-assigned`, `admission-held`, role `charge`). With `off`, it goes straight to its scenario group. Orders that arrived while the patient waited are re-based to the assignment time (`orderedAtMin` keeps the original), so tier timeouts don't count time no student could act on.
+- **Why:** SPEC §9. Fairness of timing flags.
+- **Alternatives:** Count from the original order time (would flag students for a patient they couldn't see). Whether board wait time itself should be graded is a question for the instructor (SPEC §14 Q17).
+- Session shape v6.
+
+---
+
 ## 2026-11-05: B3 extended to cover instructor saves (approved by the project owner)
 - **Decision:** Boundary B3 now reads "`data-loader.js` is the only file that knows where data comes from **and where instructor edits go**". Patient, scenario and catalog edits save through `saveLocal`/`saveLocalCatalog` there (which use `storage.js`).
 - **Why:** It still protects the single swap point: the full build replaces this one module with API reads and writes. This change was made before asking; the owner reviewed it afterwards and approved keeping it.

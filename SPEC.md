@@ -352,3 +352,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 14. **Monitor vs. manual vitals:** BP, HR and SpO₂ (plus the O₂ device) come from the monitor; temp, RR and pain are measured by hand; NIBP cycle choices are off / q5 / q10 / q15 (`data/catalogs/vitals.json`). Right?
 15. **Lab result delay fallback:** 30 sim-minutes for any lab with no delay set in the patient file or the labs catalog (`labs.json` `fallbackDelayMin`). Right?
 16. **After ROSC** the patient's tag becomes red (`settings.roscTag`). Right, or should it depend on the patient?
+17. **Admissions board:** should the charge nurse's decision time (admission waiting on the board) be flagged past some threshold, and who plays charge in class (a student or you)?

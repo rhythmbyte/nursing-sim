@@ -18,7 +18,7 @@ import { delegationProcessor } from './delegation.js';
 // Order matters within one instant: monitor readings see vitals after that instant's events.
 const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 5; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 6; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -48,6 +48,7 @@ function initialPatientState(t, groupId, admission, catalogs) {
     flowsheet: initFlowsheet(t), // [{ atMin, source, values, by }]
     monitor: null,               // { intervalMin, fromMin, count } when the student runs a cycle
     delegations: [],             // tasks delegated to LPN/CNA (engine/delegation.js)
+    admission: null,             // { status: pending|held|assigned, arrivedAtMin, message, … } (engine/admissions.js)
     code: null,
   };
 }

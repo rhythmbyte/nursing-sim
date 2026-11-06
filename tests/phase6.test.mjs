@@ -128,3 +128,29 @@ test('patient editor round-trip keeps every starter patient valid and intact', a
   const blank = blankPatient('p-new');
   assert.ok(validate({ ...blank, demographics: { ...blank.demographics, name: 'X', room: '210' }, admittingDx: 'Dx' }, schema).length === 0);
 });
+
+test('phase 7: admission waits on the board; charge assigns it; held admissions can be assigned later', async () => {
+  const { assignAdmission, holdAdmission, waitingAdmissions } = await import('../js/engine/admissions.js');
+  const { collectEvents } = await import('../js/engine/scheduler.js');
+  const sc = scenarioWith({ chargeNurse: 'student' });
+  const refs = collectEvents(session.scenarioPatients(sc).map((p) => p.id), templatesById, sc);
+  const CHARGE = { userId: 'charge', role: 'charge' };
+  let s = session.controlClock(session.createSession(sc, templatesById, catalogs, { joinCode: 'X' }), 'start', { now: 0, user: INS });
+  s = session.tick(s, { now: 156 * MIN, refs, templatesById, catalogs }).state; // admitted 150, orders 155
+  const jc = s.patients['p6-james-carter'];
+  assert.equal(jc.present, false);
+  assert.equal(jc.admission.status, 'pending');
+  assert.deepEqual(waitingAdmissions(s).map((a) => a.patientId), ['p6-james-carter']);
+  assert.ok(s.alerts.at(-2).audience.includes('charge'));
+  s = holdAdmission(s, 'p6-james-carter', { reason: 'no bed yet' }, { now: 160 * MIN, user: CHARGE });
+  assert.equal(s.patients['p6-james-carter'].admission.status, 'held');
+  s = assignAdmission(s, 'p6-james-carter', { groupId: 'g1' }, { now: 170 * MIN, user: CHARGE, scenario: sc });
+  const after = s.patients['p6-james-carter'];
+  assert.equal(after.present, true);
+  assert.deepEqual(s.log.at(-1).details, { groupId: 'g1', waitMin: 20 });
+  assert.equal(s.log.at(-1).role, 'charge');
+  const lasix = after.orders['o-p6-lasix'];
+  assert.deepEqual([lasix.orderedAtMin, lasix.activeAtMin], [155, 170], 'orders count from assignment');
+  assert.deepEqual(waitingAdmissions(s), []);
+  assert.throws(() => assignAdmission({ ...s, patients: { ...s.patients, x: { admission: { status: 'pending', arrivedAtMin: 0 } } } }, 'x', { groupId: 'nope' }, { now: 0, user: CHARGE, scenario: sc }));
+});

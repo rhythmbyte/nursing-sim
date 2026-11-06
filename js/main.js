@@ -10,8 +10,8 @@ import { withDefaults } from './engine/settings.js';
 import { mountShell } from './screens/shell.js';
 import { mountInstructor } from './screens/instructor/index.js';
 import { mountStudentTab } from './screens/student/join.js';
-import { placeholder } from './screens/shared/placeholder.js';
 import { mountDebrief } from './screens/debrief/index.js';
+import { mountCharge } from './screens/charge/index.js';
 import { h } from './screens/shared/dom.js';
 
 const TICK_MS = 250;
@@ -40,7 +40,7 @@ function buildTabs(ctx) {
     tabs.push({
       id: 'charge',
       label: 'Charge',
-      mount: (root) => { root.append(placeholder('Charge nurse', 7, 'Unit overview and the admissions board.')); },
+      mount: (root) => mountCharge(root, ctx),
     });
   }
 

@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Phase 7: charge nurse and admissions
+- **Charge tab:**
+  - **Admissions board:** incoming patient with report (SBAR, diagnosis, code status), **Assign now** to a group (shows each group's load) or **Hold** with a reason.
+  - **Unit overview:** live tags, group and students, call lights, codes, new orders and open flags per patient; waiting admissions on top.
+- With `chargeNurse` on, admissions wait on the board until assigned. Orders that arrived meanwhile count from assignment.
+- **Catalogs in the review queue** (Approve, Export, Revert) and a **Reset demo** button in the header.
+- Tests: 81 passing.
+
 ## Phase 6: instructor tools
 - **Join codes and roster:** each student tab shows **Join sim** (code + name). Manual (named roster) or random placement; full groups are never over-filled, and overflow alerts the instructor. The roster drives student screens, flags and the debrief.
 - **Live control:**

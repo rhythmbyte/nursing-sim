@@ -82,15 +82,16 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
 | `js/engine/orders.js` | `progressOrder`, `findOrder` (shared by chart actions and delegation) | built |
 | `js/engine/assignment.js` | Join codes, `placeStudent` (manual roster / random open slot, never over-fills), `fillByTagCounts` (randomizer, no reuse), roster lookups | built |
+| `js/engine/admissions.js` | `assignAdmission` (re-bases orders that arrived while waiting), `holdAdmission`, `waitingAdmissions` | built |
 | `js/engine/roster.js` | `joinSim` (code check, placement, overflow alert) | built |
 | `js/engine/templates.js` | `effectiveTemplates`: file templates + instructor ad-hoc orders | built |
 | `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
-| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `placeholder.js` | built |
+| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `download.js` | built |
 | `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js`, `live-labs.js`, `live-flags.js`, `live-roster.js` (join code, students), `live-patients.js` (push order, call light, code/ROSC); `sim-setup.js`; `review-queue.js`; `patient-editor.js` + `editor-model.js` (form ⇄ JSON) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
 | `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
-| `js/screens/charge/` | Charge nurse screens | planned, phase 7 |
+| `js/screens/charge/` | `index.js` (tab; acts as `charge` or the instructor in role `charge`), `admissions-board.js` (report, Assign / Hold), `unit-overview.js` (live tags, students, call lights, codes, flags) | built |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |

@@ -83,8 +83,10 @@ test('session: manual sepsis orders activate the whole order set', () => {
   assert.equal(s.alerts.at(-1).kind, 'new-orders');
 });
 
-test('session: admission brings James onto the unit, then his orders arrive', () => {
-  let { s, refs } = startedSession();
+test('session: admission brings James onto the unit, then his orders arrive (no charge nurse)', () => {
+  const sc = scenarioWith({ chargeNurse: 'off' });
+  const refs = collectEvents(session.scenarioPatients(sc).map((p) => p.id), templatesById, sc);
+  let s = session.controlClock(session.createSession(sc, templatesById, catalogs), 'start', { now: 0, user: instructor });
   ({ state: s } = session.tick(s, { now: 151 * MIN, refs, templatesById }));
   assert.equal(s.patients['p6-james-carter'].present, true);
   assert.equal(s.patients['p6-james-carter'].orders['o-p6-lasix'], undefined);
