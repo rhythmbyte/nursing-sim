@@ -7,7 +7,7 @@ import { coalesce } from '../shared/coalesce.js';
 import { simClock } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { toneChip } from '../shared/tone-chip.js';
-import { patientLabel } from '../shared/labels.js';
+import { patientLabel, instructorPatientLabel } from '../shared/labels.js';
 import { helpTip } from '../shared/help.js';
 import { commandCenter, statusWorsened } from '../../engine/command-center.js';
 import { timelinessConfig } from '../../engine/timeliness.js';
@@ -58,7 +58,7 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
         h('ul', { class: 'cc-patients' }, g.patients.map((p) => {
           const [arrow, trendText] = TREND[p.trend];
           return h('li', {}, h('button', { class: 'cc-patient', onclick: () => openLive({ patientId: p.patientId }), title: 'Open this patient in Live control' },
-            h('span', { class: 'cc-room' }, patientLabel(t[p.patientId])),
+            h('span', { class: 'cc-room' }, instructorPatientLabel(t[p.patientId])),
             triageChip(p.tag),
             h('span', { class: `cc-trend cc-trend-${p.trend}`, title: trendText, 'aria-label': trendText }, arrow),
             p.alarm ? h('span', { class: 'cc-alarm', title: 'Monitor alarm' }, '⚠ alarm') : null,

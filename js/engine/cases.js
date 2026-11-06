@@ -8,7 +8,7 @@
 //   Text placeholders anywhere: {firstName} {lastName} {fullName} {age} {sex} {room}, any {male/female} word pair
 //   ({he/she} {His/Her} {Mr/Ms} {wife/husband}…), this patient's baseline {bp} {hr} {rr} {spo2} {tempF}, first lab value
 //   {lab.<code>}, and the class drug {med.<class>} {med.<class>.Name|dose|route|freq}
-// Instance meta on the result: t.instance = { caseId, caseTitle, seed, meds: { class: drugName } } (instructor-only).
+// Instance meta on the result: t.instance = { caseId, caseTitle, seed, nominal, meds: { class: drugName } } (instructor-only).
 
 import { allergyMatch } from './rules/allergy-conflict.js';
 
@@ -138,7 +138,7 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
   }
   const out = fillAll(t, ctx);
   out.demographics = { ...out.demographics, name: `${first} ${last}`, age, sex };
-  out.instance = { caseId: template.id, caseTitle: c.title || template.id, seed: String(seed), meds: Object.fromEntries(Object.entries(meds).map(([k, d]) => [k, d.name])) };
+  out.instance = { caseId: template.id, caseTitle: c.title || template.id, seed: String(seed), nominal, meds: Object.fromEntries(Object.entries(meds).map(([k, d]) => [k, d.name])) };
   return out;
 }
 
@@ -149,9 +149,9 @@ export const fileIdentity = (t) => ({ first: t.demographics.name.split(' ')[0], 
  * A sim's patients: { scenario (groups list instance ids), templatesById }. The same case twice gets instance ids
  * id, id~2… and different names. Seeds: scenario.variants[instanceId].seed, else the case's first locked seed (first
  * use), else `${scenario.seed ?? scenario.id}:${instanceId}`. Rooms: group.rooms / scenario.rooms, else the case's room
- * (made unique).
+ * (made unique). opts.nominal (the demo): each case's first use is the case as written (file name, values, first drug).
  */
-export function instantiateScenario(scenario, library, catalogs) {
+export function instantiateScenario(scenario, library, catalogs, { nominal = false } = {}) {
   const byId = Object.fromEntries(library.map((p) => [p.id, p]));
   const used = new Set(); const rooms = new Set(); const count = {}; const templatesById = {};
   const roomPool = [...(scenario.rooms || [])];
@@ -164,8 +164,11 @@ export function instantiateScenario(scenario, library, catalogs) {
     for (let n = Number(room) || 0; rooms.has(String(room)); n++) room = String(n + 1);
     rooms.add(String(room));
     const v = scenario.variants?.[iid];
-    const seed = v?.seed ?? (count[cid] === 1 ? t.case?.locked?.[0]?.seed : null) ?? `${scenario.seed ?? scenario.id}:${iid}`;
-    templatesById[iid] = instantiate(t, { seed, instanceId: iid, catalogs, room, usedNames: used });
+    const lock = count[cid] === 1 && !v?.seed ? t.case?.locked?.[0] : null;
+    const seed = v?.seed ?? lock?.seed ?? `${scenario.seed ?? scenario.id}:${iid}`;
+    // As written (the demo, or a locked "as written" variant): file name and values, first allowed drug.
+    const asWritten = t.case && count[cid] === 1 && !v?.seed && (lock ? lock.nominal : nominal);
+    templatesById[iid] = instantiate(t, { seed, instanceId: iid, catalogs, room, usedNames: used, ...(asWritten ? { identity: fileIdentity(t), nominal: true } : {}) });
     return iid;
   };
   const groups = scenario.groups.map((g) => {

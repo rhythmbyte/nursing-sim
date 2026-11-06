@@ -25,7 +25,7 @@
         "sex": { "enum": ["M", "F", "either"] },
         "ageRange": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
         "excludeDrugs": { "type": "array", "items": { "type": "string" } },
-        "locked": { "type": "array", "items": { "type": "object", "required": ["seed"], "properties": { "seed": { "type": "string", "minLength": 1 }, "label": { "type": "string" } } } },
+        "locked": { "type": "array", "items": { "type": "object", "required": ["seed"], "properties": { "seed": { "type": "string", "minLength": 1 }, "nominal": { "type": "boolean" }, "label": { "type": "string" } } } },
         "review": { "$ref": "#/$defs/review" }
       }
     },

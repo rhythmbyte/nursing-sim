@@ -2,6 +2,7 @@
 // and record ROSC / no ROSC. Clinical choices stay with the instructor; nothing here judges them.
 
 import { formDraft } from '../shared/drafts.js';
+import { caseLabel } from '../../engine/cases.js';
 import { h } from '../shared/dom.js';
 import { openModal, promptText } from '../shared/modal.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -84,7 +85,7 @@ export function patientsPanel(runner, templatesById, catalogs, user, filter = nu
         !ps.alive ? 'deceased' : null,
       ].filter(Boolean).join(' · ') || '—';
       return h('tr', { class: ps.code && !ps.code.outcome ? 'needs-attention' : '' },
-        h('td', {}, name),
+        h('td', {}, name, templatesById[pid].instance ? h('div', { class: 'muted small' }, caseLabel(templatesById[pid]).split(' — ')[0]) : null),
         h('td', {}, triageChip(ps.tag)),
         h('td', {}, vitalsSummary(ps)),
         h('td', {}, Object.entries(state.roster).filter(([, r]) => r.groupId === ps.groupId)

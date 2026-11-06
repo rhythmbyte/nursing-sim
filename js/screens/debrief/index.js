@@ -1,7 +1,7 @@
 // Debrief (instructor): per-student flags, response times, order sequence, charted vs scripted vitals,
 // handoff notes, "should recognize", and the full timeline with flags inline. CSV export + print view.
 
-import { patientLabel } from '../shared/labels.js';
+import { patientLabel, instructorPatientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { load, save } from '../../storage.js';
@@ -17,6 +17,13 @@ import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
 const detail = (el) => { el.classList.add('debrief-detail'); return el; }; // left out of "Print summary"
+
+// The patients this student's group had, as generated for this sim (the debrief compares against these values).
+function casesLine(runner, templatesById, groupId) {
+  const pts = Object.entries(runner.state.patients).filter(([, ps]) => ps.groupId === groupId).map(([pid]) => templatesById[pid]).filter((t) => t?.instance);
+  if (!pts.length) return null;
+  return h('section', { class: 'panel debrief-cases' }, h('h3', {}, 'Patients in this sim'), h('ul', {}, pts.map((t) => h('li', {}, instructorPatientLabel(t)))));
+}
 
 export function mountDebrief(root, { store, runner, templatesById, scenario, catalogs }) {
   let userId = load(STUDENT_KEY);
@@ -78,6 +85,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
           } }, 'Print summary'),
         ),
       ),
+      casesLine(runner, templatesById, runner.state.roster[userId].groupId),
       flagsSection(d, helpers),
       timelinessSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       taskSection(d, helpers),

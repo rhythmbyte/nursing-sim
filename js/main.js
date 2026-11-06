@@ -6,7 +6,8 @@ import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { createWindowLock } from './window-lock.js';
-import { instantiateScenario } from './engine/cases.js';
+import { instantiateSim, newSimSeeds, caseKey } from './case-seeds.js';
+import { createSession } from './engine/session.js';
 import { restoreBackup } from './storage.js';
 import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
@@ -71,20 +72,26 @@ function scenarioPicker(scenarios, currentId, onChange) {
 function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = false } = {}) {
   // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
   // Case templates → this sim's concrete patients (seeded; identical across reloads, rejoins and the debrief).
-  const inst = instantiateScenario(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.patients, data.catalogs);
+  let saved = load(SESSION_KEY);
+  const picked = data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0];
+  const inst = instantiateSim(picked, data.patients, data.catalogs, { hadSession: saved?.scenarioId === picked.id });
   const scenario = withDefaults(inst.scenario, data.catalogs);
   const templatesById = { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...inst.templatesById };
+  // A reroll before the sim starts: new patient states for the new variants, keeping the join code and who joined.
+  const key = caseKey(inst.templatesById);
+  if (saved?.scenarioId === scenario.id && saved.clock?.status === 'ready' && saved.caseKey !== key) saved = { ...saved, patients: createSession(scenario, templatesById, data.catalogs).patients, caseKey: key };
   const store = createStore({ data });
   const runner = createRunner({
     store, scenario, templatesById, catalogs: data.catalogs,
-    saved: load(SESSION_KEY),
+    saved,
     persist: (s) => { if (writer()) save(SESSION_KEY, s); }, // only the writer window saves
   });
 
   // switchScenario: used by the scenario picker and by Sim setup after creating a sim.
-  const switchScenario = async (id) => {
+  const switchScenario = async (id, { demo = false } = {}) => {
     save(SCENARIO_KEY, id);
     remove(SESSION_KEY);
+    newSimSeeds({ demoScenarioId: demo ? id : null }); // a new sim: new patient variants (the demo: cases as written)
     await reloadData(id);
   };
   // Start demo sim: starter scenario, fresh session, a joined test student, clock running (ui.json demo).
@@ -93,7 +100,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     if (!demo) return;
     if (runner.state.clock.status !== 'ready' && !window.confirm('Start a fresh demo sim? This clears the current sim.')) return;
     saveSession('pendingDemo', true);
-    await switchScenario(data.scenarios.some((s) => s.id === demo.scenarioId) ? demo.scenarioId : data.scenarios[0].id);
+    await switchScenario(data.scenarios.some((s) => s.id === demo.scenarioId) ? demo.scenarioId : data.scenarios[0].id, { demo: true });
   };
   const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo };
   const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
@@ -236,7 +243,7 @@ async function boot() {
     const monitorPid = new URLSearchParams(window.location.search).get('monitor');
     if (monitorPid) {
       const sc = data.scenarios.find((s) => s.id === load(SCENARIO_KEY)) || data.scenarios[0];
-      mountStandaloneMonitor(root, { pid: monitorPid, templatesById: { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...instantiateScenario(sc, data.patients, data.catalogs).templatesById }, catalogs: data.catalogs,
+      mountStandaloneMonitor(root, { pid: monitorPid, templatesById: { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...instantiateSim(sc, data.patients, data.catalogs, { hadSession: true }).templatesById }, catalogs: data.catalogs,
         loadSession: () => load(SESSION_KEY), onSessionChange: (fn) => onExternalChange(SESSION_KEY, fn) });
       return;
     }
