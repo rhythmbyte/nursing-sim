@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Cleanup: naming and docs
+- The patient-editor timeline's CSS classes are now `ptl-*` (they shared the `tl-` prefix with the debrief timeline rows).
+- ARCHITECTURE folder map names every file again (priority picker, Adjust vitals panel, entered-in-error controls, monitor chart section, shared label/text helpers) and the rule count (10).
+
 ## Cleanup: dead code, stale notes, shared helpers
 - Removed an unused import, an unused export (`isStruck`) and a dead CSS rule (`.is-prior`). Rewrote stale comments that still talked about "phase N" or said features were coming that already exist; CSS section headings now name features, not phases.
 - One helper each for repeated bits: `round2()` (engine/time.js) replaces seven inline two-decimal roundings; `patientLabel()` (screens/shared/labels.js) replaces hand-built "Rm 204 Linda Garcia" labels in seven screens; `lines()` (screens/shared/text.js) is shared by the patient editor and the scenario-change model.

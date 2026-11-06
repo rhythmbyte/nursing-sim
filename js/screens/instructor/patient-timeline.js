@@ -11,11 +11,11 @@ export function patientTimeline(template, startClock, { spanMin = 480, onOpen, o
   const scheduled = changes.filter((c) => !c.manual);
   const span = Math.max(spanMin, ...scheduled.map((c) => c.atMin + 30));
   const pct = (m) => `${(m / span) * 100}%`;
-  const track = h('div', { class: 'tl-track' });
-  for (let m = 0; m <= span; m += 60) track.append(h('span', { class: 'tl-tick', style: `left:${pct(m)}` }, minToClock(startClock, m)));
+  const track = h('div', { class: 'ptl-track' });
+  for (let m = 0; m <= span; m += 60) track.append(h('span', { class: 'ptl-tick', style: `left:${pct(m)}` }, minToClock(startClock, m)));
 
   for (const c of scheduled) {
-    const marker = h('button', { class: `tl-marker tl-${c.type}`, style: `left:${pct(c.atMin)}`, title: `${minToClock(startClock, c.atMin)} · ${c.label}`, type: 'button' }, minToClock(startClock, c.atMin));
+    const marker = h('button', { class: `ptl-marker ptl-${c.type}`, style: `left:${pct(c.atMin)}`, title: `${minToClock(startClock, c.atMin)} · ${c.label}`, type: 'button' }, minToClock(startClock, c.atMin));
     let drag = null;
     marker.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, moved: false }; marker.setPointerCapture(e.pointerId); });
     marker.addEventListener('pointermove', (e) => {
@@ -38,7 +38,7 @@ export function patientTimeline(template, startClock, { spanMin = 480, onOpen, o
     track.append(marker);
   }
   const manual = changes.filter((c) => c.manual);
-  return h('div', { class: 'tl-wrap' },
+  return h('div', { class: 'ptl-wrap' },
     track,
     manual.length ? h('div', { class: 'controls' }, h('span', { class: 'muted small' }, 'Instructor-triggered:'),
       manual.map((c) => h('button', { class: 'btn btn-small', type: 'button', onclick: () => onOpen(c.key) }, c.label.slice(0, 40)))) : null,
