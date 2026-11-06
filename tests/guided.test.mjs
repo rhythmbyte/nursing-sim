@@ -1,7 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { templatesById, catalogs, scenarioWith, MIN } from './fixtures.mjs';
-import * as G from '../js/screens/instructor/guided-model.js';
+import * as GM from '../js/screens/instructor/guided-model.js';
+import { geToLiveCalls } from '../js/screens/instructor/guided-live.js';
+import { instantiate } from '../js/engine/cases.js';
+
+const G = { ...GM, geToLiveCalls };
 import { changeToForm, formToChange } from '../js/screens/instructor/change-model.js';
 import { projectedVitals, stateVitals } from '../js/engine/reactions/dry-run.js';
 import { normalFor } from '../js/engine/penalties.js';
@@ -102,4 +106,32 @@ test('Command center shows script state and penalty; diagram uses short labels',
   assert.deepEqual([p.script.state, p.script.penalty], ['crashing', 40]);
   assert.equal(commandCenter(s, ctx, scenario).flatMap((g) => g.patients).find((x) => x.patientId === 'p1-robert-miller').script, null);
   assert.ok(diagramLayout(linda.script).edges.length, 'layout unaffected by short labels');
+});
+
+test('relative to baseline: guided rows ⇄ valuesRel on reactions, states and scenario changes; each variant resolves its own', () => {
+  const rows = [{ vital: 'sbp', direction: 'rel', to: '-30', overN: 5, overUnit: 'minutes' }, { vital: 'hr', direction: 'rel', to: '20', overN: 5, overUnit: 'minutes' }, { vital: 'spo2', direction: 'worsen', from: 91, to: 85, overN: 5, overUnit: 'minutes' }];
+  const [e] = G.geToEffects({ type: 'vitals', rows });
+  assert.deepEqual(e.valuesRel, { sbp: -30, hr: 20 });
+  assert.deepEqual(e.values, { spo2: 85 });
+  assert.equal(e.overMin, 5);
+  const back = G.effectToGe(e, {}, {});
+  assert.deepEqual(back.rows.filter((r) => r.direction === 'rel').map((r) => [r.vital, Number(r.to)]), [['sbp', -30], ['hr', 20]]);
+  assert.match(G.rowText(rows[0]), /changes by -30 mmHg from this patient's baseline/);
+  assert.deepEqual(G.gesToState([{ type: 'vitals', rows }]).vitals.valuesRel, { sbp: -30, hr: 20 });
+  // Scenario change: keyframe gets valuesRel; instantiating resolves it against each variant's baseline.
+  const linda = structuredClone(templatesById['p4-linda-garcia']);
+  const key = 'p4-worsens';
+  const f = changeToForm(linda, key, '07:00');
+  const f2 = G.gesToChangeForm([{ type: 'vitals', rows: [{ vital: 'sbp', direction: 'rel', to: '-20', overN: 0, overUnit: 'instant' }] }], f);
+  assert.deepEqual(f2.vitalsRel, { sbp: -20 });
+  const t2 = formToChange(linda, f2, '07:00').template;
+  const kf = t2.vitals.keyframes.find((k) => k.eventId === 'e-p4-worsens');
+  assert.deepEqual(kf.valuesRel, { sbp: -20 });
+  t2.case = { title: 'Sepsis 1', sex: 'either', ageRange: [60, 66] };
+  t2.vitals.ranges = { sbp: [98, 106] };
+  for (let i = 0; i < 5; i++) {
+    const v = instantiate(t2, { seed: `g${i}`, catalogs });
+    const sb = Number(v.vitals.baseline.bp.split('/')[0]);
+    assert.equal(Number(v.vitals.keyframes.find((k) => k.eventId === 'e-p4-worsens').values.bp.split('/')[0]), sb - 20);
+  }
 });

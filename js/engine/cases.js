@@ -65,9 +65,17 @@ function resolveRel(obj, baseline) {
     else if (k === 'dbp') d = (bp?.[1] ?? 80) + delta;
     else if (typeof baseline[k] === 'number') out[k] = Math.round((baseline[k] + delta) * (k === 'tempF' ? 10 : 1)) / (k === 'tempF' ? 10 : 1);
   }
-  if (s != null || d != null) out.bp = `${Math.round(s ?? bp?.[0] ?? 120)}/${Math.round(d ?? bp?.[1] ?? 80)}`;
+  const cur = parseBp(out.bp) || bp; // an absolute side written next to a relative one is kept
+  if (s != null || d != null) out.bp = `${Math.round(s ?? cur?.[0] ?? 120)}/${Math.round(d ?? cur?.[1] ?? 80)}`;
   obj.values = out;
   delete obj.valuesRel;
+}
+
+function resolveAllRel(t, base) {
+  for (const k of t.vitals.keyframes || []) resolveRel(k, base);
+  for (const s of t.script?.states || []) if (s.vitals) resolveRel(s.vitals, base);
+  for (const r of t.script?.reactions || []) for (const e of r.then) if (e.type === 'vitals') resolveRel(e, base);
+  for (const e of t.events || []) if (e.payload) resolveRel(e.payload, base);
 }
 
 function allergyClasses(catalogs) { return catalogs?.rules?.rules?.['allergy-conflict']?.classes || {}; }
@@ -88,7 +96,7 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
   const t = structuredClone(template);
   t.id = instanceId;
   if (room != null) t.demographics.room = String(room);
-  if (!t.case) return t;
+  if (!t.case) { resolveAllRel(t, t.vitals.baseline); return t; } // a fixed patient: only relative changes resolve
   const rng = seededRandom(`${seed}|${template.id}`);
   const c = t.case;
   const sex = identity?.sex || (c.sex === 'either' || !c.sex ? (rng() < 0.5 ? 'M' : 'F') : c.sex);
@@ -119,11 +127,7 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
   const labs = {};
   for (const l of t.labs) if (l.value != null && !(l.code in labs)) labs[l.code] = l.value;
   const ctx = { first, last, sex, age, meds, room: t.demographics.room, vitals: base, labs };
-  // Relative scripted changes → absolute against this patient's baseline.
-  for (const k of t.vitals.keyframes || []) resolveRel(k, base);
-  for (const s of t.script?.states || []) if (s.vitals) resolveRel(s.vitals, base);
-  for (const r of t.script?.reactions || []) for (const e of r.then) if (e.type === 'vitals') resolveRel(e, base);
-  for (const e of t.events) if (e.payload) resolveRel(e.payload, base);
+  resolveAllRel(t, base); // relative scripted changes → absolute against this patient's baseline
   // Home meds and orders from a class.
   // (The same drug as the file keeps the file's dose and frequency; another drug from the class uses the catalog's.)
   for (const m of t.homeMeds || []) {

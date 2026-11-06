@@ -10,7 +10,7 @@ import { formatShiftTime } from '../../engine/time.js';
 import { activeScale, currentPriority } from '../../engine/priority.js';
 import { vitalsSummary, openAdjustVitals } from './live-vitals.js';
 import { eventForm } from './guided-form.js';
-import { geToLiveCalls } from './guided-model.js';
+import { geToLiveCalls } from './guided-live.js';
 import { normalFor } from '../../engine/penalties.js';
 
 /** Live control → Add event: the guided event builder, applied now (From = the patient's vitals right now). */

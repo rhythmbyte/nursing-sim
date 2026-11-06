@@ -59,6 +59,7 @@ export function changeToForm(t, key, startClock) {
     // Every key the keyframe has (gcs, hrNote, …) plus the standard ones, so nothing is lost on save.
     vitals: { ...Object.fromEntries(VITAL_KEYS.map((k) => [k, ''])), ...(kf?.values || {}) },
     vitalsOverMin: kf?.overMin || 0, vitalsOverMinBy: kf?.overMinBy || null, // trend instead of an instant change (guided builder)
+    vitalsRel: kf?.valuesRel || null, // case templates: change from this patient's baseline ({ sbp: -30 })
     findings: fc ? fc.findings.join('\n') : '',
     assessments: structuredClone(ae?.payload?.answers || {}), // what assessment tools find from this moment (assessment-change)
     orders: orders.map((o) => ({ id: o.id, text: o.text, type: o.type, tier: o.tier, interventionId: o.interventionIds?.[0] || '', med: o.med || '', delegable: Boolean(o.delegable) })),
@@ -94,10 +95,11 @@ export function formToChange(t, f, startClock) {
   const oldKfId = f.ids?.vitals ? prev[f.ids.vitals]?.payload?.keyframe : null;
   const oldKf = (t.vitals.keyframes || []).find((k) => k.eventId === oldKfId) || {};
   let keyframes = (t.vitals.keyframes || []).filter((k) => k.eventId !== key && k.eventId !== oldKfId);
-  if (Object.keys(vitals).length) {
+  const rel = f.vitalsRel && Object.keys(f.vitalsRel).length ? f.vitalsRel : null;
+  if (Object.keys(vitals).length || rel) {
     const kfId = oldKfId || key;
-    const { atMin: _a, values: _v, overMin: _o, overMinBy: _ob, ...kfRest } = oldKf; // keep review, notes, etc.
-    keyframes = [...keyframes, { ...kfRest, ...(f.manual ? {} : { atMin: timing.atMin }), eventId: kfId, values: vitals,
+    const { atMin: _a, values: _v, valuesRel: _r, overMin: _o, overMinBy: _ob, ...kfRest } = oldKf; // keep review, notes, etc.
+    keyframes = [...keyframes, { ...kfRest, ...(f.manual ? {} : { atMin: timing.atMin }), eventId: kfId, values: vitals, ...(rel ? { valuesRel: rel } : {}),
       ...(f.vitalsOverMin ? { overMin: f.vitalsOverMin } : {}), ...(f.vitalsOverMinBy ? { overMinBy: f.vitalsOverMinBy } : {}) }];
     out.push(ev('vitals', 'vitals-change', { keyframe: kfId }));
   }

@@ -64,14 +64,18 @@ export function parseO2(text) {
 }
 export const o2Text = (device, lpm) => (num(lpm) ? `${Number(lpm)} L ${device}` : device);
 
-/** Vitals rows → { values, overMin, overMinBy } (BP rows combine; rows without "to" are skipped). */
+/**
+ * Vitals rows → { values, valuesRel, overMin, overMinBy } (BP rows combine; rows without "to" are skipped). A row with
+ * direction "rel" is a change from the patient's baseline ("SBP by −30"), resolved per patient (engine/cases.js).
+ */
 export function rowsToValues(rows, fromVitals = {}) {
-  const values = {}; const by = {};
+  const values = {}; const by = {}; const valuesRel = {};
   const bp = {};
   for (const r of rows || []) {
     if (r.vital === 'pain' && (r.to === '' || r.to == null) && r.note) { values.pain = r.note; by.pain = 0; continue; } // pain text only
     if (r.to === '' || r.to == null) continue;
     const min = overToMin(r.overN, r.overUnit);
+    if (r.direction === 'rel' && REL_VITALS.includes(r.vital)) { const k = r.vital === 'sbp' || r.vital === 'dbp' ? 'bp' : r.vital; valuesRel[r.vital] = Number(r.to); by[k] = Math.max(by[k] ?? 0, min); continue; }
     if (r.vital === 'sbp' || r.vital === 'dbp') { bp[r.vital] = Number(r.to); by.bp = Math.max(by.bp ?? 0, min); continue; }
     if (r.vital === 'o2') { values.o2 = o2Text(r.to, r.lpm); by.o2 = 0; continue; }
     values[r.vital] = r.vital === 'pain' ? `${Number(r.to)}/10${r.note ? ` ${r.note}` : ''}` : Number(r.to);
@@ -80,12 +84,17 @@ export function rowsToValues(rows, fromVitals = {}) {
   if (bp.sbp != null || bp.dbp != null) values.bp = `${bp.sbp ?? vitalNow(fromVitals, 'sbp') ?? 120}/${bp.dbp ?? vitalNow(fromVitals, 'dbp') ?? 80}`;
   const times = [...new Set(Object.values(by))];
   const overMin = times.length === 1 ? times[0] : Math.max(0, ...times);
-  return { values, overMin, overMinBy: times.length > 1 ? by : null };
+  return { values, valuesRel, overMin, overMinBy: times.length > 1 ? by : null };
 }
+/** Vitals that can be relative to the baseline. */
+export const REL_VITALS = ['hr', 'rr', 'spo2', 'tempF', 'sbp', 'dbp'];
+const relRows = (rel = {}, overMin = 0, overMinBy = null) => Object.entries(rel || {}).map(([k, d]) => ({ vital: k, direction: 'rel', from: '', to: d, ...minToOver(overMinBy?.[k === 'sbp' || k === 'dbp' ? 'bp' : k] ?? overMin) }));
+const withRel = (v) => (Object.keys(v.valuesRel || {}).length ? { valuesRel: v.valuesRel } : {});
+const hasAny = (v) => Object.keys(v.values).length || Object.keys(v.valuesRel || {}).length;
 
-/** { values, overMin, overMinBy } → rows (direction from the normal range; From from fromVitals). */
-export function valuesToRows(values = {}, overMin = 0, overMinBy = null, fromVitals = {}, normal = {}) {
-  const rows = [];
+/** { values, overMin, overMinBy } (+ valuesRel) → rows (direction from the normal range; From from fromVitals). */
+export function valuesToRows(values = {}, overMin = 0, overMinBy = null, fromVitals = {}, normal = {}, valuesRel = null) {
+  const rows = relRows(valuesRel, overMin, overMinBy);
   const dur = (k) => overMinBy?.[k] ?? overMin;
   for (const [k, v] of Object.entries(values)) {
     if (k === 'rhythm') continue;
@@ -112,6 +121,7 @@ export function rowText(r, normal = {}) {
   if (!v) return '';
   if (r.vital === 'o2') return `O₂ set to ${o2Text(r.to, r.lpm) || '—'}.`;
   if (r.to === '' || r.to == null) return `${v.label}: enter a target (To).`;
+  if (r.direction === 'rel') return `${v.label} changes by ${Number(r.to) > 0 ? '+' : ''}${r.to}${v.unit} from this patient's baseline ${overText(overToMin(r.overN, r.overUnit))} (each variant from its own value).`;
   const verb = r.direction === 'improve' ? 'improves' : r.direction === 'worsen' ? 'worsens' : 'is set';
   const from = num(r.from) != null ? ` from ${r.from}${v.unit}` : '';
   const warn = r.direction !== 'set' && directionOf(r.vital, r.from, r.to, normal) !== 'set' && directionOf(r.vital, r.from, r.to, normal) !== r.direction
@@ -146,7 +156,7 @@ const clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !=
 /** One ge → reaction effects (vitals with mixed durations stay one effect via overMinBy). Throws on a missing choice. */
 export function geToEffects(ge, fromVitals = {}) {
   switch (ge.type) {
-    case 'vitals': { const v = rowsToValues(ge.rows, fromVitals); if (!Object.keys(v.values).length) throw new Error('Vitals change: enter at least one "To" value'); return [{ type: 'vitals', values: v.values, ...(v.overMin ? { overMin: v.overMin } : {}), ...(v.overMinBy ? { overMinBy: v.overMinBy } : {}) }]; }
+    case 'vitals': { const v = rowsToValues(ge.rows, fromVitals); if (!hasAny(v)) throw new Error('Vitals change: enter at least one "To" value'); return [{ type: 'vitals', values: v.values, ...withRel(v), ...(v.overMin ? { overMin: v.overMin } : {}), ...(v.overMinBy ? { overMinBy: v.overMinBy } : {}) }]; }
     case 'rhythm': if (!ge.rhythm) throw new Error('Rhythm change: pick a rhythm'); return [{ type: 'vitals', values: { rhythm: ge.rhythm } }];
     case 'call-light': if (!ge.message?.trim()) throw new Error('Call light: write what the patient says'); return [ev('call-light', { message: ge.message.trim() })];
     case 'staff-message': if (!ge.message?.trim()) throw new Error('Staff message: write the message'); return [ev('staff-message', clean({ from: ge.from, message: ge.message.trim() }))];
@@ -167,7 +177,7 @@ export function effectToGe(e, fromVitals = {}, normal = {}) {
   if (e.type === 'vitals') {
     const { rhythm, ...rest } = e.values || {};
     if (rhythm && !Object.keys(rest).length) return { type: 'rhythm', rhythm };
-    return { type: 'vitals', rows: valuesToRows(rest, e.overMin, e.overMinBy, fromVitals, normal), rhythmAlso: rhythm || null };
+    return { type: 'vitals', rows: valuesToRows(rest, e.overMin, e.overMinBy, fromVitals, normal, e.valuesRel), rhythmAlso: rhythm || null };
   }
   if (e.type === 'event') {
     const p = e.event.payload || {};
@@ -190,7 +200,7 @@ export function effectToGe(e, fromVitals = {}, normal = {}) {
 // ---------- states: ge list ⇄ state vitals / rhythm / assessments ----------
 export function stateToGes(def, fromVitals = {}, normal = {}) {
   const out = [];
-  if (Object.keys(def.vitals?.values || {}).filter((k) => k !== 'rhythm').length) out.push({ type: 'vitals', rows: valuesToRows(def.vitals.values, def.vitals.overMin, def.vitals.overMinBy, fromVitals, normal) });
+  if (Object.keys(def.vitals?.values || {}).filter((k) => k !== 'rhythm').length || Object.keys(def.vitals?.valuesRel || {}).length) out.push({ type: 'vitals', rows: valuesToRows(def.vitals.values, def.vitals.overMin, def.vitals.overMinBy, fromVitals, normal, def.vitals.valuesRel) });
   const rhythm = def.rhythm || def.vitals?.values?.rhythm;
   if (rhythm) out.push({ type: 'rhythm', rhythm });
   if (Object.keys(def.assessments || {}).length) out.push({ type: 'assessment', answers: def.assessments });
@@ -200,7 +210,7 @@ export function stateToGes(def, fromVitals = {}, normal = {}) {
 export function gesToState(list, fromVitals = {}) {
   const out = {};
   for (const ge of list) {
-    if (ge.type === 'vitals') { const v = rowsToValues(ge.rows, fromVitals); if (Object.keys(v.values).length) out.vitals = { values: { ...(out.vitals?.values || {}), ...v.values }, ...(v.overMin ? { overMin: v.overMin } : {}), ...(v.overMinBy ? { overMinBy: v.overMinBy } : {}) }; }
+    if (ge.type === 'vitals') { const v = rowsToValues(ge.rows, fromVitals); if (hasAny(v)) out.vitals = { values: { ...(out.vitals?.values || {}), ...v.values }, ...withRel(v), ...(v.overMin ? { overMin: v.overMin } : {}), ...(v.overMinBy ? { overMinBy: v.overMinBy } : {}) }; }
     if (ge.type === 'rhythm' && ge.rhythm) out.rhythm = ge.rhythm;
     if (ge.type === 'assessment' && Object.keys(ge.answers || {}).length) out.assessments = { ...(out.assessments || {}), ...ge.answers };
   }
@@ -216,7 +226,7 @@ export function changeFormToGes(f, fromVitals = {}, normal = {}) {
   if (f.start === 'call-light') out.push({ type: 'call-light', message: f.message });
   if (f.start === 'staff-message') out.push({ type: 'staff-message', from: f.from, message: f.message });
   const { rhythm, ...vit } = Object.fromEntries(Object.entries(f.vitals || {}).filter(([, v]) => v !== '' && v != null));
-  if (Object.keys(vit).length) out.push({ type: 'vitals', rows: valuesToRows(vit, f.vitalsOverMin || 0, f.vitalsOverMinBy || null, fromVitals, normal), extra: Object.fromEntries(Object.entries(vit).filter(([k]) => !['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain', 'gcs', 'glucose'].includes(k))) });
+  if (Object.keys(vit).length || Object.keys(f.vitalsRel || {}).length) out.push({ type: 'vitals', rows: valuesToRows(vit, f.vitalsOverMin || 0, f.vitalsOverMinBy || null, fromVitals, normal, f.vitalsRel), extra: Object.fromEntries(Object.entries(vit).filter(([k]) => !['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain', 'gcs', 'glucose'].includes(k))) });
   if (rhythm) out.push({ type: 'rhythm', rhythm });
   if ((f.orders || []).length) out.push({ type: 'new-orders', orders: f.orders.map((o) => ({ ...o })) });
   if (Object.keys(f.assessments || {}).length) out.push({ type: 'assessment', answers: f.assessments });
@@ -239,10 +249,11 @@ export function gesToChangeForm(list, f, fromVitals = {}) {
   if (lights.length > 1) throw new Error('A scenario change can start with one call light or one staff message');
   const start = lights[0];
   const vitals = Object.fromEntries(Object.keys(f.vitals || {}).map((k) => [k, '']));
-  let overMin = 0; let overMinBy = null;
+  let overMin = 0; let overMinBy = null; let vitalsRel = null;
   for (const g of list.filter((x) => x.type === 'vitals')) {
     const v = rowsToValues(g.rows, fromVitals);
     Object.assign(vitals, g.extra || {}, v.values);
+    if (Object.keys(v.valuesRel).length) vitalsRel = { ...(vitalsRel || {}), ...v.valuesRel };
     overMin = Math.max(overMin, v.overMin);
     if (v.overMinBy) overMinBy = { ...(overMinBy || {}), ...v.overMinBy };
   }
@@ -260,30 +271,9 @@ export function gesToChangeForm(list, f, fromVitals = {}) {
   return {
     ...f,
     start: start ? start.type : 'silent', from: start?.from || f.from, message: start ? (start.message || '').trim() : (f.start === 'silent' ? f.message : ''),
-    vitals, vitalsOverMin: overMin, vitalsOverMinBy: overMinBy,
+    vitals, vitalsOverMin: overMin, vitalsOverMinBy: overMinBy, vitalsRel,
     orders: list.filter((g) => g.type === 'new-orders').flatMap((g) => g.orders || []),
     assessments: Object.assign({}, ...list.filter((g) => g.type === 'assessment').map((g) => g.answers || {})),
     keep: [...keepOther, ...kept],
   };
-}
-
-// ---------- Live control: ge → runner calls ----------
-/** [{ method, args }] the Live control button runs (runner.<method>(pid, ...args, user)). */
-export function geToLiveCalls(ge, fromVitals = {}) {
-  switch (ge.type) {
-    case 'vitals': { const v = rowsToValues(ge.rows, fromVitals); if (!Object.keys(v.values).length) throw new Error('Enter at least one "To" value'); return [{ method: 'adjustVitals', args: [{ values: v.values, overMin: v.overMin, overMinBy: v.overMinBy }] }]; }
-    case 'rhythm': if (!ge.rhythm) throw new Error('Pick a rhythm'); return [{ method: 'adjustVitals', args: [{ values: { rhythm: ge.rhythm } }] }];
-    case 'call-light': if (!ge.message?.trim()) throw new Error('Write what the patient says'); return [{ method: 'setCallLight', args: [true, ge.message.trim()] }];
-    case 'new-orders': {
-      const orders = (ge.orders || []).filter((o) => o.text?.trim());
-      if (!orders.length) throw new Error('Write at least one order');
-      return orders.map((o) => ({ method: 'pushOrder', args: [{ text: o.text.trim(), type: o.type || 'once', tier: Number(o.tier) || 2, interventionIds: o.interventionId ? [o.interventionId] : [], ...(o.med ? { med: o.med } : {}) }] }));
-    }
-    case 'state': if (!ge.to) throw new Error('Pick a state'); return [{ method: 'script', args: ['forceState', [ge.to]], scripted: true }];
-    default: {
-      const [e] = geToEffects(ge, fromVitals);
-      const event = e.type === 'assessment' ? { type: 'assessment-change', payload: { answers: e.answers } } : e.event;
-      return [{ method: 'liveEvent', args: [event] }];
-    }
-  }
 }

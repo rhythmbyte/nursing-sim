@@ -13,6 +13,7 @@ import * as chart from '../chart.js';
 import { collectEvents, eventKey } from '../scheduler.js';
 import { forceState } from './control.js';
 import { names } from './describe.js';
+import { instantiate, fileIdentity } from '../cases.js';
 
 const MIN = 60000;
 const STUDENT = { userId: 'dry-run-student', role: 'student' };
@@ -33,7 +34,9 @@ export function stepLabel(step, n) {
 }
 
 /** settings must be merged scenario settings (engine/settings.js effectiveSettings). */
-export function dryRun(template, { catalogs, settings, steps = [], startClock = '07:00' }) {
+export function dryRun(raw, { catalogs, settings, steps = [], startClock = '07:00' }) {
+  // A case template from the editor runs as written (relative changes resolved, placeholders filled); an instance as is.
+  const template = raw.instance ? raw : instantiate(raw, { seed: 'dry-run', catalogs, ...(raw.case ? { identity: fileIdentity(raw), nominal: true } : {}) });
   const pid = template.id;
   const templatesById = { [pid]: template };
   const scenario = { id: 'dry-run', name: 'Dry run', startClock, speed: 1, settings: { ...settings, assessmentTools: 'all' }, groups: [{ id: 'dry', name: 'Dry run', patients: [pid] }] };

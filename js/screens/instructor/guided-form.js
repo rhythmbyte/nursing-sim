@@ -7,7 +7,7 @@ import { h, clear } from '../shared/dom.js';
 import { helpTip } from '../shared/help.js';
 import { answersEditor } from './assessment-answers.js';
 import { scriptOptions, select, input } from './script-parts.js';
-import { TYPES, CONTEXT_TYPES, VITALS, minToOver, vitalNow, directionOf, rowText, previewText, parseO2 } from './guided-model.js';
+import { TYPES, CONTEXT_TYPES, VITALS, REL_VITALS, minToOver, vitalNow, directionOf, rowText, previewText, parseO2 } from './guided-model.js';
 
 const UNIT_OPTS = [['instant', 'instantly'], ['seconds', 'seconds'], ['minutes', 'minutes'], ['hours', 'hours']];
 const DIR_OPTS = [['worsen', 'worsens'], ['improve', 'improves'], ['set', 'set to']];
@@ -22,7 +22,8 @@ function vitalsRows(ge, ctx, onChange) {
     const from0 = vitalNow(ctx.fromVitals(), r.vital);
     const st = { touchedFrom: r.from !== '' && r.from != null && String(r.from) !== String(from0 ?? '') };
     const vital = select(`Row ${n} vital`, VITALS.map((v) => [v.id, v.label]), r.vital);
-    const dir = select(`Row ${n} direction`, DIR_OPTS, r.direction);
+    // Relative to baseline: only where the change is saved in the patient (not a one-off Live control change).
+    const dir = select(`Row ${n} direction`, ctx.context === 'live' ? DIR_OPTS : [...DIR_OPTS, ['rel', 'changes by (from baseline)']], r.direction);
     const from = input(`Row ${n} from`, r.from === '' ? from0 ?? '' : r.from, { placeholder: 'from' });
     const to = input(`Row ${n} to`, r.to, { placeholder: 'to' });
     const note = input(`Row ${n} pain description`, r.note || '', { placeholder: 'description (optional)' });
@@ -40,6 +41,10 @@ function vitalsRows(ge, ctx, onChange) {
     const sync = () => {
       const o2 = vital.value === 'o2';
       for (const el of [dir, to, overN, unit]) el.hidden = o2;
+      const rel = dir.value === 'rel';
+      if (rel && !REL_VITALS.includes(vital.value)) dir.value = 'set';
+      from.hidden = o2 || dir.value === 'rel';
+      to.placeholder = dir.value === 'rel' ? '± from baseline' : 'to';
       device.hidden = !o2; lpm.hidden = !o2 || !(devices.find((d) => d.id === device.value)?.flow);
       note.hidden = vital.value !== 'pain';
       overN.disabled = unit.value === 'instant';
@@ -50,7 +55,7 @@ function vitalsRows(ge, ctx, onChange) {
     vital.addEventListener('change', () => { if (!st.touchedFrom) from.value = vital.value === 'o2' ? ctx.fromVitals().o2 ?? '' : vitalNow(ctx.fromVitals(), vital.value) ?? ''; sync(); });
     from.addEventListener('input', () => { st.touchedFrom = true; sync(); });
     to.addEventListener('input', () => { // suggest the direction from the normal range, unless the instructor picked one
-      if (!st.touchedDir) { const d = directionOf(vital.value, from.value, to.value, ctx.normal); if (d !== 'set') dir.value = d; }
+      if (!st.touchedDir && dir.value !== 'rel') { const d = directionOf(vital.value, from.value, to.value, ctx.normal); if (d !== 'set') dir.value = d; }
       sync();
     });
     dir.addEventListener('change', () => { st.touchedDir = true; sync(); });

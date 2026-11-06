@@ -21,6 +21,7 @@ import { checkList } from './script-parts.js';
 import { tagChips } from './patient-tags-ui.js';
 import { durationOverrides } from './duration-overrides.js';
 import { answersEditor } from './assessment-answers.js';
+import { caseFields } from './case-fields.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
 const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
@@ -81,6 +82,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const nr = Object.fromEntries(Object.keys(defaults).map((k) => [k, ['lo', 'hi'].map((side, i) => h('input', { class: 'input input-small', type: 'number', 'aria-label': `${k} normal ${side === 'lo' ? 'low' : 'high'}`, value: work.normalRanges?.[k]?.[i] ?? '', placeholder: String(defaults[k][i]) }))]));
     const durs = durationOverrides(catalogs, work.taskDurations || {}, { label: 'Patient task time' });
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
+    const cases = caseFields(work, catalogs, { settings: scenario.settings, onChange: () => { dirty = true; }, current: () => collect() });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
     const errBox = h('div', {});
@@ -97,7 +99,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       const { taskDurations: _td, ...rest4 } = rest3;
       const td = durs.value();
       const rest = Object.keys(td).length ? { ...rest4, taskDurations: td } : rest4;
-      return Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest;
+      return cases.apply(Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest);
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
 
@@ -164,6 +166,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         field('Name', inp('name')), field('Age', inp('age', 'number')), field('Sex', inp('sex')), field('Room', inp('room')),
         field('Triage tag (yours)', sel('tag', TAGS)), field('Priority label', inp('priorityLabel')), field('Admitting diagnosis', inp('admittingDx')),
         field('Code status', inp('codeStatus')), field('Review status', sel('review', ['proposed', 'partial', 'approved'])), field('Source', inp('source'))),
+      cases.el,
       ptags ? h('section', { class: 'panel' }, h('h3', {}, 'Patient tags ', helpTip('editor.patient-tags')), h('p', { class: 'muted small' }, 'For finding and randomizing patients (not the triage tag above). Click to add or remove; a patient can have several in a group.'), ptags.el) : null,
       h('section', { class: 'panel' }, h('h3', {}, 'H&P'),
         field('Allergies', area('allergies', 2), 'One per line: agent | reaction'), field('Allergy note', inp('allergyText'), 'e.g. "No known drug allergies"'),
@@ -203,6 +206,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         } }, 'Apply JSON')),
       h('div', { class: 'controls' }, h('button', { class: 'btn btn-primary', onclick: onSave }, 'Save')),
     );
+    cases.refresh();
   }
 
   load(id);

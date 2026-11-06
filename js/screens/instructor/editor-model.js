@@ -63,7 +63,8 @@ export function fromForm(f, base, { orders = base.orders, labs = base.labs } = {
     tag: f.tag, priorityLabel: f.priorityLabel, admittingDx: f.admittingDx.trim(), codeStatus: f.codeStatus,
     allergies: lines(f.allergies).map(pipes).map(([agent, reaction]) => ({ agent, ...(reaction ? { reaction } : {}) })),
     hpi: f.hpi, pmh: lines(f.pmh),
-    homeMeds: lines(f.homeMeds).map(pipes).map(([name, dose, freq]) => ({ name, ...(dose ? { dose } : {}), ...(freq ? { freq } : {}) })),
+    // A home med keeps its medication class (case templates) by name.
+    homeMeds: lines(f.homeMeds).map(pipes).map(([name, dose, freq]) => { const cls = (base.homeMeds || []).find((m) => m.name === name)?.medClass; return { name, ...(cls ? { medClass: cls } : {}), ...(dose ? { dose } : {}), ...(freq ? { freq } : {}) }; }),
     handoff: { ...(base.handoff || {}), situation: f.situation, background: f.background, assessment: f.assessment, recommendation: f.recommendation },
     vitals: { ...base.vitals, baseline },
     findings: { ...base.findings, baseline: lines(f.findings) },
