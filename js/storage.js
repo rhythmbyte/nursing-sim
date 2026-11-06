@@ -93,3 +93,10 @@ export function saveSession(key, value) {
     console.warn(`storage.saveSession(${key}) failed:`, err);
   }
 }
+
+/** Calls fn() when another tab of this browser changes `key` (the window "storage" event). Returns unsubscribe. */
+export function onExternalChange(key, fn) {
+  const handler = (e) => { if (e.key === PREFIX + key) fn(); };
+  try { window.addEventListener('storage', handler); } catch { return () => {}; }
+  return () => window.removeEventListener('storage', handler);
+}

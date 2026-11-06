@@ -4,6 +4,12 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Standalone monitor follows the session in storage, read-only
+- **Decision:** `?monitor=<pid>` mounts only `screens/monitor/standalone.js`, which loads the saved session (`storage.load`) and re-renders on `storage.onExternalChange` (the browser's storage event) plus a 2 s refresh. It never writes, so two tabs can't race over the session.
+- **Why / limits:** Works for a second screen on the same device and browser only. A monitor on a different device needs the full build's realtime channel (SPEC §13).
+
+---
+
 ## 2026-11-05: Monitor alarm episodes are tracked by the engine
 - **Decision:** A tick processor (`engine/monitor-alarms.js`) compares each patient's `monitorView` alarms with the last recorded set and logs `monitor-alarm` on changes. An episode runs from first alarm to all-clear. **Silence alarm** (`acknowledgeAlarm`) logs the response time once per episode and silences the sound for `alarmSilenceMin`; the visual alarm stays. The `alarm-response` rule and the debrief read episodes from the log. It lives in its own module so `session.js` can list the processor without an import cycle at load time. Session shape v13.
 - **Why:** Alarm response is gradable only if the engine, not the display, knows when alarms started. Thresholds and silence length are clinical, so they're data plus SPEC §14 questions.

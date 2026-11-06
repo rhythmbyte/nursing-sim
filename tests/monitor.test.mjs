@@ -108,3 +108,16 @@ test('Suggestion 2: alarm episodes, silence logs response time, alarm-response r
   const eps = alarmEpisodes(s.log, DE);
   assert.deepEqual(eps.map((e) => [e.start, e.ack, e.end]), [[2.1, 5, 21.1]]);
 });
+
+test('Suggestion 1: standalone monitor view from a saved session (display only)', async () => {
+  const { standaloneView } = await import('../js/screens/monitor/standalone.js');
+  let { s } = started();
+  s = chart.connectMonitor(s, LG, {}, ctx(0));
+  const saved = JSON.parse(JSON.stringify(s)); // as storage would hold it
+  const sv = standaloneView(saved, LG, templatesById, catalogs, 5 * MIN);
+  assert.equal(sv.view.rhythm.id, 'sinus-tach');
+  assert.equal(sv.running, true);
+  assert.match(sv.title, /Linda Garcia/);
+  assert.equal(standaloneView(null, LG, templatesById, catalogs, 0), null, 'no sim yet');
+  assert.equal(standaloneView(saved, 'p-nobody', templatesById, catalogs, 0), null);
+});

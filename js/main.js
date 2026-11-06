@@ -3,7 +3,8 @@
 
 import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
-import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure } from './storage.js';
+import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
+import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { openModal } from './screens/shared/modal.js';
 import { setHelp } from './screens/shared/help.js';
 import { setTagStyles } from './screens/shared/triage-chip.js';
@@ -175,6 +176,13 @@ async function boot() {
     let data = await loadAll();
     setHelp(data.catalogs.help);
     setTagStyles(data.catalogs.priorityScales);
+    // index.html?monitor=<patientId>: standalone bedside monitor only (display-only, no app, no welcome).
+    const monitorPid = new URLSearchParams(window.location.search).get('monitor');
+    if (monitorPid) {
+      mountStandaloneMonitor(root, { pid: monitorPid, templatesById: Object.fromEntries(data.patients.map((p) => [p.id, p])), catalogs: data.catalogs,
+        loadSession: () => load(SESSION_KEY), onSessionChange: (fn) => onExternalChange(SESSION_KEY, fn) });
+      return;
+    }
     if (data.problems.length) console.warn('Data validation problems:', data.problems);
     if (!data.scenarios.length) throw new Error('No valid scenarios loaded.');
     let teardown = null;

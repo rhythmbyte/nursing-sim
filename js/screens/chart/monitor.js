@@ -18,7 +18,8 @@ export default {
       const p = document.fullscreenElement ? document.exitFullscreen() : wrap.requestFullscreen?.();
       Promise.resolve(p).catch(() => toast('Full screen isn\'t allowed here. Use the browser\'s full-screen key instead.'));
     } }, 'Full screen');
-    root.append(h('div', { class: 'controls' }, connectBtn, full), wrap);
+    const popout = h('button', { class: 'btn', title: 'A monitor-only page for a bedside tablet or TV (same browser)', onclick: () => window.open(`${location.pathname}?monitor=${encodeURIComponent(pid)}`, `monitor-${pid}`) }, 'Open in new tab');
+    root.append(h('div', { class: 'controls' }, connectBtn, full, popout), wrap);
     const mon = createMonitor(wrap, { isRunning: () => runner.state.clock.status === 'running', title: `Rm ${view.demographics.room} ${view.demographics.name}`,
       onSilence: () => { act('acknowledgeAlarm', {}); toast('Alarm silenced'); } });
     return {

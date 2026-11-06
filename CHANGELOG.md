@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Standalone monitor page (suggestion 1)
+- **Open in new tab** on the chart's Monitor tab opens `index.html?monitor=<patient>`: just the bedside monitor (with Full screen) for a tablet or TV, no app around it. It follows the sim running in **the same browser** live (reads the saved session via `storage.onExternalChange`) and is display-only (never writes; silencing happens in the chart).
+- Checked in two browser tabs: an instructor vitals change showed up on the monitor page with alarms.
+- Tests: 120 passing.
+
 ## Alarm acknowledgement (suggestion 2)
 - When the bedside monitor alarms, students see **Silence alarm**. It logs the response time and silences the sound for `vitals.json alarmSilenceMin` (2 min); the flashing stays.
 - The engine tracks alarm episodes (start, changes, cleared), logged as `monitor-alarm`.
