@@ -174,3 +174,26 @@ details.advanced summary { cursor: pointer; color: var(--muted); }
   .sheet-notes { min-height: 1.4in; }
   .sheet-grid { width: 100%; border-collapse: collapse; } .sheet-grid th, .sheet-grid td { border: 1px solid #000; padding: 2px 4px; height: 0.28in; font-size: 9pt; }
 }
+
+/* B13: tablet / touch layout (student, charge, monitor). No hover-only controls anywhere. */
+@media (pointer: coarse) {
+  .btn, .tab, .chart-tab, .subnav-btn, .pill, select, .input, .sp-open, .mon-btn { min-height: 44px; }
+  .btn-small { min-height: 40px; padding: 4px 12px; font-size: 0.9rem; }
+  input[type="checkbox"], input[type="radio"] { width: 22px; height: 22px; }
+  .pill { padding: 6px 14px; }
+  .call-light-dot { width: 14px; height: 14px; }
+}
+@media (max-width: 1024px) {
+  .chart-grid.two { grid-template-columns: 1fr; }
+  .patient-banner { flex-direction: column; }
+  .banner-side { align-items: stretch; }
+  .allergy-box { max-width: none; }
+  .tab-panel { padding: var(--space-3); }
+  .sp-main { row-gap: var(--space-1); }
+}
+@media (max-width: 1024px) and (orientation: landscape) {
+  .chart-grid.two { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+}
+.panel { min-width: 0; }
+.data-table { max-width: 100%; }
+.screen-header, .chart-top, .controls { flex-wrap: wrap; }

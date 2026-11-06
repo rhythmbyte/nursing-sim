@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## B13. Tablet layout
+- Touch screens get ≥ 44 px targets (buttons, selects, inputs, pills, tabs) and larger checkboxes. Student and charge screens stack in portrait and stay two-column in landscape. Wide tables scroll inside their panel, not the page. There are no hover-only controls.
+- Browser check at 810×1080 and 1080×810 with touch emulation: no horizontal overflow on the student home, any chart tab, or charge; no small touch targets.
+
 ## B12. Call-light sound
 - A beep when a call light comes on for one of the student's patients, then a gentle repeat (every 30 s of real time, while the sim runs) until it's answered. A toggle on the student home and chart (one setting, remembered per student) turns it on or off. Timing and tones are data (`ui.json callLightSound`).
 - Tests: 110 passing.
