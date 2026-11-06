@@ -61,6 +61,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - Skip to her 08:00 deterioration first if you haven't.
    - **Instructor → Event timeline → Fire now** on her sepsis orders.
    - Back as the student: chart **Insert Foley** before the fluid bolus (a deliberate priority mistake).
+   - **Linda reacts on her own** (reactive script, proposed content): at 08:00 she starts desaturating. Chart **Apply / titrate oxygen** with 2 L (stays about 86%, below her target), 6 L (90%, in her 88–92% COPD target) or a NRB (96%, over-oxygenated). Or do nothing: after 5 min she is hypoxic (SpO₂ 82%, RR 32, the CNA calls it in), and 10 min later she is crashing and her daughter hits the call light. **Live control → Patient scripts** shows her state, the countdown ("If no O₂ by 08:05 → Hypoxic") and buttons to force a state, fire a reaction, skip a countdown, disable a reaction or pause her script. The debrief's **Patient states** table shows each change and why.
 6. **Charge tab.** Skip to 09:30. James waits on the **Admissions board**. **Assign now** to the group. He appears on Student 1's list.
 7. **End the shift** (Live control → **End**, or let it reach 15:00). The student gets a short **reflection** form. Then the **Debrief tab.** Walk through:
    - the red/amber flags (nitro override, Foley before bolus, missed notifications);
@@ -77,6 +78,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - **Command center** (Instructor, the default while a sim runs): one card per group, worst first, with late / very late work, overdue meds, call lights, alarms and flags. Click a group or patient to jump to Live control. A card flashes for a few seconds when its status gets worse. The debrief adds a **Timeliness** table.
    - **Keyboard:** on Live control, Space pauses/resumes, N skips to the next event, ? lists shortcuts.
    - **Help:** every Sim setup and editor field has a ? with a plain-language explanation.
+   - **Reactive script** (Patient editor → Linda → Reactive script): the state diagram (click a box or an arrow to edit it), When / If / Then reaction forms, **Add from template** (O₂ response, fluid bolus) and **Test this patient** (a dry run: wait, chart O₂ at 12 L, see what fires).
    - **Patient editor:** open a patient, click a timeline marker to see a scenario change, or **Add scenario change** (e.g. 09:45 call light, new vitals, a tier 1 order), then drag it on the timeline.
    - **Sim setup:** build a two-group sim with random tag counts.
 

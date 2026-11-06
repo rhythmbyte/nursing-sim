@@ -193,3 +193,26 @@ test('Live control view: state, armed countdowns with their "without", what it l
   assert.deepEqual([p.paused, p.timers.length, p.listening.length], [true, 0, 0]);
   assert.equal(scriptView(s, 'p1-robert-miller', templatesById['p1-robert-miller'], catalogs), null, 'no script, no panel');
 });
+
+test('debrief: state timeline with causes; "nothing done" changes flagged; teaching notes', async () => {
+  const { stateTimeline } = await import('../js/engine/reactions/view.js');
+  const { buildDebrief } = await import('../js/engine/debrief.js');
+  const { joinSim } = await import('../js/engine/roster.js');
+  const { studentIdsForGroup, groupOfStudent } = await import('../js/engine/assignment.js');
+  const scenario = scenarioWith();
+  const L = live();
+  let s = joinSim({ ...L.s, joinCode: 'ABC123' }, { userId: 'student-1', name: 'Pat', code: 'abc123' }, { scenario, now: 0 }).state;
+  s = L.tick(s, 76); // neglected: desaturating → hypoxic → crashing
+  s = chart.chartIntervention(s, LG, { interventionId: 'o2-apply', fields: { device: 'NRB', lpm: '15' } }, { ...L.ctx(78), user: S1 });
+  s = L.tick(s, 79);
+  const rows = stateTimeline(s, LG, linda, catalogs);
+  assert.deepEqual(rows.map((r) => [r.to, r.cause.kind, r.nothingDone]), [
+    ['baseline', 'start', false], ['desaturating', 'event', false], ['hypoxic', 'timeout', true], ['crashing', 'timeout', true], ['over-oxygenated', 'student', false]]);
+  assert.match(rows[2].causeText, /nothing done in time: 5 min without Apply \/ titrate oxygen/);
+  assert.match(rows[4].note, /above her 88–92% COPD target/);
+  const ctx = { templatesById, catalogs, simMin: 79, studentIdsForGroup: (g) => studentIdsForGroup(s.roster, g), groupOfStudent: (u) => groupOfStudent(s.roster, u) };
+  const d = buildDebrief(s, 'student-1', ctx);
+  const mine = d.scripts.find((x) => x.patientId === LG);
+  if (d.patientIds.includes(LG)) assert.equal(mine.rows.length, 5);
+  else assert.equal(mine, undefined, 'only this student\'s patients');
+});

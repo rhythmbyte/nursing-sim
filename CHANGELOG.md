@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Reactive scripting: debrief and demo guide (stages 4–5)
+- **Debrief → Patient states:** for each of the student's scripted patients, the state timeline (time, from → to, why: student action, nothing done in time, vitals threshold, scheduled event, another reaction, instructor) with the state's teaching note. Changes caused by nothing being done in time are red and marked "⚠ Nothing done". A per-patient chip counts them. It's in Print summary, and the CSV gets one `patient-state` row per change.
+- README demo guide: Linda's script (watch her desaturate, try 2 L vs 6 L vs NRB, or do nothing), Live control's Patient scripts panel, the builder and Test this patient.
+- Tests: 162 passing.
+
 ## Reactive scripting: builder, diagram, dry run, templates (stage 3)
 - **Patient editor → Reactive script** (no JSON): pick the starting state; a **States** list (name, target vitals now or over N min, rhythm, findings, teaching note) and a **Reactions** list written as **When / If / Then** with dropdowns from the catalogs and the patient (interventions and their chart fields with all-of / any-of field tests, orders, med orders and MAR results with dose ranges, vitals thresholds, countdowns from a state, event, reaction or the start *without* chosen actions, chains; conditions on state, actions done or not done, vitals ranges, a time window; effects: state, vitals, findings, call light / staff message / new orders / lab result / code, fire an event). Readable errors in the form; renaming a state updates every reaction; deleting a state or reaction that's still used is refused with the reason.
 - **State diagram** (SVG): states as boxes in columns from the start, state-changing reactions as arrows labelled with their trigger, "Any state" for reactions without a state condition. Click or press Enter on a box or arrow to edit it. Reactions without a state change are listed under it.

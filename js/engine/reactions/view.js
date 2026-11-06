@@ -1,7 +1,7 @@
 // What Live control (and the builder) show about a patient's script right now. Pure, no DOM.
 
 import { armedTimers, maxFires } from '../reactions.js';
-import { names, triggerText, effectText, matcherText, reactionText } from './describe.js';
+import { names, triggerText, effectText, matcherText, reactionText, causeText } from './describe.js';
 
 const LISTENS = ['intervention', 'order', 'med', 'vitals', 'fired'];
 
@@ -34,4 +34,23 @@ export function scriptView(state, pid, template, catalogs) {
       id: r.id, label: r.label || r.id, text: reactionText(r, n), fires: sc.fires[r.id] || 0, max: maxFires(r, state.settings), disabled: Boolean(sc.disabled[r.id]),
     })),
   };
+}
+
+/**
+ * Debrief: a patient's state timeline from the log. Rows { atMin, from, fromLabel, to, label, cause, causeText,
+ * by, nothingDone, note }. nothingDone = a countdown fired because none of its "without" actions happened.
+ */
+export function stateTimeline(state, pid, template, catalogs) {
+  if (!template?.script) return [];
+  const n = names(template, catalogs);
+  const start = { atMin: 0, from: null, fromLabel: '', to: template.script.initialState, label: n.state(template.script.initialState), cause: { kind: 'start' }, causeText: 'start of the sim', by: 'system', nothingDone: false, note: '' };
+  return [start, ...state.log.filter((l) => l.patientId === pid && l.action === 'script-state').map((l) => {
+    const d = l.details;
+    return {
+      atMin: l.simMin, from: d.from, fromLabel: n.state(d.from), to: d.to, label: d.label || n.state(d.to), cause: d.cause,
+      causeText: causeText(d.cause, n), by: l.userId,
+      nothingDone: d.cause?.kind === 'timeout' && (d.cause.without || []).length > 0,
+      note: template.script.states.find((s) => s.id === d.to)?.note || '',
+    };
+  })];
 }
