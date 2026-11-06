@@ -111,6 +111,11 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/call-light-sound.js` | `litLights` (pure) + per-tab watcher (beep on new light, gentle repeat, remembered on/off) | built |
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/instructor/script-editor.js` | Patient editor → Reactive script section (starting state, diagram, states and reactions lists, templates, Test this patient) | built |
+| `js/screens/instructor/script-model.js`, `script-model-reactions.js` | Pure builder model: state and reaction form ⇄ data, rename, duplicate, delete guards, `applyTemplate`, `templateFrom` | built |
+| `js/screens/instructor/script-state-form.js`, `script-reaction-form.js`, `script-when.js`, `script-parts.js` | State form; When / If / Then reaction form; shared option lists and check lists | built |
+| `js/screens/instructor/script-diagram.js` | `diagramLayout` (pure) + SVG state diagram (click or Enter to edit) | built |
+| `js/screens/instructor/script-test.js` | "Test this patient" dry-run modal | built |
 | `js/screens/instructor/live-script.js` | Live control → Patient scripts panel (state, countdowns, listening, overrides); `rebuildKeepingUi` keeps open details and select values across re-renders | built |
 | `js/screens/instructor/command-center.js` | Command center sub-view (default while a sim is in progress); group/patient click → Live control filter | built |
 | `js/screens/shared/tone-chip.js` | Symbol + word + color chips for timeliness tags and group status (data) | built |
@@ -126,7 +131,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `rhythms.json` (monitor rhythms and how they're drawn) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `rhythms.json` (monitor rhythms and how they're drawn) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |

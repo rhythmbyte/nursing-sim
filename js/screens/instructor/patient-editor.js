@@ -14,6 +14,7 @@ import { listChanges, minToClock, retimeChange, duplicateChange, deleteChange } 
 import { openChangeBuilder } from './change-builder.js';
 import { patientTimeline } from './patient-timeline.js';
 import { setLeaveGuard, clearLeaveGuard } from '../shared/leave-guard.js';
+import { scriptSection } from './script-editor.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
 const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
@@ -132,6 +133,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
           h('button', { class: 'btn btn-small', onclick: () => { sync(); update(duplicateChange(work, c.key, startClock).template); } }, 'Duplicate'),
           h('button', { class: 'btn btn-small btn-ghost', onclick: () => { if (window.confirm('Delete this scenario change?')) { sync(); update(deleteChange(work, c.key, startClock)); } } }, 'Delete'))))
           : h('p', { class: 'muted' }, 'No scenario changes yet.')),
+      scriptSection({ work: () => work, sync, update, catalogs, scenario, schemas: data.schemas, reloadData }),
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Outcome and code branch'),
         field('Outcome', sel('outcomeMode', ['survive', 'die', 'instructor'])), field('Outcome notes', inp('outcomeNotes')),
         h('label', { class: 'inline' }, chk('cbOn'), ' Has a code branch'), h('label', { class: 'inline' }, chk('cbEnabled'), ' Code branch enabled'),

@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-06: The script builder is a form over a pure model; the dry run reuses the real session
+- **Decision:** `script-model.js` / `script-model-reactions.js` convert between forms and `template.script` (pure, tested: every starter reaction round-trips unchanged). The modals only build forms. "Test this patient" calls `engine/reactions/dry-run.js`, which runs the real session, chart actions and processors on a private copy.
+- **Why:** What the dry run shows is exactly what the live sim will do. Form bugs show up in Node tests, not mid-class.
+- **Details:** A `where` with several fields per alternative can't be shown in the form; it's kept as-is unless the instructor adds field tests. Templates carry findings as text (`findingsText`), because finding-change ids are per patient.
+
+---
+
 ## 2026-11-06: Reaction scripts run as a processor and reuse event types for effects
 - **Decision:** `engine/reactions.js` is a session processor. It reads triggers from the log (student actions, events fired, reactions fired) and from `vitalsHistory` (thresholds), and it adds its own deadlines ("N min without X"). Processors may report `nextAt`, so the session stops at that moment first and everything stays in time order, including during Skip and catch-up. Effects reuse the event-type registry (call light, staff message, new orders, lab result, code) and `setVitalsTarget`, instead of a second copy of each.
 - **Why:** One path for every trigger, the same in live sims and the dry run. Nothing new for the screens or chart actions to call, and no copied effect logic.

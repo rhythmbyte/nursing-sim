@@ -4,7 +4,7 @@
 //
 // steps: [{ kind: 'wait', min } | { kind: 'chart', interventionId, fields? } | { kind: 'med', orderId, result? }
 //         | { kind: 'order', orderId } | { kind: 'fire', eventId } | { kind: 'force', stateId }]
-// Returns frames: one per step + the start, each { label, atMin, state, stateLabel, vitals, fired, transitions, alerts }.
+// Returns frames: one per step + the start, each { label, atMin, state, stateLabel, vitals, trend, fired, transitions, events, alerts }.
 
 import * as session from '../session.js';
 import * as chart from '../chart.js';
@@ -49,6 +49,7 @@ export function dryRun(template, { catalogs, settings, steps = [], startClock = 
     frames.push({
       label, atMin: t, state: ps.script?.state ?? null, stateLabel: ps.script ? n.state(ps.script.state) : '',
       vitals: { ...ps.vitals },
+      trend: ps.vitalsTrend ? { to: { ...ps.vitalsTrend.to }, toMin: ps.vitalsTrend.toMin } : null,
       fired: fresh.filter((l) => l.action === 'reaction-fired').map((l) => ({ reactionId: l.details.reactionId, label: l.details.label, cause: l.details.cause })),
       transitions: fresh.filter((l) => l.action === 'script-state').map((l) => ({ atMin: l.simMin, from: l.details.from, to: l.details.to, cause: l.details.cause })),
       events: fresh.filter((l) => l.action === 'event-fired').map((l) => l.details.eventId),

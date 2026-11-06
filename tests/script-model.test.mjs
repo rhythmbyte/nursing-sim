@@ -90,3 +90,15 @@ test('templates: apply renames clashing ids; a template saved from Linda applies
   const onRobert = applyTemplate(robert, { ...tpl, states: [...tpl.states, { id: 'desaturating', label: 'Desaturating' }] }).template;
   clean(onRobert);
 });
+
+test('state diagram layout: columns by distance from the start; arrows from inState or the countdown state', async () => {
+  const { diagramLayout } = await import('../js/screens/instructor/script-diagram.js');
+  const L = diagramLayout(linda.script);
+  assert.equal(L.pos.baseline.col, 0);
+  assert.equal(L.pos.desaturating.col, 1);
+  assert.equal(L.pos.hypoxic.col, 2, 'reached from desaturating by the 5-min countdown');
+  assert.equal(L.pos.crashing.col, 3);
+  assert.ok(L.edges.some((e) => e.from === 'desaturating' && e.to === 'hypoxic' && e.reactionId === 'r-p4-no-o2'));
+  assert.ok(L.hasAny, 'O₂ reactions use notInState, so they come from "any state"');
+  assert.deepEqual(L.other, ['r-p4-spo2-82', 'r-p4-crash-light']);
+});
