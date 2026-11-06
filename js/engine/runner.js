@@ -3,9 +3,10 @@
 // Store events: 'tick' (simMin) on every tick; store.set({ session }) whenever state changes.
 
 import * as session from './session.js';
+import * as chart from './chart.js';
 import { collectEvents, groupMembers } from './scheduler.js';
 
-export function createRunner({ store, scenario, templatesById, now = () => Date.now(), persist = () => {}, saved = null }) {
+export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null }) {
   const ids = session.scenarioPatients(scenario).map((p) => p.id).filter((id) => templatesById[id]);
   const refs = collectEvents(ids, templatesById, scenario);
   const fresh = () => session.createSession(scenario, templatesById);
@@ -62,6 +63,16 @@ export function createRunner({ store, scenario, templatesById, now = () => Date.
 
     answerCallLight(patientId, user) {
       commit(session.answerCallLight(state, patientId, { now: now(), user }));
+    },
+
+    /**
+     * Student chart actions: runner.chart(name, patientId, args, user).
+     * name ∈ openPatient, openHandoff, closeHandoff, saveHandoffNotes, acknowledgeOrder, completeOrder,
+     *        chartIntervention, medAction, addNote, escalate (see engine/chart.js).
+     */
+    chart(name, patientId, args, user) {
+      if (typeof chart[name] !== 'function') throw new Error(`Unknown chart action ${name}`);
+      commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById, catalogs }));
     },
 
     reset() {

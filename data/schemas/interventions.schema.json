@@ -22,7 +22,8 @@
           "category": { "type": "string" },
           "label": { "type": "string" },
           "chartFields": { "type": "array", "items": { "type": "string" } },
-          "delegableTo": { "type": "array", "items": { "enum": ["LPN", "CNA"] } }
+          "delegableTo": { "type": "array", "items": { "enum": ["LPN", "CNA"] } },
+          "revealsFindings": { "type": "boolean" }
         }
       }
     }

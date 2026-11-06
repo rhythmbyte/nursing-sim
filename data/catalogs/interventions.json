@@ -15,8 +15,8 @@
     { "id": "communication", "label": "Communication / Escalation" }
   ],
   "interventions": [
-    { "id": "assess-focused", "category": "assessment", "label": "Focused assessment", "chartFields": ["system", "findings"], "delegableTo": [] },
-    { "id": "assess-full", "category": "assessment", "label": "Head-to-toe assessment", "chartFields": ["findings"], "delegableTo": [] },
+    { "id": "assess-focused", "revealsFindings": true, "category": "assessment", "label": "Focused assessment", "chartFields": ["system", "findings"], "delegableTo": [] },
+    { "id": "assess-full", "revealsFindings": true, "category": "assessment", "label": "Head-to-toe assessment", "chartFields": ["findings"], "delegableTo": [] },
     { "id": "assess-pain", "category": "assessment", "label": "Pain assessment", "chartFields": ["score", "location", "quality"], "delegableTo": [] },
     { "id": "assess-neuro", "category": "assessment", "label": "Neuro check (GCS / pupils)", "chartFields": ["gcs", "pupils", "orientation"], "delegableTo": [] },
     { "id": "assess-nv", "category": "assessment", "label": "Neurovascular check", "chartFields": ["extremity", "pulses", "capRefill", "sensation", "movement"], "delegableTo": ["LPN"] },

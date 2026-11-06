@@ -1,6 +1,7 @@
 // Live session state + pure transitions. No DOM, no timers; wall time (`now`) is passed in.
 // Shape (SPEC §4.5):
-// { version, scenarioId, startClock, clock, patients: { id → patientState }, fired: { key → n }, alerts, log }
+// { version, scenarioId, startClock, clock, patients: { id → patientState }, students: { userId → { seen, handoff } },
+//   fired: { key → n }, alerts, log }
 // Every transition returns a NEW state; event types mutate a structuredClone draft.
 
 import './events/index.js';
@@ -9,7 +10,7 @@ import * as clock from './clock.js';
 import { dueEvents, groupMembers, nextAt } from './scheduler.js';
 import { append, SYSTEM } from './log.js';
 
-export const SESSION_VERSION = 1;
+export const SESSION_VERSION = 2; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -32,7 +33,8 @@ function initialPatientState(t, groupId, admission) {
     alive: true,
     vitals: { ...t.vitals.baseline },
     callLight: null,
-    findingChanges: [],
+    findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
+    revealed: [],       // [{ source: 'baseline' | eventId, atMin, findings }] once the student assesses
     orders,
     labs: t.labs.map((l) => ({ ...l })),
     code: null,
@@ -55,6 +57,7 @@ export function createSession(scenario, templatesById) {
     startClock: scenario.startClock,
     clock: clock.createClock(scenario.speed),
     patients,
+    students: {},
     fired: {},
     alerts: [],
     log: [],
