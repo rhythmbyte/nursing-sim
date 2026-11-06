@@ -114,7 +114,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
       h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags ', helpTip('setup.tags-charge')),
       h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain ', helpTip('setup.reveal-manual-vitals')),
       h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes ', helpTip('setup.pause-on-close')),
-      h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings')),
+      h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings ', helpTip('setup.delegated-assessment-reveals'))),
     groupsBox,
     h('div', { class: 'controls' }, h('button', { class: 'btn', onclick: addGroup }, 'Add group'), h('button', { class: 'btn btn-primary', onclick: create }, 'Create sim')),
     result,
