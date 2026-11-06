@@ -11,6 +11,7 @@ import { joinSim } from './roster.js';
 import { assignAdmission, holdAdmission } from './admissions.js';
 import { assignPriority } from './priority.js';
 import { adjustVitals } from './vitals-control.js';
+import { submitReflection } from './reflection.js';
 import { effectiveTemplates } from './templates.js';
 import { evaluateRules } from './rules/index.js';
 import { buildDebrief } from './debrief.js';
@@ -125,6 +126,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     holdAdmission(patientId, reason, user) { commit(holdAdmission(state, patientId, { reason }, { now: now(), user })); },
     assignPriority(patientId, levelId, user) { commit(assignPriority(state, patientId, { levelId }, { now: now(), user, catalogs })); },
     adjustVitals(patientId, args, user) { commit(adjustVitals(state, patientId, args, { now: now(), user })); runner.tick(); },
+    submitReflection(userId, answers, user) { commit(submitReflection(state, { userId, answers }, { now: now(), user, catalogs })); },
     startCode(patientId, args, user) { commit(startCode(state, patientId, args || {}, { now: now(), user })); },
     setCodeOutcome(patientId, outcome, user) { commit(setCodeOutcome(state, patientId, outcome, { now: now(), user })); },
     setCallLight(patientId, on, message, user) { commit(setCallLight(state, patientId, { on, message }, { now: now(), user })); },

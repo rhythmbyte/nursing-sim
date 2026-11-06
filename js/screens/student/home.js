@@ -93,13 +93,35 @@ export function mountStudentHome(root, ctx) {
     cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, getView: () => { refreshViews(); return views[pid]; }, onBack: showHome, onOpenPatient: openPatient });
   }
 
+  // End-of-sim reflection (questions: data/catalogs/reflection.json). Built once, so typing isn't lost on re-render.
+  let reflectionForm = null;
+  function reflectionPanel(state) {
+    const done = state.reflections?.[user.userId];
+    if (done) return h('section', { class: 'panel' }, h('h3', {}, 'Reflection'), h('p', {}, 'Thanks, your reflection was submitted.'));
+    if (reflectionForm) return reflectionForm;
+    const qs = ctx.catalogs.reflection?.questions || [];
+    const boxes = Object.fromEntries(qs.map((q) => [q.id, h('textarea', { class: 'input', rows: 3, 'aria-label': q.text })]));
+    const err = h('p', { class: 'form-error', role: 'alert' });
+    reflectionForm = h('section', { class: 'panel reflection' }, h('h3', {}, 'The shift is over: reflection'),
+      qs.map((q) => h('label', { class: 'field' }, h('span', {}, q.text), boxes[q.id])), err,
+      h('button', { class: 'btn btn-primary', onclick: () => {
+        try { runner.submitReflection(user.userId, Object.fromEntries(Object.entries(boxes).map(([k, el]) => [k, el.value])), user); }
+        catch (e) { err.textContent = e.message; }
+      } }, 'Submit reflection'));
+    return reflectionForm;
+  }
+  let renderReflection = () => {};
+
   function mountHome() {
     const clock = simClock(store, runner);
+    const reflectBox = h('div', {});
+    renderReflection = (state) => { if (state.clock.status === 'ended') clear(reflectBox).append(reflectionPanel(state)); };
     const list = h('ul', { class: 'student-patients' });
     const alerts = h('div', {});
 
     function render() {
       const state = runner.state;
+      renderReflection(state);
       const simMin = runner.simMin();
       const seen = state.students[user.userId]?.seen || {};
       refreshViews();
@@ -127,6 +149,7 @@ export function mountStudentHome(root, ctx) {
           printReportSheet(runner.state, user.userId, mine, views, user.name);
         } }, 'Print report sheet'),
         clock.el),
+      reflectBox,
       h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
       h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
     );

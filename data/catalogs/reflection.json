@@ -1,0 +1,10 @@
+{
+  "review": "proposed",
+  "_comment": "Questions students answer when the sim ends. Answers appear in the debrief. Instructor to confirm the wording (SPEC §14).",
+  "questions": [
+    { "id": "first-patient", "text": "Which patient did you see first, and why?" },
+    { "id": "recognized", "text": "What change in a patient did you recognize, and what did you do about it?" },
+    { "id": "delegation", "text": "What did you delegate, and was it appropriate?" },
+    { "id": "differently", "text": "What would you do differently next time?" }
+  ]
+}

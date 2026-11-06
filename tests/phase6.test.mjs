@@ -232,3 +232,23 @@ test('C17: every tag and scale level has a symbol (not color alone)', async () =
   const noSym = structuredClone(ps); delete noSym.scales['triage-colors'].levels[0].symbol;
   assert.ok(scaleProblems(noSym).some((p) => /symbol/.test(p)));
 });
+
+test('C18: reflection opens at sim end, saves once, shows in the debrief', async () => {
+  const { submitReflection } = await import('../js/engine/reflection.js');
+  const { buildDebrief } = await import('../js/engine/debrief.js');
+  const sc = scenarioWith();
+  let s = session.createSession(sc, templatesById, catalogs, { joinCode: 'X' });
+  s = joinSim(s, { userId: 'student-1', name: 'Ana', code: 'X' }, { scenario: sc, now: 0 }).state;
+  s = session.controlClock(s, 'start', { now: 0, user: INS });
+  const S1 = { userId: 'student-1', role: 'student' };
+  assert.throws(() => submitReflection(s, { userId: 'student-1', answers: { differently: 'x' } }, { now: MIN, user: S1, catalogs }), /when the sim ends/);
+  s = session.controlClock(s, 'end', { now: 60 * MIN, user: INS });
+  assert.throws(() => submitReflection(s, { userId: 'student-1', answers: { differently: ' ' } }, { now: 61 * MIN, user: S1, catalogs }), /at least one/);
+  s = submitReflection(s, { userId: 'student-1', answers: { 'first-patient': 'Robert, chest pain', bogus: 'ignored' } }, { now: 61 * MIN, user: S1, catalogs });
+  assert.deepEqual(s.reflections['student-1'].answers, { 'first-patient': 'Robert, chest pain' });
+  assert.equal(s.log.at(-1).action, 'reflection-submitted');
+  assert.equal(submitReflection(s, { userId: 'student-1', answers: { differently: 'again' } }, { now: 62 * MIN, user: S1, catalogs }), s, 'once');
+  const d = buildDebrief(s, 'student-1', { templatesById, catalogs, simMin: 62, studentIdsForGroup: (g) => studentIdsForGroup(s.roster, g), groupOfStudent: (u) => s.roster[u]?.groupId });
+  assert.equal(d.reflection.answers['first-patient'], 'Robert, chest pain');
+  assert.equal(catalogs.reflection.review, 'proposed');
+});

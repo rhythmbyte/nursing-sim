@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## C18. Student reflection after the sim
+- When the sim ends, each student's home shows a short reflection form. The questions are data in `data/catalogs/reflection.json` (proposed). Answers are logged and shown in a **Reflection** section of the debrief. Submitted once; at least one answer is required.
+- Tests: 117 passing.
+
 ## C17. Color-blind-safe tags
 - Every tag shows a shape as well as color and name: ▲ red, ◆ yellow, ● green, ✕ black. This covers the instructor's triage chips everywhere (library, Live control, charge, debrief) and the students' priority options. The symbols are data in `priority-scales.json` (`instructorTags` and each scale level's `symbol`). The scale check requires a symbol on every level.
 - Tests: 115 passing.

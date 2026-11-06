@@ -99,3 +99,12 @@ export function prioritySection(d, { at, room, scale }) {
       ))))) : empty('No patients.'),
   );
 }
+
+/** The student's end-of-sim reflection (questions from data/catalogs/reflection.json). */
+export function reflectionSection(d, { at, questions }) {
+  const r = d.reflection;
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Reflection'),
+    r ? h('dl', { class: 'sbar' }, questions.filter((q) => r.answers[q.id]).map((q) => [h('dt', {}, q.text), h('dd', { class: 'pre' }, r.answers[q.id])]), h('dt', {}, 'Submitted'), h('dd', {}, at(r.atMin)))
+      : empty('Not submitted yet (opens for students when the sim ends).'));
+}

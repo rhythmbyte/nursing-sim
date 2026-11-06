@@ -265,7 +265,7 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
    - assignment manual or random
    - "Create sim" → generates a 6-character join code
 4. **Live control** — **Adjust vitals** per patient (edit any value; apply now or trend over N minutes; quick presets from `data/catalogs/vitals-presets.json` and the patient's `vitalsPresets`; logged old → new and shown on the debrief timeline), clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
-5. **Debrief** — per student: timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
+5. **Debrief** — per student (including their end-of-sim reflection answers): timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
 
 ---
 
@@ -377,3 +377,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 26. **Rhythm after a code:** ROSC → sinus tach (`roscRhythm`), no ROSC → asystole (`noRoscRhythm`). Right?
 27. **Monitor connections:** telemetry orders connect ECG, continuous pulse ox connects SpO₂, NIBP only when the cycle is on or after Take BP now. Should any patient start fully connected? Which patients have a temp probe (`monitor.tempProbe`)?
 28. **Breathing rate during an arrest:** pulseless rhythms (VF, pVT, PEA, asystole; `pulseless: true` in rhythms.json) now show RR "--" along with no SpO₂/pleth. Should RR instead show 0, or agonal breaths for a while? (Still open.)
+29. **Reflection questions** (`reflection.json`, proposed): which patient you saw first and why; what change you recognized and what you did; what you delegated and whether it was appropriate; what you'd do differently. Right questions? Required or optional?

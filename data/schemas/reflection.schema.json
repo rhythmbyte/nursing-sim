@@ -1,0 +1,1 @@
+{ "title": "Reflection questions", "type": "object", "required": ["questions"], "properties": { "review": { "enum": ["approved", "proposed", "partial"] }, "questions": { "type": "array", "items": { "type": "object", "required": ["id", "text"], "properties": { "id": { "type": "string" }, "text": { "type": "string", "minLength": 1 } } } } } }

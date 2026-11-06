@@ -6,7 +6,7 @@ import { formatShiftTime } from '../../engine/time.js';
 import { load, save } from '../../storage.js';
 import { describeEntry } from './describe.js';
 import { toCsv, downloadCsv } from './csv.js';
-import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection } from './sections.js';
+import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection, reflectionSection } from './sections.js';
 import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
@@ -60,6 +60,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         ),
       ),
       flagsSection(d, helpers),
+      reflectionSection(d, { ...helpers, questions: catalogs.reflection?.questions || [] }),
       prioritySection(d, helpers),
       responseSection(d, helpers),
       orderSequenceSection(d, helpers),

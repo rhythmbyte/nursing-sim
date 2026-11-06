@@ -109,6 +109,7 @@ export function buildDebrief(fullState, userId, ctx) {
     vitalsCompare: vitalsCompare(state, userId, ctx),
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
       durationMin: handoff[pid].closedAt != null ? round(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
+    reflection: fullState.reflections?.[userId] || null,
     priorities: pids.filter((pid) => state.patients[pid].present).map((pid) => ({
       patientId: pid, segments: priorityTimeline(state, userId, pid, activeScale(state.settings, ctx.catalogs), ctx.simMin),
     })),

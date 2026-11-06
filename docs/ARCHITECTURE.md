@@ -64,6 +64,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks → overlay this browser's edits → `{ patients, scenarios, catalogs, schemas, local, fileIds, problems }`. Also `validateItem`, `saveLocal`, `removeLocal` (instructor edits via `storage.js`) | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
+| `js/engine/reflection.js` | `submitReflection` (after sim end, once, questions from `reflection.json`) | built |
 | `js/engine/struck.js` | `activeLog` / `withoutStruck` ("entered in error" entries removed for rules and comparisons), `isStruck` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/` | Reusable bedside monitor display: `waveforms.js` (pure ECG/pleth math), `bedside-monitor.js` (canvas sweep, tiles, alarms, mute; one shared animation loop) | built |

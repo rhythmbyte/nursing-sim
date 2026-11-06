@@ -21,7 +21,7 @@ import { trendProcessor } from './vitals-control.js';
 // Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
 const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 11; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 12; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -83,6 +83,7 @@ export function createSession(scenario, templatesById, catalogs, { joinCode = nu
     joinCode,      // students join with this code (engine/roster.js)
     roster: {},    // userId → { name, groupId, joinedAtMin }
     priorities: {}, // userId → patientId → [{ atMin, levelId }] (student-assigned, engine/priority.js)
+    reflections: {}, // userId → { atMin, answers } (engine/reflection.js)
     struck: {},     // logId → { atMin, by, reason } ("entered in error", engine/struck.js)
     adhoc: {},     // patientId → { orders } pushed live by the instructor (engine/templates.js)
     students: {},

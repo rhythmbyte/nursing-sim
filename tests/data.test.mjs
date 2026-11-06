@@ -24,6 +24,7 @@ const schemaFor = {
   vitalsPresets: load('schemas/vitals-presets.schema.json'),
   rhythms: load('schemas/rhythms.schema.json'),
   help: load('schemas/help.schema.json'),
+  reflection: load('schemas/reflection.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

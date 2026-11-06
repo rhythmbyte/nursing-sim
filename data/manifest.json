@@ -11,7 +11,8 @@
     "ui": "catalogs/ui.json",
     "vitalsPresets": "catalogs/vitals-presets.json",
     "rhythms": "catalogs/rhythms.json",
-    "help": "catalogs/help.json"
+    "help": "catalogs/help.json",
+    "reflection": "catalogs/reflection.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

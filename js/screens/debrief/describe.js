@@ -29,6 +29,7 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
       return `Instructor adjusted vitals: ${ch}${d.overMin ? ` (over ${d.overMin} min)` : ''}${d.presetId ? ` [${d.presetId}]` : ''}`;
     }
     case 'entered-in-error': return `Marked an entry as entered in error (${d.reason})`;
+    case 'reflection-submitted': return 'Submitted reflection';
     case 'left-unattended': return `Instructor: left unattended${d.note ? ` (${d.note})` : ''}`;
     case 'clock-skip': return `Clock skipped ${d.fromMin} → ${d.toMin} min`;
     default: return l.action.replace(/-/g, ' ') + (d.reason ? ` (${d.reason})` : '');
