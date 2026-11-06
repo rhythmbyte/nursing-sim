@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Rejoin by name with a device token; approval when the token is missing
+- **Decision:** `joinSim` treats a known name as a rejoin. The same device, or a device holding that student's rejoin token (issued at the first join, kept in storage per code and name), rejoins at once. Otherwise a request goes to Live control, and approving it switches the requesting tab to that student (`device.<tab>` mapping).
+- **Why:** A student who loses a tablet mid-sim must not lose their patients, timers or debrief history, and must not appear twice. In the full build the login does this (SPEC §13); the token is the prototype stand-in.
+- **Note:** names are the rejoin key here, so two students with the same name need distinct names when joining.
+
+---
+
 ## 2026-11-07: Drafts are generic form snapshots, restored in document order
 - **Decision:** `formDraft(container, key)` saves every field's value by a stable key (data-draft, aria-label, name, or position) and restores them in order, firing input/change. Then a dropdown that builds more fields (the guided event type, the When trigger) creates them before their own values are restored. Single fields use `textDraft`; the patient editor saves its working copy as JSON.
 - **Why:** One mechanism covers a dozen forms without each one knowing about drafts. Restoring in order handles the dynamic forms.

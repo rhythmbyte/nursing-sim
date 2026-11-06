@@ -2,6 +2,13 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Rejoin at the same spot (Part D)
+- A student who reloads, crashes, closes the tab or goes Back and returns lands exactly where they were: same identity and group, open chart and section, drafts, running task timer, pending or queued delegations, alerts and priorities. Handoff "show once" stays closed (notes kept); a submitted reflection doesn't come back.
+- **Re-entering the join code with the same name rejoins** that student (same userId and group) instead of "already joined" or a duplicate. This device: at once. Another device with the saved **rejoin token**: at once. Token missing: Live control shows "Ana is rejoining from another device" with **Approve / Deny**, and the waiting device switches to Ana when approved.
+- **Every reconnect is logged with the time away** (`reconnected` after a reload, crash or closed tab; `student-rejoined`; `rejoin-requested / approved / denied`). Live control → Students has a **Connection** column ("↻ reconnected after 2 min (08:12)"), the Command center shows it for 10 sim minutes, and the debrief timeline lists them.
+- Instructor and charge nurse come back to the same view; the one-writer-window lock still decides who has control.
+- Tests: 209 passing.
+
 ## Save everything instantly (Part C)
 - **Audit:** every charted action, priority, join, reflection, break and staff change is saved (`runner.commit` persists before the screen updates). What wasn't saved was typing in progress, so:
 - **Drafts autosave as you type** (`shared/drafts.js`, 250 ms debounce, flushed when the page hides, via storage.js): chart notes, handoff notes while the report is open, reflection answers, the intervention and assessment forms in progress (which one, and the fields), MAR reasons, the scenario-change / reaction / state builders, Live control → Add event, Sim setup (groups and every field) and the patient editor's working copy. Coming back shows "✎ Draft restored · Discard". Submitting or Cancel clears it.

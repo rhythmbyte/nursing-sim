@@ -424,6 +424,7 @@ What the full build needs so a 1–4 hour sim never loses a student, a minute or
 - **Screen Wake Lock** on student devices and the bedside monitor while the sim runs (the prototype already does this; see below). Released on pause, break and end.
 - **Offline-safe charting.** Every action is queued on the device with its original timestamp and synced on reconnect; a "Reconnecting…" banner shows meanwhile. The server orders actions by their timestamps.
 - **The server owns the clock, state and log.** A refresh, crash or switch to another device resumes exactly where the student was (same identity, chart, drafts, task timer, delegations).
+- **Rejoin:** the login identifies the student on any device; rejoining keeps the same userId, group, open chart, drafts, timers and delegations. The prototype uses a device rejoin token, or instructor approval when it's missing.
 - **Instructor pause for breaks** with a "back at HH:MM" banner on every screen (the prototype has this).
 - **Shared lab computers** are logged out cleanly at the end: the session token is revoked, drafts on that device are cleared, and the next user starts fresh.
 - **Log size and data retention per sim.** A 4-hour sim logs a few thousand entries (see the soak test in DECISIONS.md). Keep the full log for the debrief and export, then archive or delete per the school's retention policy.

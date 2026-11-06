@@ -80,7 +80,10 @@ export function commandCenter(state, ctx, scenario) {
     }).sort((a, b) => tagRank(b.worst?.tag) - tagRank(a.worst?.tag) || (b.worst?.minutes ?? 0) - (a.worst?.minutes ?? 0));
     const students = Object.entries(state.roster || {}).filter(([, r]) => r.groupId === g.id).map(([uid, r]) => {
       const t = state.students?.[uid]?.task; // timed task in progress (engine/tasks.js)
-      return { userId: uid, name: r.name, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null };
+      // Reconnected / rejoined in the last 10 sim minutes (shown as "↻ reconnected after 2 min").
+      const c = [...state.log].reverse().find((l) => (l.action === 'reconnected' || l.action === 'student-rejoined') && l.userId === uid);
+      const back = c && ctx.simMin - c.simMin <= 10 ? { awayMin: c.details.awayMin, atMin: c.simMin } : null;
+      return { userId: uid, name: r.name, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null, back };
     });
     return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients, staffing: staffing(state, g.id, ctx) };
   });

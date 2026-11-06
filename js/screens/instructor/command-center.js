@@ -43,7 +43,8 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
           h('h3', {}, g.name), toneChip(statusLabels[g.status])),
         h('div', { class: 'cc-students' }, g.students.length
           ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`,
-            st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null))
+            st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null,
+            st.back ? h('span', { class: 'muted' }, ` · ↻ reconnected${st.back.awayMin != null ? ` after ${st.back.awayMin} min` : ''}`) : null))
           : h('span', { class: 'muted' }, 'Nobody joined yet')),
         g.staffing?.roles.length ? h('div', { class: `cc-staff${g.staffing.allBusy.length || g.staffing.queued ? ' cc-staff-full' : ''}`, title: 'Delegation helpers in this group' },
           h('span', { class: 'muted small' }, 'Staff: '),

@@ -104,7 +104,14 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
   // closed without warning (crash/freeze): pause it as of the last heartbeat.
   // Only at a real page load: an in-page remount (after an edit, approval or new sim) must not pause or rewind.
-  if (pageLoad && writer()) runner.pauseForClose(load(HEARTBEAT_KEY));
+  const lastBeat = load(HEARTBEAT_KEY);
+  if (pageLoad && writer()) runner.pauseForClose(lastBeat);
+  // Rejoin at the same spot: log who came back on this screen and how long it was away (reload, crash, closed tab).
+  if (pageLoad && writer() && lastBeat && load(SESSION_KEY)) {
+    const tab = load('ui.tab');
+    const id = tab === 'instructor' ? INSTRUCTOR : tab === 'charge' ? { userId: 'charge', role: 'charge' } : tab?.startsWith('student-') ? { userId: load(`device.${tab}`) || tab, role: 'student' } : null;
+    if (id && (id.role !== 'student' || runner.state.roster[id.userId])) runner.reconnected({ userId: id.userId, role: id.role }, Math.round((Date.now() - lastBeat) / 6000) / 10);
+  }
   if (loadSession('pendingDemo', false)) {
     saveSession('pendingDemo', false);
     const demo = data.catalogs.ui.demo;

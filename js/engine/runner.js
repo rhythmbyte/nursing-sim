@@ -9,7 +9,7 @@ import * as staffOps from './staff.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
 import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight } from './instructor.js';
-import { joinSim } from './roster.js';
+import { joinSim, decideRejoin, logReconnect } from './roster.js';
 import { assignAdmission, holdAdmission } from './admissions.js';
 import { assignPriority } from './priority.js';
 import { adjustVitals } from './vitals-control.js';
@@ -33,6 +33,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     && Object.keys(saved.patients || {}).every((id) => templatesById[id]);
   if (saved && !usable) console.warn('Saved session discarded (different scenario, older format, or a patient is missing).');
   let state = usable ? saved : fresh();
+  let lastJoin = null;
 
   function commit(next) {
     if (next === state) return;
@@ -149,11 +150,16 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     templates: () => eff(),
 
     /** Student joins with the code. Returns an error message or null. */
-    join(userId, name, code) {
-      const r = joinSim(state, { userId, name, code }, { scenario, now: now(), rng });
+    join(userId, name, code, token = null) {
+      const r = joinSim(state, { userId, name, code, token }, { scenario, now: now(), rng });
       commit(r.state);
+      lastJoin = r;
       return r.error;
     },
+    /** Details of the last join: { token, rejoinAs, pending } (the join form keeps the token / switches identity). */
+    lastJoin: () => lastJoin,
+    decideRejoin(requestId, approve, user) { commit(decideRejoin(state, requestId, approve, { now: now(), user })); },
+    reconnected(user, awayMin) { if (state.clock.status === 'ready') return; commit(logReconnect(state, { ...user, awayMin, now: now() })); },
 
     /** Live control → Add event (guided builder): fire an inline event now. */
     liveEvent(patientId, event, user) { commit(session.fireLiveEvent(state, patientId, event, { ...ctx(), user })); runner.tick(); },
