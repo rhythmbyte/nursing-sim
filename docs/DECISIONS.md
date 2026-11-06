@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: One guided event form with converters per place
+- **Decision:** `guided-model.js` defines one event shape and converts it to what each place stores: change-model forms (keyframes, starts, orders, kept events), reaction effects, state fields, and runner calls for Live control. `guided-form.js` is the only event form. Per-vital durations were added to `setVitalsTarget` (`overMinBy`) instead of separate trends.
+- **Why:** The same form everywhere means one place to fix and one way to think. Round-trip tests over every starter event prove nothing is lost. "From" uses the real dry run, so it shows what the patient will actually be.
+- **Alternatives:** Four separate forms (they had already drifted). Several parallel trends per patient (bigger engine change, more ways to conflict).
+
+---
+
 ## 2026-11-06: Assessment tools are catalog data; expected answers live in session state
 - **Decision:** Tools, items, points, bands and licenses are one catalog. Scoring is pure (`assessment-score.js`). The patient's current answer key is session state (`assessmentsExpected`), changed by the same paths as vitals and findings: baseline, script states, scenario-change events and reaction effects. A charted assessment logs the student's answers together with a snapshot of what was expected, so the debrief and `assessment-mismatch` compare against the truth at that moment. Required reassessments are timeliness items, so the Command center, debrief and rules share one definition.
 - **Why:** Adding a tool is data only. The comparison can't drift if the script changes later. B11 still holds: student screens get the answer key only through `revealItem` (one item, and only when the sim reveals findings) and auto-calculated NEWS2.

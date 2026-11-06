@@ -124,6 +124,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/instructor/script-state-form.js`, `script-reaction-form.js`, `script-when.js`, `script-parts.js` | State form; When / If / Then reaction form; shared option lists and check lists | built |
 | `js/screens/instructor/script-diagram.js` | `diagramLayout` (pure) + SVG state diagram (click or Enter to edit) | built |
 | `js/screens/instructor/script-test.js` | "Test this patient" dry-run modal | built |
+| `js/screens/instructor/guided-model.js` | Guided event model (pure): vitals rows ⇄ values with per-vital durations, direction, plain-English preview, converters for scenario changes, reactions, states and Live control | built |
+| `js/screens/instructor/guided-form.js` | The one "Add event" form (`eventForm`, `eventList`) used by the change builder, reaction Then, state form and Live control | built |
 | `js/screens/instructor/live-script.js` | Live control → Patient scripts panel (state, countdowns, listening, overrides); `rebuildKeepingUi` keeps open details and select values across re-renders | built |
 | `js/screens/instructor/command-center.js` | Command center sub-view (default while a sim is in progress); group/patient click → Live control filter | built |
 | `js/screens/shared/tone-chip.js` | Symbol + word + color chips for timeliness tags and group status (data) | built |

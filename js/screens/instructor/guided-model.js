@@ -111,6 +111,7 @@ export function rowText(r, normal = {}) {
   const v = vitalOf(r.vital);
   if (!v) return '';
   if (r.vital === 'o2') return `O₂ set to ${o2Text(r.to, r.lpm) || '—'}.`;
+  if (r.to === '' || r.to == null) return `${v.label}: enter a target (To).`;
   const verb = r.direction === 'improve' ? 'improves' : r.direction === 'worsen' ? 'worsens' : 'is set';
   const from = num(r.from) != null ? ` from ${r.from}${v.unit}` : '';
   const warn = r.direction !== 'set' && directionOf(r.vital, r.from, r.to, normal) !== 'set' && directionOf(r.vital, r.from, r.to, normal) !== r.direction

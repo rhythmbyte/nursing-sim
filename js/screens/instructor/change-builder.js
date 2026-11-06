@@ -34,7 +34,8 @@ export function openChangeBuilder({ template, key, startClock, catalogs, setting
     }
     return cache.v;
   };
-  const events = eventList(changeFormToGes(f, fromVitals(), normal), { context: 'change', template, catalogs, fromVitals, normal });
+  const initial = changeFormToGes(f, fromVitals(), normal);
+  const events = eventList(initial.length ? initial : [{}], { context: 'change', template, catalogs, fromVitals, normal });
   const sync = () => { time.disabled = manual.checked; events.refreshFrom(); };
   time.addEventListener('change', sync);
   manual.addEventListener('change', sync);
