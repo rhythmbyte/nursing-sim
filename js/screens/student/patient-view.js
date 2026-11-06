@@ -3,7 +3,10 @@
 
 import { h, clear } from '../shared/dom.js';
 import { busyBanner } from './busy-banner.js';
+import { staffPanel } from './staff-panel.js';
 import { toast } from '../shared/toast.js';
+import { formatShiftTime } from '../../engine/time.js';
+import { openModal } from '../shared/modal.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { load, save } from '../../storage.js';
 import { chartSections } from '../chart/index.js';
@@ -30,13 +33,26 @@ export function mountPatientView(root, ctx) {
     // Live view: includes orders the instructor pushes after the chart opened.
     get view() { return ctx.getView ? ctx.getView() : view; },
     // Chart actions: { task } (timed task started), { done }, or null when refused (e.g. busy; shown as a toast).
-    act: (name, args) => { try { return runner.chart(name, pid, args, user); } catch (e) { toast(e.message, 5000); return null; } },
+    act: (name, args) => {
+      try { return runner.chart(name, pid, args, user); } catch (e) {
+        if (e.code === 'no-helper') { noHelperChoice(e, name, args); return null; }
+        toast(e.message, 5000); return null;
+      }
+    },
     /** Jump to another chart section, e.g. Interventions → Assessments with a tool picked (read once with takePending). */
     openSection: (id, pending = null) => { pendingFor[id] = pending; activeId = id; save(SECTION_KEY, id); renderTabs(); mountSection(); },
     takePending: (id) => { const p = pendingFor[id]; delete pendingFor[id]; return p; },
     patientState: () => runner.state.patients[pid],
   };
 
+  // Nobody of that role is free: do it yourself, or queue it (when the sim allows a queue).
+  function noHelperChoice(e, name, args) {
+    const when = e.nextAt != null ? ` (next free at ${formatShiftTime(runner.state.startClock, e.nextAt)})` : '';
+    const mine = () => { const { delegatedTo, queue, ...rest } = args; const r = sectionCtx.act(name, rest); if (r) toast(r.task ? 'Doing it yourself' : 'Done yourself'); };
+    openModal({ title: `No ${e.role} free${when}`, body: h('p', {}, e.queueable ? `Every ${e.role} in your group is busy. Do it yourself, or queue it for the next free ${e.role}?` : `Every ${e.role} in your group is busy${e.nextAt == null ? ' or there is none' : ''}. Do it yourself?`),
+      actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Do it myself', kind: 'primary', onClick: () => { mine(); return true; } },
+        ...(e.queueable ? [{ label: `Queue for a ${e.role}`, onClick: () => { try { runner.chart(name, pid, { ...args, queue: true }, user); toast(`Queued for the next free ${e.role}`); } catch (err) { toast(err.message, 5000); } return true; } }] : [])] });
+  }
   const clock = simClock(store, runner);
   const busy = busyBanner(store, runner, user, (id) => `Rm ${views[id]?.demographics.room ?? '?'}`);
   const lightBanner = h('div', {});
@@ -47,6 +63,7 @@ export function mountPatientView(root, ctx) {
   }
   const tabBar = h('nav', { class: 'chart-tabs', role: 'tablist', 'aria-label': 'Chart sections' });
   const body = h('div', { class: 'chart-body', role: 'tabpanel' });
+  const staffBox = h('div', {});
 
   function renderTabs() {
     const ps = runner.state.patients[pid];
@@ -61,6 +78,7 @@ export function mountPatientView(root, ctx) {
 
   // This patient's call light (answer here) + unanswered lights on the student's OTHER patients (go to them).
   function renderLight() {
+    clear(staffBox).append(...[staffPanel(runner, runner.state.patients[pid].groupId, (id) => `Rm ${views[id]?.demographics.room ?? '?'}`)].filter(Boolean));
     const state = runner.state;
     const light = state.patients[pid].callLight;
     const groupId = state.patients[pid].groupId;
@@ -107,6 +125,7 @@ export function mountPatientView(root, ctx) {
     lightBanner,
     tabBar,
     body,
+    staffBox,
   );
   renderTabs();
   renderLight();

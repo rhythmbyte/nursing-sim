@@ -8,7 +8,6 @@
   "setup.handoff": "Once: the report pops up the first time a student opens a patient, then is gone (notes stay). Always: a Handoff tab stays in the chart. Never: no report.",
   "setup.charge-nurse": "Who runs the Charge tab (admissions board, unit overview): you, a student, or nobody. With nobody, admissions go straight to their group.",
   "setup.prn-pre-check-window-min": "How recent a required check (e.g. a BP before nitro) must be when the order itself doesn't say.",
-  "setup.delegation-delay-min": "How long an LPN or CNA takes before reporting back on a delegated task.",
   "setup.student-priority-scale": "The scale students use to prioritize their patients (from priority-scales.json). Your own triage tags stay hidden from them.",
   "setup.group-name": "Shown to students, e.g. \"Rooms 201–206\".",
   "setup.students": "How many students share this group's patients.",
@@ -128,9 +127,15 @@
   "setup.task-timer-mode": "Screen only: the student waits the whole task time (the time is the cost when there's no manikin). Manikin: only a short lockout, because the real task already happened on the manikin. Off: no timers.",
   "setup.manikin-lockout-fraction-of-the-task-tim": "In Manikin mode, the lockout is this fraction of the task time (0.25 = a quarter), but never shorter than the shortest lockout.",
   "setup.shortest-lockout-seconds": "In Manikin mode, the lockout is never shorter than this many sim seconds (stops tap-tap-tap charting).",
+  "setup.delegation-queue": "When every helper of a role is busy, students can queue the task for the next free one (it starts automatically and the wait is timed). Off: they must do it themselves or wait.",
+  "setup.cna-helpers": "How many nursing assistants this group can delegate to. Each does one task at a time (the task's time × the CNA speed factor in staff.json, plus walking time).",
+  "setup.lpn-helpers": "How many LPNs this group can delegate to. Each does one task at a time (the task's time × the LPN speed factor in staff.json, plus walking time).",
+  "chart.staff": "The helpers your group can delegate to: free, busy (with what, which patient, time left) or on break, and tasks waiting for a free helper. When you delegate, a free helper of that role takes it; if none is free you can do it yourself or queue it.",
+  "charge.staff": "All delegation helpers on the unit. Move a free helper to another group, send them on break or back, or change how many a group has (+ / −). Every change is logged.",
   "command.status": "Each group card shows On track / Falling behind / Needs attention (rule in rules.json timeliness.groupStatus), its late and very late work, overdue meds, unanswered call lights, monitor alarms and flags. Patients are listed worst first with their most overdue open item. Late/very-late thresholds are in rules.json timeliness. A card flashes for a few seconds when its status gets worse (a steady outline if reduced motion is on).",
   "debrief.states": "For patients with a reactive script: each state the patient went through, when, and why (a student action, nothing done in time, a vitals threshold, a scheduled event, another reaction, or the instructor). Red rows changed because nothing was done in time. Teaching notes come from the state (patient editor → Reactive script).",
   "debrief.assessments": "Each assessment tool the student charted, compared with what the patient's script expected at that moment: score and interpretation, the items that differed, and a red Missed high risk when a high-risk result was charted as lower risk. Below: reassessments the orders required that were late or never done. Flags come from the assessment-mismatch, assessment-overdue and required-assessment-missing rules (rules.json; off when grading is off in Sim setup).",
   "debrief.tasks": "Timed tasks (Sim setup → Task timers): when each started, how long it took, and whether it finished, was interrupted (not charted) or was ended early by you. Busy vs not-on-a-task time, and anything on this student's patients (call lights, orders, meds, reassessments, alarms) that went late while they were tied up.",
+  "debrief.delegation": "Each task this student delegated: when, to which helper, how long it waited for a free helper (queued tasks are marked) and when it was done. Utilization = how much of each group's helper time was spent on tasks so far.",
   "debrief.timeliness": "Each order and scheduled med for this student's patients: when it became active or due, when it was done, minutes taken, and On time / Late / Very late / Never done (thresholds in rules.json timeliness)."
 }

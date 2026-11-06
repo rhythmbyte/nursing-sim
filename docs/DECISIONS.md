@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Delegation goes to helpers with their own time
+- **Decision:** `state.staff` holds helpers per group, built from `settings.staffPool` and the group's `staff`. `placeDelegation` gives a task to a free helper of the requested role (time = task duration × speedFactor + travel, the same durations as task timers) or throws `NoHelperError` with the next free time. Queued tasks start in order when the delegation processor frees a helper. Charge and instructor controls change the pool, all logged.
+- **Why:** A limited pool makes delegation a real prioritization choice and limits spamming naturally. One duration source serves both students and helpers.
+- **Replaces:** `delegationDelayMin` (a flat delay with an unlimited pool).
+
+---
+
 ## 2026-11-07: Timed tasks apply their chart action when they finish
 - **Decision:** `runner.chart` asks `engine/tasks.js taskPlan` whether the call is a timed task. If it is, the student gets `students[uid].task` and `taskProcessor` runs the original chart action at `endsAt` (`ctx.atMin`), followed by `task-finished`. Interrupting logs `task-interrupted` and applies nothing; the instructor's End now applies it immediately.
 - **Why:** One switch point means every chart action (orders, timeliness, reactions, penalties, assessments) automatically counts work at the finish, with no per-feature changes. The processor's `nextAt` keeps finishes in time order with everything else.

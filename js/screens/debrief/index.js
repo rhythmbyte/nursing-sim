@@ -12,6 +12,7 @@ import { timelinessConfig } from '../../engine/timeliness.js';
 import { scriptStatesSection } from './script-section.js';
 import { assessmentSection } from './assessment-section.js';
 import { taskSection } from './task-section.js';
+import { delegationSection } from './delegation-section.js';
 import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
@@ -79,6 +80,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
       flagsSection(d, helpers),
       timelinessSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       taskSection(d, helpers),
+      delegationSection(d, { ...helpers, groupName }),
       scriptStatesSection(d, helpers),
       assessmentSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       reflectionSection(d, { ...helpers, questions: catalogs.reflection?.questions || [] }),

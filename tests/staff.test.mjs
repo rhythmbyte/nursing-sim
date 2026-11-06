@@ -74,3 +74,15 @@ test('delegation-overload flags a burst of delegations', () => {
   assert.equal(f.length, 1);
   assert.match(f[0].message, /Delegated 5 tasks within 15 min \(more than 4\)/);
 });
+
+test('debrief: delegated to whom, wait, queued, utilization per group', async () => {
+  const { delegationReview } = await import('../js/engine/staff-review.js');
+  const { s: s0, tick, ctx, g } = rig();
+  let s = del(s0, ctx, RM, 'vs-full', 10); s = del(s, ctx, LG, 'vs-full', 10); s = del(s, ctx, MW, 'ambulate', 11, { queue: true });
+  s = tick(s, 30);
+  const r = delegationReview(s, 'student-1', [RM, LG, MW], { catalogs, simMin: 30 });
+  assert.deepEqual(r.rows.map((x) => [x.helper, x.waitMin, x.queued]), [['CNA 1', 0, false], ['CNA 2', 0, false], ['CNA 1', 2.4, true]]);
+  assert.equal(r.queued, 1);
+  const grp = r.groups.find((x) => x.groupId === g);
+  assert.ok(grp.percent > 0 && grp.helpers === 3);
+});

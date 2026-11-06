@@ -3,6 +3,7 @@
 
 import { h, clear } from '../shared/dom.js';
 import { busyBanner } from './busy-banner.js';
+import { staffPanel } from './staff-panel.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { badge } from '../shared/badge.js';
@@ -119,9 +120,11 @@ export function mountStudentHome(root, ctx) {
     const reflectBox = h('div', {});
     renderReflection = (state) => { if (state.clock.status === 'ended') clear(reflectBox).append(reflectionPanel(state)); };
     const list = h('ul', { class: 'student-patients' });
+    const staffBox = h('div', {});
     const alerts = h('div', {});
 
     function render() {
+      clear(staffBox).append(...[staffPanel(runner, groupId, (id) => `Rm ${views[id]?.demographics.room ?? '?'}`)].filter(Boolean));
       const state = runner.state;
       renderReflection(state);
       const simMin = runner.simMin();
@@ -155,6 +158,7 @@ export function mountStudentHome(root, ctx) {
       reflectBox,
       h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
       h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
+      staffBox,
     );
     render();
     const offSet = store.subscribe(render);

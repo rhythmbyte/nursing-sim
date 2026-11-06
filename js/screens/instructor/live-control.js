@@ -13,6 +13,7 @@ import { flagsPanel } from './live-flags.js';
 import { rosterPanel } from './live-roster.js';
 import { patientsPanel } from './live-patients.js';
 import { scriptPanel, updateCountdowns, rebuildKeepingUi } from './live-script.js';
+import { staffBoard } from '../charge/staff-board.js';
 import { installShortcuts } from './shortcuts.js';
 import { load, save } from '../../storage.js';
 
@@ -111,6 +112,7 @@ export function mountLiveControl(root, ctx) {
   const roster = h('div', {});
   const patients = h('div', {});
   const scripts = h('div', {});
+  const staff = h('div', {});
   const unitList = h('div', { class: 'unit-strip' });
 
   function render() {
@@ -124,6 +126,7 @@ export function mountLiveControl(root, ctx) {
     clear(roster).append(rosterPanel(runner, templatesById, scenario, instructorUser));
     clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser, filter));
     rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter));
+    clear(staff).append(staffBoard(runner, scenario, instructorUser, templatesById, catalogs));
   }
 
 
@@ -142,6 +145,7 @@ export function mountLiveControl(root, ctx) {
     ),
     h('section', { class: 'panel' }, h('h3', {}, 'Patients'), patients),
     scripts,
+    h('section', { class: 'panel' }, h('h3', {}, 'Staff (delegation helpers)'), staff),
     h('section', { class: 'panel' }, h('h3', {}, 'Pending labs'), labs),
     h('section', { class: 'panel' }, h('h3', {}, 'Event timeline'), events),
   );

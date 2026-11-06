@@ -2,6 +2,16 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Delegation staff pool (Part B)
+- **Each group has helpers** (Sim setup → per group "CNA helpers" / "LPN helpers"; default `staffPool` { CNA: 2, LPN: 1 }, proposed). **This replaces the flat `delegationDelayMin`.**
+- **Delegating assigns a free helper** of that role, who is busy for the task's own time × the role's `speedFactor` plus `travelSec` (`staff.json`: CNA ×1.2, LPN ×1, 60 s walk, proposed), then reports back as before.
+- **Nobody free:** the student sees "No CNA free (next free at 07:07)" and chooses **Do it myself** or **Queue for a CNA** (`settings.delegationQueue`, Sim setup). Queued tasks start when a helper frees up and are timed (new timeliness kind "Waiting for a CNA", `rules.timeliness.delegationQueue` 10 / 20 min).
+- **Student staff panel** (home and chart): each helper free / busy (task, room, time left) / on break, plus tasks waiting.
+- **Charge nurse and instructor** (Charge tab → Staff; Live control → Staff): move a free helper to another group, Break / Back from break, and + / − helpers per role per group. All logged.
+- **New rule `delegation-overload`** (`rules.json`: more than 4 delegations in 15 min → amber, proposed); inappropriate-delegation still applies.
+- **Debrief → Delegation:** each delegated task (to whom, wait for a helper, queued, done) and helper utilization per group. Busy and idle times use when the sim actually stopped.
+- Tests: 202 passing (pool, refusal with next free time, queue start, moves / breaks / counts, overload, debrief).
+
 ## Task timers (Part A)
 - **Every task has a duration** (sim seconds, proposed): interventions and assessment tools carry `durationSec` (e.g. head-to-toe 8 min, full vitals 2 min, 12-lead ECG 5 min, IV start 5 min, Foley 10 min, GCS 1 min, NIHSS 7 min); MAR actions in the new `task-timing.json` (give 3 min, hold 30 s). Patients (`taskDurations`, patient editor → Task times) and sims (Sim setup → Task times for this sim) can override, with a seconds / minutes dropdown.
 - **Busy while doing it:** charting a task starts a timer; the student sees a "Busy" banner with progress, time left and **Interrupt task** (logged as interrupted, nothing charted), and can't start another task on any patient until it finishes. Durations are sim time, so they scale with speed. Call lights, alarm silencing, rapid response / code and notify charge are always allowed (`allowedWhileBusy`, data).

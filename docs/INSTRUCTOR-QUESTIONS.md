@@ -117,9 +117,24 @@ Your answer: ______________________________________________
 
 ## 3. Timing
 
-**3.1 How long delegated tasks take** [3]
-Right now: 10 sim-minutes for LPN and CNA tasks.
-OK? Should it depend on the task (vitals vs. a lab draw)?
+**3.1 How long tasks take** [50]
+Right now: charting a task keeps the student busy for its time (sim time), e.g. head-to-toe 8 min, focused assessment 3 min, full vitals 2 min, BP 45 s, 12-lead ECG 5 min, IV start 5 min, Foley 10 min, blood cultures 5 min, giving a med 3 min, holding one 30 s, GCS 1 min, NIH stroke scale 7 min, CIWA 5 min, notifying the provider 2 min.
+Realistic for students?
+Your answer: ______________________________________________
+
+**3.1a Busy rules** [51]
+Right now: with no manikin, the student waits the whole time; with manikins, only a quarter of it (at least 5 s), because the real task already happened. While busy they can still answer call lights, silence alarms, call rapid response or a code, and notify charge.
+Right? Anything else they should be able to do while busy?
+Your answer: ______________________________________________
+
+**3.1b Helpers students can delegate to** [52, 53]
+Right now: each group of students has 2 CNAs and 1 LPN. Each helper does one task at a time: the task's time (a CNA takes 1.2× as long) plus 60 s to walk there. If nobody is free, the student does it themselves or queues it.
+Realistic staffing and speed for your clinical sites? Should a student charge nurse be able to move helpers between groups?
+Your answer: ______________________________________________
+
+**3.1c Waiting for a helper, and delegating too much** [54]
+Right now: a queued task waiting more than 10 min is late (20 min very late); delegating more than 4 tasks in 15 min is flagged amber.
+Right?
 Your answer: ______________________________________________
 
 **3.2 BP before nitro** [5]
@@ -255,7 +270,8 @@ Everything below was drafted by AI and is marked "Needs review" in the app (Inst
 **Settings and lists**
 - Flag rules and their thresholds, timeliness, Command center colors (rules.json).
 - Normal ranges, monitor limits, the worsening arrow, oxygen devices (vitals.json).
-- Every scenario setting default (scenario-defaults.json).
+- Every scenario setting default (scenario-defaults.json), including task timer mode and the staff pool per group.
+- Task times for every intervention, assessment tool and MAR action (interventions.json, assessment-tools.json, task-timing.json) and helper speed and walking time (staff.json).
 - Interventions, labs, staff roles, priority scales, quick vitals buttons, heart rhythms, reflection questions.
 - Reaction templates (oxygen response, fluid bolus, neglect penalty).
 - All 17 assessment tools (items, points, cut-offs, reassessment times, who can do them).

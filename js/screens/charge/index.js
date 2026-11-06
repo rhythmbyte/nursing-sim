@@ -4,6 +4,7 @@
 import { h, clear } from '../shared/dom.js';
 import { simClock } from '../shared/timer.js';
 import { unitOverview } from './unit-overview.js';
+import { staffBoard } from './staff-board.js';
 import { admissionsBoard } from './admissions-board.js';
 import { canSeeInstructorTags } from '../../engine/priority.js';
 
@@ -16,17 +17,20 @@ export function mountCharge(root, { store, runner, scenario, instructorUser, cat
   const clock = simClock(store, runner);
   const board = h('div', {});
   const unit = h('div', {});
+  const staff = h('div', {});
 
   function render() {
     const t = runner.templates();
     clear(board).append(admissionsBoard(runner, t, scenario, user, { seesTags, catalogs: ctxCatalogs }));
     clear(unit).append(unitOverview(runner, t, scenario, { seesTags }));
+    clear(staff).append(staffBoard(runner, scenario, user, t, ctxCatalogs));
   }
 
   root.append(
     h('header', { class: 'screen-header' }, h('h2', {}, `Charge nurse · ${user.name}`), clock.el),
     h('section', { class: 'panel' }, h('h3', {}, 'Admissions board'), board),
     h('section', { class: 'panel' }, h('h3', {}, 'Unit overview'), unit),
+    h('section', { class: 'panel' }, h('h3', {}, 'Staff'), staff),
   );
   render();
   const off = store.subscribe(render);

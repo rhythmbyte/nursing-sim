@@ -9,8 +9,7 @@ const lateMinOf = (i, cfg) => (i.kind === 'order' ? cfg.orders?.[i.tier]?.lateMi
 
 /** { rows: [{ taskId, label, patientId, startedAt, endedAt, minutes, outcome }], busyMin, idleMin, interrupted, waiting: [{ label, patientId, lateAt, during }] } */
 export function taskReview(state, userId, pids, ctx) {
-  const ended = state.clock.status === 'ended';
-  const nowMin = ended && state.endMin != null ? state.endMin : ctx.simMin;
+  const nowMin = ctx.simMin; // the clock stops where the sim ended (End or end of shift)
   const end = new Map(state.log.filter((l) => ['task-finished', 'task-interrupted'].includes(l.action)).map((l) => [l.details.taskId, l]));
   const rows = state.log.filter((l) => l.action === 'task-started' && l.userId === userId).map((l) => {
     const e = end.get(l.details.taskId);

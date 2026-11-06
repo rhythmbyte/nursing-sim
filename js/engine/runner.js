@@ -5,6 +5,7 @@
 import * as session from './session.js';
 import * as chart from './chart.js';
 import { taskPlan, beginTask, interruptTask, endTaskNow, busyView } from './tasks.js';
+import * as staffOps from './staff.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
 import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight } from './instructor.js';
@@ -109,6 +110,10 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     /** The student's current task: { label, patientId, endsAt, leftSec, fraction } or null. */
     busy: (userId) => busyView(state, userId, runner.simMin()),
     interruptTask(user) { commit(interruptTask(state, { now: now(), user })); },
+    /** Delegation helpers of a group: { helpers, queued } (engine/staff.js). */
+    staffView: (groupId) => staffOps.staffView(state, groupId, runner.simMin(), catalogs),
+    /** Charge / instructor: name ∈ moveHelper(helperId, groupId), setOnBreak(helperId, on), setStaffCount(groupId, role, n). */
+    staff(name, args, user) { commit(staffOps[name](state, ...args, { now: now(), user, templatesById: eff(), catalogs })); runner.tick(); },
     /** Instructor: end a student's task now (counts as done). */
     endTaskNow(userId, user) { commit(endTaskNow(state, userId, { now: now(), user, templatesById: eff(), catalogs })); runner.tick();
     },

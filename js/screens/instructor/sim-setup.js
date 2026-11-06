@@ -39,7 +39,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
     pauseOnClose: h('input', { type: 'checkbox', checked: defaults.pauseOnClose }),
     delegatedAssessmentRevealsFindings: h('input', { type: 'checkbox', checked: defaults.delegatedAssessmentRevealsFindings }),
     prnPreCheckWindowMin: h('input', { class: 'input', type: 'number', min: 1, value: defaults.prnPreCheckWindowMin }),
-    delegationDelayMin: h('input', { class: 'input', type: 'number', min: 0, value: defaults.delegationDelayMin.CNA }),
+    delegationQueue: h('input', { type: 'checkbox', checked: defaults.delegationQueue }),
     revealAssessmentFindings: h('input', { type: 'checkbox', checked: defaults.revealAssessmentFindings }),
     gradeAssessments: h('input', { type: 'checkbox', checked: defaults.gradeAssessments }),
     taskTimerMode: h('select', {}, [['screen-only', 'Screen only: full task time (no manikins)'], ['manikin', 'Manikin: short lockout only'], ['off', 'Off']].map(([v, l]) => h('option', { value: v, selected: v === defaults.taskTimerMode }, l))),
@@ -51,6 +51,8 @@ export function mountSimSetup(root, { data, switchScenario }) {
   const toolBoxes = (data.catalogs.assessmentTools?.tools || []).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
   const groupsBox = h('div', {});
   const result = h('div', {});
+  // Delegation helper roles (staff.json; the roles students can delegate to).
+  const staffRoles = (data.catalogs.staff?.staff || []).filter((s) => s.speedFactor != null).map((s) => s.role);
   // Randomizer patient-tag filter (sim-wide; each "random" group may narrow it). Counts update as you click.
   let simFilter = {};
   const simCount = h('p', { class: 'tag-count', 'aria-live': 'polite' });
@@ -72,7 +74,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
   const simChips = data.catalogs.patientTags ? tagChips(data.catalogs.patientTags, {}, { data, label: 'Randomizer patient tags', onChange: (v) => { simFilter = v; refreshCounts(); } }) : null;
 
   function addGroup() {
-    groups.push({ id: `g${groups.length + 1}`, name: `Group ${groups.length + 1}`, studentCount: 1, mode: 'pick', patients: new Set(), admissions: new Set(), tagCounts: { red: 1, yellow: 1, green: 1, black: 0 }, names: '' });
+    groups.push({ id: `g${groups.length + 1}`, name: `Group ${groups.length + 1}`, studentCount: 1, staff: { ...defaults.staffPool }, mode: 'pick', patients: new Set(), admissions: new Set(), tagCounts: { red: 1, yellow: 1, green: 1, black: 0 }, names: '' });
     renderGroups();
     refreshCounts();
   }
@@ -83,6 +85,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
       h('div', { class: 'editor-grid' },
         field('Group name', h('input', { class: 'input', value: g.name, oninput: (e) => { g.name = e.target.value; } })),
         field('Students', h('input', { class: 'input', type: 'number', min: 1, value: g.studentCount, oninput: (e) => { g.studentCount = Number(e.target.value); } })),
+        ...staffRoles.map((r) => field(`${r} helpers`, h('input', { class: 'input', type: 'number', min: 0, max: 9, value: g.staff[r] ?? 0, 'aria-label': `${g.name} ${r} helpers`, oninput: (e) => { g.staff[r] = Number(e.target.value) || 0; } }))),
         field('Patients', h('select', { onchange: (e) => { g.mode = e.target.value; renderGroups(); refreshCounts(); } },
           h('option', { value: 'pick', selected: g.mode === 'pick' }, 'Pick patients'), h('option', { value: 'tags', selected: g.mode === 'tags' }, 'Random by tag counts')))),
       g.mode === 'pick'
@@ -100,7 +103,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
 
   async function create() {
     const scGroups = groups.map((g) => ({
-      id: g.id, name: g.name, studentCount: g.studentCount,
+      id: g.id, name: g.name, studentCount: g.studentCount, staff: { ...g.staff },
       ...(g.mode === 'pick' ? { patients: [...g.patients].filter((id) => !g.admissions.has(id)), admissions: [...g.admissions] } : { tagCounts: g.tagCounts, tagFilter: g.tagFilter || {} }),
     }));
     const { groups: filled, warnings } = fillByTagCounts(scGroups, data.patients, Math.random, simFilter);
@@ -112,7 +115,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
         handoffMode: set.handoffMode.value, chargeNurse: set.chargeNurse.value, showTagsTo: ['instructor', ...(set.tagsStudent.checked ? ['student'] : []), ...(set.tagsCharge.checked ? ['charge'] : [])], priorityScale: set.priorityScale.value,
         revealManualVitals: set.revealManualVitals.checked, pauseOnClose: set.pauseOnClose.checked,
         delegatedAssessmentRevealsFindings: set.delegatedAssessmentRevealsFindings.checked,
-        prnPreCheckWindowMin: Number(set.prnPreCheckWindowMin.value), delegationDelayMin: Number(set.delegationDelayMin.value),
+        prnPreCheckWindowMin: Number(set.prnPreCheckWindowMin.value), delegationQueue: set.delegationQueue.checked, staffPool: { ...defaults.staffPool },
         assessmentTools: toolBoxes.every((x) => x.box.checked === (x.t.license?.status === 'public')) ? 'public' : toolBoxes.filter((x) => x.box.checked).map((x) => x.t.id),
         revealAssessmentFindings: set.revealAssessmentFindings.checked, gradeAssessments: set.gradeAssessments.checked,
         taskTimerMode: set.taskTimerMode.value, taskTimerManikinFactor: Number(set.taskTimerManikinFactor.value), taskTimerMinLockoutSec: Number(set.taskTimerMinLockoutSec.value),
@@ -147,7 +150,8 @@ export function mountSimSetup(root, { data, switchScenario }) {
       field('Name', name), field('Shift start', startClock), field('Shift end (sim stops; blank = no end)', endClock), field('Speed', speed), field('Assignment', assignment)),
     h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Settings'),
       field('Handoff', set.handoffMode), field('Charge nurse', set.chargeNurse),
-      field('PRN pre-check window (min)', set.prnPreCheckWindowMin), field('Delegation delay (min)', set.delegationDelayMin),
+      field('PRN pre-check window (min)', set.prnPreCheckWindowMin),
+      h('label', { class: 'inline' }, set.delegationQueue, ' Students can queue a task when no helper is free ', helpTip('setup.delegation-queue')),
       field('Student priority scale', set.priorityScale),
       h('label', { class: 'inline' }, set.tagsStudent, ' Students see the instructor\'s tags ', helpTip('setup.tags-student')),
       h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags ', helpTip('setup.tags-charge')),

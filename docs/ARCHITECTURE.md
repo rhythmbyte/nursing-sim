@@ -87,6 +87,11 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/task-review.js` | `taskReview` (debrief: task times, busy vs idle, what went late while busy) | built |
 | `js/screens/student/busy-banner.js` | Busy banner with progress and Interrupt task | built |
 | `js/screens/instructor/duration-overrides.js` | Task duration overrides with a seconds / minutes dropdown | built |
+| `js/engine/staff.js` | Delegation staff pool: `initStaff`, `placeDelegation` (free helper or `NoHelperError` / queue), `startQueued`, `releaseHelper`, `helperSec`, `moveHelper`, `setOnBreak`, `setStaffCount`, `staffView` | built |
+| `js/engine/staff-review.js` | `delegationReview` (debrief: to whom, waits, queued, utilization) | built |
+| `js/engine/rules/delegation-overload.js` | Flag: too many delegations in a window (rules.json) | built |
+| `js/screens/student/staff-panel.js` | Student: the group's helpers and queued tasks | built |
+| `js/screens/charge/staff-board.js` | Charge / instructor: move, break, change counts | built |
 | `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |

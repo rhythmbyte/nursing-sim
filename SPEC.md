@@ -181,6 +181,10 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
 
 `{ joinCode, status, clock, groups, students: { id → { name, groupId, role } }, patientState: { id → { vitals, ordersStatus, callLight, tag, alive } }, log: [ … ] }`
 
+### 4.10 Delegation staff pool
+
+`settings.staffPool` { role: count } for every group (a scenario group's `staff` overrides). `staff.json` roles carry `speedFactor` and `travelSec`. A delegated task goes to a free helper of the chosen role, who is busy for duration × speedFactor + travel. With nobody free, the student does it themselves or queues it (`settings.delegationQueue`); queued waits are timeliness items (`rules.timeliness.delegationQueue`). Charge nurse and instructor can move helpers, set breaks and change counts, all logged. Rule `delegation-overload` flags bursts. The old `delegationDelayMin` is removed.
+
 ### 4.9 Task timers
 
 Interventions and assessment tools have `durationSec`; MAR actions and the default live in `task-timing.json`; overrides go in a patient's `taskDurations` and a scenario's `settings.taskDurations` (keys: intervention id, `tool:<id>`, `mar:<result>`). `settings.taskTimerMode` is `screen-only`, `manikin` (lockout = duration × `taskTimerManikinFactor`, at least `taskTimerMinLockoutSec`) or `off`. While a student is busy they can't start another task. Actions in `allowedWhileBusy`, call lights, alarms and anything that isn't a task always work. The chart action is applied when the task finishes. Interrupted tasks are logged and not charted.
@@ -416,7 +420,7 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 
 1. **PRN limits: warn or block?** The prototype warns and lets the student "Give anyway" (e.g. a 4th nitro, or nitro without a BP first), logs the override, and flags it red in the debrief. Should the MAR hard-block instead?
 2. **Manual vitals in class:** for live sessions, should `revealManualVitals` be off (temp/RR/pain from the manikin or instructor), with the debrief comparing charted vs scripted values?
-3. **Delegation timing:** is 10 sim-minutes a sensible default for LPN/CNA tasks, and should it differ by task (vitals vs. lab draw)?
+3. **Delegation timing:** *(replaced: delegated tasks now take the task's own time on a helper from the group's staff pool, see 50 and 52–54.)*
 4. **Robert's repeat troponin** has no scripted value. Rising or flat? (The instructor currently enters it live when it comes due.)
 5. **PRN pre-check (BP before nitro):** any BP in the last 15 sim-minutes counts, whether a monitor-cycle reading, "Take BP now", a charted BP or full vitals, or a BP reported back by delegated staff. The student doesn't have to chart a separate BP. Is that right, and is 15 minutes the right window? (Data: `prn.requiresWithinMin` per order, else scenario setting `prnPreCheckWindowMin`, default 15; catalog `satisfiedByMonitor: true` on the BP check.)
 7. **Flag rule defaults** (`data/catalogs/rules.json`, all proposed):
@@ -469,3 +473,6 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 49. **Patient tag groups and starter tags** (`patient-tags.json`, proposed): License (LPN, RN), Unit (Med-surg, Surgical, Cardiology, ED, ICU, OB, Peds, Psych, Neuro, Rehab), Topic (respiratory, cardiac, sepsis, neuro, post-op, pain, falls, heart failure, admission, discharge), Age (peds, adult, geriatric). Starter patients: Robert RN · Med-surg/Cardiology · cardiac/pain; Margaret LPN+RN · Med-surg/Surgical/Rehab · post-op/pain/falls; Harold LPN+RN · Med-surg · respiratory/discharge; Linda RN · Med-surg · respiratory/sepsis; Dorothy RN · Med-surg/Neuro · neuro/falls; James RN · Med-surg/Cardiology · cardiac/heart failure/admission. Which patients are appropriate for LPN students?
 50. **Task durations** (proposed, sim seconds; `interventions.json` / `assessment-tools.json` `durationSec`, `task-timing.json`): e.g. head-to-toe 8 min, focused assessment 3 min, full vitals 2 min, BP 45 s, 12-lead ECG 5 min, IV start 5 min, Foley 10 min, blood cultures 5 min, med pass (give) 3 min, hold 30 s, GCS 1 min, NIHSS 7 min, CIWA-Ar 5 min, notify provider 2 min. Realistic for students?
 51. **Task timer mode and what's allowed while busy:** default screen-only (full time); manikin mode locks for ¼ of the time (at least 5 s). Always allowed while busy: answer a call light, silence an alarm, call rapid response or a code, notify charge. Right?
+52. **Staff pool per group** (`scenario-defaults staffPool`, proposed): 2 CNAs and 1 LPN per group of students. Realistic for your clinical sites? Should a student charge nurse be able to move helpers?
+53. **Helper speed and walking time** (`staff.json`, proposed): a CNA takes 1.2× the task's time, an LPN 1×, plus 60 s to get to the patient. Right?
+54. **Queued delegation and overload** (proposed): students may queue a task when no helper is free (on by default); waiting more than 10 min is late, 20 min very late; delegating more than 4 tasks in 15 min is flagged amber. Right?
