@@ -105,10 +105,16 @@ export function prioritySection(d, { at, room, scale }) {
 }
 
 /** The student's end-of-sim reflection (questions from data/catalogs/reflection.json). */
-export function reflectionSection(d, { at, questions }) {
+export function reflectionSection(d, { at, room, questions }) {
   const r = d.reflection;
+  if (!r) return h('section', { class: 'panel' }, h('h3', {}, 'Reflection'), empty('Not submitted yet (opens for students when the sim ends).'));
   return h('section', { class: 'panel' },
-    h('h3', {}, 'Reflection'),
-    r ? h('dl', { class: 'sbar' }, questions.filter((q) => r.answers[q.id]).map((q) => [h('dt', {}, q.text), h('dd', { class: 'pre' }, r.answers[q.id])]), h('dt', {}, 'Submitted'), h('dd', {}, at(r.atMin)))
-      : empty('Not submitted yet (opens for students when the sim ends).'));
+    h('h3', {}, 'Reflection vs. should recognize'),
+    h('div', { class: 'seq-cols' },
+      h('div', {}, h('h4', {}, 'Student\'s reflection'),
+        h('dl', { class: 'sbar' }, questions.filter((q) => r.answers[q.id]).map((q) => [h('dt', {}, q.text), h('dd', { class: 'pre' }, r.answers[q.id])]), h('dt', {}, 'Submitted'), h('dd', {}, at(r.atMin)))),
+      h('div', {}, h('h4', {}, 'Should recognize'),
+        d.reflectionCoverage.map((p) => h('div', {}, h('strong', {}, room(p.patientId)),
+          h('ul', {}, p.items.map((x) => h('li', {}, x.item, x.mentioned ? [' ', h('span', { class: 'badge badge-ok', title: `Matched words: ${x.words.join(', ')}` }, 'possible mention')] : null))))),
+        h('p', { class: 'muted small' }, '"Possible mention" is a keyword match to help you read, not a grade.'))));
 }

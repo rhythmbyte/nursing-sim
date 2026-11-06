@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Reflection vs. should recognize (suggestion 4)
+- The debrief's Reflection section shows the student's answers beside each patient's **should recognize** items (patient-level plus per-scenario-change). Items whose key words appear in the answers get a **possible mention** badge (hover shows the matched words). It's labelled as a reading aid, not a grade.
+- Tests: 122 passing.
+
 ## Printing at scale (suggestion 6)
 - **Print all report sheets** on Live control (Students panel): every joined student's patient pages in one print job, each labelled with the student.
 - Debrief: **Print summary** (one student: counts, flags, reflection, priorities, response times; the timeline, order sequence, charted-vs-scripted, handoff and should-recognize are left out) next to **Print full**.

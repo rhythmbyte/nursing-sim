@@ -252,3 +252,13 @@ test('C18: reflection opens at sim end, saves once, shows in the debrief', async
   assert.equal(d.reflection.answers['first-patient'], 'Robert, chest pain');
   assert.equal(catalogs.reflection.review, 'proposed');
 });
+
+test('Suggestion 4: reflection coverage of should-recognize items (keyword aid, not a grade)', async () => {
+  const { reflectionCoverage } = await import('../js/engine/debrief.js');
+  const items = ['They should obtain an ECG promptly, notify the provider', 'They should not delegate the assessment', 'Hold the anticoagulant'];
+  const cov = reflectionCoverage({ a: 'I got an ECG promptly and paged the provider', b: 'I would not hold anything' }, items);
+  assert.deepEqual(cov.map((c) => c.mentioned), [true, false, false]);
+  assert.ok(cov[0].words.includes('promptly'));
+  assert.ok(reflectionCoverage({ a: 'anticoagulant held' }, items)[2].mentioned, 'one long word counts');
+  assert.deepEqual(reflectionCoverage({}, items).map((c) => c.mentioned), [false, false, false]);
+});

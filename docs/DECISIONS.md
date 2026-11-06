@@ -4,6 +4,12 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Reflection coverage is a keyword aid, not grading
+- **Decision:** `reflectionCoverage` marks a should-recognize item "possible mention" when the reflection shares 2+ significant words with it (or one word of 8+ letters), ignoring a short stop-word list. The UI says it's a reading aid.
+- **Why:** It helps the instructor scan quickly without pretending to judge clinical reasoning. Real grading of free text would need the full build's AI (with instructor review) or the instructor's own judgment.
+
+---
+
 ## 2026-11-05: Standalone monitor follows the session in storage, read-only
 - **Decision:** `?monitor=<pid>` mounts only `screens/monitor/standalone.js`, which loads the saved session (`storage.load`) and re-renders on `storage.onExternalChange` (the browser's storage event) plus a 2 s refresh. It never writes, so two tabs can't race over the session.
 - **Why / limits:** Works for a second screen on the same device and browser only. A monitor on a different device needs the full build's realtime channel (SPEC §13).

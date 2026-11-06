@@ -12,6 +12,22 @@ import { alarmEpisodes } from './monitor-alarms.js';
 
 const round = (n) => Math.round(n * 100) / 100;
 
+// Words too common to count as a match between a reflection and a "should recognize" item.
+const STOP = new Set(['should', 'their', 'there', 'about', 'which', 'would', 'could', 'patient', 'patients', 'student', 'students', 'before', 'after', 'while', 'these', 'those', 'other', 'appropriate', 'recognize', 'condition', 'change']);
+const words = (text) => [...new Set(String(text).toLowerCase().match(/[a-z][a-z-]{4,}/g) || [])].filter((w) => !STOP.has(w));
+
+/**
+ * Which "should recognize" items the reflection may mention: keyword overlap (2+ words, or one word of 8+
+ * letters). A reading aid for the instructor, NOT a grade.
+ */
+export function reflectionCoverage(answers, items) {
+  const said = new Set(words(Object.values(answers || {}).join(' ')));
+  return items.map((item) => {
+    const hits = words(item).filter((w) => said.has(w));
+    return { item, words: hits, mentioned: hits.length >= 2 || hits.some((w) => w.length >= 8) };
+  });
+}
+
 function responseTimes(state, pids, ctx) {
   const lights = [];
   const params = [];
@@ -112,6 +128,10 @@ export function buildDebrief(fullState, userId, ctx) {
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
       durationMin: handoff[pid].closedAt != null ? round(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
     reflection: fullState.reflections?.[userId] || null,
+    reflectionCoverage: fullState.reflections?.[userId] ? pids.map((pid) => {
+      const d = ctx.templatesById[pid].debrief || {};
+      return { patientId: pid, items: reflectionCoverage(fullState.reflections[userId].answers, [...(d.shouldRecognize || []), ...Object.values(d.byChange || {}).flat()]) };
+    }).filter((p) => p.items.length) : [],
     priorities: pids.filter((pid) => state.patients[pid].present).map((pid) => ({
       patientId: pid, segments: priorityTimeline(state, userId, pid, activeScale(state.settings, ctx.catalogs), ctx.simMin),
     })),
