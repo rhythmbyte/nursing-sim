@@ -31,7 +31,15 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'entered-in-error': return `Marked an entry as entered in error (${d.reason})`;
     case 'reflection-submitted': return 'Submitted reflection';
     case 'alarm-acknowledged': return `Silenced monitor alarm (${(d.alarms || []).join(', ')}) after ${d.responseMin} min`;
-    case 'monitor-alarm': return d.active.length ? `Monitor alarm: ${d.active.join(', ')}` : 'Monitor alarm cleared';
+    case 'monitor-alarm': return d.active?.length ? `Monitor alarm: ${d.active.join(', ')}` : 'Monitor alarm cleared';
+    case 'admission-assigned': return `Charge nurse assigned the admission to ${d.groupId ?? 'a group'}${d.waitMin != null ? ` (waited ${d.waitMin} min)` : ''}`;
+    case 'admission-held': return `Charge nurse held the admission${d.reason ? ` (${d.reason})` : ''}`;
+    case 'order-pushed': return `Provider (instructor) ordered: ${d.text ?? 'new order'}${d.tier ? ` · tier ${d.tier}` : ''}`;
+    case 'code-started': return `Instructor started a code${d.rhythm ? ` (${d.rhythm})` : ''}`;
+    case 'code-outcome': return `Code ended: ${d.outcome === 'rosc' ? 'ROSC' : 'no ROSC'}${d.durationMin != null ? ` after ${d.durationMin} min` : ''}`;
+    case 'monitor-connected': return `Connected ${patientName(l.patientId)} to the monitor`;
+    case 'priority-assigned': return `Set priority: ${d.levelId ?? ''}`;
+    case 'clock-end': return d.reason === 'end-of-shift' ? 'End of shift' : 'Sim ended';
     case 'left-unattended': return `Instructor: left unattended${d.note ? ` (${d.note})` : ''}`;
     case 'clock-skip': return `Clock skipped ${d.fromMin} → ${d.toMin} min`;
     default: return l.action.replace(/-/g, ' ') + (d.reason ? ` (${d.reason})` : '');

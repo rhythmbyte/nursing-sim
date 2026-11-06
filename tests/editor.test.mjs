@@ -111,3 +111,19 @@ test('Suggestion 3: a silent rhythm-only change is a monitor-only event', async 
   assert.deepEqual(patientReferenceProblems(template, catalogs), []);
   assert.equal(changeToForm(template, key, SC).vitals.rhythm, 'afib', 'reopens with the rhythm');
 });
+
+test('every action the engine logs has a readable debrief description', async () => {
+  const { describeEntry } = await import('../js/screens/debrief/describe.js');
+  const { readFileSync: read, readdirSync } = await import('node:fs');
+  const dir = (d) => readdirSync(new URL(d, import.meta.url)).filter((f) => f.endsWith('.js')).map((f) => read(new URL(d + f, import.meta.url), 'utf8'));
+  const src = [...dir('../js/engine/'), ...dir('../js/engine/rules/'), ...dir('../js/engine/events/')].join('\n');
+  const actions = new Set([...src.matchAll(/action: '([a-z-]+)'/g), ...src.matchAll(/log\(draft, simMin, ctx, patientId, '([a-z-]+)'/g)].map((m) => m[1]));
+  assert.ok(actions.size > 20, `found ${actions.size} actions`);
+  const plainOk = new Set(['joined']); // the generic wording reads fine for these
+  const helpers = { labelOf: (id) => id, orderText: () => 'an order', patientName: () => 'Pat' };
+  const missing = [...actions].filter((a) => {
+    if (plainOk.has(a)) return false;
+    try { return describeEntry({ action: a, details: {}, patientId: 'p' }, helpers) === a.replace(/-/g, ' '); } catch (e) { return `${a}: crashed (${e.message})`; }
+  }).map((a) => a);
+  assert.deepEqual(missing, [], 'actions falling back to the generic description');
+});

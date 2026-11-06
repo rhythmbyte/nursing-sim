@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Tests for untested behavior (+ fixes they found)
+- New `tests/loader.test.mjs` runs the real data loader in Node (fetch reads `data/`, in-memory localStorage): starter data loads clean, browser edits overlay files, a broken edit falls back to the file version, a scenario with no patients left is dropped, `clearAll` removes only this app's keys.
+- New test: every action the engine logs has a readable debrief description (scans the engine source).
+- **Fixed (found by the tests):** `clearAll` used `Object.keys(localStorage)`; now the standard `length`/`key()` API. The debrief timeline showed raw names for 8 actions (admission assigned/held, order pushed, code started/outcome, monitor connected, priority assigned, end of shift); they now read as sentences. `monitor-alarm` descriptions no longer crash on missing details.
+- Tests: 128 passing.
+
 ## Polish: loading state, accessible editor inputs
 - "Loading…" while data reloads after an editor save, approval or new sim (was a blank screen).
 - Screen-reader labels on every input in the patient editor's orders and labs tables and the scenario-change builder's order rows.

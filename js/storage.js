@@ -62,7 +62,10 @@ export function clearAll() {
   try {
     const a = area();
     if (!a) return;
-    for (const k of Object.keys(a)) if (k.startsWith(PREFIX)) a.removeItem(k);
+    // Standard Storage API (length/key) rather than Object.keys, so it works in every implementation.
+    const keys = [];
+    for (let i = 0; i < a.length; i++) keys.push(a.key(i));
+    for (const k of keys) if (k?.startsWith(PREFIX)) a.removeItem(k);
   } catch (err) {
     console.warn('storage.clearAll failed:', err);
   }

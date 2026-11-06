@@ -196,7 +196,7 @@ Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passe
   - **Python 3** (or any static server) to run the site locally.
   - **`jq`** for Claude Code's env-file guard hook (`.claude/hooks/block-env.sh`). The hook fails closed, so without `jq` every Bash command Claude Code tries is blocked with a "jq is required" message. Install it with your package manager (`pacman -S jq`, `brew install jq`, `apt install jq`).
 - **Run:** `python3 -m http.server 8000` from the repo root, then open http://localhost:8000. Opening `index.html` from disk won't work, because `fetch` needs http.
-- **Tests:** `node --test tests/` (Node 18+). Shared test data (real starter content, all catalogs, merged settings) comes from `tests/fixtures.mjs`. They cover:
+- **Tests:** `node --test tests/` (Node 18+). `tests/loader.test.mjs` exercises the real data loader with a disk-backed fetch and in-memory storage. Shared test data (real starter content, all catalogs, merged settings) comes from `tests/fixtures.mjs`. They cover:
   - every data file against its schema, plus the manifest matching the files on disk;
   - the pure modules (time, review helpers, store);
   - engine modules as they're added.
