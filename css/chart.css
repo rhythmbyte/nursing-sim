@@ -132,3 +132,27 @@ tr.needs-attention td { background: var(--review-bg); }
 .change-list li { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }
 details.advanced summary { cursor: pointer; color: var(--muted); }
 .save-warning { position: sticky; top: 0; z-index: 20; margin: 0; border-radius: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+
+/* Bedside monitor */
+.monitor-wrap { background: #000; border-radius: var(--radius); }
+.monitor-wrap:fullscreen { display: flex; align-items: center; justify-content: center; padding: 2vh 2vw; }
+.bedside-monitor { background: #05070a; color: #e8f0f2; border-radius: var(--radius); padding: var(--space-2) var(--space-3); font-family: system-ui, sans-serif; width: 100%; }
+.monitor-wrap:fullscreen .bedside-monitor { max-width: 1600px; }
+.mon-head { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #9fb3c8; margin-bottom: var(--space-1); }
+.mon-btn { font: inherit; font-size: 0.8rem; background: #1a2230; color: #e8f0f2; border: 1px solid #334; border-radius: 6px; padding: 2px 10px; cursor: pointer; min-height: 32px; }
+.mon-body { display: grid; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: var(--space-3); }
+.mon-waves { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mon-wave { width: 100%; height: auto; background: #05070a; border-bottom: 1px solid #1c2633; }
+.mon-wave-label { font-size: 0.8rem; font-weight: 600; }
+.mon-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); align-content: start; }
+.mon-tile { border: 1px solid #1c2633; border-radius: 6px; padding: 4px 8px; }
+.mon-label { font-size: 0.75rem; opacity: 0.85; }
+.mon-value { font-size: 2.4rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.monitor-wrap:fullscreen .mon-value { font-size: 4.5rem; }
+.mon-sub { font-size: 0.75rem; opacity: 0.8; min-height: 1em; }
+.mon-green { color: #39ff6a; } .mon-cyan { color: #36e0ff; } .mon-white { color: #f2f5f7; } .mon-yellow { color: #ffe14d; } .mon-orange { color: #ffae42; }
+.mon-tile.mon-alarm { animation: mon-flash 0.9s steps(2, start) infinite; border-color: #ff3b3b; }
+.mon-tile.mon-white.mon-alarm { color: #ff4d4d; }
+@keyframes mon-flash { 50% { background: #5a0b0b; } }
+@media (prefers-reduced-motion: reduce) { .mon-tile.mon-alarm { animation: none; background: #5a0b0b; } }
+@media (max-width: 760px) { .mon-body { grid-template-columns: 1fr; } .mon-value { font-size: 1.8rem; } }

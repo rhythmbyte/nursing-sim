@@ -40,7 +40,7 @@ export function cleanValues(values) {
       if (!Number.isFinite(n)) throw new Error(`${k} must be a number (got "${raw}")`);
       out[k] = n;
     } else {
-      out[k] = String(raw).trim(); // o2 device, pain text, etc.
+      out[k] = String(raw).trim(); // o2 device, pain text, rhythm, etc.
     }
   }
   return out;

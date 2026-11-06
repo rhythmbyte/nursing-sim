@@ -2,6 +2,8 @@
 // JSON Schema checks shapes; this checks that ids point at things that exist. Each problem names the
 // field, the missing id, and where it should be defined.
 
+import { rhythmProblems } from './monitor.js';
+
 const has = (set, id) => set.has(id);
 
 /** Problems in one patient template against the catalogs. */
@@ -37,6 +39,7 @@ export function patientReferenceProblems(t, catalogs) {
     if (l.forOrder && !has(orderIds, l.forOrder)) p.push(`labs[${i}] forOrder: no order "${l.forOrder}" in this patient`);
   }
   (t.codeBranch?.trigger?.ifNotCharted || []).forEach((id) => iv('codeBranch.trigger.ifNotCharted', id));
+  p.push(...rhythmProblems(t, catalogs));
   return p;
 }
 

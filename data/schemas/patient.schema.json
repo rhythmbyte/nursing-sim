@@ -54,6 +54,7 @@
       "type": "object",
       "required": ["baseline"],
       "properties": {
+        "review": { "$ref": "#/$defs/review" },
         "baseline": { "$ref": "#/$defs/vitalValues" },
         "keyframes": {
           "type": "array",
@@ -112,6 +113,7 @@
       "properties": { "mode": { "enum": ["survive", "die", "instructor"] }, "notes": { "type": "string" } }
     },
     "codeBranch": { "type": ["object", "null"] },
+    "monitor": { "type": "object", "properties": { "tempProbe": { "type": "boolean" } } },
     "vitalsPresets": {
       "type": "array",
       "items": {
@@ -141,7 +143,8 @@
         "tempF": { "type": "number" },
         "spo2": { "type": "number", "minimum": 0, "maximum": 100 },
         "o2": { "type": "string" },
-        "pain": { "type": "string" }
+        "pain": { "type": "string" },
+        "rhythm": { "type": "string", "minLength": 1 }
       }
     },
     "order": {

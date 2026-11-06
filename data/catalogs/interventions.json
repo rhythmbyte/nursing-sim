@@ -25,9 +25,9 @@
 
     { "id": "vs-full", "vitalsCapture": true, "includes": ["vs-bp"], "category": "monitoring", "label": "Full vital signs", "chartFields": ["bp", "hr", "rr", "tempF", "spo2", "pain"], "delegableTo": ["LPN", "CNA"] },
     { "id": "vs-bp", "vitalsCapture": true, "satisfiedByMonitor": true, "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
-    { "id": "monitor-cycle", "category": "monitoring", "label": "Set monitor cycle", "chartFields": ["intervalMin"], "delegableTo": [] },
-    { "id": "tele", "category": "monitoring", "label": "Place on telemetry / cardiac monitor", "chartFields": [], "delegableTo": ["LPN"] },
-    { "id": "pulse-ox-cont", "category": "monitoring", "label": "Continuous pulse oximetry", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+    { "id": "monitor-cycle", "monitorConnects": ["nibp"], "category": "monitoring", "label": "Set monitor cycle", "chartFields": ["intervalMin"], "delegableTo": [] },
+    { "id": "tele", "monitorConnects": ["ecg"], "category": "monitoring", "label": "Place on telemetry / cardiac monitor", "chartFields": [], "delegableTo": ["LPN"] },
+    { "id": "pulse-ox-cont", "monitorConnects": ["spo2"], "category": "monitoring", "label": "Continuous pulse oximetry", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
     { "id": "io", "category": "monitoring", "label": "Intake & output", "chartFields": ["intakeMl", "outputMl"], "delegableTo": ["LPN", "CNA"] },
     { "id": "weight", "category": "monitoring", "label": "Weight", "chartFields": ["kg"], "delegableTo": ["LPN", "CNA"] },
     { "id": "glucose-poc", "category": "monitoring", "label": "Point-of-care glucose", "chartFields": ["mgdl"], "delegableTo": ["LPN"] },

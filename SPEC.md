@@ -216,6 +216,7 @@ Tabs, left to right:
 1. **Summary** — banner (name, age, room, allergies, code status), active problems, latest vitals, alerts.
 2. **Orders** — active orders, with a status per order (new / acknowledged / done). New orders highlight until acknowledged.
 3. **Flowsheet** — vitals table over time.
+   - **Bedside monitor** (chart tab + Full screen): HR/ECG, SpO₂/pleth, NIBP (last cycle time), RR, O₂ device, temp only with a probe. Shows only what the patient is connected for (tele / continuous pulse ox orders, NIBP cycle, or the student's Connect to monitor). Rhythm from vitals (`rhythms.json`). Alarm limits in `vitals.json`.
    - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min), or presses **Take BP now** to cycle the NIBP immediately (logged as a student action). A **Charted only** toggle hides monitor rows. BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle. Monitor values (BP, HR, SpO2) **always** come from the device, whether by cycle or a charted vital-signs check; the student never types them.
    - **Manual entries:** anything a monitor doesn't give (temp, RR, pain, GCS, glucose, I&O, weight, neuro checks) is typed in by the student, and their value is compared with the scripted value in the debrief.
      - `settings.revealManualVitals: true` (default, for demos): a **Measure** button fills temp/RR/pain with the current scripted values.
@@ -369,3 +370,8 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 21. **Who sees your tags:** only you by default (`showTagsTo: ["instructor"]`). Should a student charge nurse see them?
 22. **Live vitals vs. the script:** after you adjust a patient's vitals live, should the next scripted vitals event still apply (current default, `scriptedVitalsAfterInstructor: "apply"`), or be skipped so you stay in control (`"skip"`)?
 23. **Vitals presets:** "Deteriorate" (SBP −25, DBP −12, HR +25, RR +6, SpO₂ −5 over 10 min) and "Improve" (roughly the reverse), with safety limits, in `vitals-presets.json`. Right values? Do you want patient-specific presets (e.g. Linda's septic shock)?
+24. **Starter rhythms** (proposed): Robert sinus → sinus tach at 08:15, Margaret and Harold sinus, Linda sinus tach, Dorothy AFib, James sinus tach → sinus. Right?
+25. **Monitor alarm limits** (`vitals.json alarmLimits`): HR 50–120, SpO₂ < 90, RR 8–28, SBP 90–180, DBP > 110. Right for this unit?
+26. **Rhythm after a code:** ROSC → sinus tach (`roscRhythm`), no ROSC → asystole (`noRoscRhythm`). Right?
+27. **Monitor connections:** telemetry orders connect ECG, continuous pulse ox connects SpO₂, NIBP only when the cycle is on or after Take BP now. Should any patient start fully connected? Which patients have a temp probe (`monitor.tempProbe`)?
+28. **Breathing rate during an arrest:** the monitor's RR keeps the patient's RR during VF/asystole. Should arrest rhythms show RR 0 (or agonal)?

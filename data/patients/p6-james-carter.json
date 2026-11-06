@@ -27,10 +27,11 @@
     "recommendation": "Needs reassessment on arrival, admission orders to follow. Watch respiratory status closely."
   },
   "vitals": {
-    "baseline": { "bp": "162/94", "hr": 112, "rr": 28, "tempF": 98.2, "spo2": 93, "o2": "4 L NC", "pain": "0/10" },
+    "review": "proposed",
+    "baseline": { "rhythm": "sinus-tach", "bp": "162/94", "hr": 112, "rr": 28, "tempF": 98.2, "spo2": 93, "o2": "4 L NC", "pain": "0/10" },
     "keyframes": [
       { "atMin": 0, "relativeTo": "admission", "values": { "spo2": 93, "o2": "4 L NC" } },
-      { "trigger": "furosemide-given-plus-45min", "values": { "bp": "144/86", "hr": 98, "rr": 22, "spo2": 95 }, "notes": "Optional improvement if diuresis started. Engine may implement as instructor-fired." }
+      { "trigger": "furosemide-given-plus-45min", "values": { "rhythm": "sinus", "bp": "144/86", "hr": 98, "rr": 22, "spo2": 95 }, "notes": "Optional improvement if diuresis started. Engine may implement as instructor-fired." }
     ]
   },
   "findings": {

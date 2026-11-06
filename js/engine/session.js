@@ -21,7 +21,7 @@ import { trendProcessor } from './vitals-control.js';
 // Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
 const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 9; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 10; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -47,6 +47,7 @@ function initialPatientState(t, groupId, admission, catalogs) {
     vitalsHistory: [{ atMin: 0, values: { ...t.vitals.baseline } }], // every change (engine/vitals-control.js)
     vitalsTrend: null,                         // instructor trend in progress
     vitalsOverride: false,                     // instructor has taken over vitals (until the next scripted change)
+    monitorLink: null,                         // { atMin, by } once a student connects the bedside monitor
     callLight: null,
     findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
     revealed: [],       // [{ source: 'baseline' | eventId, atMin, findings }] once the student assesses

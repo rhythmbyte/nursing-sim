@@ -1,0 +1,14 @@
+{
+  "review": "proposed",
+  "_comment": "Cardiac rhythms for the bedside monitor. 'draw' says how the ECG is drawn: shape (sinus = P-QRS-T complexes, fib = fibrillatory baseline + QRS, vf = chaotic wave, flat = asystole), p (P waves), qrsWide, irregular (0-1 beat-to-beat variation), fibAmp (baseline wobble), vfFreq. pulse: false = no pulse/pleth (SpO2 and pleth show nothing). showsRate: false = HR shows --. alarm: true = always alarms. aliases: other names accepted (e.g. a code event's rhythm 'PEA').",
+  "rhythms": {
+    "sinus": { "label": "Sinus rhythm", "draw": { "shape": "sinus", "p": true }, "pulse": true },
+    "sinus-tach": { "label": "Sinus tachycardia", "draw": { "shape": "sinus", "p": true }, "pulse": true, "aliases": ["sinus tach", "ST"] },
+    "sinus-brady": { "label": "Sinus bradycardia", "draw": { "shape": "sinus", "p": true }, "pulse": true, "aliases": ["sinus brady", "SB"] },
+    "afib": { "label": "Atrial fibrillation", "draw": { "shape": "fib", "p": false, "irregular": 0.35, "fibAmp": 0.06 }, "pulse": true, "aliases": ["a-fib", "AF", "atrial fibrillation"] },
+    "pea": { "label": "PEA", "draw": { "shape": "sinus", "p": true }, "pulse": false, "alarm": true, "aliases": ["PEA", "pulseless electrical activity"] },
+    "asystole": { "label": "Asystole", "draw": { "shape": "flat" }, "pulse": false, "showsRate": false, "alarm": true },
+    "vf": { "label": "Ventricular fibrillation", "draw": { "shape": "vf", "vfFreq": 5 }, "pulse": false, "showsRate": false, "alarm": true, "aliases": ["VF", "v-fib"] },
+    "vt": { "label": "Ventricular tachycardia", "draw": { "shape": "sinus", "p": false, "qrsWide": true }, "pulse": true, "alarm": true, "aliases": ["VT", "v-tach"] }
+  }
+}

@@ -9,7 +9,8 @@
     "scenarioDefaults": "catalogs/scenario-defaults.json",
     "priorityScales": "catalogs/priority-scales.json",
     "ui": "catalogs/ui.json",
-    "vitalsPresets": "catalogs/vitals-presets.json"
+    "vitalsPresets": "catalogs/vitals-presets.json",
+    "rhythms": "catalogs/rhythms.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

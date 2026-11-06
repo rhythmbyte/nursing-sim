@@ -7,6 +7,8 @@
     "monitorFields": { "type": "array", "items": { "type": "string" } },
     "manualScriptedFields": { "type": "array", "items": { "type": "string" } },
     "otherManualFields": { "type": "array", "items": { "type": "string" } },
-    "monitorCycles": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+    "monitorCycles": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+    "alarmLimits": { "type": "object" },
+    "monitorLeads": { "type": "object" }
   }
 }

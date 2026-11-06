@@ -28,6 +28,8 @@
           "drawsLabs": { "type": "boolean" },
           "satisfiedByMonitor": { "type": "boolean" },
           "quickAction": { "type": "string" },
+          "monitorConnects": { "type": "array", "items": { "enum": ["ecg", "spo2", "nibp"] } },
+          "synonyms": { "type": "array", "items": { "type": "string" } },
           "includes": { "type": "array", "items": { "type": "string" } }
         }
       }

@@ -26,6 +26,7 @@ const SCHEMAS = {
   priorityScales: 'schemas/priority-scales.schema.json',
   ui: 'schemas/ui.schema.json',
   vitalsPresets: 'schemas/vitals-presets.schema.json',
+  rhythms: 'schemas/rhythms.schema.json',
 };
 
 async function fetchJson(base, rel) {

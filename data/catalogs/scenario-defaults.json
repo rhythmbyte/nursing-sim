@@ -15,6 +15,8 @@
     "codeTag": "black",
     "scriptedVitalsAfterInstructor": "apply",
     "roscTag": "red",
+    "roscRhythm": "sinus-tach",
+    "noRoscRhythm": "asystole",
     "messages": {
       "codeStarted": "Patient is unresponsive. No pulse.",
       "rosc": "ROSC achieved.",

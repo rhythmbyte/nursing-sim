@@ -4,5 +4,17 @@
   "monitorFields": ["bp", "hr", "spo2", "o2"],
   "manualScriptedFields": ["tempF", "rr", "pain"],
   "otherManualFields": ["gcs", "glucose", "intakeMl", "outputMl", "weightKg", "neuro"],
-  "monitorCycles": [0, 5, 10, 15]
+  "monitorCycles": [0, 5, 10, 15],
+  "alarmLimits": {
+    "_comment": "Monitor alarms when a value is outside [low, high] (null = no limit). Instructor to confirm (SPEC §14).",
+    "hr": [50, 120],
+    "spo2": [90, null],
+    "rr": [8, 28],
+    "sbp": [90, 180],
+    "dbp": [null, 110]
+  },
+  "monitorLeads": {
+    "_comment": "Which monitor parts a connection gives. Interventions/orders connect via the catalog flag monitorConnects; 'Connect to monitor' connects all.",
+    "all": ["ecg", "spo2", "nibp"]
+  }
 }

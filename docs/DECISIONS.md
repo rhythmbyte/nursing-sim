@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Bedside monitor: engine view + reusable display module
+- **Decision:** `engine/monitor.js monitorView()` decides what may be shown (connections, rhythm via catalog aliases, alarms from `vitals.json alarmLimits`). It never includes pain or GCS, and temp only with `monitor.tempProbe`. The display lives in `js/screens/monitor/`: `waveforms.js` (pure ECG and pleth math from `rhythms.json draw`) and `bedside-monitor.js` (canvases and tiles, with one shared requestAnimationFrame loop that skips frames when the page is hidden or the sim isn't running). Codes set the monitor rhythm from the code's rhythm name, and ROSC / no ROSC use settings (`roscRhythm`, `noRoscRhythm`). Connection comes from catalog `monitorConnects` (tele → ECG, continuous pulse ox → SpO₂, NIBP cycle) or the student's logged Connect to monitor.
+- **Why:** Clinical and drawing choices stay in data, and the display can move unchanged to the full build (or a separate monitor device).
+- **Alternatives:** Per-monitor animation loops (wasteful; can't pause together); SVG (slower for continuous sweeps).
+- Session shape v10.
+
+---
+
 ## 2026-11-05: Broken-reference checks, visible save failures, end of shift
 - **References:** `engine/integrity.js` checks that every id points at something: order interventions, lab codes, activeOnEvent, PRN pre-checks, parameter watch/requires, event keyframes, finding changes and order sets, lab forOrder, code-branch interventions, and scenario patients and groups. The loader and the tests run it.
   - A broken browser edit is skipped and the file version stays (found in testing: excluding the patient cascaded into excluding the scenario, and the app wouldn't start).

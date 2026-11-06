@@ -27,7 +27,8 @@
     "recommendation": "Possible discharge today if criteria met. Needs med rec and discharge teaching."
   },
   "vitals": {
-    "baseline": { "bp": "128/76", "hr": 78, "rr": 16, "tempF": 98.4, "spo2": 95, "o2": "RA", "pain": "0/10" },
+    "review": "proposed",
+    "baseline": { "rhythm": "sinus", "bp": "128/76", "hr": 78, "rr": 16, "tempF": 98.4, "spo2": 95, "o2": "RA", "pain": "0/10" },
     "keyframes": []
   },
   "findings": {

@@ -27,7 +27,8 @@
     "recommendation": "Pain control before PT. NV checks q4h. Enoxaparin due today. Fall precautions."
   },
   "vitals": {
-    "baseline": { "bp": "136/78", "hr": 88, "rr": 18, "tempF": 99.1, "spo2": 96, "o2": "RA", "pain": "6/10 with movement, 3/10 at rest" },
+    "review": "proposed",
+    "baseline": { "rhythm": "sinus", "bp": "136/78", "hr": 88, "rr": 18, "tempF": 99.1, "spo2": 96, "o2": "RA", "pain": "6/10 with movement, 3/10 at rest" },
     "keyframes": [
       { "atMin": 120, "eventId": "e-p2-pain", "values": { "pain": "8/10" } }
     ]

@@ -1,0 +1,6 @@
+{
+  "title": "Rhythms",
+  "type": "object",
+  "required": ["rhythms"],
+  "properties": { "review": {"enum": ["approved", "proposed", "partial"]}, "rhythms": {"type": "object"} }
+}

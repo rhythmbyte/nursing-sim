@@ -28,9 +28,10 @@
     "recommendation": "Neuro checks q2h — she's anticoagulated, so watch closely for any change. High fall risk, bed alarm on."
   },
   "vitals": {
-    "baseline": { "bp": "142/80", "hr": 88, "hrNote": "irregular", "rr": 16, "tempF": 98.3, "spo2": 96, "o2": "RA", "pain": "2/10 occipital headache", "painReview": "proposed" },
+    "review": "proposed",
+    "baseline": { "rhythm": "afib", "bp": "142/80", "hr": 88, "hrNote": "irregular", "rr": 16, "tempF": 98.3, "spo2": 96, "o2": "RA", "pain": "2/10 occipital headache", "painReview": "proposed" },
     "keyframes": [
-      { "atMin": 105, "eventId": "e-p5-confused", "review": "proposed", "values": { "bp": "172/94", "hr": 64, "hrNote": "irregular", "rr": 16, "spo2": 95, "o2": "RA", "pain": "6/10 headache, worsening", "gcs": 14 } }
+      { "atMin": 105, "eventId": "e-p5-confused", "review": "proposed", "values": { "rhythm": "afib", "bp": "172/94", "hr": 64, "hrNote": "irregular", "rr": 16, "spo2": 95, "o2": "RA", "pain": "6/10 headache, worsening", "gcs": 14 } }
     ]
   },
   "findings": {

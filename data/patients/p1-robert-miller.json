@@ -28,9 +28,10 @@
     "recommendation": "Watch for recurrent pain. Nitro SL PRN with BP check first. Follow up repeat troponin."
   },
   "vitals": {
-    "baseline": { "bp": "148/88", "hr": 96, "rr": 20, "tempF": 98.6, "spo2": 94, "o2": "RA", "pain": "3/10 intermittent chest pressure" },
+    "review": "proposed",
+    "baseline": { "rhythm": "sinus", "bp": "148/88", "hr": 96, "rr": 20, "tempF": 98.6, "spo2": 94, "o2": "RA", "pain": "3/10 intermittent chest pressure" },
     "keyframes": [
-      { "atMin": 75, "eventId": "e-p1-pain-returns", "values": { "bp": "158/92", "hr": 108, "rr": 24, "spo2": 92, "o2": "RA", "pain": "7/10 radiating to L arm" } }
+      { "atMin": 75, "eventId": "e-p1-pain-returns", "values": { "rhythm": "sinus-tach", "bp": "158/92", "hr": 108, "rr": 24, "spo2": 92, "o2": "RA", "pain": "7/10 radiating to L arm" } }
     ]
   },
   "findings": {

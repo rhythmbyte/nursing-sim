@@ -2,6 +2,16 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## A. Bedside patient monitor
+- **Monitor** tab in the student chart, with **Full screen** for a tablet or TV next to the manikin.
+- Real-monitor look: dark background, large numbers. HR/ECG green, SpO₂ cyan, NIBP white (red when alarming), RR yellow. Shows NIBP time of the last cycle, O₂ device, and temp only with a temp probe (`monitor.tempProbe`).
+- Animated **ECG** and **pleth** waveforms on canvas. Rhythm is data: new `data/catalogs/rhythms.json` (sinus, sinus tach/brady, AFib, PEA, asystole, VF, VT) says how each is drawn. New `rhythm` field in vitals; starter rhythms added (Dorothy AFib, Linda sinus tach, …) with `vitals.review: proposed`.
+- **Live:** scripted changes, instructor adjustments (Adjust vitals has a **rhythm** picker), trends and codes (arrest rhythm; no pulse = no SpO₂/pleth). ROSC / no ROSC set `settings.roscRhythm` / `noRoscRhythm`.
+- **Connections:** shows only what the patient is connected for: catalog `monitorConnects` on tele (ECG), continuous pulse ox (SpO₂) and the NIBP cycle, or the student's logged **Connect to monitor** (all).
+- **Alarms:** flashing tiles past data limits (`vitals.json alarmLimits`) or on alarm rhythms; optional sound with mute. NIBP still follows the cycle and Take BP now; no pain, GCS, or temp without a probe.
+- One animation loop for all monitors, paused when hidden or when the sim isn't running. Reusable module `js/screens/monitor/`.
+- Tests: 106 passing.
+
 ## Review fixes #5, #2, #7
 - **#5 Broken-reference check** (`engine/integrity.js`), run by the loader and the tests. It covers orders → interventions and labs, events → keyframes, findings and order sets, labs → catalog and forOrder, parameter and PRN references, code branch, and scenario patients. Clear messages appear at the top of the Instructor tab. A broken browser edit falls back to the file version instead of breaking the app.
 - **#2 Save failures are visible:** a sticky "Not saved" banner when browser storage is full or blocked.

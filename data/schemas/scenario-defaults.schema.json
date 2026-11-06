@@ -16,7 +16,7 @@
         "revealManualVitals",
         "delegationDelayMin",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "roscTag", "messages"
+        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -37,6 +37,8 @@
         "codeTag": { "enum": ["red", "yellow", "green", "black"] },
         "scriptedVitalsAfterInstructor": { "enum": ["apply", "skip"] },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
+        "roscRhythm": { "type": "string" },
+        "noRoscRhythm": { "type": "string" },
         "messages": { "type": "object", "properties": { "codeStarted": { "type": "string" }, "rosc": { "type": "string" }, "noRosc": { "type": "string" } } }
       }
     }

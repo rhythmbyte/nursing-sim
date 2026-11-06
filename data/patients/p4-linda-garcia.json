@@ -29,9 +29,10 @@
     "recommendation": "Watch closely for sepsis. Repeat lactate due. Strict I&O. COPD O2 target 88–92%."
   },
   "vitals": {
-    "baseline": { "bp": "102/64", "hr": 104, "rr": 24, "tempF": 101.3, "spo2": 91, "o2": "2 L NC", "pain": "2/10" },
+    "review": "proposed",
+    "baseline": { "rhythm": "sinus-tach", "bp": "102/64", "hr": 104, "rr": 24, "tempF": 101.3, "spo2": 91, "o2": "2 L NC", "pain": "2/10" },
     "keyframes": [
-      { "atMin": 60, "eventId": "e-p4-worsens", "values": { "bp": "86/52", "hr": 122, "rr": 30, "tempF": 102.2, "spo2": 88, "o2": "2 L NC" } }
+      { "atMin": 60, "eventId": "e-p4-worsens", "values": { "rhythm": "sinus-tach", "bp": "86/52", "hr": 122, "rr": 30, "tempF": 102.2, "spo2": 88, "o2": "2 L NC" } }
     ]
   },
   "findings": {
