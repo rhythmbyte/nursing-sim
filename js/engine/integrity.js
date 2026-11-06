@@ -3,6 +3,7 @@
 // field, the missing id, and where it should be defined.
 
 import { rhythmProblems } from './monitor.js';
+import { scriptProblems } from './reactions/integrity.js';
 
 const has = (set, id) => set.has(id);
 
@@ -40,6 +41,7 @@ export function patientReferenceProblems(t, catalogs) {
   }
   (t.codeBranch?.trigger?.ifNotCharted || []).forEach((id) => iv('codeBranch.trigger.ifNotCharted', id));
   p.push(...rhythmProblems(t, catalogs));
+  p.push(...scriptProblems(t, catalogs));
   return p;
 }
 

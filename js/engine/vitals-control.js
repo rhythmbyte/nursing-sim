@@ -11,12 +11,15 @@ const DECIMALS = { tempF: 1 };
 const round = (k, v) => { const p = 10 ** (DECIMALS[k] || 0); return Math.round(v * p) / p; };
 const parseBp = (bp) => { const m = /^(\d{2,3})\/(\d{2,3})$/.exec(String(bp ?? '')); return m ? [Number(m[1]), Number(m[2])] : null; };
 
-/** Records the patient's current vitals at atMin (replaces an entry at the same minute). Mutates ps. */
+/**
+ * Records the patient's current vitals at atMin. Mutates ps. A second change in the same minute is appended,
+ * not written over the first (vitalsAt takes the last one), because the reaction script reads history entries
+ * in order and must see every change. Unchanged values aren't recorded again.
+ */
 export function recordVitals(ps, atMin) {
   const last = ps.vitalsHistory.at(-1);
-  const entry = { atMin, values: { ...ps.vitals } };
-  if (last && last.atMin === atMin) ps.vitalsHistory[ps.vitalsHistory.length - 1] = entry;
-  else ps.vitalsHistory.push(entry);
+  if (last && last.atMin === atMin && JSON.stringify(last.values) === JSON.stringify(ps.vitals)) return;
+  ps.vitalsHistory.push({ atMin, values: { ...ps.vitals } });
 }
 
 /** Vitals at a sim minute (last recorded change at or before t). */
@@ -64,6 +67,28 @@ function interpolate(from, to, f) {
 const trendable = (k, v) => k === 'bp' || typeof v === 'number';
 
 /**
+ * Moves vitals toward `target` (already cleaned): now (overMin 0) or as a per-minute trend. Text values apply now.
+ * Replaces any trend in progress and records the change. Mutates ps; returns the previous values of the changed keys.
+ * Shared by the instructor's Adjust vitals and the reaction script (engine/reactions.js).
+ */
+export function setVitalsTarget(ps, target, overMin, simMin) {
+  const from = Object.fromEntries(Object.keys(target).map((k) => [k, ps.vitals[k] ?? null]));
+  const trendTo = overMin > 0 ? Object.fromEntries(Object.entries(target).filter(([k, v]) => trendable(k, v) && ps.vitals[k] != null)) : {};
+  const nowValues = Object.fromEntries(Object.entries(target).filter(([k]) => !(k in trendTo)));
+  Object.assign(ps.vitals, nowValues);
+  ps.vitalsTrend = Object.keys(trendTo).length
+    ? { fromMin: simMin, toMin: simMin + overMin, from: Object.fromEntries(Object.keys(trendTo).map((k) => [k, ps.vitals[k]])), to: trendTo, lastMin: Math.floor(simMin) }
+    : null;
+  recordVitals(ps, simMin);
+  return from;
+}
+
+/** Scripted vitals (keyframes, reactions) yield to the instructor when settings.scriptedVitalsAfterInstructor is 'skip'. */
+export function scriptedVitalsBlocked(settings, ps) {
+  return Boolean(ps.vitalsOverride) && settings.scriptedVitalsAfterInstructor === 'skip';
+}
+
+/**
  * Instructor adjusts vitals. args: { values, overMin = 0, presetId? }. overMin 0 = apply now; otherwise
  * numeric values and BP trend linearly to the target (recalculated each sim minute); text values
  * (O₂ device, pain description) apply immediately.
@@ -75,15 +100,8 @@ export function adjustVitals(state, patientId, { values, overMin = 0, presetId =
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
   const ps = draft.patients[patientId];
-  const from = Object.fromEntries(Object.keys(target).map((k) => [k, ps.vitals[k] ?? null]));
-  const trendTo = overMin > 0 ? Object.fromEntries(Object.entries(target).filter(([k, v]) => trendable(k, v) && ps.vitals[k] != null)) : {};
-  const nowValues = Object.fromEntries(Object.entries(target).filter(([k]) => !(k in trendTo)));
-  Object.assign(ps.vitals, nowValues);
-  ps.vitalsTrend = Object.keys(trendTo).length
-    ? { fromMin: simMin, toMin: simMin + overMin, from: Object.fromEntries(Object.keys(trendTo).map((k) => [k, ps.vitals[k]])), to: trendTo, lastMin: Math.floor(simMin) }
-    : null;
+  const from = setVitalsTarget(ps, target, overMin, simMin);
   ps.vitalsOverride = true;
-  recordVitals(ps, simMin);
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'vitals-adjusted', details: { from, to: target, overMin, presetId } });
   return draft;
 }

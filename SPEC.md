@@ -181,6 +181,35 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
 
 `{ joinCode, status, clock, groups, students: { id → { name, groupId, role } }, patientState: { id → { vitals, ordersStatus, callLight, tag, alive } }, log: [ … ] }`
 
+### 4.6 Reactive script (`script` in a patient file, optional)
+
+Lets a patient mostly run itself: the patient reacts to what the student does (or doesn't do), and the instructor can override any of it live (§8).
+
+```jsonc
+"script": {
+  "initialState": "baseline",
+  "states": [ { "id": "hypoxic", "label": "Hypoxic (SpO₂ 82%)",                  // label is what the instructor sees
+                "vitals": { "values": { "spo2": 82, "rr": 32 }, "overMin": 0 },    // 0 = now, N = trend over N min
+                "rhythm": "sinus-tach", "findings": "state-p4-hypoxic",            // findings.changes[].eventId
+                "note": "teaching point shown in the debrief" } ],
+  "reactions": [ {
+    "id": "r-…", "label": "No O₂ within 5 min: hypoxic",
+    "when": { "kind": "elapsed", "since": "state", "state": "desaturating", "afterMin": 5,
+              "without": [ { "kind": "intervention", "interventionId": "o2-apply" } ] },
+    "if":   { "inState": [], "notInState": [], "vitals": { "spo2": { "max": 90 } }, "done": [], "notDone": [], "betweenMin": [0, 240] },
+    "then": [ { "type": "state", "to": "hypoxic" } ],
+    "repeat": false, "maxFires": 5 } ]
+}
+```
+
+- **Triggers (`when.kind`):** `intervention` (charted, with `where` field tests such as `{ "lpm": { "min": 1, "max": 4 }, "device": { "excludes": ["NRB"] } }`; a list of these means any one of them), `order` (any work that counts for the order), `med` (MAR entry by order or med name, `result`, `dose` range), `vitals` (`field` `op` `value`, fires when the value crosses into it, so `<=` fires on the way down and `>=` on the way up), `elapsed` (`afterMin` since a `state` was entered, an `event` fired, a `reaction` fired, or the `start`, optionally `without` given actions), `fired` (another `eventId` or `reactionId`: chains).
+- **Conditions (`if`):** current state in / not in, vitals ranges, actions done / not done, a sim-minute window.
+- **Effects (`then`):** `state`, `vitals` (now or trend; rhythm is a vitals value), `findings`, `event` (any registered event type inline: call light, staff message, new orders, lab result, code), `fire` (one of the patient's events with its linked group).
+- **Repeats and loops:** a reaction fires once unless `repeat` (then up to `maxFires`, default `settings.reactionMaxFires`). It never fires twice at the same instant, and more than `settings.reactionMaxPerInstant` reactions at one moment stops with an instructor alert.
+- **Vitals vs the instructor:** scripted vitals follow `settings.scriptedVitalsAfterInstructor` exactly like keyframes: `apply` (the script takes back over) or `skip` (the instructor keeps control; the state still changes, and the skip is logged).
+- Every transition is logged (`reaction-fired`, `script-state` with its cause: student action, timeout, threshold, event, another reaction, or instructor).
+- Broken references (states, reactions, events, interventions and their fields, orders, finding changes, rhythms, order sets, pending labs) are load errors (`engine/reactions/integrity.js`).
+
 ---
 
 ## 5. Event types (one file each in `js/engine/events/`)
@@ -352,6 +381,7 @@ Things in the prototype that will need to change for the real website (logins, b
 | User identities are hard-coded (`instructor`, `student-N`) in `main.js` | `userId`/`role` come from the auth session; log format is unchanged | `js/main.js` |
 | The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
 | One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
+| Reactions run in the browser that owns the session (the one writer window), as a processor in `session.advance()` | They run on the server, which is the clock authority; student actions reach it as API calls, and the same pure `engine/reactions.js` runs there | `js/engine/reactions.js`, `session.js` |
 
 ---
 
@@ -397,3 +427,6 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 32. **When are shift-start daily meds due?** Daily meds already active at 07:00 with no set time are first due at 09:00 (`scheduledMeds.shiftStartDueMin: 120`). Right, or should each med carry its own due time?
 33. **Group status rule:** Needs attention = any very late item or any red flag; Falling behind = any late item or amber flag (`timeliness.groupStatus`). Too sensitive?
 34. **Vitals trend arrow:** worsening if, over 15 min, SpO₂ drops ≥ 3, SBP drops ≥ 15 or HR rises ≥ 15 (`vitals.json trend`). Right?
+35. **Linda's O₂ responses** (starter `script`, proposed): 1–4 L → SpO₂ about 86% (below target); 5–9 L → about 90% (in her 88–92% COPD target); ≥ 10 L or a non-rebreather → about 96% (over-oxygenated, a teaching point). Are those bands and numbers right, and should a Venturi mask be its own band?
+36. **Linda's deterioration timing:** the 08:00 worsening starts a desaturation; no O₂ within 5 min → SpO₂ 82%, RR 32, HR 128; no O₂ or rapid response within 10 more min → crashing (SpO₂ 76%, RR 36, HR 138, BP 78/44). Right timing and values? Should notifying the provider also count as a response?
+37. **Hypoxic and crashing findings for Linda** (`findings.changes` `state-p4-hypoxic`, `state-p4-crashing`, proposed): "Speaking in 2–3 word sentences, accessory muscles, anxious" and "Lethargic, dusky lips and nail beds, mottled knees". Accurate?

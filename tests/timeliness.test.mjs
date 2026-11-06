@@ -68,9 +68,9 @@ test('call lights and alarms use their own thresholds; rules agree', () => {
   let { s, ctx, tick } = started();
   s = tick(s, 76);
   s = session.answerCallLight(s, RM, { now: 82 * MIN, user: S1 });
-  const light = timelinessItems(s, ctx(90, s)).find((i) => i.kind === 'callLight');
+  const light = timelinessItems(s, ctx(90, s)).find((i) => i.kind === 'callLight' && i.patientId === RM);
   assert.deepEqual([light.tag, light.minutes], ['late', 7]);
-  assert.equal(evaluateRules(s, ctx(90, s)).find((f) => f.ruleId === 'call-light-response').severity, 'amber');
+  assert.equal(evaluateRules(s, ctx(90, s)).find((f) => f.ruleId === 'call-light-response' && f.patientId === RM).severity, 'amber');
   assert.deepEqual(timelinessCounts([light]), { onTime: 0, late: 1, veryLate: 0, open: 0 });
 });
 

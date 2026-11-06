@@ -116,7 +116,7 @@ test('every action the engine logs has a readable debrief description', async ()
   const { describeEntry } = await import('../js/screens/debrief/describe.js');
   const { readFileSync: read, readdirSync } = await import('node:fs');
   const dir = (d) => readdirSync(new URL(d, import.meta.url)).filter((f) => f.endsWith('.js')).map((f) => read(new URL(d + f, import.meta.url), 'utf8'));
-  const src = [...dir('../js/engine/'), ...dir('../js/engine/rules/'), ...dir('../js/engine/events/')].join('\n');
+  const src = [...dir('../js/engine/'), ...dir('../js/engine/rules/'), ...dir('../js/engine/events/'), ...dir('../js/engine/reactions/')].join('\n');
   const actions = new Set([...src.matchAll(/action: '([a-z-]+)'/g), ...src.matchAll(/log\(draft, simMin, ctx, patientId, '([a-z-]+)'/g)].map((m) => m[1]));
   assert.ok(actions.size > 20, `found ${actions.size} actions`);
   const plainOk = new Set(['joined']); // the generic wording reads fine for these

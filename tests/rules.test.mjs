@@ -72,11 +72,12 @@ test('tier-timeout: shift-start orders are not timed by default, configurable pe
 test('call-light-response: amber after 5 min, red after 10, and open lights count', () => {
   let { s, tick, flags } = started();
   s = tick(s, 76);
-  assert.equal(flags(s, 79, 'call-light-response').length, 0);
-  assert.equal(flags(s, 82, 'call-light-response')[0].severity, 'amber');
-  assert.equal(flags(s, 86, 'call-light-response')[0].severity, 'red');
+  const rm = (st, min) => flags(st, min, 'call-light-response').filter((x) => x.patientId === RM); // Linda's script lights her own later
+  assert.equal(rm(s, 79).length, 0);
+  assert.equal(rm(s, 82)[0].severity, 'amber');
+  assert.equal(rm(s, 86)[0].severity, 'red');
   s = session.answerCallLight(s, RM, { now: 82 * MIN, user: S1 });
-  const f = flags(s, 100, 'call-light-response');
+  const f = rm(s, 100);
   assert.equal(f.length, 1);
   assert.match(f[0].message, /answered after 7 min/);
 });

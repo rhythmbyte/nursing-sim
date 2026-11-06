@@ -18,11 +18,14 @@ import { initFlowsheet, monitorProcessor } from './vitals.js';
 import { delegationProcessor } from './delegation.js';
 import { trendProcessor } from './vitals-control.js';
 import { alarmProcessor } from './monitor-alarms.js';
+import { reactionsProcessor, initScript } from './reactions.js';
 
-// Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
-const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
+// Order matters within one instant: trends step first, then reactions (which may change vitals), then
+// monitor readings (which read vitalsAt). A processor may expose nextAt(state, upto, ctx): the session
+// stops there first, so work it does at that moment happens in time order with the others.
+const PROCESSORS = [trendProcessor, reactionsProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
 
-export const SESSION_VERSION = 13; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 14; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -60,6 +63,7 @@ function initialPatientState(t, groupId, admission, catalogs) {
     delegations: [],             // tasks delegated to LPN/CNA (engine/delegation.js)
     admission: null,             // { status: pending|held|assigned, arrivedAtMin, message, … } (engine/admissions.js)
     code: null,
+    script: initScript(t),       // reactive script position (engine/reactions.js), null if the patient has none
   };
 }
 
@@ -110,6 +114,13 @@ function pendingTimedOrders(state, templatesById, simMin) {
   return out;
 }
 
+/** Fires one of a patient's events by id, with its linked group (reaction effect "fire"). Mutates draft. */
+export function fireEventGroup(draft, patientId, eventId, { simMin, now, refs, templatesById, user, source }) {
+  const ref = refs.find((r) => r.patientId === patientId && r.event.id === eventId);
+  if (!ref) { console.warn(`fireEventGroup: no event ${eventId} on ${patientId}`); return; }
+  for (const m of groupMembers(refs, ref)) fireInto(draft, m, { simMin, now, templatesById, user, source });
+}
+
 function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
   const { patientId, event } = ref;
   const type = getEventType(event.type);
@@ -136,9 +147,10 @@ function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
 
 /** Advance to the current sim time: fire due events, activate timed orders. Returns { state, fired }. */
 export function tick(state, { now, refs, templatesById, catalogs }) {
-  if (state.clock.status !== 'running') return { state, fired: 0 };
+  // While paused, sim time stands still, but reactions to what was charted meanwhile still run.
+  if (state.clock.status !== 'running' && state.clock.status !== 'paused') return { state, fired: 0 };
   const { state: next, fired } = advance(state, { now, refs, templatesById, catalogs });
-  if (state.endMin != null && simMinOf(next, now) >= state.endMin) return { state: endShift(next, now), fired };
+  if (state.clock.status === 'running' && state.endMin != null && simMinOf(next, now) >= state.endMin) return { state: endShift(next, now), fired };
   return { state: next, fired };
 }
 
@@ -150,20 +162,30 @@ function endShift(state, now) {
   return draft;
 }
 
-function runProcessors(draft, upto, ctx) {
+function runAll(draft, upto, ctx) {
   for (const p of PROCESSORS) if (p.due(draft, upto, ctx)) p.apply(draft, upto, ctx);
+}
+
+/** Runs processors to `upto`, stopping first at any earlier moment a processor asks for (nextAt). */
+function runProcessors(draft, upto, ctx) {
+  for (let guard = 0; guard < 1000; guard++) {
+    const stop = Math.min(...PROCESSORS.map((p) => p.nextAt?.(draft, upto, ctx) ?? Infinity));
+    if (!(stop < upto)) break;
+    runAll(draft, stop, ctx);
+  }
+  runAll(draft, upto, ctx);
 }
 
 /** Fire everything due at the clock's current sim minute (any clock status). Returns { state, fired }. */
 function advance(state, { now, refs, templatesById, catalogs }) {
   const simMin = Math.min(simMinOf(state, now), state.endMin ?? Infinity); // nothing past the end of shift
   const due = dueEvents(refs, state.fired, simMin);
-  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin, { now, templatesById, catalogs }))) {
+  const ctx = { now, templatesById, catalogs, refs };
+  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin, ctx))) {
     return { state, fired: 0 };
   }
 
   const draft = structuredClone(state);
-  const ctx = { now, templatesById, catalogs };
   for (const { ref, at } of due) {
     runProcessors(draft, at - 1e-9, ctx); // everything strictly before this event's instant
     fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled' });

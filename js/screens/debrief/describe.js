@@ -10,6 +10,15 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'intervention': return `${labelOf(d.interventionId)}${d.delegatedTo ? ` → delegated to ${d.delegatedTo}` : ''}${d.orderId ? ` · for "${orderText(l.patientId, d.orderId)}"` : ''}${fields(d.fields) ? ` · ${fields(d.fields)}` : ''}`;
     case 'delegation-completed': return `${d.to} reported: ${labelOf(d.interventionId)} done${d.values ? ` · ${fields(d.values)}` : ''}`;
     case 'med': return `${VERB[d.result] || d.result} ${d.med}${d.reason ? ` (${d.reason})` : ''}${d.warnings?.length ? ` · overrode: ${d.warnings.join(', ')}` : ''}`;
+    case 'reaction-fired': return `Script: ${d.label || d.reactionId || 'reaction'}${d.forced ? ' (instructor fired it)' : ''}`;
+    case 'script-state': return `Patient state: ${d.from ?? '—'} → ${d.label || d.to || '?'}${d.cause?.kind ? ` (${d.cause.kind === 'timeout' ? 'nothing done in time' : d.cause.kind})` : ''}`;
+    case 'script-vitals-skipped': return 'Scripted vitals skipped (instructor has control of vitals)';
+    case 'script-loop-stopped': return `Script loop stopped (more than ${d.limit ?? '?'} reactions at one moment)`;
+    case 'script-paused': return 'Instructor paused scripting for this patient';
+    case 'script-resumed': return 'Instructor resumed scripting for this patient';
+    case 'reaction-disabled': return `Instructor disabled reaction ${d.reactionId ?? ''}`.trim();
+    case 'reaction-enabled': return `Instructor re-enabled reaction ${d.reactionId ?? ''}`.trim();
+    case 'reaction-skipped': return `Instructor skipped countdown ${d.reactionId ?? ''}`.trim();
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

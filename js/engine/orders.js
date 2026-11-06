@@ -24,16 +24,20 @@ export function firstWork(state, patientId, order) {
   for (const l of state.log) {
     if (l.patientId !== patientId || l.simMin < os.activeAtMin) continue;
     if (best && l.simMin >= best.simMin) continue;
-    const d = l.details || {};
-    const forThis = d.orderId === order.id;
-    const counts = (l.action === 'intervention' && !d.delegatedTo
-        && (forThis || (!d.orderId && (order.interventionIds || []).includes(d.interventionId))))
-      || (l.action === 'delegation-completed' && forThis)
-      || (l.action === 'med' && forThis && d.result === 'given')
-      || (l.action === 'order-done' && forThis);
-    if (counts) best = l;
+    if (countsAsWork(l, order)) best = l;
   }
   return best;
+}
+
+/** Does this log entry count as work done for the order? (Shared by firstWork and reaction triggers.) */
+export function countsAsWork(l, order) {
+  const d = l.details || {};
+  const forThis = d.orderId === order.id;
+  return (l.action === 'intervention' && !d.delegatedTo
+      && (forThis || (!d.orderId && (order.interventionIds || []).includes(d.interventionId))))
+    || (l.action === 'delegation-completed' && forThis)
+    || (l.action === 'med' && forThis && d.result === 'given')
+    || (l.action === 'order-done' && forThis);
 }
 
 /** Orders on a patient still waiting to be acknowledged (badges on home, chart tabs, charge overview). */

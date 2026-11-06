@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-06: Reaction scripts run as a processor and reuse event types for effects
+- **Decision:** `engine/reactions.js` is a session processor. It reads triggers from the log (student actions, events fired, reactions fired) and from `vitalsHistory` (thresholds), and it adds its own deadlines ("N min without X"). Processors may report `nextAt`, so the session stops at that moment first and everything stays in time order, including during Skip and catch-up. Effects reuse the event-type registry (call light, staff message, new orders, lab result, code) and `setVitalsTarget`, instead of a second copy of each.
+- **Why:** One path for every trigger, the same in live sims and the dry run. Nothing new for the screens or chart actions to call, and no copied effect logic.
+- **Details:** Elapsed countdowns restart when scripting is resumed. A skipped countdown re-arms only when its anchor happens again (for example, the state is entered again). Instructor "Fire now" ignores conditions but still counts as a fire and still chains. `recordVitals` now appends a second change in the same minute instead of overwriting the first, because the script must see every change.
+- **Alternatives:** Calling reactions from each chart action (misses thresholds and timeouts, and is easy to miss in new actions). A separate effect implementation (would drift from the event types).
+
+---
+
 ## 2026-11-06: One timeliness helper feeds the command center, debrief and timing rules
 - **Decision:** `engine/timeliness.js` turns work into items `{ kind, patientId, startAt, doneAt, minutes, tag }` using `rules.timeliness` thresholds (per tier; scheduled meds; call lights; alarms), the shared timed-order definition (`timeliness.tracking`) and the active log (struck entries don't count). tier-timeout, call-light-response and alarm-response map late → amber (or the tier's severity) and very late → red from these items. `engine/command-center.js` summarizes per group with a data-driven status rule; `debriefTimeliness` gives the per-student table. parameter-breach keeps its per-order window (it's part of each order's data).
 - **Why:** Three screens and three rules used to compute lateness separately. Now they share one function and can't disagree.

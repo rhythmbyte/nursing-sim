@@ -1,7 +1,7 @@
 // vitals-change: applies the keyframe whose eventId === payload.keyframe to the patient's current vitals.
 // After the instructor adjusts vitals live, settings.scriptedVitalsAfterInstructor decides: 'apply' (the scripted
 // change wins and ends the instructor's trend/override) or 'skip' (the instructor stays in control). SPEC §14.
-import { recordVitals } from '../vitals-control.js';
+import { recordVitals, scriptedVitalsBlocked } from '../vitals-control.js';
 import { addAlert } from '../alerts.js';
 
 export default {
@@ -13,7 +13,7 @@ export default {
       return;
     }
     const ps = draft.patients[patientId];
-    if (ps.vitalsOverride && draft.settings.scriptedVitalsAfterInstructor === 'skip') {
+    if (scriptedVitalsBlocked(draft.settings, ps)) {
       addAlert(draft, { simMin, patientId, kind: 'vitals', message: `Scripted vitals change skipped (instructor has control): ${event.id}`, audience: ['instructor'] });
       return;
     }

@@ -113,6 +113,7 @@
       "properties": { "mode": { "enum": ["survive", "die", "instructor"] }, "notes": { "type": "string" } }
     },
     "codeBranch": { "type": ["object", "null"] },
+    "script": {"type": "object", "required": ["initialState", "states", "reactions"], "properties": {"review": {"$ref": "#/$defs/review"}, "initialState": {"type": "string"}, "states": {"type": "array", "items": {"$ref": "#/$defs/scriptState"}}, "reactions": {"type": "array", "items": {"$ref": "#/$defs/reaction"}}}},
     "monitor": { "type": "object", "properties": { "tempProbe": { "type": "boolean" } } },
     "vitalsPresets": {
       "type": "array",
@@ -132,6 +133,12 @@
     }
   },
   "$defs": {
+    "fieldTest": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}, "equals": {"type": ["string", "number"]}, "matches": {"type": "array", "items": {"type": "string", "minLength": 1}}, "excludes": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
+    "matcher": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["intervention", "order", "med"]}, "interventionId": {"type": "string"}, "orderId": {"type": "string"}, "med": {"type": "string"}, "result": {"enum": ["given", "held", "not-given"]}, "dose": {"$ref": "#/$defs/fieldTest"}, "where": {"type": ["object", "array"]}}},
+    "scriptState": {"type": "object", "required": ["id", "label"], "properties": {"id": {"type": "string", "pattern": "^[a-z0-9-]+$"}, "label": {"type": "string", "minLength": 1}, "vitals": {"type": "object", "properties": {"values": {"$ref": "#/$defs/vitalValues"}, "overMin": {"type": "number", "minimum": 0}}}, "rhythm": {"type": "string", "minLength": 1}, "findings": {"type": "string", "minLength": 1}, "note": {"type": "string"}, "review": {"$ref": "#/$defs/review"}}},
+    "trigger": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["intervention", "order", "med", "vitals", "elapsed", "fired"]}, "interventionId": {"type": "string"}, "orderId": {"type": "string"}, "med": {"type": "string"}, "result": {"enum": ["given", "held", "not-given"]}, "dose": {"$ref": "#/$defs/fieldTest"}, "where": {"type": ["object", "array"]}, "field": {"enum": ["spo2", "hr", "rr", "sbp", "dbp", "tempF", "gcs", "glucose"]}, "op": {"enum": ["<=", "<", ">=", ">"]}, "value": {"type": "number"}, "since": {"enum": ["state", "event", "reaction", "start"]}, "state": {"type": "string"}, "eventId": {"type": "string"}, "reactionId": {"type": "string"}, "afterMin": {"type": "number", "minimum": 0}, "without": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}}},
+    "effect": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["state", "vitals", "findings", "event", "fire"]}, "to": {"type": "string"}, "values": {"$ref": "#/$defs/vitalValues"}, "overMin": {"type": "number", "minimum": 0}, "change": {"type": "string"}, "eventId": {"type": "string"}, "event": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["new-orders", "call-light", "staff-message", "lab-result", "code"]}, "payload": {"type": "object"}}}}},
+    "reaction": {"type": "object", "required": ["id", "when", "then"], "properties": {"id": {"type": "string", "pattern": "^r-"}, "label": {"type": "string"}, "review": {"$ref": "#/$defs/review"}, "when": {"$ref": "#/$defs/trigger"}, "if": {"type": "object", "properties": {"inState": {"type": "array", "items": {"type": "string"}}, "notInState": {"type": "array", "items": {"type": "string"}}, "vitals": {"type": "object"}, "done": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}, "notDone": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}, "betweenMin": {"type": "array", "items": {"type": "number"}}}}, "then": {"type": "array", "items": {"$ref": "#/$defs/effect"}}, "repeat": {"type": "boolean"}, "maxFires": {"type": "integer", "minimum": 1}}},
     "review": { "enum": ["approved", "proposed", "partial"] },
     "tag": { "enum": ["red", "yellow", "green", "black"] },
     "vitalValues": {

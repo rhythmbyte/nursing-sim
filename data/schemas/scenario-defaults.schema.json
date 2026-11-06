@@ -16,7 +16,7 @@
         "revealManualVitals",
         "delegationDelayMin",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
+        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -36,6 +36,8 @@
         "delegatedAssessmentRevealsFindings": { "type": "boolean" },
         "codeTag": { "enum": ["red", "yellow", "green", "black"] },
         "scriptedVitalsAfterInstructor": { "enum": ["apply", "skip"] },
+        "reactionMaxFires": { "type": "integer", "minimum": 1 },
+        "reactionMaxPerInstant": { "type": "integer", "minimum": 1 },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
         "roscRhythm": { "type": "string" },
         "noRoscRhythm": { "type": "string" },

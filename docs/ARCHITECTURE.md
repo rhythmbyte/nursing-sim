@@ -29,6 +29,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Processors (timed work besides events):** `session.advance()` runs the monitor cycle, lab results and delegated tasks as processors (`{ due(state, upto), apply(draft, upto, ctx) }`, listed in `PROCESSORS` in `session.js`). It interleaves them with events in time order, so a monitor reading at 08:15 sees the vitals change that fires at 08:15, and a skip or catch-up fills in every reading in between. To add timed work, write a processor in its own engine file and add it to `PROCESSORS`.
 
+**Reactive scripts:** a patient's optional `script` (SPEC §4.6) is run by `reactionsProcessor` (`engine/reactions.js`). It reads new log entries and vitals-history entries for the patient, plus its own countdown deadlines, and applies effects through the event registry and `setVitalsTarget`. Processors can expose `nextAt(state, upto, ctx)` so `runProcessors` stops there first (time order holds through Skip and catch-up). The session also ticks while paused, so reactions answer charting done during a pause.
+
 **Vitals history:** `patients[id].vitalsHistory` records every change (scripted keyframe, instructor adjustment, each sim minute of a trend). The monitor cycle and delegated reports read `vitalsAt(ps, t)` at their own reading time, parameter rules scan the history, and charting snapshots `ps.vitals` for the debrief. So a live change reaches everything, including catch-up after Skip.
 
 **Data checks on load:** schema, then cross-field checks, then broken references (`engine/integrity.js`). A broken browser edit is skipped (the file version stays in use). A broken file patient is left out. A scenario runs without missing patients and is dropped only if none are left. All of this is shown at the top of the Instructor tab.
@@ -69,6 +71,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/monitor-alarms.js` | `alarmProcessor` (alarm episodes), `acknowledgeAlarm` (silence + response time), `alarmEpisodes` (rule and debrief) | built |
 | `js/engine/struck.js` | `activeLog` / `withoutStruck` ("entered in error" entries removed for rules and comparisons), `isStruck` | built |
 | `js/engine/timeliness.js` | `timelinessItems` (orders, scheduled meds, call lights, alarms → tags), `timelinessConfig`, `tagFor`, `medDueTimes`, `debriefTimeliness`. Read by the command center, debrief and the tier-timeout / call-light-response / alarm-response rules | built |
+| `js/engine/reactions.js` | Reactive script processor (`reactionsProcessor`), `initScript`, `tryFire` (loop protection, conditions, effects), `armedTimers`, `anchorOf`, `maxFires` | built |
+| `js/engine/reactions/` | `match.js` (field tests, action matchers, thresholds, conditions), `effects.js` (`EFFECTS`, `enterState`), `control.js` (force state, fire now, enable/disable, skip countdown, pause/resume), `describe.js` (When/If/Then text), `integrity.js` (`scriptProblems`), `dry-run.js` ("Test this patient") | built |
 | `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |

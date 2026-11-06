@@ -48,7 +48,9 @@
       "Urine output decreased overnight"
     ],
     "changes": [
-      { "eventId": "e-p4-worsens", "findings": ["New confusion", "Cool extremities", "Capillary refill 4 seconds", "Urine output 15 mL over the last hour"] }
+      { "eventId": "e-p4-worsens", "findings": ["New confusion", "Cool extremities", "Capillary refill 4 seconds", "Urine output 15 mL over the last hour"] },
+      { "eventId": "state-p4-hypoxic", "review": "proposed", "findings": ["Speaking in 2–3 word sentences", "Using accessory muscles to breathe", "Anxious and restless"] },
+      { "eventId": "state-p4-crashing", "review": "proposed", "findings": ["Lethargic, difficult to rouse", "Lips and nail beds dusky", "Mottled knees"] }
     ]
   },
   "labs": [
@@ -91,6 +93,29 @@
     "description": "Optional: turns Linda into the black (coding) patient if sepsis isn't escalated.",
     "trigger": { "ifNotCharted": ["notify-provider", "rapid-response"], "byMin": 90 },
     "event": { "id": "e-p4-code", "type": "code", "payload": { "rhythm": "PEA", "message": "Linda Garcia is unresponsive. No pulse." } }
+  },
+  "script": {
+    "review": "proposed",
+    "initialState": "baseline",
+    "states": [
+      {"id": "baseline", "label": "Baseline: 2 L NC, SpO₂ about 91%", "review": "proposed"},
+      {"id": "desaturating", "label": "Desaturating (SpO₂ falling)", "vitals": {"values": {"spo2": 86, "rr": 30}, "overMin": 5}, "review": "proposed"},
+      {"id": "low-flow", "label": "Low-flow O₂: still below target (SpO₂ about 86%)", "vitals": {"values": {"spo2": 86, "rr": 28}, "overMin": 3}, "note": "Titrated, but not into her 88–92% COPD target: still hypoxemic.", "review": "proposed"},
+      {"id": "in-target", "label": "In COPD target (SpO₂ 88–92%)", "vitals": {"values": {"spo2": 90, "rr": 26}, "overMin": 5}, "review": "proposed"},
+      {"id": "over-oxygenated", "label": "Over-oxygenated (above COPD target)", "vitals": {"values": {"spo2": 96, "rr": 24}, "overMin": 5}, "note": "Teaching point: SpO₂ 94–98% is above her 88–92% COPD target (risk of CO₂ retention).", "review": "proposed"},
+      {"id": "hypoxic", "label": "Hypoxic (SpO₂ 82%, RR 32)", "vitals": {"values": {"spo2": 82, "rr": 32, "hr": 128}}, "findings": "state-p4-hypoxic", "review": "proposed"},
+      {"id": "crashing", "label": "Crashing", "vitals": {"values": {"spo2": 76, "rr": 36, "hr": 138, "bp": "78/44"}, "overMin": 5}, "findings": "state-p4-crashing", "note": "Reached because no oxygen or escalation followed the hypoxia.", "review": "proposed"}
+    ],
+    "reactions": [
+      {"id": "r-p4-desat", "label": "Worsening at 08:00 starts the desaturation", "review": "proposed", "when": {"kind": "fired", "eventId": "e-p4-worsens"}, "if": {"inState": ["baseline"]}, "then": [{"type": "state", "to": "desaturating"}]},
+      {"id": "r-p4-o2-low", "label": "O₂ 1–4 L: partial response", "review": "proposed", "when": {"kind": "intervention", "interventionId": "o2-apply", "where": {"lpm": {"min": 1, "max": 4}, "device": {"excludes": ["NRB", "non-rebreather"]}}}, "if": {"notInState": ["baseline", "low-flow"]}, "then": [{"type": "state", "to": "low-flow"}], "repeat": true, "maxFires": 5},
+      {"id": "r-p4-o2-target", "label": "O₂ 5–9 L: into COPD target", "review": "proposed", "when": {"kind": "intervention", "interventionId": "o2-apply", "where": {"lpm": {"min": 5, "max": 9}, "device": {"excludes": ["NRB", "non-rebreather"]}}}, "if": {"notInState": ["baseline", "in-target"]}, "then": [{"type": "state", "to": "in-target"}], "repeat": true, "maxFires": 5},
+      {"id": "r-p4-o2-high", "label": "O₂ ≥ 10 L or NRB: over-oxygenated", "review": "proposed", "when": {"kind": "intervention", "interventionId": "o2-apply", "where": [{"lpm": {"min": 10}}, {"device": {"matches": ["NRB", "non-rebreather"]}}]}, "if": {"notInState": ["baseline", "over-oxygenated"]}, "then": [{"type": "state", "to": "over-oxygenated"}], "repeat": true, "maxFires": 5},
+      {"id": "r-p4-no-o2", "label": "No O₂ within 5 min: hypoxic", "review": "proposed", "when": {"kind": "elapsed", "since": "state", "state": "desaturating", "afterMin": 5, "without": [{"kind": "intervention", "interventionId": "o2-apply"}]}, "then": [{"type": "state", "to": "hypoxic"}]},
+      {"id": "r-p4-spo2-82", "label": "CNA reports the SpO₂ drop", "review": "proposed", "when": {"kind": "vitals", "field": "spo2", "op": "<=", "value": 82}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "Linda's sat just dropped to 82% and she looks really short of breath."}}}]},
+      {"id": "r-p4-no-response", "label": "No response within 10 more min: crashing", "review": "proposed", "when": {"kind": "elapsed", "since": "state", "state": "hypoxic", "afterMin": 10, "without": [{"kind": "intervention", "interventionId": "o2-apply"}, {"kind": "intervention", "interventionId": "rapid-response"}]}, "then": [{"type": "state", "to": "crashing"}]},
+      {"id": "r-p4-crash-light", "label": "Family hits the call light", "review": "proposed", "when": {"kind": "fired", "reactionId": "r-p4-no-response"}, "then": [{"type": "event", "event": {"type": "call-light", "payload": {"message": "Daughter at the bedside: \"Mom isn't making sense and she's turning blue!\""}}}]}
+    ]
   },
   "debrief": {
     "shouldRecognize": [

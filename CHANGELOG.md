@@ -2,6 +2,15 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Reactive patient scripting: engine (stage 1)
+- **Patient states and reactions** (`engine/reactions.js` + `engine/reactions/`): a patient file can carry a `script` of states (target vitals now or as a trend, rhythm, findings, label, teaching note) and reactions (*when* trigger, *if* conditions, *then* effects). Triggers: intervention charted with field tests (lpm, device…), order work, med given (by order, name or dose), vitals crossing a threshold (down or up), N min since a state, event or reaction *without* an action, and chains (another reaction or event fired). Effects: change state, vitals (now or trend), findings, any event type inline (call light, staff message, new orders, lab result, code) or fire one of the patient's event groups.
+- Runs as a session processor in time order with events, trends and the monitor (processors can now ask the session to stop at an earlier moment: `nextAt`). Reactions also answer charting while the clock is paused.
+- Loop protection: once by default, `repeat` up to `maxFires` (default `reactionMaxFires: 10`), never twice at one instant, and a per-instant cap (`reactionMaxPerInstant: 20`) with an instructor alert. Integrity checks name every broken reference.
+- Scripted vitals follow `scriptedVitalsAfterInstructor` like keyframes (one shared helper). Instructor overrides (engine): force state, fire a reaction now, disable or re-enable, skip a countdown, pause and resume scripting per patient. All of these are logged.
+- **Starter content for Linda (proposed):** the 08:00 worsening starts a desaturation; O₂ at 1–4 L → about 86% (still below target); 5–9 L → 90% (in her 88–92% COPD target); ≥ 10 L or NRB → 96% (over-oxygenated, flagged as a teaching point); no O₂ within 5 min → SpO₂ 82% and RR 32 (CNA calls it in); no O₂ or rapid response within 10 more min → crashing, and the family hits the call light.
+- Shared helpers pulled out: `countsAsWork` (orders), `setVitalsTarget` and `scriptedVitalsBlocked` (vitals-control). Same-minute vitals changes are now appended rather than overwritten, so every change is seen. Session format bumped to 14.
+- Tests: 152 passing (10 new). Three older tests now scope to Robert, since Linda's script now adds her own call light and CNA message.
+
 ## Command center: flash on worse status
 - A group card flashes for 4 seconds when its status gets worse (On track → Falling behind → Needs attention), so a change stands out on a TV. With reduced motion turned on, it shows a steady red outline for those 4 seconds instead. The ranking comes from one engine helper, `statusWorsened`, which also orders the cards. It's a UI cue only, so nothing is logged.
 - Tests: 142 passing.

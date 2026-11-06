@@ -105,7 +105,7 @@ test('delegation: CNA vitals report back after the delay, with a flowsheet row a
   assert.deepEqual([row.source, row.by, row.values.hr, row.values.rr], ['delegated', 'CNA', 108, 24]);
   const done = s.log.find((l) => l.action === 'delegation-completed');
   assert.deepEqual([done.role, done.userId, done.simMin], ['staff', 'staff-cna', 80]);
-  assert.match(s.alerts.find((a) => a.message.startsWith('CNA:')).message, /HR 108/);
+  assert.match(s.alerts.find((a) => a.patientId === RM && a.message.startsWith('CNA:')).message, /HR 108/);
 });
 
 test('delegation: delay is configurable per role or as one number (merged with scenario-defaults)', () => {
