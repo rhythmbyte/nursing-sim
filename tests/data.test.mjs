@@ -21,6 +21,7 @@ const schemaFor = {
   scenarioDefaults: load('schemas/scenario-defaults.schema.json'),
   priorityScales: load('schemas/priority-scales.schema.json'),
   ui: load('schemas/ui.schema.json'),
+  vitalsPresets: load('schemas/vitals-presets.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

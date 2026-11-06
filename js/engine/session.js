@@ -14,11 +14,12 @@ import { append, SYSTEM } from './log.js';
 import { initLabs, labsProcessor } from './labs.js';
 import { initFlowsheet, monitorProcessor } from './vitals.js';
 import { delegationProcessor } from './delegation.js';
+import { trendProcessor } from './vitals-control.js';
 
-// Order matters within one instant: monitor readings see vitals after that instant's events.
-const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
+// Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
+const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 7; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 8; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -40,7 +41,10 @@ function initialPatientState(t, groupId, admission, catalogs) {
     tag: t.tag,                  // instructor's tag (answer key); see engine/priority.js for who may see it
     tagHistory: [{ atMin: 0, tag: t.tag }],
     alive: true,
-    vitals: { ...t.vitals.baseline },
+    vitals: { ...t.vitals.baseline },          // current vitals
+    vitalsHistory: [{ atMin: 0, values: { ...t.vitals.baseline } }], // every change (engine/vitals-control.js)
+    vitalsTrend: null,                         // instructor trend in progress
+    vitalsOverride: false,                     // instructor has taken over vitals (until the next scripted change)
     callLight: null,
     findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
     revealed: [],       // [{ source: 'baseline' | eventId, atMin, findings }] once the student assesses

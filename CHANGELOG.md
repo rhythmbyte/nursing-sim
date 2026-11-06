@@ -2,6 +2,21 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Live vitals control
+- **Live control → Adjust vitals** per patient:
+  - current values (BP, HR, RR, temp, SpO₂, O₂ device, pain, GCS, glucose);
+  - edit any of them, then **Apply now** or **Trend over N min**;
+  - a vitals column shows current values and "trending".
+- **Quick presets from data:** `data/catalogs/vitals-presets.json` (Deteriorate, Improve; proposed) plus optional patient `vitalsPresets`.
+- **Changes reach everything:**
+  - the monitor cycle, Take BP now, Measure and delegated reports;
+  - parameter rules (e.g. a live SBP drop triggers "notify for SBP < 90");
+  - the debrief's charted-vs-actual comparison.
+- **Logged** as an instructor action (old → new) and shown on the debrief timeline as "Instructor adjusted vitals".
+- **Scripted vs. live:** the next scripted vitals event takes over by default; `settings.scriptedVitalsAfterInstructor: "skip"` keeps instructor control. SPEC §14 Q22–23.
+- **Fix:** BP entered with spaces around it was refused.
+- Tests: 93 passing.
+
 ## Student priorities, hidden instructor tags, welcome popup
 - **Instructor tags hidden:** hidden from every student-facing role by default (`settings.showTagsTo: ["instructor"]`, replacing `showTagsToStudents`). Checked in the browser: no tag chips, classes or tooltips on student or student-charge screens.
 - **Student priorities:** students set their own priority per patient from the home list or chart banner; the charge nurse does the same for admissions. Logged with sim time.

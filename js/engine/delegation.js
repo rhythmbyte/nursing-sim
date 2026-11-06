@@ -9,6 +9,7 @@ import { progressOrder, findOrder } from './orders.js';
 import { drawLabs } from './labs.js';
 import { deviceValues, scriptedSnapshot } from './vitals.js';
 import { revealFindings } from './findings.js';
+import { vitalsAt } from './vitals-control.js';
 
 /** Delay for a role from merged settings (engine/settings.js turns a single number into per-role values). */
 export function delegationDelay(settings, to) {
@@ -43,8 +44,9 @@ function complete(draft, patientId, task, ctx) {
     // Staff report device values; temp/RR/pain only when the scenario reveals manual vitals
     // (otherwise they come from the manikin/instructor, like the student's own checks).
     const vcat = catalogs.vitals;
-    const manual = draft.settings.revealManualVitals ? iv.chartFields.filter((k) => vcat.manualScriptedFields.includes(k) && ps.vitals[k] != null) : [];
-    values = { ...deviceValues(ps, iv.chartFields, vcat), ...Object.fromEntries(manual.map((k) => [k, ps.vitals[k]])) };
+    const v = vitalsAt(ps, at); // what the vitals were when the staff member measured
+    const manual = draft.settings.revealManualVitals ? iv.chartFields.filter((k) => vcat.manualScriptedFields.includes(k) && v[k] != null) : [];
+    values = { ...deviceValues({ vitals: v }, iv.chartFields, vcat), ...Object.fromEntries(manual.map((k) => [k, v[k]])) };
     ps.flowsheet.push({ atMin: at, source: 'delegated', values, by: task.to });
   }
   if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs, order.id);

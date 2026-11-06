@@ -14,7 +14,7 @@ export function conditionMetAt(state, pid, order, template) {
   }
   if (p.watch?.startsWith('vitals.')) {
     const field = p.watch.slice(7);
-    const hit = vitalsTimeline(state, pid, template).find((t) => {
+    const hit = vitalsTimeline(state, pid).find((t) => {
       const v = vitalNumber(t.values, field);
       return v != null && compare(v, p.op, p.value);
     });

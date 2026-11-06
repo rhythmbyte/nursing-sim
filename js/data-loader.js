@@ -24,6 +24,7 @@ const SCHEMAS = {
   scenarioDefaults: 'schemas/scenario-defaults.schema.json',
   priorityScales: 'schemas/priority-scales.schema.json',
   ui: 'schemas/ui.schema.json',
+  vitalsPresets: 'schemas/vitals-presets.schema.json',
 };
 
 async function fetchJson(base, rel) {

@@ -112,6 +112,14 @@
       "properties": { "mode": { "enum": ["survive", "die", "instructor"] }, "notes": { "type": "string" } }
     },
     "codeBranch": { "type": ["object", "null"] },
+    "vitalsPresets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "values"],
+        "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "values": { "$ref": "#/$defs/vitalValues" }, "overMin": { "type": "number", "minimum": 0 }, "review": { "$ref": "#/$defs/review" } }
+      }
+    },
     "debrief": {
       "type": "object",
       "required": ["shouldRecognize"],

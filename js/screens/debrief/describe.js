@@ -24,6 +24,10 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'nibp-now': return `Took BP now · ${fields(d.values)}`;
     case 'lab-resulted': return `Lab resulted: ${d.code}`;
     case 'lab-released': return `Instructor released lab: ${d.code}${d.value != null ? ` = ${d.value}` : ''}`;
+    case 'vitals-adjusted': {
+      const ch = Object.entries(d.to || {}).map(([k, v]) => `${k} ${d.from?.[k] ?? '—'} → ${v}`).join(', ');
+      return `Instructor adjusted vitals: ${ch}${d.overMin ? ` (over ${d.overMin} min)` : ''}${d.presetId ? ` [${d.presetId}]` : ''}`;
+    }
     case 'left-unattended': return `Instructor: left unattended${d.note ? ` (${d.note})` : ''}`;
     case 'clock-skip': return `Clock skipped ${d.fromMin} → ${d.toMin} min`;
     default: return l.action.replace(/-/g, ' ') + (d.reason ? ` (${d.reason})` : '');

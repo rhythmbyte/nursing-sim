@@ -10,6 +10,7 @@ import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight 
 import { joinSim } from './roster.js';
 import { assignAdmission, holdAdmission } from './admissions.js';
 import { assignPriority } from './priority.js';
+import { adjustVitals } from './vitals-control.js';
 import { effectiveTemplates } from './templates.js';
 import { evaluateRules } from './rules/index.js';
 import { buildDebrief } from './debrief.js';
@@ -123,6 +124,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     assignAdmission(patientId, groupId, user) { commit(assignAdmission(state, patientId, { groupId }, { now: now(), user, scenario })); },
     holdAdmission(patientId, reason, user) { commit(holdAdmission(state, patientId, { reason }, { now: now(), user })); },
     assignPriority(patientId, levelId, user) { commit(assignPriority(state, patientId, { levelId }, { now: now(), user, catalogs })); },
+    adjustVitals(patientId, args, user) { commit(adjustVitals(state, patientId, args, { now: now(), user })); runner.tick(); },
     startCode(patientId, args, user) { commit(startCode(state, patientId, args || {}, { now: now(), user })); },
     setCodeOutcome(patientId, outcome, user) { commit(setCodeOutcome(state, patientId, outcome, { now: now(), user })); },
     setCallLight(patientId, on, message, user) { commit(setCallLight(state, patientId, { on, message }, { now: now(), user })); },

@@ -1,0 +1,131 @@
+// Instructor live vitals control: apply now or trend toward a target over N minutes. Pure, no DOM.
+// Every vitals change (scripted keyframe, instructor adjust, each trend minute) is recorded in
+// patients[id].vitalsHistory [{ atMin, values }], which the monitor, delegated reports and the
+// parameter rules read via vitalsAt(), so they see what the vitals actually were at that moment.
+
+import { simMinOf } from './session.js';
+import { append } from './log.js';
+
+const NUMERIC = ['hr', 'rr', 'tempF', 'spo2', 'gcs', 'glucose'];
+const DECIMALS = { tempF: 1 };
+const round = (k, v) => { const p = 10 ** (DECIMALS[k] || 0); return Math.round(v * p) / p; };
+const parseBp = (bp) => { const m = /^(\d{2,3})\/(\d{2,3})$/.exec(String(bp ?? '')); return m ? [Number(m[1]), Number(m[2])] : null; };
+
+/** Records the patient's current vitals at atMin (replaces an entry at the same minute). Mutates ps. */
+export function recordVitals(ps, atMin) {
+  const last = ps.vitalsHistory.at(-1);
+  const entry = { atMin, values: { ...ps.vitals } };
+  if (last && last.atMin === atMin) ps.vitalsHistory[ps.vitalsHistory.length - 1] = entry;
+  else ps.vitalsHistory.push(entry);
+}
+
+/** Vitals at a sim minute (last recorded change at or before t). */
+export function vitalsAt(ps, t) {
+  let v = ps.vitalsHistory[0]?.values ?? ps.vitals;
+  for (const h of ps.vitalsHistory) if (h.atMin <= t + 1e-9) v = h.values;
+  return v;
+}
+
+/** Validates and normalizes instructor-entered values. Throws with a readable message. */
+export function cleanValues(values) {
+  const out = {};
+  for (const [k, raw] of Object.entries(values || {})) {
+    if (raw === '' || raw == null) continue;
+    if (k === 'bp') {
+      const bp = String(raw).trim();
+      if (!parseBp(bp)) throw new Error(`BP must look like 120/80 (got "${raw}")`);
+      out.bp = bp;
+    } else if (NUMERIC.includes(k)) {
+      const n = Number(raw);
+      if (!Number.isFinite(n)) throw new Error(`${k} must be a number (got "${raw}")`);
+      out[k] = n;
+    } else {
+      out[k] = String(raw).trim(); // o2 device, pain text, etc.
+    }
+  }
+  return out;
+}
+
+function interpolate(from, to, f) {
+  const out = {};
+  for (const [k, target] of Object.entries(to)) {
+    if (k === 'bp') {
+      const a = parseBp(from.bp); const b = parseBp(target);
+      out.bp = a && b ? `${Math.round(a[0] + (b[0] - a[0]) * f)}/${Math.round(a[1] + (b[1] - a[1]) * f)}` : target;
+    } else if (typeof target === 'number' && typeof from[k] === 'number') {
+      out[k] = round(k, from[k] + (target - from[k]) * f);
+    } else {
+      out[k] = target;
+    }
+  }
+  return out;
+}
+
+const trendable = (k, v) => k === 'bp' || typeof v === 'number';
+
+/**
+ * Instructor adjusts vitals. args: { values, overMin = 0, presetId? }. overMin 0 = apply now; otherwise
+ * numeric values and BP trend linearly to the target (recalculated each sim minute); text values
+ * (O₂ device, pain description) apply immediately.
+ */
+export function adjustVitals(state, patientId, { values, overMin = 0, presetId = null }, { now, user }) {
+  const target = cleanValues(values);
+  if (!Object.keys(target).length) return state;
+  if (!(overMin >= 0)) throw new Error('Trend minutes must be 0 or more');
+  const draft = structuredClone(state);
+  const simMin = simMinOf(state, now);
+  const ps = draft.patients[patientId];
+  const from = Object.fromEntries(Object.keys(target).map((k) => [k, ps.vitals[k] ?? null]));
+  const trendTo = overMin > 0 ? Object.fromEntries(Object.entries(target).filter(([k, v]) => trendable(k, v) && ps.vitals[k] != null)) : {};
+  const nowValues = Object.fromEntries(Object.entries(target).filter(([k]) => !(k in trendTo)));
+  Object.assign(ps.vitals, nowValues);
+  ps.vitalsTrend = Object.keys(trendTo).length
+    ? { fromMin: simMin, toMin: simMin + overMin, from: Object.fromEntries(Object.keys(trendTo).map((k) => [k, ps.vitals[k]])), to: trendTo, lastMin: Math.floor(simMin) }
+    : null;
+  ps.vitalsOverride = true;
+  recordVitals(ps, simMin);
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'vitals-adjusted', details: { from, to: target, overMin, presetId } });
+  return draft;
+}
+
+/** Tick processor: steps active trends once per sim minute up to `upto` (finishing at the target). */
+export const trendProcessor = {
+  due(state, upto) {
+    return Object.values(state.patients).some((ps) => ps.vitalsTrend && (Math.floor(upto) > ps.vitalsTrend.lastMin || upto >= ps.vitalsTrend.toMin));
+  },
+  apply(draft, upto) {
+    for (const ps of Object.values(draft.patients)) {
+      const tr = ps.vitalsTrend;
+      if (!tr) continue;
+      const end = Math.min(upto, tr.toMin);
+      for (let t = tr.lastMin + 1; t <= end; t++) {
+        Object.assign(ps.vitals, interpolate(tr.from, tr.to, (t - tr.fromMin) / (tr.toMin - tr.fromMin)));
+        recordVitals(ps, t);
+        tr.lastMin = t;
+      }
+      if (upto >= tr.toMin) {
+        Object.assign(ps.vitals, tr.to);
+        recordVitals(ps, tr.toMin);
+        ps.vitalsTrend = null;
+      }
+    }
+  },
+};
+
+/**
+ * Target values for a preset. Catalog presets are relative (`delta`, e.g. { sbp: -25, hr: 25 }) and clamped
+ * to `limits`; patient presets (patient JSON `vitalsPresets`) are absolute (`values`).
+ */
+export function presetTarget(current, preset, limits = {}) {
+  if (preset.values) return { ...preset.values };
+  const clamp = (k, v) => { const [lo, hi] = limits[k] || [-Infinity, Infinity]; return Math.min(hi, Math.max(lo, v)); };
+  const out = {};
+  const d = preset.delta || {};
+  const bp = parseBp(current.bp);
+  if (bp && (d.sbp || d.dbp)) out.bp = `${Math.round(clamp('sbp', bp[0] + (d.sbp || 0)))}/${Math.round(clamp('dbp', bp[1] + (d.dbp || 0)))}`;
+  for (const [k, dv] of Object.entries(d)) {
+    if (k === 'sbp' || k === 'dbp') continue;
+    if (typeof current[k] === 'number') out[k] = round(k, clamp(k, current[k] + dv));
+  }
+  return out;
+}

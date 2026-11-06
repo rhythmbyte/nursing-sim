@@ -1,0 +1,9 @@
+{
+  "review": "proposed",
+  "_comment": "Quick vitals changes for Live control. Relative: delta per field (sbp/dbp change the BP), clamped to limits, trended over overMin. Patients can also carry absolute presets in their JSON (vitalsPresets: [{ id, label, values, overMin, review }]). Clinical values: instructor to confirm (SPEC §14).",
+  "limits": { "sbp": [50, 240], "dbp": [25, 140], "hr": [25, 200], "rr": [4, 50], "spo2": [60, 100], "tempF": [93, 106] },
+  "presets": [
+    { "id": "deteriorate", "label": "Deteriorate", "overMin": 10, "delta": { "sbp": -25, "dbp": -12, "hr": 25, "rr": 6, "spo2": -5 } },
+    { "id": "improve", "label": "Improve", "overMin": 10, "delta": { "sbp": 15, "dbp": 8, "hr": -15, "rr": -4, "spo2": 3 } }
+  ]
+}

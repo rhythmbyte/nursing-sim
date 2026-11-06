@@ -8,7 +8,8 @@
     "vitals": "catalogs/vitals.json",
     "scenarioDefaults": "catalogs/scenario-defaults.json",
     "priorityScales": "catalogs/priority-scales.json",
-    "ui": "catalogs/ui.json"
+    "ui": "catalogs/ui.json",
+    "vitalsPresets": "catalogs/vitals-presets.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

@@ -29,6 +29,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Processors (timed work besides events):** `session.advance()` runs the monitor cycle, lab results and delegated tasks as processors (`{ due(state, upto), apply(draft, upto, ctx) }`, listed in `PROCESSORS` in `session.js`). It interleaves them with events in time order, so a monitor reading at 08:15 sees the vitals change that fires at 08:15, and a skip or catch-up fills in every reading in between. To add timed work, write a processor in its own engine file and add it to `PROCESSORS`.
 
+**Vitals history:** `patients[id].vitalsHistory` records every change (scripted keyframe, instructor adjustment, each sim minute of a trend). The monitor cycle and delegated reports read `vitalsAt(ps, t)` at their own reading time, parameter rules scan the history, and charting snapshots `ps.vitals` for the debrief. So a live change reaches everything, including catch-up after Skip.
+
 **Settings:** every scenario setting has a default in `data/catalogs/scenario-defaults.json`, merged under the scenario's own settings by `withDefaults()` in `main.js`. Engine and screens read the merged settings. **No setting or clinical default lives in code.** If one is missing, the code throws a clear error instead of guessing.
 
 **Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), can be satisfied by a monitor reading (`satisfiedByMonitor`), or appears as a Notes quick action (`quickAction`) is set in `data/catalogs/interventions.json`, not in code. Code-start and ROSC alert text is `settings.messages`. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
@@ -82,6 +84,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
 | `js/engine/orders.js` | `progressOrder`, `findOrder`, `firstWork`, `newOrderCount` (one helper for every "new orders" badge) | built |
 | `js/engine/assignment.js` | Join codes, `placeStudent` (manual roster / random open slot, never over-fills), `fillByTagCounts` (randomizer, no reuse), roster lookups | built |
+| `js/engine/vitals-control.js` | `adjustVitals` (apply now / trend), `trendProcessor` (steps once per sim minute), `vitalsAt` (vitals at any minute from `vitalsHistory`), `presetTarget`, `recordVitals` | built |
 | `js/engine/priority.js` | `canSeeInstructorTags` (who may see instructor tags), `assignPriority`, `priorityTimeline` (student level vs instructor tag history), `scaleProblems` | built |
 | `js/engine/admissions.js` | `assignAdmission` (re-bases orders that arrived while waiting), `holdAdmission`, `waitingAdmissions` | built |
 | `js/engine/roster.js` | `joinSim` (code check, placement, overflow alert) | built |
@@ -97,7 +100,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `ui.json` (prototype-only UI text: welcome popup) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |

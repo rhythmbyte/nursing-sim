@@ -1,0 +1,26 @@
+{
+  "title": "Vitals presets",
+  "type": "object",
+  "required": ["presets"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "limits": { "type": "object" },
+    "presets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "anyOf": [{"required": ["delta"]}, {"required": ["values"]}],
+        "anyOfMessage": "preset needs delta or values",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "overMin": { "type": "number", "minimum": 0 },
+          "delta": { "type": "object" },
+          "values": { "type": "object" },
+          "review": { "enum": ["approved", "proposed", "partial"] }
+        }
+      }
+    }
+  }
+}

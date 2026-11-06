@@ -102,6 +102,7 @@ data/
   "events": [ /* see §5 */ ],
   "outcome": { "mode": "survive" | "die" | "instructor", "notes": "…" },
   "codeBranch": { … } | null,                      // optional path that turns the patient black
+  "vitalsPresets": [ { "id", "label", "values": { … }, "overMin", "review" } ],  // optional patient-specific quick buttons (Live control)
   "debrief": {
     "shouldRecognize": [ "…" ],                    // INSTRUCTOR ONLY — never shown to students
     "instructorNotes": [ "…" ]
@@ -154,6 +155,7 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
     "revealManualVitals": true,           // "Measure" reveals scripted temp/RR/pain (default true). false = from manikin/instructor
     "delegationDelayMin": { "LPN": 10, "CNA": 10 },  // or one number; when delegated staff report back
     "prnPreCheckWindowMin": 15,           // PRN pre-check window when the order doesn't set prn.requiresWithinMin
+    "scriptedVitalsAfterInstructor": "apply", // after a live vitals change: "apply" next scripted keyframe, or "skip" it
     "delegatedAssessmentRevealsFindings": false  // does a delegated assessment reveal findings (when staff report back)?
   },
   "groups": [
@@ -258,7 +260,7 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
    - add groups; per group: student count, then pick patients OR enter tag counts
    - assignment manual or random
    - "Create sim" → generates a 6-character join code
-4. **Live control** — clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
+4. **Live control** — **Adjust vitals** per patient (edit any value; apply now or trend over N minutes; quick presets from `data/catalogs/vitals-presets.json` and the patient's `vitalsPresets`; logged old → new and shown on the debrief timeline), clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
 5. **Debrief** — per student: timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
 
 ---
@@ -363,3 +365,5 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 19. **Priority mismatch:** amber after 10 min of mismatch (`graceMin`); patients never prioritized aren't flagged (`flagUnassigned: false`). Should it fire at all, and how strictly?
 20. **During a code** the instructor tag becomes black (`settings.codeTag`). Right?
 21. **Who sees your tags:** only you by default (`showTagsTo: ["instructor"]`). Should a student charge nurse see them?
+22. **Live vitals vs. the script:** after you adjust a patient's vitals live, should the next scripted vitals event still apply (current default, `scriptedVitalsAfterInstructor: "apply"`), or be skipped so you stay in control (`"skip"`)?
+23. **Vitals presets:** "Deteriorate" (SBP −25, DBP −12, HR +25, RR +6, SpO₂ −5 over 10 min) and "Improve" (roughly the reverse), with safety limits, in `vitals-presets.json`. Right values? Do you want patient-specific presets (e.g. Linda's septic shock)?

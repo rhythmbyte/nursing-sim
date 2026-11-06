@@ -41,6 +41,6 @@
   },
   "vitalsCompare": {
     "_comment": "Debrief display only: a charted manual vital 'differs' from the scripted value when off by more than this.",
-    "tolerance": { "tempF": 0.3, "rr": 2, "pain": 1, "hr": 0, "spo2": 0 }
+    "tolerance": { "tempF": 0.3, "rr": 2, "pain": 1, "hr": 0, "spo2": 0, "gcs": 0, "glucose": 10 }
   }
 }

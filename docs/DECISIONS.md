@@ -4,6 +4,16 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Live vitals control with a single vitals history
+- **Decision:** The instructor can adjust any vital now or trend it over N minutes. Numbers and BP step linearly once per sim minute (the trend processor runs before the monitor). Text values (O₂ device, pain description) change at once. Every change goes into `vitalsHistory`, and the monitor and delegated reports read `vitalsAt()` at their reading time. Parameter rules use the history instead of re-deriving scripted keyframes from the log. Logged as `vitals-adjusted` (old → new, over, preset).
+- **Scripted vs. live:** the next scripted vitals event applies and ends the instructor's trend (`settings.scriptedVitalsAfterInstructor: "apply"`); `"skip"` keeps the instructor in control (SPEC §14 Q22).
+- **Presets are data:** relative presets with limits in `vitals-presets.json` (proposed); absolute patient presets in patient JSON `vitalsPresets`. None added to patient files (clinical content is the instructor's).
+- **Why:** The debrief compares charted values with what the vitals actually were, so live changes must reach every reader. One history makes that true by construction.
+- **Alternatives:** Re-derive vitals from the log on demand (the old parameter-rule approach; can't represent trends); per-tick recording (too many history rows).
+- Session shape v8.
+
+---
+
 ## 2026-11-05: Instructor tags are hidden by role; students assign their own priorities
 - **Decision:** `settings.showTagsTo` (default `["instructor"]`) replaces `showTagsToStudents`. One helper, `canSeeInstructorTags(settings, role)`, gates every tag display: student home, chart, admissions board, unit overview (column and priority-mismatch flags). The instructor playing charge counts as the instructor. Students, and a student charge nurse for admissions, set their own priority on `settings.priorityScale` from `data/catalogs/priority-scales.json`. Every change is logged and kept as history. Instructor tag changes (code → `codeTag`, ROSC → `roscTag`) are kept in `tagHistory`, so the debrief and the `priority-mismatch` rule compare at each moment.
 - **Why:** Prioritization is the skill being taught, so the answer key can't be on screen. The instructor hasn't chosen a triage system (SPEC §14 Q18), so scales are data, and each level says which instructor tags it matches (works for ESI or acuity too).

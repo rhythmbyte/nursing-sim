@@ -13,6 +13,7 @@
     "prnPreCheckWindowMin": 15,
     "delegatedAssessmentRevealsFindings": false,
     "codeTag": "black",
+    "scriptedVitalsAfterInstructor": "apply",
     "roscTag": "red",
     "messages": {
       "codeStarted": "Patient is unresponsive. No pulse.",
