@@ -190,6 +190,7 @@ async function boot() {
     const reloadData = async (id) => {
       // Stop the current app (tick timer, heartbeat) first, so it can't re-save the old session while loading.
       if (teardown) { teardown(); teardown = null; }
+      root.replaceChildren(h('p', { class: 'loading', role: 'status' }, 'Loading…'));
       data = await loadAll();
       restart(id);
     };

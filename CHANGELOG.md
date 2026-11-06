@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Polish: loading state, accessible editor inputs
+- "Loading…" while data reloads after an editor save, approval or new sim (was a blank screen).
+- Screen-reader labels on every input in the patient editor's orders and labs tables and the scenario-change builder's order rows.
+
 ## Docs match the code
 - SPEC §2 folder layout updated to what exists (and points to ARCHITECTURE.md as the detailed map); `ems-arrival` marked not built yet. ARCHITECTURE no longer says "phase N" for things that are built.
 

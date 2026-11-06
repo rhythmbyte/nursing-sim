@@ -11,13 +11,14 @@ export function ordersTable(orders, catalogs) {
   const ivOptions = (sel) => [h('option', { value: '' }, '(none)'), ...catalogs.interventions.interventions.map((i) => h('option', { value: i.id, selected: i.id === sel }, i.label))];
   function render() {
     clear(body).append(...rows.map((r, i) => {
-      r.text ??= h('textarea', { class: 'input', rows: 2 }, r.o.text || '');
-      r.type ??= h('select', {}, ORDER_TYPES.map((x) => h('option', { value: x, selected: (r.o.type || 'once') === x }, x)));
-      r.tier ??= h('select', {}, [1, 2, 3].map((x) => h('option', { value: x, selected: (r.o.tier || 2) === x }, `T${x}`)));
-      r.set ??= h('input', { class: 'input', value: r.o.orderSet || '' });
-      r.iv ??= h('select', {}, ivOptions(r.o.interventionIds?.[0]));
-      r.med ??= h('input', { class: 'input', value: r.o.med || '', placeholder: 'med (MAR)' });
-      r.delegable ??= h('input', { type: 'checkbox', checked: Boolean(r.o.delegable) });
+      const n = i + 1;
+      r.text ??= h('textarea', { class: 'input', rows: 2, 'aria-label': `Order ${n} text` }, r.o.text || '');
+      r.type ??= h('select', { 'aria-label': `Order ${n} type` }, ORDER_TYPES.map((x) => h('option', { value: x, selected: (r.o.type || 'once') === x }, x)));
+      r.tier ??= h('select', { 'aria-label': `Order ${n} tier` }, [1, 2, 3].map((x) => h('option', { value: x, selected: (r.o.tier || 2) === x }, `T${x}`)));
+      r.set ??= h('input', { class: 'input', value: r.o.orderSet || '', 'aria-label': `Order ${n} order set` });
+      r.iv ??= h('select', { 'aria-label': `Order ${n} satisfied by` }, ivOptions(r.o.interventionIds?.[0]));
+      r.med ??= h('input', { class: 'input', value: r.o.med || '', placeholder: 'med (MAR)', 'aria-label': `Order ${n} medication` });
+      r.delegable ??= h('input', { type: 'checkbox', checked: Boolean(r.o.delegable), 'aria-label': `Order ${n} delegable` });
       return h('tr', {}, [r.text, r.type, r.tier, r.set, r.iv, r.med, r.delegable].map((el) => h('td', {}, el)),
         h('td', {}, h('button', { class: 'btn btn-small btn-ghost', type: 'button', onclick: () => { rows.splice(i, 1); render(); } }, 'Remove')));
     }));
@@ -47,12 +48,13 @@ export function labsTable(labs, catalogs, orders) {
   const body = h('tbody', {});
   function render() {
     clear(body).append(...rows.map((r, i) => {
-      r.code ??= h('select', {}, catalogs.labs.labs.map((c) => h('option', { value: c.code, selected: c.code === r.l.code }, c.name)));
-      r.label ??= h('input', { class: 'input', value: r.l.label || '', placeholder: 'optional label' });
-      r.value ??= h('input', { class: 'input', value: r.l.value ?? '', placeholder: 'blank = instructor enters live' });
-      r.status ??= h('select', {}, ['resulted', 'pending'].map((x) => h('option', { value: x, selected: (r.l.status || 'resulted') === x }, x)));
-      r.delay ??= h('input', { class: 'input', type: 'number', min: 0, value: r.l.resultDelayMin ?? '', placeholder: 'catalog default' });
-      r.forOrder ??= h('select', {}, h('option', { value: '' }, '(any lab order)'), orders.filter((o) => o.labCodes?.length).map((o) => h('option', { value: o.id, selected: o.id === r.l.forOrder }, o.text.slice(0, 50))));
+      const n = i + 1;
+      r.code ??= h('select', { 'aria-label': `Lab ${n} test` }, catalogs.labs.labs.map((c) => h('option', { value: c.code, selected: c.code === r.l.code }, c.name)));
+      r.label ??= h('input', { class: 'input', value: r.l.label || '', placeholder: 'optional label', 'aria-label': `Lab ${n} label` });
+      r.value ??= h('input', { class: 'input', value: r.l.value ?? '', placeholder: 'blank = instructor enters live', 'aria-label': `Lab ${n} value` });
+      r.status ??= h('select', { 'aria-label': `Lab ${n} status` }, ['resulted', 'pending'].map((x) => h('option', { value: x, selected: (r.l.status || 'resulted') === x }, x)));
+      r.delay ??= h('input', { class: 'input', type: 'number', min: 0, value: r.l.resultDelayMin ?? '', placeholder: 'catalog default', 'aria-label': `Lab ${n} delay in minutes` });
+      r.forOrder ??= h('select', { 'aria-label': `Lab ${n} result belongs to order` }, h('option', { value: '' }, '(any lab order)'), orders.filter((o) => o.labCodes?.length).map((o) => h('option', { value: o.id, selected: o.id === r.l.forOrder }, o.text.slice(0, 50))));
       return h('tr', {}, [r.code, r.label, r.value, r.status, r.delay, r.forOrder].map((el) => h('td', {}, el)),
         h('td', {}, h('button', { class: 'btn btn-small btn-ghost', type: 'button', onclick: () => { rows.splice(i, 1); render(); } }, 'Remove')));
     }));

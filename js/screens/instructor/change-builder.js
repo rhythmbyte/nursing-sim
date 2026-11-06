@@ -28,10 +28,11 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
   const err = h('p', { class: 'form-error', role: 'alert' });
   const ivOpts = (sel) => [h('option', { value: '' }, '(none)'), ...catalogs.interventions.interventions.map((i) => h('option', { value: i.id, selected: i.id === sel }, i.label))];
   function addOrder(o = { text: '', type: 'once', tier: 2 }) {
-    const row = { id: o.id || null, text: h('input', { class: 'input', value: o.text, placeholder: 'e.g. Obtain 12-lead ECG now' }),
-      type: h('select', {}, ['once', 'prn', 'scheduled', 'continuous'].map((x) => h('option', { value: x, selected: o.type === x }, x))),
-      tier: h('select', {}, [1, 2, 3].map((x) => h('option', { value: x, selected: Number(o.tier) === x }, `Tier ${x}`))),
-      iv: h('select', {}, ivOpts(o.interventionId)), med: h('input', { class: 'input', value: o.med || '', placeholder: 'med (optional)' }) };
+    const n = orderRows.length + 1;
+    const row = { id: o.id || null, text: h('input', { class: 'input', value: o.text, placeholder: 'e.g. Obtain 12-lead ECG now', 'aria-label': `New order ${n}` }),
+      type: h('select', { 'aria-label': `New order ${n} type` }, ['once', 'prn', 'scheduled', 'continuous'].map((x) => h('option', { value: x, selected: o.type === x }, x))),
+      tier: h('select', { 'aria-label': `New order ${n} tier` }, [1, 2, 3].map((x) => h('option', { value: x, selected: Number(o.tier) === x }, `Tier ${x}`))),
+      iv: h('select', { 'aria-label': `New order ${n} satisfied by` }, ivOpts(o.interventionId)), med: h('input', { class: 'input', value: o.med || '', placeholder: 'med (optional)', 'aria-label': `New order ${n} medication` }) };
     orderRows.push(row);
     ordersBody.append(h('div', { class: 'pick-row' }, row.text, row.type, row.tier, row.iv, row.med));
   }
