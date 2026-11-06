@@ -82,3 +82,18 @@ test('B9: intervention search uses catalog synonyms; recent = last distinct for 
   const log = ['vs-bp', 'foley', 'vs-bp', 'ecg-12lead'].map((id, i) => ({ userId: i === 1 ? 'student-2' : 'student-1', action: 'intervention', details: { interventionId: id } }));
   assert.deepEqual(recentInterventions(log, 'student-1', cat).map((i) => i.id), ['ecg-12lead', 'vs-bp']);
 });
+
+test('C16: shortcut keys map to actions; ignored while typing, in dialogs, or with modifiers', async () => {
+  const { shortcutAction } = await import('../js/screens/instructor/shortcuts.js');
+  const body = { tagName: 'BODY' };
+  assert.equal(shortcutAction({ key: ' ', target: body }), 'toggle');
+  assert.equal(shortcutAction({ key: 'n', target: body }), 'skip');
+  assert.equal(shortcutAction({ key: 'N', target: body }), 'skip');
+  assert.equal(shortcutAction({ key: '?', target: body }), 'help');
+  assert.equal(shortcutAction({ key: ' ', target: { tagName: 'INPUT' } }), null);
+  assert.equal(shortcutAction({ key: 'n', target: { tagName: 'TEXTAREA' } }), null);
+  assert.equal(shortcutAction({ key: 'n', target: { tagName: 'DIV', isContentEditable: true } }), null);
+  assert.equal(shortcutAction({ key: 'n', target: body, ctrlKey: true }), null);
+  assert.equal(shortcutAction({ key: ' ', target: body }, { dialogOpen: true }), null);
+  assert.equal(shortcutAction({ key: 'x', target: body }), null);
+});

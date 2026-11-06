@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## C16. Instructor keyboard shortcuts
+- On Live control: **Space** pause/resume, **N** skip to next event, **?** list shortcuts (hint shown in the header). Ignored while typing in a field, while a dialog is open, or with Ctrl/Alt/Meta.
+- Tests: 114 passing; checked in the browser (a key typed in a field doesn't skip).
+
 ## C15. Help text on settings and editor fields
 - A small **?** next to every Sim setup setting, patient editor field and scenario-change field opens a plain-language explanation. All text lives in `data/catalogs/help.json` (keys `<screen>.<label slug>`). A test fails if a field label has no help entry.
 - Tests: 113 passing.

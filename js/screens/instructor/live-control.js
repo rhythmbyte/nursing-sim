@@ -11,6 +11,7 @@ import { labsPanel } from './live-labs.js';
 import { flagsPanel } from './live-flags.js';
 import { rosterPanel } from './live-roster.js';
 import { patientsPanel } from './live-patients.js';
+import { installShortcuts } from './shortcuts.js';
 
 function clockControls(runner, user, startDemo) {
   const s = runner.state.clock.status;
@@ -114,7 +115,7 @@ export function mountLiveControl(root, ctx) {
 
 
   root.append(
-    h('header', { class: 'screen-header' }, h('h2', {}, `Live control · ${scenario.name}`), clock.el),
+    h('header', { class: 'screen-header' }, h('h2', {}, `Live control · ${scenario.name}`), h('span', { class: 'muted small' }, 'Keys: Space pause/resume · N next event · ? help'), clock.el),
     controls,
     unitList,
     h('div', { class: 'live-grid' },
@@ -141,5 +142,6 @@ export function mountLiveControl(root, ctx) {
       clear(flags).append(flagsPanel(runner, templatesById, instructorUser)); // time-based flags change with the clock
     }
   });
-  return () => { clock.destroy(); offSet(); offTick(); };
+  const offKeys = installShortcuts(runner, instructorUser);
+  return () => { offKeys(); clock.destroy(); offSet(); offTick(); };
 }
