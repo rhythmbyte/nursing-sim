@@ -76,8 +76,9 @@ export default {
       clear(form).append(h('form', { class: 'iv-form', onsubmit: (e) => {
         e.preventDefault();
         const delegatedTo = by?.value || null;
-        act('chartAssessment', { toolId: tool.id, answers: delegatedTo ? {} : answers(), delegatedTo });
-        toast(delegatedTo ? `Delegated to ${delegatedTo}: ${tool.name}` : `Charted ${tool.name}`);
+        const r = act('chartAssessment', { toolId: tool.id, answers: delegatedTo ? {} : answers(), delegatedTo });
+        if (!r) return;
+        toast(delegatedTo ? `Delegated to ${delegatedTo}: ${tool.name}` : r.task ? `Doing ${tool.name} (${Math.round(r.task.lockSec)} s)` : `Charted ${tool.name}`);
         renderForm();
       } },
         h('h4', {}, tool.name, tool.license?.status !== 'public' ? h('span', { class: 'muted small' }, ' (license check needed)') : null),

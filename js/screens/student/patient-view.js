@@ -2,6 +2,8 @@
 // Re-renders only each section's dynamic parts on store changes, so forms keep what the student typed.
 
 import { h, clear } from '../shared/dom.js';
+import { busyBanner } from './busy-banner.js';
+import { toast } from '../shared/toast.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { load, save } from '../../storage.js';
 import { chartSections } from '../chart/index.js';
@@ -27,7 +29,8 @@ export function mountPatientView(root, ctx) {
     ...ctx,
     // Live view: includes orders the instructor pushes after the chart opened.
     get view() { return ctx.getView ? ctx.getView() : view; },
-    act: (name, args) => runner.chart(name, pid, args, user),
+    // Chart actions: { task } (timed task started), { done }, or null when refused (e.g. busy; shown as a toast).
+    act: (name, args) => { try { return runner.chart(name, pid, args, user); } catch (e) { toast(e.message, 5000); return null; } },
     /** Jump to another chart section, e.g. Interventions → Assessments with a tool picked (read once with takePending). */
     openSection: (id, pending = null) => { pendingFor[id] = pending; activeId = id; save(SECTION_KEY, id); renderTabs(); mountSection(); },
     takePending: (id) => { const p = pendingFor[id]; delete pendingFor[id]; return p; },
@@ -35,6 +38,7 @@ export function mountPatientView(root, ctx) {
   };
 
   const clock = simClock(store, runner);
+  const busy = busyBanner(store, runner, user, (id) => `Rm ${views[id]?.demographics.room ?? '?'}`);
   const lightBanner = h('div', {});
   const prio = h('div', { class: 'banner-prio' });
   const scale = activeScale(scenario.settings, ctx.catalogs);
@@ -91,6 +95,7 @@ export function mountPatientView(root, ctx) {
       ctx.sound ? ctx.sound.toggle() : null,
       clock.el,
     ),
+    busy.el,
     h('header', { class: 'chart-banner patient-banner' },
       h('div', {},
         h('h2', {}, d.name),
@@ -117,5 +122,5 @@ export function mountPatientView(root, ctx) {
   // Elapsed times in the call-light banners change every sim minute.
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); renderLight(); } });
-  return () => { off(); offTick(); clock.destroy(); if (mounted?.destroy) mounted.destroy(); };
+  return () => { off(); offTick(); clock.destroy(); busy.destroy(); if (mounted?.destroy) mounted.destroy(); };
 }

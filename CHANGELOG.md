@@ -2,6 +2,15 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Task timers (Part A)
+- **Every task has a duration** (sim seconds, proposed): interventions and assessment tools carry `durationSec` (e.g. head-to-toe 8 min, full vitals 2 min, 12-lead ECG 5 min, IV start 5 min, Foley 10 min, GCS 1 min, NIHSS 7 min); MAR actions in the new `task-timing.json` (give 3 min, hold 30 s). Patients (`taskDurations`, patient editor → Task times) and sims (Sim setup → Task times for this sim) can override, with a seconds / minutes dropdown.
+- **Busy while doing it:** charting a task starts a timer; the student sees a "Busy" banner with progress, time left and **Interrupt task** (logged as interrupted, nothing charted), and can't start another task on any patient until it finishes. Durations are sim time, so they scale with speed. Call lights, alarm silencing, rapid response / code and notify charge are always allowed (`allowedWhileBusy`, data).
+- **Done counts at the finish:** the chart action is applied when the task ends, so order work, timeliness tags and reactions see it then.
+- **`settings.taskTimerMode`** (Sim setup): screen-only (full time, the default), manikin (short lockout: × `taskTimerManikinFactor` 0.25, at least `taskTimerMinLockoutSec` 5 s), off.
+- **Instructor:** Live control → Students shows what each student is busy with and time left, with **End now** (counts as done, logged); the Command center shows "⏳ Head-to-toe (3 min left)" per student.
+- **Debrief → Task time:** each task (minutes, finished / interrupted / ended early), busy vs not-on-a-task time, and what went late on their patients while they were busy.
+- Tests run with timers off unless a test turns them on (injected config). Tests: 198 passing.
+
 ## Smaller items (Part C)
 - **Per-patient normal ranges** (`normalRanges` in a patient file; patient editor → "Normal ranges for this patient", blank = the usual range): used for recovery penalties, the event builder's "To" hint and improve/worsen, and noted in the debrief. Linda: SpO₂ 88–92% (COPD, proposed), so pushing her to 96% now counts as moving away from normal.
 - **Command center:** each scripted patient shows its current state (◆, ⏸ when scripting is paused) and its recovery penalty (▼ penalty 40%).

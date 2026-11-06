@@ -41,7 +41,8 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
         h('button', { class: 'cc-head', onclick: () => openLive({ groupId: g.groupId }), title: 'Open this group in Live control' },
           h('h3', {}, g.name), toneChip(statusLabels[g.status])),
         h('div', { class: 'cc-students' }, g.students.length
-          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`))
+          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`,
+            st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null))
           : h('span', { class: 'muted' }, 'Nobody joined yet')),
         h('div', { class: 'cc-counts' },
           count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'), count(c.assessmentsOverdue, 'reassessments overdue', 'yellow'),

@@ -5,7 +5,7 @@ import { formatShiftTime } from '../../engine/time.js';
 import { printReportSheets, studentSheets } from '../student/report-sheet.js';
 import { studentView } from '../../engine/student-view.js';
 
-export function rosterPanel(runner, templatesById, scenario) {
+export function rosterPanel(runner, templatesById, scenario, user = null) {
   const state = runner.state;
   const at = (m) => formatShiftTime(state.startClock, m);
   const slots = scenario.groups.reduce((n, g) => n + g.studentCount, 0);
@@ -21,7 +21,7 @@ export function rosterPanel(runner, templatesById, scenario) {
         printReportSheets(runner.state, studentSheets(runner.state), views);
       } }, 'Print all report sheets') : null),
     joined.length ? h('table', { class: 'data-table' },
-      h('thead', {}, h('tr', {}, ['Student', 'Group', 'In chart', 'Last action'].map((c) => h('th', {}, c)))),
+      h('thead', {}, h('tr', {}, ['Student', 'Group', 'In chart', 'Busy with', 'Last action'].map((c) => h('th', {}, c)))),
       h('tbody', {}, joined.map(([uid, r]) => {
         const opened = last(uid, 'patient-opened');
         const act = last(uid);
@@ -29,6 +29,8 @@ export function rosterPanel(runner, templatesById, scenario) {
           h('td', {}, r.name),
           h('td', {}, groupName(r.groupId)),
           h('td', {}, opened ? `Rm ${templatesById[opened.patientId].demographics.room} (since ${at(opened.simMin)})` : '—'),
+          (() => { const b = runner.busy(uid); return h('td', {}, b ? [`${b.label} · Rm ${templatesById[b.patientId]?.demographics.room ?? '?'} · ${b.leftSec >= 60 ? `${Math.ceil(b.leftSec / 60)} min` : `${b.leftSec} s`} left `,
+            user ? h('button', { class: 'btn btn-small', title: 'Finish this task now (counts as done)', onclick: () => runner.endTaskNow(uid, user) }, 'End now') : null] : '—'); })(),
           h('td', {}, act ? `${at(act.simMin)} · ${act.action.replace(/-/g, ' ')}` : '—'),
         );
       })),

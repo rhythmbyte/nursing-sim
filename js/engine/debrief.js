@@ -13,6 +13,7 @@ import { alarmEpisodes } from './monitor-alarms.js';
 import { debriefTimeliness } from './timeliness.js';
 import { stateTimeline, penaltyTimeline } from './reactions/view.js';
 import { assessmentRows } from './assessment-review.js';
+import { taskReview } from './task-review.js';
 
 
 // Words too common to count as a match between a reflection and a "should recognize" item.
@@ -131,6 +132,7 @@ export function buildDebrief(fullState, userId, ctx) {
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
       durationMin: handoff[pid].closedAt != null ? round2(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
     timeliness: debriefTimeliness(fullState, pids, ctx),
+    tasks: taskReview(fullState, userId, pids, ctx),
     assessments: (() => { const t = debriefTimeliness(fullState, pids, ctx); return { rows: assessmentRows(fullState, ctx, pids), reassess: t.rows.filter((r) => r.kind === 'assessment') }; })(),
     scripts: pids.filter((pid) => fullState.patients[pid].script && ctx.templatesById[pid]?.script).map((pid) => ({ patientId: pid, rows: stateTimeline(fullState, pid, ctx.templatesById[pid], ctx.catalogs), penalties: penaltyTimeline(fullState, pid, ctx.templatesById[pid], ctx.catalogs), ownRanges: ctx.templatesById[pid]?.normalRanges || null })),
     reflection: fullState.reflections?.[userId] || null,

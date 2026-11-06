@@ -18,6 +18,7 @@ import { scriptSection } from './script-editor.js';
 import { parseO2, o2Text } from './guided-model.js';
 import { checkList } from './script-parts.js';
 import { tagChips } from './patient-tags-ui.js';
+import { durationOverrides } from './duration-overrides.js';
 import { answersEditor } from './assessment-answers.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
@@ -70,6 +71,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     // This patient's own normal ranges (e.g. COPD SpO₂ 88–92): blank = the catalog default shown as placeholder.
     const defaults = catalogs.vitals?.recovery?.normal || {};
     const nr = Object.fromEntries(Object.keys(defaults).map((k) => [k, ['lo', 'hi'].map((side, i) => h('input', { class: 'input input-small', type: 'number', 'aria-label': `${k} normal ${side === 'lo' ? 'low' : 'high'}`, value: work.normalRanges?.[k]?.[i] ?? '', placeholder: String(defaults[k][i]) }))]));
+    const durs = durationOverrides(catalogs, work.taskDurations || {}, { label: 'Patient task time' });
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
@@ -83,7 +85,10 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       const rest1 = tags && Object.keys(tags).length ? { ...rest0, patientTags: tags } : rest0;
       const ranges = Object.fromEntries(Object.entries(nr).filter(([, [lo, hi]]) => lo.value !== '' && hi.value !== '').map(([k, [lo, hi]]) => [k, [Number(lo.value), Number(hi.value)]]));
       const { normalRanges: _nr, ...rest2 } = rest1;
-      const rest = Object.keys(ranges).length ? { ...rest2, normalRanges: ranges } : rest2;
+      const rest3 = Object.keys(ranges).length ? { ...rest2, normalRanges: ranges } : rest2;
+      const { taskDurations: _td, ...rest4 } = rest3;
+      const td = durs.value();
+      const rest = Object.keys(td).length ? { ...rest4, taskDurations: td } : rest4;
       return Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest;
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
@@ -156,6 +161,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), field('Rhythm', rhythmSel('v_rhythm', '(none)')), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'pain'].map((k) => field(k, inp(`v_${k}`))), field('o2', o2Field('v_o2'))),
       h('section', { class: 'panel' }, h('h3', {}, 'Normal ranges for this patient ', helpTip('editor.normal-ranges')), h('p', { class: 'muted small' }, 'Blank = the usual range (shown faded). Used for recovery penalties, the event builder\'s "To" hint and the debrief.'),
         h('div', { class: 'editor-grid' }, Object.entries(nr).map(([k, [lo, hi]]) => h('div', { class: 'pick-row' }, h('span', { class: 'tag-group' }, k), lo, '–', hi)))),
+      h('section', { class: 'panel' }, h('h3', {}, 'Task times for this patient ', helpTip('editor.task-times')), h('p', { class: 'muted small' }, 'Only where this patient differs from the usual time (e.g. a hard IV start). The usual time is in brackets.'), durs.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline findings'), field('Shown when the student assesses (one per line)', area('findings', 5))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline assessment findings ', helpTip('editor.assessments')), h('p', { class: 'muted small' }, 'What each tool finds at the start (NEWS2 is calculated from vitals). Scenario changes, states and reactions can change them later.'), baselineAssess.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Orders at shift start'), orders.el),

@@ -11,6 +11,7 @@ import { saveLocal } from '../../data-loader.js';
 import { fillByTagCounts } from '../../engine/assignment.js';
 import { countByTriage, filterText, mergeFilters } from '../../engine/patient-tags.js';
 import { tagChips } from './patient-tags-ui.js';
+import { durationOverrides } from './duration-overrides.js';
 import { SPEEDS } from '../../engine/clock.js';
 import { save } from '../../storage.js';
 
@@ -41,7 +42,11 @@ export function mountSimSetup(root, { data, switchScenario }) {
     delegationDelayMin: h('input', { class: 'input', type: 'number', min: 0, value: defaults.delegationDelayMin.CNA }),
     revealAssessmentFindings: h('input', { type: 'checkbox', checked: defaults.revealAssessmentFindings }),
     gradeAssessments: h('input', { type: 'checkbox', checked: defaults.gradeAssessments }),
+    taskTimerMode: h('select', {}, [['screen-only', 'Screen only: full task time (no manikins)'], ['manikin', 'Manikin: short lockout only'], ['off', 'Off']].map(([v, l]) => h('option', { value: v, selected: v === defaults.taskTimerMode }, l))),
+    taskTimerManikinFactor: h('input', { class: 'input', type: 'number', min: 0, max: 1, step: 0.05, value: defaults.taskTimerManikinFactor }),
+    taskTimerMinLockoutSec: h('input', { class: 'input', type: 'number', min: 0, value: defaults.taskTimerMinLockoutSec }),
   };
+  const simDurs = durationOverrides(data.catalogs, {}, { label: 'Sim task time' });
   // Assessment tools offered to students: public ones ticked by default; others show "License check needed".
   const toolBoxes = (data.catalogs.assessmentTools?.tools || []).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
   const groupsBox = h('div', {});
@@ -110,6 +115,8 @@ export function mountSimSetup(root, { data, switchScenario }) {
         prnPreCheckWindowMin: Number(set.prnPreCheckWindowMin.value), delegationDelayMin: Number(set.delegationDelayMin.value),
         assessmentTools: toolBoxes.every((x) => x.box.checked === (x.t.license?.status === 'public')) ? 'public' : toolBoxes.filter((x) => x.box.checked).map((x) => x.t.id),
         revealAssessmentFindings: set.revealAssessmentFindings.checked, gradeAssessments: set.gradeAssessments.checked,
+        taskTimerMode: set.taskTimerMode.value, taskTimerManikinFactor: Number(set.taskTimerManikinFactor.value), taskTimerMinLockoutSec: Number(set.taskTimerMinLockoutSec.value),
+        ...(Object.keys(simDurs.value()).length ? { taskDurations: simDurs.value() } : {}),
       },
       assignment: assignment.value,
       groups: filled.map(({ filledFrom, ...g }) => g),
@@ -147,6 +154,9 @@ export function mountSimSetup(root, { data, switchScenario }) {
       h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain ', helpTip('setup.reveal-manual-vitals')),
       h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes ', helpTip('setup.pause-on-close')),
       h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings ', helpTip('setup.delegated-assessment-reveals'))),
+    h('section', { class: 'panel' }, h('h3', {}, 'Task timers ', helpTip('setup.task-timers')),
+      h('div', { class: 'editor-grid' }, field('Task timer mode', set.taskTimerMode), field('Manikin lockout (fraction of the task time)', set.taskTimerManikinFactor), field('Shortest lockout (seconds)', set.taskTimerMinLockoutSec)),
+      h('details', {}, h('summary', {}, 'Task times for this sim (optional)'), simDurs.el)),
     h('section', { class: 'panel' }, h('h3', {}, 'Assessment tools ', helpTip('setup.assessment-tools')),
       h('label', { class: 'inline' }, set.revealAssessmentFindings, ' "Check patient" shows the scripted finding for each item ', helpTip('setup.reveal-assessment-findings')),
       h('label', { class: 'inline' }, set.gradeAssessments, ' Grade reassessments and mismatches (flags) ', helpTip('setup.grade-assessments')),

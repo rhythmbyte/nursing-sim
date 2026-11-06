@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Timed tasks apply their chart action when they finish
+- **Decision:** `runner.chart` asks `engine/tasks.js taskPlan` whether the call is a timed task. If it is, the student gets `students[uid].task` and `taskProcessor` runs the original chart action at `endsAt` (`ctx.atMin`), followed by `task-finished`. Interrupting logs `task-interrupted` and applies nothing; the instructor's End now applies it immediately.
+- **Why:** One switch point means every chart action (orders, timeliness, reactions, penalties, assessments) automatically counts work at the finish, with no per-feature changes. The processor's `nextAt` keeps finishes in time order with everything else.
+- **Alternatives:** Log at the start and back-date (rules would see work before it happened), or a busy flag only in the UI (can be bypassed, and timeliness would be wrong).
+
+---
+
 ## 2026-11-07: Patient tags are a separate catalog with any-within, all-across matching
 - **Decision:** `patient-tags.json` groups → tags; patients store `patientTags { group: [tags] }`. One pure matcher (`engine/patient-tags.js matchesTags`) serves the library filter, the Sim setup counts and `fillByTagCounts`. A group's own filter replaces the sim-wide choice only in the tag groups it sets.
 - **Why:** "RN AND (Med-surg OR Surgical)" is how instructors describe a pool. One matcher means the counts shown always equal what the randomizer can pick. The name "patient tags" keeps it apart from the triage tag (B11 answer key).

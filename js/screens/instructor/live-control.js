@@ -121,7 +121,7 @@ export function mountLiveControl(root, ctx) {
     clear(events).append(eventsPanel(runner, templatesById, instructorUser, filter));
     clear(labs).append(labsPanel(runner, templatesById, instructorUser));
     clear(flags).append(flagsPanel(runner, templatesById, instructorUser));
-    clear(roster).append(rosterPanel(runner, templatesById, scenario));
+    clear(roster).append(rosterPanel(runner, templatesById, scenario, instructorUser));
     clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser, filter));
     rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter));
   }

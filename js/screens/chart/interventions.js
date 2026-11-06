@@ -69,8 +69,9 @@ export default {
         onsubmit: (e) => {
           e.preventDefault();
           const fields = vf ? vf.values() : Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value.trim()]));
-          act('chartIntervention', { interventionId: iv.id, fields, orderId: orderSel.value || null, delegatedTo: by.value || null });
-          toast(by.value ? `Delegated to ${by.value}: ${iv.label}. They'll report back.` : `Charted: ${iv.label}`);
+          const r = act('chartIntervention', { interventionId: iv.id, fields, orderId: orderSel.value || null, delegatedTo: by.value || null });
+          if (!r) return;
+          toast(by.value ? `Delegated to ${by.value}: ${iv.label}. They'll report back.` : r.task ? `Started: ${iv.label} (${Math.round(r.task.lockSec)} s)` : `Charted: ${iv.label}`);
           renderBars(); // refresh the Recent row
           renderForm();
         },

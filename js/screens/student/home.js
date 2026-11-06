@@ -2,6 +2,7 @@
 // Student screens only see `studentView` templates (UI convenience only, not security; see engine/student-view.js).
 
 import { h, clear } from '../shared/dom.js';
+import { busyBanner } from './busy-banner.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { badge } from '../shared/badge.js';
@@ -114,6 +115,7 @@ export function mountStudentHome(root, ctx) {
 
   function mountHome() {
     const clock = simClock(store, runner);
+    const busy = busyBanner(store, runner, user, (id) => `Rm ${views[id]?.demographics.room ?? '?'}`);
     const reflectBox = h('div', {});
     renderReflection = (state) => { if (state.clock.status === 'ended') clear(reflectBox).append(reflectionPanel(state)); };
     const list = h('ul', { class: 'student-patients' });
@@ -149,6 +151,7 @@ export function mountStudentHome(root, ctx) {
           printReportSheet(runner.state, user.userId, mine, views, user.name);
         } }, 'Print report sheet'),
         clock.el),
+      busy.el,
       reflectBox,
       h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
       h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
@@ -157,7 +160,7 @@ export function mountStudentHome(root, ctx) {
     const offSet = store.subscribe(render);
     let lastMin = -1;
     const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
-    return () => { clock.destroy(); offSet(); offTick(); };
+    return () => { clock.destroy(); busy.destroy(); offSet(); offTick(); };
   }
 
   const reopen = load(OPEN_KEY);

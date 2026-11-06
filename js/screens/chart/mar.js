@@ -35,15 +35,15 @@ export default {
         const ok = await confirmWarnings(`Give ${o.med}?`, 'Check before giving:', warnings.map((w) => w.message), 'Give anyway');
         if (!ok) return;
       }
-      act('medAction', { orderId: o.id, result: 'given', warnings });
-      toast(`Given: ${o.med}`);
+      const r = act('medAction', { orderId: o.id, result: 'given', warnings });
+      if (r) toast(r.task ? `Giving ${o.med} (${Math.round(r.task.lockSec)} s)` : `Given: ${o.med}`);
     }
 
     async function withReason(o, result, title) {
       const reason = await promptText(`${title}: ${o.med}`, 'Reason');
       if (reason == null) return;
-      act('medAction', { orderId: o.id, result, reason });
-      toast(`${title}: ${o.med}`);
+      const r = act('medAction', { orderId: o.id, result, reason });
+      if (r) toast(`${title}: ${o.med}`);
     }
 
     return {

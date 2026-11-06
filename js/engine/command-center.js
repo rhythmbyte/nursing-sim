@@ -67,7 +67,10 @@ export function commandCenter(state, ctx, scenario) {
         penalty: Math.round(totalPercent(ps.penalties, ctx.simMin, state.settings.recoveryPenaltyMaxPercent ?? 60)) } : null;
       return { patientId: pid, tag: ps.tag, trend: vitalsTrend(ps, ctx.simMin, trendCfg), alarm: Boolean(ps.alarm?.active?.length), worst, script };
     }).sort((a, b) => tagRank(b.worst?.tag) - tagRank(a.worst?.tag) || (b.worst?.minutes ?? 0) - (a.worst?.minutes ?? 0));
-    const students = Object.entries(state.roster || {}).filter(([, r]) => r.groupId === g.id).map(([uid, r]) => ({ userId: uid, name: r.name, inPatient: lastOpened(uid) }));
+    const students = Object.entries(state.roster || {}).filter(([, r]) => r.groupId === g.id).map(([uid, r]) => {
+      const t = state.students?.[uid]?.task; // timed task in progress (engine/tasks.js)
+      return { userId: uid, name: r.name, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null };
+    });
     return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients };
   });
   return groups.sort((a, b) => STATUS_RANK[b.status] - STATUS_RANK[a.status] || b.counts.veryLate - a.counts.veryLate || b.counts.late - a.counts.late);

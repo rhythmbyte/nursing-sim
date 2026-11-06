@@ -78,3 +78,18 @@ test('manikin mode: short lockout, then the action lands; reactions see it at th
   at(61.3);
   assert.equal(runner.state.patients[LG].script.state, 'in-target', 'O₂ 60 s × 0.25 = 15 s, then the reaction fires');
 });
+
+test('debrief: task times, busy vs idle, interrupted, what went late while busy', () => {
+  const { runner, at } = rig({ taskTimerMode: 'screen-only' });
+  runner.join('student-1', 'Ana', runner.state.joinCode);
+  at(73);
+  runner.chart('chartIntervention', LG, { interventionId: 'assess-full' }, S1); // 8 min: 73–81; Robert's call light lights at 75
+  at(82);
+  runner.chart('chartAssessment', RM, { toolId: 'nihss', answers: {} }, S1);
+  at(83); runner.interruptTask(S1);
+  const d = runner.debrief('student-1');
+  assert.deepEqual(d.tasks.rows.map((r) => [r.label, r.minutes, r.outcome]), [['Head-to-toe assessment', 8, 'finished'], ['NIH Stroke Scale (NIHSS)', 1, 'interrupted']]);
+  assert.equal(d.tasks.busyMin, 9);
+  assert.equal(d.tasks.interrupted, 1);
+  assert.ok(d.tasks.waiting.some((w) => w.kind === 'callLight' && w.during === 'Head-to-toe assessment'), 'Robert\'s call light went late (5 min) at 08:20 during the head-to-toe');
+});
