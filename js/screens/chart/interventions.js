@@ -17,7 +17,8 @@ function pendingNote(state, pid, taskId) {
 export default {
   id: 'interventions',
   label: 'Interventions',
-  mount(root, { pid, view, catalogs, act, runner, scenario }) {
+  mount(root, ctx) {
+    const { pid, catalogs, act, runner, scenario } = ctx;
     const reveal = scenario.settings.revealManualVitals;
     const cat = catalogs.interventions;
     let category = cat.categories[0].id;
@@ -48,7 +49,7 @@ export default {
       const vf = iv.vitalsCapture ? vitalsInputs(iv.chartFields, { reveal, vcat: catalogs.vitals, measure: () => runner.measure(pid) }) : null;
       const inputs = vf ? {} : Object.fromEntries(iv.chartFields.map((f) => [f, h('input', { type: 'text', class: 'input', name: f })]));
       const ps = runner.state.patients[pid];
-      const forOrders = view.orders.filter((o) => ps.orders[o.id] && ps.orders[o.id].status !== 'done' && (o.interventionIds || []).includes(iv.id));
+      const forOrders = ctx.view.orders.filter((o) => ps.orders[o.id] && ps.orders[o.id].status !== 'done' && (o.interventionIds || []).includes(iv.id));
       const orderSel = h('select', { name: 'order' },
         h('option', { value: '' }, 'Not for a specific order'),
         forOrders.map((o, i) => h('option', { value: o.id, selected: i === 0 }, o.text.length > 90 ? `${o.text.slice(0, 88)}…` : o.text)));

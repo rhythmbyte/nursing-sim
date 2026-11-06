@@ -116,8 +116,8 @@ test('runner: pushes state to the store, persists, and resumes a saved session',
   assert.equal(r3.state.log.length, 0, 'ignores a session saved for another scenario');
 });
 
-test('assignment: student slots follow group studentCount', () => {
-  assert.deepEqual(studentSlots({ groups: [{ id: 'a', name: 'A', studentCount: 2 }, { id: 'b', name: 'B', studentCount: 1 }] }).map((s) => s.groupId), ['a', 'a', 'b']);
+test('assignment: one student tab per slot across groups', () => {
+  assert.deepEqual(studentSlots({ groups: [{ id: 'a', studentCount: 2 }, { id: 'b', studentCount: 1 }] }).map((s) => s.userId), ['student-1', 'student-2', 'student-3']);
 });
 
 test('groups: Fire now fires the whole group, and the scheduled time does not re-fire it', () => {

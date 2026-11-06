@@ -9,6 +9,8 @@ import { SPEEDS } from '../../engine/clock.js';
 import { eventsPanel } from './live-events.js';
 import { labsPanel } from './live-labs.js';
 import { flagsPanel } from './live-flags.js';
+import { rosterPanel } from './live-roster.js';
+import { patientsPanel } from './live-patients.js';
 
 function clockControls(runner, user) {
   const s = runner.state.clock.status;
@@ -83,7 +85,8 @@ function unitChips(state, templatesById) {
   });
 }
 
-export function mountLiveControl(root, { store, runner, templatesById, scenario, instructorUser }) {
+export function mountLiveControl(root, { store, runner, scenario, instructorUser, catalogs }) {
+  const templatesById = runner.templates(); // demographics only here; orders come via the runner
   const clock = simClock(store, runner);
   const controls = h('div', {});
   const lights = h('div', {});
@@ -91,6 +94,8 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
   const events = h('div', {});
   const labs = h('div', {});
   const flags = h('div', {});
+  const roster = h('div', {});
+  const patients = h('div', {});
   const unitList = h('div', { class: 'unit-strip' });
 
   function render() {
@@ -101,6 +106,8 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
     clear(events).append(eventsPanel(runner, templatesById, instructorUser));
     clear(labs).append(labsPanel(runner, templatesById, instructorUser));
     clear(flags).append(flagsPanel(runner, templatesById, instructorUser));
+    clear(roster).append(rosterPanel(runner, templatesById, scenario));
+    clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser));
   }
 
 
@@ -112,7 +119,11 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
       h('section', { class: 'panel' }, h('h3', {}, 'Call lights'), lights),
       h('section', { class: 'panel' }, h('h3', {}, 'Recent activity'), feed),
     ),
-    h('section', { class: 'panel' }, h('h3', {}, 'Flags (live)'), flags),
+    h('div', { class: 'live-grid' },
+      h('section', { class: 'panel' }, h('h3', {}, 'Students'), roster),
+      h('section', { class: 'panel' }, h('h3', {}, 'Flags (live)'), flags),
+    ),
+    h('section', { class: 'panel' }, h('h3', {}, 'Patients'), patients),
     h('section', { class: 'panel' }, h('h3', {}, 'Pending labs'), labs),
     h('section', { class: 'panel' }, h('h3', {}, 'Event timeline'), events),
   );

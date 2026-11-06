@@ -8,13 +8,14 @@ const TYPE_LABEL = { once: 'Once', scheduled: 'Scheduled', prn: 'PRN', continuou
 export default {
   id: 'orders',
   label: 'Orders',
-  mount(root, { pid, view, act }) {
-    const byId = Object.fromEntries(view.orders.map((o) => [o.id, o]));
+  mount(root, ctx) {
+    const { pid, act } = ctx;
     const body = h('div', {});
     root.append(h('section', { class: 'panel' }, h('h3', {}, 'Active orders'), body));
 
     return {
       update(state) {
+        const byId = Object.fromEntries(ctx.view.orders.map((o) => [o.id, o]));
         const rows = Object.entries(state.patients[pid].orders)
           .map(([id, os]) => ({ o: byId[id], os }))
           .filter((r) => r.o)

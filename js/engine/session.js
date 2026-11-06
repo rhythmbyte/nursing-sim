@@ -1,7 +1,7 @@
 // Live session state + pure transitions. No DOM, no timers; wall time (`now`) is passed in.
 // Shape (SPEC §4.5):
 // { version, scenarioId, startClock, settings, clock, patients: { id → patientState },
-//   students: { userId → { seen, handoff } }, fired: { key → n }, alerts, log }
+//   joinCode, roster, adhoc, students: { userId → { seen, handoff } }, fired: { key → n }, alerts, log }
 // Timed work besides events (monitor cycles, lab results, delegated tasks) runs as "processors",
 // interleaved with events in time order (see advance()).
 // Every transition returns a NEW state; event types mutate a structuredClone draft.
@@ -18,7 +18,7 @@ import { delegationProcessor } from './delegation.js';
 // Order matters within one instant: monitor readings see vitals after that instant's events.
 const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 4; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 5; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -53,7 +53,7 @@ function initialPatientState(t, groupId, admission, catalogs) {
 }
 
 /** scenario.settings must already be merged with defaults (engine/settings.js withDefaults). */
-export function createSession(scenario, templatesById, catalogs) {
+export function createSession(scenario, templatesById, catalogs, { joinCode = null } = {}) {
   const patients = {};
   for (const { id, groupId, admission } of scenarioPatients(scenario)) {
     const t = templatesById[id];
@@ -70,6 +70,9 @@ export function createSession(scenario, templatesById, catalogs) {
     settings: { ...scenario.settings },
     clock: clock.createClock(scenario.speed),
     patients,
+    joinCode,      // students join with this code (engine/roster.js)
+    roster: {},    // userId → { name, groupId, joinedAtMin }
+    adhoc: {},     // patientId → { orders } pushed live by the instructor (engine/templates.js)
     students: {},
     fired: {},
     alerts: [],

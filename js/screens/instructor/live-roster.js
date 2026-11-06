@@ -1,0 +1,31 @@
+// Join code + who has joined, their group, the chart they last opened, and their last action.
+
+import { h } from '../shared/dom.js';
+import { formatShiftTime } from '../../engine/time.js';
+
+export function rosterPanel(runner, templatesById, scenario) {
+  const state = runner.state;
+  const at = (m) => formatShiftTime(state.startClock, m);
+  const slots = scenario.groups.reduce((n, g) => n + g.studentCount, 0);
+  const joined = Object.entries(state.roster);
+  const groupName = (gid) => scenario.groups.find((g) => g.id === gid)?.name || gid;
+  const last = (uid, action) => [...state.log].reverse().find((l) => l.userId === uid && (!action || l.action === action));
+
+  return h('div', {},
+    h('div', { class: 'join-code' }, h('span', { class: 'muted' }, 'Join code'), h('strong', { class: 'code' }, state.joinCode || '—'),
+      h('span', { class: 'muted' }, `${joined.length} of ${slots} joined · ${scenario.assignment} placement`)),
+    joined.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Student', 'Group', 'In chart', 'Last action'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, joined.map(([uid, r]) => {
+        const opened = last(uid, 'patient-opened');
+        const act = last(uid);
+        return h('tr', {},
+          h('td', {}, r.name),
+          h('td', {}, groupName(r.groupId)),
+          h('td', {}, opened ? `Rm ${templatesById[opened.patientId].demographics.room} (since ${at(opened.simMin)})` : '—'),
+          h('td', {}, act ? `${at(act.simMin)} · ${act.action.replace(/-/g, ' ')}` : '—'),
+        );
+      })),
+    ) : h('p', { class: 'muted' }, 'Nobody has joined yet. Students enter the code on their tab.'),
+  );
+}

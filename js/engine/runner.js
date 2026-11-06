@@ -6,17 +6,19 @@ import * as session from './session.js';
 import * as chart from './chart.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
-import { markLeftUnattended } from './instructor.js';
+import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight } from './instructor.js';
+import { joinSim } from './roster.js';
+import { effectiveTemplates } from './templates.js';
 import { evaluateRules } from './rules/index.js';
 import { buildDebrief } from './debrief.js';
-import { studentIdsForGroup, groupOfStudent } from './assignment.js';
+import { studentIdsForGroup, groupOfStudent, generateJoinCode } from './assignment.js';
 import { collectEvents, groupMembers } from './scheduler.js';
 
 // `scenario` must have merged settings (engine/settings.js withDefaults).
-export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null }) {
+export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null, rng = Math.random }) {
   const ids = session.scenarioPatients(scenario).map((p) => p.id).filter((id) => templatesById[id]);
   const refs = collectEvents(ids, templatesById, scenario);
-  const fresh = () => session.createSession(scenario, templatesById, catalogs);
+  const fresh = () => session.createSession(scenario, templatesById, catalogs, { joinCode: generateJoinCode(rng) });
   let state = saved && saved.version === session.SESSION_VERSION && saved.scenarioId === scenario.id ? saved : fresh();
 
   function commit(next) {
@@ -26,7 +28,14 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     store.set({ session: state });
   }
 
-  const ctx = () => ({ now: now(), templatesById, catalogs });
+  // Effective templates (file + ad-hoc orders), recomputed only when state.adhoc changes.
+  let effFor = null;
+  let effCache = templatesById;
+  const eff = () => {
+    if (effFor !== state.adhoc) { effFor = state.adhoc; effCache = effectiveTemplates(templatesById, state); }
+    return effCache;
+  };
+  const ctx = () => ({ now: now(), templatesById: eff(), catalogs });
 
   const runner = {
     refs,
@@ -79,7 +88,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
      */
     chart(name, patientId, args, user) {
       if (typeof chart[name] !== 'function') throw new Error(`Unknown chart action ${name}`);
-      commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById, catalogs }));
+      commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById: eff(), catalogs }));
     },
 
     /** Manual vitals a student would measure now ({} when settings.revealManualVitals is false). */
@@ -93,11 +102,28 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
       commit(markLeftUnattended(state, patientId, { studentIds, note }, { now: now(), user }));
     },
 
-    /** Context the rules and the debrief need. */
+    /** Templates including instructor ad-hoc orders (screens that show orders use this). */
+    templates: () => eff(),
+
+    /** Student joins with the code. Returns an error message or null. */
+    join(userId, name, code) {
+      const r = joinSim(state, { userId, name, code }, { scenario, now: now(), rng });
+      commit(r.state);
+      return r.error;
+    },
+
+    pushOrder(patientId, order, user) {
+      commit(pushOrder(state, patientId, order, { now: now(), user }));
+    },
+    startCode(patientId, args, user) { commit(startCode(state, patientId, args || {}, { now: now(), user })); },
+    setCodeOutcome(patientId, outcome, user) { commit(setCodeOutcome(state, patientId, outcome, { now: now(), user })); },
+    setCallLight(patientId, on, message, user) { commit(setCallLight(state, patientId, { on, message }, { now: now(), user })); },
+
+    /** Context the rules and the debrief need (responsibility comes from the joined roster). */
     rulesCtx: () => ({
-      templatesById, catalogs, simMin: runner.simMin(),
-      studentIdsForGroup: (g) => studentIdsForGroup(scenario, g),
-      groupOfStudent: (u) => groupOfStudent(scenario, u),
+      templatesById: eff(), catalogs, simMin: runner.simMin(),
+      studentIdsForGroup: (g) => studentIdsForGroup(state.roster, g),
+      groupOfStudent: (u) => groupOfStudent(state.roster, u),
     }),
     flags: () => evaluateRules(state, runner.rulesCtx()),
     debrief: (userId) => buildDebrief(state, userId, runner.rulesCtx()),

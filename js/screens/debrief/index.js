@@ -3,7 +3,6 @@
 
 import { h, clear } from '../shared/dom.js';
 import { formatShiftTime } from '../../engine/time.js';
-import { studentSlots } from '../../engine/assignment.js';
 import { load, save } from '../../storage.js';
 import { describeEntry } from './describe.js';
 import { toCsv, downloadCsv } from './csv.js';
@@ -12,8 +11,7 @@ import { flagsSection, responseSection, orderSequenceSection, vitalsSection, han
 const STUDENT_KEY = 'ui.debrief.student';
 
 export function mountDebrief(root, { store, runner, templatesById, scenario, catalogs }) {
-  const slots = studentSlots(scenario);
-  let userId = slots.some((s) => `student-${s.slot}` === load(STUDENT_KEY)) ? load(STUDENT_KEY) : `student-${slots[0]?.slot ?? 1}`;
+  let userId = load(STUDENT_KEY);
   const labelOf = (id) => catalogs.interventions.interventions.find((i) => i.id === id)?.label || id;
   const orderText = (pid, oid) => templatesById[pid]?.orders.find((o) => o.id === oid)?.text || oid;
   const patientName = (pid) => templatesById[pid]?.demographics.name || pid || '';
@@ -33,13 +31,20 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
   }
 
   function render() {
+    const roster = Object.entries(runner.state.roster);
+    if (!roster.length) {
+      clear(body).append(h('header', { class: 'screen-header' }, h('h2', {}, 'Debrief')), h('p', { class: 'muted' }, 'No students have joined yet.'));
+      return;
+    }
+    if (!runner.state.roster[userId]) userId = roster[0][0];
+    const groupName = (gid) => scenario.groups.find((g) => g.id === gid)?.name || gid;
     const d = runner.debrief(userId);
     const at = (m) => formatShiftTime(runner.state.startClock, m);
     const helpers = { at, room };
     const select = h('select', {
       'aria-label': 'Student',
       onchange: (e) => { userId = e.target.value; save(STUDENT_KEY, userId); render(); },
-    }, slots.map((s) => h('option', { value: `student-${s.slot}`, selected: `student-${s.slot}` === userId }, `Student ${s.slot} · ${s.groupName}`)));
+    }, roster.map(([id, r]) => h('option', { value: id, selected: id === userId }, `${r.name} · ${groupName(r.groupId)}`)));
 
     clear(body).append(
       h('header', { class: 'screen-header debrief-header' },
@@ -49,7 +54,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         h('span', { class: 'flag-chip flag-amber' }, `${d.counts.amber} amber`),
         h('span', { class: 'muted' }, `as of ${at(runner.simMin())}`),
         h('div', { class: 'debrief-actions' },
-          h('button', { class: 'btn', onclick: () => downloadCsv(`debrief-${userId}-${new Date().toISOString().slice(0, 10)}.csv`, csvFor(d, at)) }, 'Export CSV'),
+          h('button', { class: 'btn', onclick: () => downloadCsv(`debrief-${runner.state.roster[userId].name.replace(/\W+/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`, csvFor(d, at)) }, 'Export CSV'),
           h('button', { class: 'btn', onclick: () => window.print() }, 'Print'),
         ),
       ),

@@ -21,6 +21,8 @@ export function mountPatientView(root, ctx) {
 
   const sectionCtx = {
     ...ctx,
+    // Live view: includes orders the instructor pushes after the chart opened.
+    get view() { return ctx.getView ? ctx.getView() : view; },
     act: (name, args) => runner.chart(name, pid, args, user),
     patientState: () => runner.state.patients[pid],
   };

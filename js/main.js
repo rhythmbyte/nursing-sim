@@ -9,7 +9,7 @@ import { studentSlots } from './engine/assignment.js';
 import { withDefaults } from './engine/settings.js';
 import { mountShell } from './screens/shell.js';
 import { mountInstructor } from './screens/instructor/index.js';
-import { mountStudentHome } from './screens/student/home.js';
+import { mountStudentTab } from './screens/student/join.js';
 import { placeholder } from './screens/shared/placeholder.js';
 import { mountDebrief } from './screens/debrief/index.js';
 import { h } from './screens/shared/dom.js';
@@ -27,11 +27,12 @@ const studentUser = (n) => ({ userId: `student-${n}`, role: 'student', name: `St
 function buildTabs(ctx) {
   const tabs = [{ id: 'instructor', label: 'Instructor', mount: (root) => mountInstructor(root, ctx) }];
 
+  // Prototype: one tab per student slot; each tab joins with the code like a real device would.
   for (const slot of studentSlots(ctx.scenario)) {
     tabs.push({
-      id: `student-${slot.slot}`,
+      id: slot.userId,
       label: `Student ${slot.slot}`,
-      mount: (root) => mountStudentHome(root, { ...ctx, slot, user: studentUser(slot.slot) }),
+      mount: (root) => mountStudentTab(root, { ...ctx, user: studentUser(slot.slot) }),
     });
   }
 

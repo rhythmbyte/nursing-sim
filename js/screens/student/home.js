@@ -37,10 +37,19 @@ function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen }) {
 }
 
 export function mountStudentHome(root, ctx) {
-  const { store, runner, templatesById, scenario, slot, user } = ctx;
+  const { store, runner, scenario, user, groupId } = ctx;
+  const groupName = scenario.groups.find((g) => g.id === groupId)?.name || groupId;
   const OPEN_KEY = `ui.${user.userId}.patient`;
-  const views = Object.fromEntries(Object.keys(runner.state.patients).map((pid) => [
-    pid, studentView(templatesById[pid], { showTags: scenario.settings.showTagsToStudents })]));
+  // Student views (UI convenience only, B11). Rebuilt when the instructor pushes an order.
+  let views = {};
+  let viewsFor = null;
+  function refreshViews() {
+    const t = runner.templates();
+    if (t === viewsFor) return;
+    viewsFor = t;
+    views = Object.fromEntries(Object.keys(runner.state.patients).map((pid) => [pid, studentView(t[pid], { showTags: scenario.settings.showTagsToStudents })]));
+  }
+  refreshViews();
   let cleanupChild = null;
 
   function showHome() {
@@ -75,7 +84,8 @@ export function mountStudentHome(root, ctx) {
     if (cleanupChild) cleanupChild();
     save(OPEN_KEY, pid);
     runner.chart('openPatient', pid, {}, user);
-    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, onBack: showHome, onOpenPatient: openPatient });
+    refreshViews();
+    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, getView: () => { refreshViews(); return views[pid]; }, onBack: showHome, onOpenPatient: openPatient });
   }
 
   function mountHome() {
@@ -87,7 +97,8 @@ export function mountStudentHome(root, ctx) {
       const state = runner.state;
       const simMin = runner.simMin();
       const seen = state.students[user.userId]?.seen || {};
-      const mine = Object.entries(state.patients).filter(([, ps]) => ps.groupId === slot.groupId && ps.present);
+      refreshViews();
+      const mine = Object.entries(state.patients).filter(([, ps]) => ps.groupId === groupId && ps.present);
       clear(list).append(...(mine.length
         ? mine.map(([pid, ps]) => patientRow(pid, ps, views[pid], { runner, user, simMin, seenAt: seen[pid], onOpen: openPatient }))
         : [h('li', { class: 'muted' }, 'No patients assigned.')]));
@@ -103,7 +114,7 @@ export function mountStudentHome(root, ctx) {
     }
 
     clear(root).append(
-      h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${slot.groupName}`), clock.el),
+      h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${groupName}`), clock.el),
       h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
       h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
     );

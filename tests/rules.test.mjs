@@ -9,6 +9,7 @@ import { allergyMatch } from '../js/engine/rules/allergy-conflict.js';
 import { markLeftUnattended } from '../js/engine/instructor.js';
 import { buildDebrief } from '../js/engine/debrief.js';
 import { studentIdsForGroup, groupOfStudent } from '../js/engine/assignment.js';
+import { joinSim } from '../js/engine/roster.js';
 import { prnWarnings, prnOptions } from '../js/engine/prn.js';
 
 const S1 = { userId: 'student-1', role: 'student' };
@@ -20,12 +21,13 @@ const JC = 'p6-james-carter';
 function started(settings = {}) {
   const scenario = scenarioWith(settings);
   const refs = collectEvents(session.scenarioPatients(scenario).map((p) => p.id), templatesById, scenario);
-  let s = session.createSession(scenario, templatesById, catalogs);
+  let s = session.createSession(scenario, templatesById, catalogs, { joinCode: 'ABC123' });
+  s = joinSim(s, { userId: 'student-1', name: 'Pat', code: 'abc123' }, { scenario, now: 0 }).state;
   s = session.controlClock(s, 'start', { now: 0, user: INS });
   const tick = (st, min) => session.tick(st, { now: min * MIN, refs, templatesById, catalogs }).state;
   const fire = (st, pid, eid, min) => session.fireNow(st, refs.find((r) => r.key === eventKey(pid, eid)), { now: min * MIN, refs, templatesById, catalogs, user: INS });
-  const rctx = (simMin) => ({ templatesById, catalogs, simMin, studentIdsForGroup: (g) => studentIdsForGroup(scenario, g), groupOfStudent: (u) => groupOfStudent(scenario, u) });
-  const flags = (st, simMin, ruleId) => evaluateRules(st, rctx(simMin)).filter((f) => !ruleId || f.ruleId === ruleId);
+  const rctx = (simMin, st = s) => ({ templatesById, catalogs, simMin, studentIdsForGroup: (g) => studentIdsForGroup(st.roster, g), groupOfStudent: (u) => groupOfStudent(st.roster, u) });
+  const flags = (st, simMin, ruleId) => evaluateRules(st, rctx(simMin, st)).filter((f) => !ruleId || f.ruleId === ruleId);
   return { s, tick, fire, flags, rctx };
 }
 const ctx = (min) => ({ now: min * MIN, user: S1, templatesById, catalogs });
@@ -149,7 +151,7 @@ test('debrief: counts, response times, order sequence, charted vs scripted, time
   s = fire(s, LG, 'e-p4-sepsis-orders', 81);
   s = iv(s, LG, 'foley', 82, { orderId: 'o-p4-foley' });
   s = iv(s, LG, 'iv-fluids', 84, { orderId: 'o-p4-bolus' });
-  const d = buildDebrief(s, 'student-1', rctx(90));
+  const d = buildDebrief(s, 'student-1', rctx(90, s));
   assert.ok(d.counts.red >= 1 && d.counts.amber >= 1);
   assert.deepEqual(d.responseTimes.callLights[0], { patientId: RM, litAtMin: 75, answeredAtMin: 79, responseMin: 4, by: 'student-1' });
   const sepsis = d.orderSequences.find((o) => o.orderSet === 'os-p4-sepsis');

@@ -10,6 +10,7 @@
     "revealManualVitals": true,
     "delegationDelayMin": { "LPN": 10, "CNA": 10 },
     "prnPreCheckWindowMin": 15,
-    "delegatedAssessmentRevealsFindings": false
+    "delegatedAssessmentRevealsFindings": false,
+    "roscTag": "red"
   }
 }

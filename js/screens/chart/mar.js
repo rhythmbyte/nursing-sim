@@ -21,8 +21,8 @@ function schedule(o, state) {
 export default {
   id: 'mar',
   label: 'MAR',
-  mount(root, { pid, view, act, runner, catalogs }) {
-    const meds = view.orders.filter((o) => o.med);
+  mount(root, ctx) {
+    const { pid, act, runner, catalogs } = ctx;
     const body = h('div', {});
     root.append(h('section', { class: 'panel' }, h('h3', {}, 'Medication administration record'), body));
 
@@ -46,7 +46,7 @@ export default {
 
     return {
       update(state) {
-        const active = meds.filter((o) => state.patients[pid].orders[o.id]);
+        const active = ctx.view.orders.filter((o) => o.med && state.patients[pid].orders[o.id]);
         if (!active.length) { clear(body).append(h('p', { class: 'muted' }, 'No active medication orders.')); return; }
         clear(body).append(h('table', { class: 'data-table mar-table' },
           h('thead', {}, h('tr', {}, ['Medication', 'Schedule', 'Given', 'Last action', ''].map((c) => h('th', {}, c)))),

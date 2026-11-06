@@ -15,7 +15,7 @@
         "revealManualVitals",
         "delegationDelayMin",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings"
+        "delegatedAssessmentRevealsFindings", "roscTag"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -31,7 +31,8 @@
           "properties": { "LPN": {"type": "integer", "minimum": 0}, "CNA": {"type": "integer", "minimum": 0} }
         },
         "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
-        "delegatedAssessmentRevealsFindings": { "type": "boolean" }
+        "delegatedAssessmentRevealsFindings": { "type": "boolean" },
+        "roscTag": { "enum": ["red", "yellow", "green", "black"] }
       }
     }
   }
