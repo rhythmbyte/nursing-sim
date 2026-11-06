@@ -55,3 +55,40 @@ export function scenarioReferenceProblems(s, patientIds) {
   for (const gid of Object.keys(s.manualStudents || {})) if (!groupIds.has(gid)) p.push(`manualStudents: no group "${gid}"`);
   return p;
 }
+
+const SHAPES = ['sinus', 'fib', 'vf', 'flat'];
+const isBool = (v) => v === undefined || typeof v === 'boolean';
+
+/** Per-entry checks for data/catalogs/rhythms.json (the schema only checks the outer shape). */
+export function rhythmCatalogProblems(catalog) {
+  const p = [];
+  const aliasOwner = new Map();
+  for (const [id, r] of Object.entries(catalog?.rhythms || {})) {
+    const at = `rhythms.${id}`;
+    if (!r.label || typeof r.label !== 'string') p.push(`${at}: needs a label`);
+    if (!r.draw || !SHAPES.includes(r.draw.shape)) p.push(`${at}: draw.shape must be one of ${SHAPES.join(', ')}`);
+    if (r.draw?.irregular != null && !(r.draw.irregular >= 0 && r.draw.irregular <= 1)) p.push(`${at}: draw.irregular must be 0–1`);
+    if (r.draw?.fibAmp != null && !(r.draw.fibAmp >= 0)) p.push(`${at}: draw.fibAmp must be 0 or more`);
+    if (r.draw?.vfFreq != null && !(r.draw.vfFreq > 0)) p.push(`${at}: draw.vfFreq must be above 0`);
+    for (const k of ['pulseless', 'showsRate', 'alarm']) if (!isBool(r[k])) p.push(`${at}: ${k} must be true or false`);
+    for (const k of ['p', 'qrsWide']) if (!isBool(r.draw?.[k])) p.push(`${at}: draw.${k} must be true or false`);
+    if (r.aliases !== undefined && (!Array.isArray(r.aliases) || r.aliases.some((a) => typeof a !== 'string' || !a.trim()))) p.push(`${at}: aliases must be a list of names`);
+    for (const name of [id, r.label, ...(r.aliases || [])]) {
+      const key = String(name).toLowerCase();
+      if (aliasOwner.has(key) && aliasOwner.get(key) !== id) p.push(`${at}: name "${name}" also belongs to rhythms.${aliasOwner.get(key)}`);
+      else aliasOwner.set(key, id);
+    }
+  }
+  return p;
+}
+
+/** Checks for data/catalogs/help.json: keys look like "screen.field", texts are non-empty. */
+export function helpCatalogProblems(catalog) {
+  const p = [];
+  for (const [k, v] of Object.entries(catalog || {})) {
+    if (k.startsWith('_')) continue;
+    if (!/^[a-z]+\.[a-z0-9-]+$/.test(k)) p.push(`help "${k}": key must look like screen.field-name`);
+    if (typeof v !== 'string' || !v.trim()) p.push(`help "${k}": text must not be empty`);
+  }
+  return p;
+}

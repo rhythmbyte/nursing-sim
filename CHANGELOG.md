@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Per-entry checks for rhythms and help catalogs
+- `rhythms.json`: each rhythm needs a label and a known drawing shape (sinus, fib, vf, flat); numbers in range; true/false flags; aliases are names, and no name may point to two rhythms. `help.json`: keys look like `screen.field`, texts non-empty. Run by the loader (bad catalog → problem banner) and the tests.
+- Tests: 134 passing.
+
 ## One window writes the sim
 - If the sim is open in a second window of the same browser, that window is **read-only** (no ticking, saving or pause-on-close) and shows "This sim is open in another window" with **Take over here**. Taking over makes the other window read-only within ~2 s. If the writing window closes or stops responding, the notice offers **Continue here**. The standalone monitor page never takes the lock.
 - Checked with real tabs in the browser; the first version lost the lock during the take-over reload (fixed).

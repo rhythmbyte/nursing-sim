@@ -93,3 +93,19 @@ test('C15: every literal field label in setup/editor/builder has help text in he
     for (const [, key] of src.matchAll(/helpTip\('([^']+)'\)/g)) assert.ok(help[key], key);
   }
 });
+
+test('Suggestion 6: rhythms and help catalogs pass per-entry checks; mistakes are caught', async () => {
+  const { rhythmCatalogProblems, helpCatalogProblems } = await import('../js/engine/integrity.js');
+  const rhythms = load(manifest.catalogs.rhythms);
+  const help = load(manifest.catalogs.help);
+  assert.deepEqual(rhythmCatalogProblems(rhythms), []);
+  assert.deepEqual(helpCatalogProblems(help), []);
+  const bad = structuredClone(rhythms);
+  bad.rhythms.sinus.draw.shape = 'zigzag';
+  bad.rhythms.afib.draw.irregular = 2;
+  bad.rhythms.vf.pulseless = 'yes';
+  bad.rhythms.vt.aliases = ['PEA'];
+  const p = rhythmCatalogProblems(bad);
+  for (const re of [/sinus: draw.shape/, /afib: draw.irregular/, /vf: pulseless must be true or false/, /name "PEA" also belongs/]) assert.ok(p.some((x) => re.test(x)), re.source);
+  assert.equal(helpCatalogProblems({ 'Setup Name': 'x', 'setup.ok': ' ', _comment: 'skip' }).length, 2);
+});

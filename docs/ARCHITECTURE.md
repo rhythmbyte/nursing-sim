@@ -71,7 +71,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |
 | `js/screens/monitor/` | Reusable bedside monitor display: `waveforms.js` (pure ECG/pleth math), `bedside-monitor.js` (canvas sweep, tiles, alarms, mute; one shared animation loop) | built |
-| `js/engine/integrity.js` | `patientReferenceProblems` / `scenarioReferenceProblems`: ids that point at nothing (interventions, labs, events, keyframes, finding changes, order sets, forOrder, scenario patients). Run by the loader and the tests | built |
+| `js/engine/integrity.js` | `rhythmCatalogProblems`, `helpCatalogProblems` (per-entry catalog checks); `patientReferenceProblems` / `scenarioReferenceProblems`: ids that point at nothing (interventions, labs, events, keyframes, finding changes, order sets, forOrder, scenario patients). Run by the loader and the tests | built |
 | `js/engine/settings.js` | `effectiveSettings` / `withDefaults`: scenario settings over `scenario-defaults.json`. Applied once in `main.js`; the engine reads only `state.settings` | built |
 | `js/engine/findings.js` | `revealFindings` (shared by chart actions and delegation) | built |
 | `js/engine/time.js` | `parseClock`, `formatShiftTime`, `shiftLengthMin`, `formatRemaining`, `round2` | built |

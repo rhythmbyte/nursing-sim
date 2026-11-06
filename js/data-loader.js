@@ -5,13 +5,15 @@ import { validate } from './validate.js';
 import { eventGroupProblems } from './engine/scheduler.js';
 import { load, save } from './storage.js';
 import { scaleProblems } from './engine/priority.js';
-import { patientReferenceProblems, scenarioReferenceProblems } from './engine/integrity.js';
+import { patientReferenceProblems, scenarioReferenceProblems, rhythmCatalogProblems, helpCatalogProblems } from './engine/integrity.js';
 
 // Checks JSON Schema can't express (cross-field rules), per kind of file.
 const EXTRA_CHECKS = {
   patient: (d) => eventGroupProblems(d.events, '$.events'),
   scenario: (d) => eventGroupProblems(d.events, '$.events'),
   priorityScales: (d) => scaleProblems(d),
+  rhythms: (d) => rhythmCatalogProblems(d),
+  help: (d) => helpCatalogProblems(d),
 };
 
 const SCHEMAS = {
