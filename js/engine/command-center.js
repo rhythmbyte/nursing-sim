@@ -2,6 +2,7 @@
 // Pure, no DOM. Sorted so the group (and patient) needing attention most comes first.
 
 import { totalPercent } from './penalties.js';
+import { staffView } from './staff.js';
 import { timelinessItems, timelinessConfig, tagRank, isLate, isVeryLate } from './timeliness.js';
 import { evaluateRules } from './rules/index.js';
 import { vitalNumber } from './vitals.js';
@@ -30,6 +31,16 @@ const STATUS_RANK = { 'needs-attention': 2, 'falling-behind': 1, 'on-track': 0 }
 /** True when a group's status moved to a worse one (e.g. on-track → falling-behind). Unknown/first → false. */
 export function statusWorsened(prev, next) {
   return prev != null && (STATUS_RANK[next] ?? 0) > (STATUS_RANK[prev] ?? 0);
+}
+
+/** Delegation helpers for a group card: { roles: [{ role, total, busy, onBreak }], queued, allBusy: [roles] }. */
+export function staffing(state, groupId, ctx) {
+  const v = staffView(state, groupId, ctx.simMin, ctx.catalogs);
+  const roles = [...new Set(v.helpers.map((x) => x.role))].map((role) => {
+    const hs = v.helpers.filter((x) => x.role === role);
+    return { role, total: hs.length, busy: hs.filter((x) => x.status === 'busy').length, onBreak: hs.filter((x) => x.status === 'break').length };
+  });
+  return { roles, queued: v.queued.length, allBusy: roles.filter((r) => r.total && r.busy + r.onBreak >= r.total).map((r) => r.role) };
 }
 
 /** ctx: runner.rulesCtx() (templatesById, catalogs, simMin, studentIdsForGroup, …). */
@@ -71,7 +82,7 @@ export function commandCenter(state, ctx, scenario) {
       const t = state.students?.[uid]?.task; // timed task in progress (engine/tasks.js)
       return { userId: uid, name: r.name, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null };
     });
-    return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients };
+    return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients, staffing: staffing(state, g.id, ctx) };
   });
   return groups.sort((a, b) => STATUS_RANK[b.status] - STATUS_RANK[a.status] || b.counts.veryLate - a.counts.veryLate || b.counts.late - a.counts.late);
 }

@@ -86,3 +86,12 @@ test('debrief: delegated to whom, wait, queued, utilization per group', async ()
   const grp = r.groups.find((x) => x.groupId === g);
   assert.ok(grp.percent > 0 && grp.helpers === 3);
 });
+
+test('Command center: staffing per group (busy / total, on break, waiting)', async () => {
+  const { staffing } = await import('../js/engine/command-center.js');
+  const { s: s0, tick, ctx, g } = rig();
+  let s = del(s0, ctx, RM, 'vs-full', 10); s = del(s, ctx, LG, 'vs-full', 10); s = del(s, ctx, MW, 'ambulate', 11, { queue: true });
+  const st = staffing(s, g, { simMin: 11, catalogs });
+  assert.deepEqual(st.roles, [{ role: 'CNA', total: 2, busy: 2, onBreak: 0 }, { role: 'LPN', total: 1, busy: 0, onBreak: 0 }]);
+  assert.deepEqual([st.queued, st.allBusy], [1, ['CNA']]);
+});

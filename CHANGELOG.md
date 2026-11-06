@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Command center: staffing per group
+- Each group card shows its delegation helpers: "Staff: CNAs 2/2 busy · LPNs 0/1 busy · 1 waiting for a helper". It's highlighted when every helper of a role is busy or on break, or a task is waiting. From `staffing()` in `engine/command-center.js`, built on `staffView`.
+- Tests: 203 passing.
+
 ## Task timers default to manikin mode
 - `taskTimerMode` now defaults to **manikin** (scenario-defaults and the starter scenario): a short lockout (¼ of the task time, at least 5 s), since the task really happens on the manikin. Screen only (full time) and off are still in Sim setup, which lists manikin first. Demo guide updated.
 

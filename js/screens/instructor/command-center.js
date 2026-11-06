@@ -44,6 +44,10 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
           ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`,
             st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null))
           : h('span', { class: 'muted' }, 'Nobody joined yet')),
+        g.staffing?.roles.length ? h('div', { class: `cc-staff${g.staffing.allBusy.length || g.staffing.queued ? ' cc-staff-full' : ''}`, title: 'Delegation helpers in this group' },
+          h('span', { class: 'muted small' }, 'Staff: '),
+          g.staffing.roles.map((r, i) => [i ? ' · ' : '', `${r.role}s ${r.busy}/${r.total} busy${r.onBreak ? `, ${r.onBreak} on break` : ''}`]),
+          g.staffing.queued ? h('strong', {}, ` · ${g.staffing.queued} waiting for a helper`) : null) : null,
         h('div', { class: 'cc-counts' },
           count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'), count(c.assessmentsOverdue, 'reassessments overdue', 'yellow'),
           count(c.callLights, c.callLights ? `call lights (longest ${Math.round(c.longestCallLightMin)} min)` : 'call lights', c.longestCallLightMin > (cfg.callLights?.lateMin ?? 5) ? 'red' : 'yellow'),

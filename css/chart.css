@@ -300,3 +300,5 @@ body.standalone-monitor { background: #000; }
 .busy-banner progress { width: 10em; }
 .busy-left { font-variant-numeric: tabular-nums; font-weight: 600; }
 .cc-busy { color: var(--review-text); font-weight: 600; }
+.cc-staff { font-size: 0.85rem; }
+.cc-staff-full { color: var(--review-text); background: var(--review-bg); border-radius: 6px; padding: 2px 6px; }
