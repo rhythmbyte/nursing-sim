@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Memoize timeliness and flags per state; coalesce heavy re-renders
+- **Decision:** session states are immutable, so `timelinessItems` and `evaluateRules` cache their result per (state object, sim minute) in a WeakMap. The Command center and Live control re-render through `coalesce` (at most every 250 ms).
+- **Why (soak test, 4-hour sim, 3 groups):** before, one Command center render took 51 ms and every action re-rendered it; it called timeliness about six times per render. After: 7 ms, with renders capped. Memory stayed flat (heap 2.2 → 4.3 MB over 811 log entries). The remaining ~30 ms per action is the synchronous clone and save of the 286 KB session, which "save everything instantly" requires.
+- **Full build:** the server owns the log; screens get incremental updates instead of re-deriving everything from the whole log (SPEC §13).
+
+---
+
 ## 2026-11-07: Paused tasks are set aside, not frozen in place
 - **Decision:** `pauseTask` moves the current task to `students[uid].pausedTask` with its time left and frees the student; `resumeTask` makes it current again. A task keeps `activeMin` and `runFrom`, so finished minutes and the debrief count active time only.
 - **Why:** Pausing exists so the student can deal with something else. Freezing the busy lock would defeat that. One paused task at a time keeps it simple to follow (and to grade).

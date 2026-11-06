@@ -2,6 +2,7 @@
 // activity, students (join code), flags, patients (adjust vitals, push order, call light, code), labs, events.
 
 import { patientLabel } from '../shared/labels.js';
+import { coalesce } from '../shared/coalesce.js';
 import { openModal } from '../shared/modal.js';
 import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
@@ -158,7 +159,8 @@ export function mountLiveControl(root, ctx) {
   renderFilter();
   render();
 
-  const offSet = store.subscribe(render);
+  const later = coalesce(render, 250); // bursts of updates → one render
+  const offSet = store.subscribe(later.run);
   // Call-light "lit for" times change every sim minute; refresh just that panel on ticks.
   let lastMin = -1;
   const offTick = store.on('tick', (simMin) => {
@@ -171,5 +173,5 @@ export function mountLiveControl(root, ctx) {
     }
   });
   const offKeys = installShortcuts(runner, instructorUser);
-  return () => { offKeys(); clock.destroy(); offSet(); offTick(); };
+  return () => { offKeys(); clock.destroy(); offSet(); offTick(); later.cancel(); };
 }

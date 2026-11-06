@@ -23,7 +23,17 @@ import { withoutStruck } from '../struck.js';
   .forEach(registerRule);
 
 /** All flags for the session at ctx.simMin, sorted by time. ctx: { templatesById, catalogs, simMin, studentIdsForGroup } */
+// Memo per (immutable session state, minute): Live control, the command center and the debrief ask several times per render.
+const memo = new WeakMap();
 export function evaluateRules(fullState, ctx) {
+  const hit = memo.get(fullState);
+  if (hit && hit.simMin === ctx.simMin && hit.templates === ctx.templatesById && hit.roster === fullState.roster) return hit.flags;
+  const flags = computeFlags(fullState, ctx);
+  memo.set(fullState, { simMin: ctx.simMin, templates: ctx.templatesById, roster: fullState.roster, flags });
+  return flags;
+}
+
+function computeFlags(fullState, ctx) {
   const state = withoutStruck(fullState); // entries marked "entered in error" don't count
   const flags = [];
   for (const rule of allRules()) {

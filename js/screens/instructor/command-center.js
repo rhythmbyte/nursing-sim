@@ -3,6 +3,7 @@
 // Click a group → Live control filtered to it; click a patient → Live control filtered to that patient.
 
 import { h, clear } from '../shared/dom.js';
+import { coalesce } from '../shared/coalesce.js';
 import { simClock } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { toneChip } from '../shared/tone-chip.js';
@@ -77,8 +78,9 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
     grid,
   );
   render();
-  const off = store.subscribe(render);
+  const later = coalesce(render, 250); // at most ~4 renders a second however busy the sim is
+  const off = store.subscribe(later.run);
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
-  return () => { off(); offTick(); clock.destroy(); clearTimeout(flashTimer); };
+  return () => { off(); offTick(); later.cancel(); clock.destroy(); clearTimeout(flashTimer); };
 }

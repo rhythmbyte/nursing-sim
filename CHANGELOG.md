@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Soak test: a 4-hour sim (Part B)
+- Ran a full 07:00–11:00 sim in headless Chromium: 3 groups (one with an admission), 3 students charting every few minutes, assessments, notes, CNA delegation with queuing, call lights, every reactive script, recovery penalties, task timers (manikin) and the staff pool. Results at the end: **811 log entries, 286 KB saved session, JS heap 2.2 → 4.3 MB** (no leak; it grows with the log only).
+- **Fixed:** the Command center and Live control recomputed timeliness and every flag rule several times per render, and re-rendered on every update. Now `timelinessItems` and `evaluateRules` are memoized per (immutable state, minute), and both screens coalesce bursts of updates into at most ~4 renders a second. Command center render at 4 h: **51 → 7 ms**; tick at 4 h 51 → 34 ms average; debrief render 85 ms; CSV export 44 ms.
+- Automated checks can open the app with `?debug=1`, which exposes the runner to the page (never linked from the app).
+- Tests: 207 passing.
+
 ## Long sims: Wake Lock and breaks (Part B)
 - **Screen Wake Lock** while the sim is running: student tabs (home, chart, monitor) and the standalone bedside monitor page keep the screen on, release it when the sim is paused, on a break or ended, and take it back when the tab returns. Unsupported browsers carry on without it.
 - **Break** (Live control): pick a length and the sim pauses; every screen, including the bedside monitor, shows "☕ Break — back at 10:45 (12 min)". Resume (or End) ends it; both are logged.

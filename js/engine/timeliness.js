@@ -173,7 +173,18 @@ function alarmItems(state, ctx, cfg) {
 }
 
 /** All timeliness items for the session at ctx.simMin. ctx: { templatesById, catalogs, simMin }. */
+// Memo: the session state is immutable (every change makes a new object), so items for (state, minute) never change.
+// One render calls this many times (several rules, the command center, the debrief); the soak test showed it adds up.
+const memo = new WeakMap();
 export function timelinessItems(fullState, ctx) {
+  const hit = memo.get(fullState);
+  if (hit && hit.simMin === ctx.simMin && hit.templates === ctx.templatesById && hit.catalogs === ctx.catalogs) return hit.items;
+  const items = computeItems(fullState, ctx);
+  memo.set(fullState, { simMin: ctx.simMin, templates: ctx.templatesById, catalogs: ctx.catalogs, items });
+  return items;
+}
+
+function computeItems(fullState, ctx) {
   const state = withoutStruck(fullState); // "entered in error" work doesn't count as done
   const cfg = timelinessConfig(state, ctx.catalogs);
   return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...assessmentItems(state, ctx, cfg), ...queueItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
