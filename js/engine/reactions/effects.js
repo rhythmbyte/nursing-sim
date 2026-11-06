@@ -42,6 +42,7 @@ export function enterState(draft, pid, stateId, fx, { force = false } = {}) {
   sc.state = stateId;
   sc.enteredAt = fx.t;
   append(draft, { simMin: fx.t, wallTime: fx.now, ...fx.user, patientId: pid, action: 'script-state', details: { from, to: stateId, label: def.label, cause: fx.cause } });
+  addAlert(draft, { simMin: fx.t, patientId: pid, kind: 'script', message: `Script: ${def.label}${fx.cause.kind === 'timeout' ? ' (nothing done in time)' : fx.cause.kind === 'instructor' ? ' (forced)' : ''}`, audience: ['instructor'] });
   const values = { ...(def.vitals?.values || {}), ...(def.rhythm ? { rhythm: def.rhythm } : {}) };
   if (Object.keys(values).length) scriptedVitals(draft, pid, { values, overMin: def.vitals?.overMin || 0 }, fx, { force });
   queueFindings(draft, pid, def.findings);

@@ -55,7 +55,7 @@ export function conditionText(c, n) {
 const vitalsText = (v) => Object.entries(v.values || {}).map(([k, x]) => `${k} ${x}`).join(', ') + (v.overMin ? ` over ${v.overMin} min` : '');
 
 export function effectText(e, n) {
-  if (e.type === 'state') return `→ "${n.state(e.to)}"`;
+  if (e.type === 'state') return `go to "${n.state(e.to)}"`;
   if (e.type === 'vitals') return `vitals ${vitalsText(e)}`;
   if (e.type === 'findings') return `new findings (${e.change})`;
   if (e.type === 'event') return `${e.event?.type}${e.event?.payload?.message ? `: "${e.event.payload.message}"` : e.event?.payload?.orderSet ? ` ${e.event.payload.orderSet}` : ''}`;

@@ -72,7 +72,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/struck.js` | `activeLog` / `withoutStruck` ("entered in error" entries removed for rules and comparisons), `isStruck` | built |
 | `js/engine/timeliness.js` | `timelinessItems` (orders, scheduled meds, call lights, alarms → tags), `timelinessConfig`, `tagFor`, `medDueTimes`, `debriefTimeliness`. Read by the command center, debrief and the tier-timeout / call-light-response / alarm-response rules | built |
 | `js/engine/reactions.js` | Reactive script processor (`reactionsProcessor`), `initScript`, `tryFire` (loop protection, conditions, effects), `armedTimers`, `anchorOf`, `maxFires` | built |
-| `js/engine/reactions/` | `match.js` (field tests, action matchers, thresholds, conditions), `effects.js` (`EFFECTS`, `enterState`), `control.js` (force state, fire now, enable/disable, skip countdown, pause/resume), `describe.js` (When/If/Then text), `integrity.js` (`scriptProblems`), `dry-run.js` ("Test this patient") | built |
+| `js/engine/reactions/` | `match.js` (field tests, action matchers, thresholds, conditions), `effects.js` (`EFFECTS`, `enterState`), `control.js` (force state, fire now, enable/disable, skip countdown, pause/resume), `describe.js` (When/If/Then text), `view.js` (`scriptView` for Live control), `integrity.js` (`scriptProblems`), `dry-run.js` ("Test this patient") | built |
 | `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |
@@ -111,6 +111,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/call-light-sound.js` | `litLights` (pure) + per-tab watcher (beep on new light, gentle repeat, remembered on/off) | built |
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/instructor/live-script.js` | Live control → Patient scripts panel (state, countdowns, listening, overrides); `rebuildKeepingUi` keeps open details and select values across re-renders | built |
 | `js/screens/instructor/command-center.js` | Command center sub-view (default while a sim is in progress); group/patient click → Live control filter | built |
 | `js/screens/shared/tone-chip.js` | Symbol + word + color chips for timeliness tags and group status (data) | built |
 | `js/screens/instructor/shortcuts.js` | `shortcutAction` (pure) + `installShortcuts` (Live control only, cleaned up on leave) | built |

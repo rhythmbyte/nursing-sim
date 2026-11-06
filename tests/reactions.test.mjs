@@ -176,6 +176,20 @@ test('reactions answer charting while the clock is paused', () => {
 test('plain-language text for the builder and Live control', () => {
   const n = names(linda, catalogs);
   const txt = (id) => reactionText(linda.script.reactions.find((r) => r.id === id), n);
-  assert.match(txt('r-p4-no-o2'), /When 5 min in "Desaturating \(SpO₂ falling\)" without Apply \/ titrate oxygen · then → "Hypoxic/);
+  assert.match(txt('r-p4-no-o2'), /When 5 min in "Desaturating \(SpO₂ falling\)" without Apply \/ titrate oxygen · then go to "Hypoxic/);
   assert.match(txt('r-p4-o2-high'), /lpm ≥ 10 or device contains NRB or non-rebreather/);
+});
+
+test('Live control view: state, armed countdowns with their "without", what it listens for', async () => {
+  const { scriptView } = await import('../js/engine/reactions/view.js');
+  const L = live();
+  let s = L.tick(L.s, 61);
+  const v = scriptView(s, LG, linda, catalogs);
+  assert.equal(v.stateLabel, 'Desaturating (SpO₂ falling)');
+  assert.deepEqual(v.timers.map((x) => [x.id, x.deadline, x.without, x.then]), [['r-p4-no-o2', 65, ['Apply / titrate oxygen'], 'go to "Hypoxic (SpO₂ 82%, RR 32)"']]);
+  assert.deepEqual(v.listening.map((x) => x.id), ['r-p4-o2-low', 'r-p4-o2-target', 'r-p4-o2-high', 'r-p4-spo2-82', 'r-p4-crash-light']);
+  s = setScriptPaused(s, LG, true, L.ctx(62));
+  const p = scriptView(s, LG, linda, catalogs);
+  assert.deepEqual([p.paused, p.timers.length, p.listening.length], [true, 0, 0]);
+  assert.equal(scriptView(s, 'p1-robert-miller', templatesById['p1-robert-miller'], catalogs), null, 'no script, no panel');
 });

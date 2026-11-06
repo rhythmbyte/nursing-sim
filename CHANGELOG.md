@@ -2,6 +2,13 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Reactive scripting: Live control overrides (stage 2)
+- **Live control → Patient scripts** (`screens/instructor/live-script.js`, data from `engine/reactions/view.js`): each scripted patient's current state and since when; running countdowns ("⏱ 4 min 12 s left · If no Apply / titrate oxygen by 08:05 → go to Hypoxic") with **Skip**; what the patient is listening for; **Force state**, **Fire now**, **Disable / Enable** per reaction (with fires used / allowed), **Pause / Resume scripting**. It follows the Command center's group or patient filter.
+- State changes also show in Recent activity (instructor only, "(nothing done in time)" or "(forced)" when that's the cause). Every override is logged and shows in the debrief timeline.
+- Live control keeps open "details" sections and select choices when it re-renders.
+- Manual vitals keep working; `scriptedVitalsAfterInstructor` decides whether the script takes back over.
+- Tests: 153 passing.
+
 ## Reactive patient scripting: engine (stage 1)
 - **Patient states and reactions** (`engine/reactions.js` + `engine/reactions/`): a patient file can carry a `script` of states (target vitals now or as a trend, rhythm, findings, label, teaching note) and reactions (*when* trigger, *if* conditions, *then* effects). Triggers: intervention charted with field tests (lpm, device…), order work, med given (by order, name or dose), vitals crossing a threshold (down or up), N min since a state, event or reaction *without* an action, and chains (another reaction or event fired). Effects: change state, vitals (now or trend), findings, any event type inline (call light, staff message, new orders, lab result, code) or fire one of the patient's event groups.
 - Runs as a session processor in time order with events, trends and the monitor (processors can now ask the session to stop at an earlier moment: `nextAt`). Reactions also answer charting while the clock is paused.

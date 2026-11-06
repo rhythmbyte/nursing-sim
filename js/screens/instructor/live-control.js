@@ -12,6 +12,7 @@ import { labsPanel } from './live-labs.js';
 import { flagsPanel } from './live-flags.js';
 import { rosterPanel } from './live-roster.js';
 import { patientsPanel } from './live-patients.js';
+import { scriptPanel, updateCountdowns, rebuildKeepingUi } from './live-script.js';
 import { installShortcuts } from './shortcuts.js';
 import { load, save } from '../../storage.js';
 
@@ -109,6 +110,7 @@ export function mountLiveControl(root, ctx) {
   const flags = h('div', {});
   const roster = h('div', {});
   const patients = h('div', {});
+  const scripts = h('div', {});
   const unitList = h('div', { class: 'unit-strip' });
 
   function render() {
@@ -121,6 +123,7 @@ export function mountLiveControl(root, ctx) {
     clear(flags).append(flagsPanel(runner, templatesById, instructorUser));
     clear(roster).append(rosterPanel(runner, templatesById, scenario));
     clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser, filter));
+    rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter));
   }
 
 
@@ -138,6 +141,7 @@ export function mountLiveControl(root, ctx) {
       h('section', { class: 'panel' }, h('h3', {}, 'Flags (live)'), flags),
     ),
     h('section', { class: 'panel' }, h('h3', {}, 'Patients'), patients),
+    scripts,
     h('section', { class: 'panel' }, h('h3', {}, 'Pending labs'), labs),
     h('section', { class: 'panel' }, h('h3', {}, 'Event timeline'), events),
   );
@@ -148,10 +152,12 @@ export function mountLiveControl(root, ctx) {
   // Call-light "lit for" times change every sim minute; refresh just that panel on ticks.
   let lastMin = -1;
   const offTick = store.on('tick', (simMin) => {
+    updateCountdowns(scripts, simMin);
     if (Math.floor(simMin) !== lastMin) {
       lastMin = Math.floor(simMin);
       clear(lights).append(callLights(runner, templatesById));
       clear(flags).append(flagsPanel(runner, templatesById, instructorUser)); // time-based flags change with the clock
+      rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter)); // countdowns can start or end
     }
   });
   const offKeys = installShortcuts(runner, instructorUser);

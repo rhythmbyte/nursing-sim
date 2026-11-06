@@ -17,6 +17,8 @@ import { evaluateRules } from './rules/index.js';
 import { buildDebrief } from './debrief.js';
 import { studentIdsForGroup, groupOfStudent, generateJoinCode } from './assignment.js';
 import { collectEvents, groupMembers } from './scheduler.js';
+import * as script from './reactions/control.js';
+import { scriptView } from './reactions/view.js';
 
 // `scenario` must have merged settings (engine/settings.js withDefaults).
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null, rng = Math.random }) {
@@ -130,6 +132,18 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     startCode(patientId, args, user) { commit(startCode(state, patientId, args || {}, { now: now(), user })); },
     setCodeOutcome(patientId, outcome, user) { commit(setCodeOutcome(state, patientId, outcome, { now: now(), user })); },
     setCallLight(patientId, on, message, user) { commit(setCallLight(state, patientId, { on, message }, { now: now(), user })); },
+
+    /**
+     * Instructor overrides for a patient's reaction script (engine/reactions/control.js), then a tick so
+     * any chained reactions run straight away. name ∈ forceState(stateId), fireReactionNow(reactionId),
+     * setReactionEnabled(reactionId, enabled), skipArmed(reactionId), setScriptPaused(paused).
+     */
+    script(name, patientId, args, user) {
+      if (typeof script[name] !== 'function') throw new Error(`Unknown script action ${name}`);
+      commit(script[name](state, patientId, ...args, { ...ctx(), user, refs }));
+      runner.tick();
+    },
+    scriptView: (patientId) => scriptView(state, patientId, eff()[patientId], catalogs),
 
     /** Context the rules and the debrief need (responsibility comes from the joined roster). */
     rulesCtx: () => ({

@@ -241,3 +241,12 @@ body.standalone-monitor { background: #000; }
 @keyframes cc-flash { 50% { box-shadow: 0 0 0 4px var(--triage-red); background: var(--surface-2); } }
 @media (prefers-reduced-motion: reduce) { .cc-flash { animation: none; box-shadow: 0 0 0 4px var(--triage-red); } }
 @media (min-width: 1800px) { .cc-grid { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); } .cc-card { font-size: 1.15rem; } .cc-count strong { font-size: 2rem; } }
+
+/* Live control → Patient scripts */
+.script-row { border-top: 1px solid var(--border); padding: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.script-row:first-of-type { border-top: 0; }
+.script-row.is-paused { opacity: 0.75; }
+.script-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.script-state { font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); }
+.script-armed { margin: 0; padding-left: 1.2em; }
+.script-countdown { font-variant-numeric: tabular-nums; font-weight: 600; }
