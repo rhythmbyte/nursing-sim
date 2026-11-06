@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Full check after B/C batch
+- Full browser run through every tab: instructor views, two students, a student charge nurse, the monitor (with Full screen), report-sheet print preview, end of shift with reflection, and the debrief.
+- **Fixed:** the Recent row now refreshes after charting. Full screen being refused (e.g. inside a frame) now shows a message instead of an unhandled error.
+- README demo guide covers the new features. Tests: 117 passing.
+
 ## C18. Student reflection after the sim
 - When the sim ends, each student's home shows a short reflection form. The questions are data in `data/catalogs/reflection.json` (proposed). Answers are logged and shown in a **Reflection** section of the debrief. Submitted once; at least one answer is required.
 - Tests: 117 passing.
