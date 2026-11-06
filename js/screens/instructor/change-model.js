@@ -6,7 +6,7 @@
 // manage (admission, code, lab-result) are kept and retimed with the change.
 
 const MANAGED = ['call-light', 'staff-message', 'vitals-change', 'findings-change', 'new-orders'];
-const VITAL_KEYS = ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'];
+const VITAL_KEYS = ['rhythm', 'bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'];
 const NUMERIC = ['hr', 'rr', 'tempF', 'spo2', 'gcs', 'glucose'];
 
 export const clockToMin = (startClock, hhmm) => {

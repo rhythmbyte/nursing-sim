@@ -97,3 +97,17 @@ test('C16: shortcut keys map to actions; ignored while typing, in dialogs, or wi
   assert.equal(shortcutAction({ key: ' ', target: body }, { dialogOpen: true }), null);
   assert.equal(shortcutAction({ key: 'x', target: body }), null);
 });
+
+test('Suggestion 3: a silent rhythm-only change is a monitor-only event', async () => {
+  const { catalogs } = await import('./fixtures.mjs');
+  const { patientReferenceProblems } = await import('../js/engine/integrity.js');
+  const t = templatesById['p2-margaret-wilson'];
+  const blank = changeToForm(t, null, SC);
+  assert.equal(blank.vitals.rhythm, '', 'rhythm field in the builder');
+  const { template, key } = formToChange(t, { ...blank, time: '10:00', start: 'silent', message: '', vitals: { ...blank.vitals, rhythm: 'afib', hr: '128' } }, SC);
+  const evs = template.events.filter((e) => e.group === key);
+  assert.deepEqual(evs.map((e) => e.type), ['vitals-change'], 'no call light or message: monitor only');
+  assert.deepEqual(template.vitals.keyframes.find((k) => k.eventId === key).values, { rhythm: 'afib', hr: 128 });
+  assert.deepEqual(patientReferenceProblems(template, catalogs), []);
+  assert.equal(changeToForm(template, key, SC).vitals.rhythm, 'afib', 'reopens with the rhythm');
+});

@@ -6,7 +6,7 @@ import { h } from '../shared/dom.js';
 import { openModal } from '../shared/modal.js';
 import { changeToForm, formToChange } from './change-model.js';
 
-const VITALS = [['bp', 'BP'], ['hr', 'HR'], ['rr', 'RR'], ['tempF', 'Temp °F'], ['spo2', 'SpO₂ %'], ['o2', 'O₂'], ['pain', 'Pain']];
+const VITALS = [['rhythm', 'Rhythm (monitor)'], ['bp', 'BP'], ['hr', 'HR'], ['rr', 'RR'], ['tempF', 'Temp °F'], ['spo2', 'SpO₂ %'], ['o2', 'O₂'], ['pain', 'Pain']];
 const field = (label, el, hint) => helpField('change', label, el, hint); // help text: data/catalogs/help.json
 
 /** onSave(newTemplate) gets the whole updated template. */
@@ -14,10 +14,13 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
   const f = changeToForm(template, key, startClock);
   const time = h('input', { class: 'input', type: 'time', value: f.time });
   const manual = h('input', { type: 'checkbox', checked: f.manual });
-  const start = h('select', {}, [['call-light', 'Call light'], ['staff-message', 'Staff message (CNA, LPN, family…)'], ['silent', 'Silent (no alert)']].map(([v, l]) => h('option', { value: v, selected: f.start === v }, l)));
+  const start = h('select', {}, [['call-light', 'Call light'], ['staff-message', 'Staff message (CNA, LPN, family…)'], ['silent', 'Silent (no alert; e.g. a monitor-only change)']].map(([v, l]) => h('option', { value: v, selected: f.start === v }, l)));
   const from = h('input', { class: 'input', value: f.from });
   const message = h('textarea', { class: 'input', rows: 2 }, f.message);
   const vitals = Object.fromEntries(Object.keys(f.vitals).map((k) => [k, h('input', { class: 'input', value: f.vitals[k] ?? '' })]));
+  // Rhythm is picked from data/catalogs/rhythms.json (a silent rhythm change = a monitor-only event).
+  vitals.rhythm = h('select', {}, h('option', { value: '' }, '(no change)'),
+    Object.entries(catalogs.rhythms?.rhythms || {}).map(([id, r]) => h('option', { value: id, selected: id === f.vitals.rhythm }, r.label)));
   const findings = h('textarea', { class: 'input', rows: 3 }, f.findings);
   const recognize = h('textarea', { class: 'input', rows: 3 }, f.recognize);
   const orderRows = [];

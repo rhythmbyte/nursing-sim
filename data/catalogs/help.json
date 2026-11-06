@@ -51,5 +51,6 @@
   "setup.reveal-manual-vitals": "On: a Measure button fills in temp, RR and pain. Off: students get them from the manikin or you.",
   "setup.pause-on-close": "Pause the sim automatically if the page is closed or reloaded.",
   "setup.delegated-assessment-reveals": "If on, an assessment delegated to an LPN shows findings when they report back.",
-  "change.manual": "Nothing happens at a set time; you fire it from Live control when the moment comes."
+  "change.manual": "Nothing happens at a set time; you fire it from Live control when the moment comes.",
+  "change.rhythm-monitor": "Changes the rhythm on the bedside monitor at this time. With \"Silent\", nothing else alerts students: a monitor-only event to see who notices."
 }
