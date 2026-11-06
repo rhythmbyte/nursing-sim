@@ -1,12 +1,13 @@
 // "Scenario change" builder: one moment in the case, written the way the instructor writes cases.
 // Saving generates the linked events (shared group) via change-model.js. Reopening edits the same change.
 
+import { helpField, helpTip } from '../shared/help.js';
 import { h } from '../shared/dom.js';
 import { openModal } from '../shared/modal.js';
 import { changeToForm, formToChange } from './change-model.js';
 
 const VITALS = [['bp', 'BP'], ['hr', 'HR'], ['rr', 'RR'], ['tempF', 'Temp °F'], ['spo2', 'SpO₂ %'], ['o2', 'O₂'], ['pain', 'Pain']];
-const field = (label, el, hint) => h('label', { class: 'field' }, h('span', {}, label), el, hint ? h('span', { class: 'muted small' }, hint) : null);
+const field = (label, el, hint) => helpField('change', label, el, hint); // help text: data/catalogs/help.json
 
 /** onSave(newTemplate) gets the whole updated template. */
 export function openChangeBuilder({ template, key, startClock, catalogs, onSave }) {
@@ -44,7 +45,7 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
     body: h('div', { class: 'iv-form' },
       h('div', { class: 'editor-grid' },
         field('Time (shift clock)', time),
-        h('label', { class: 'inline' }, manual, ' Instructor triggers it (Fire now)'),
+        h('label', { class: 'inline' }, manual, ' Instructor triggers it (Fire now) ', helpTip('change.manual')),
         field('How it starts', start), fromWrap),
       field('What the patient says / what is reported', message),
       h('h4', {}, 'New vitals (leave blank to keep)'),

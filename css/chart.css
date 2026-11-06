@@ -197,3 +197,7 @@ details.advanced summary { cursor: pointer; color: var(--muted); }
 .panel { min-width: 0; }
 .data-table { max-width: 100%; }
 .screen-header, .chart-top, .controls { flex-wrap: wrap; }
+.help { display: inline-flex; flex-direction: column; vertical-align: middle; }
+.help-btn { font: inherit; font-size: 0.7rem; font-weight: 700; width: 18px; height: 18px; min-height: 18px; padding: 0; border-radius: 50%; border: 1px solid var(--accent); color: var(--accent); background: var(--surface); cursor: pointer; line-height: 1; }
+.help-pop { display: block; max-width: 320px; margin-top: 4px; padding: 6px 8px; font-size: 0.8rem; font-weight: 400; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; text-transform: none; letter-spacing: 0; }
+@media (pointer: coarse) { .help-btn { width: 28px; height: 28px; min-height: 28px; } }

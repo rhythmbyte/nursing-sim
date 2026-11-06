@@ -2,6 +2,7 @@
 // admissions); manual or random assignment. "Create sim" fills tag counts (randomizer), validates, saves
 // the scenario in this browser, and switches to it (a new join code is generated).
 
+import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -11,7 +12,7 @@ import { SPEEDS } from '../../engine/clock.js';
 import { save } from '../../storage.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
-const field = (label, el, hint) => h('label', { class: 'field' }, h('span', {}, label), el, hint ? h('span', { class: 'muted small' }, hint) : null);
+const field = (label, el, hint) => helpField('setup', label, el, hint); // help text: data/catalogs/help.json
 
 export function mountSimSetup(root, { data, switchScenario }) {
   const defaults = data.catalogs.scenarioDefaults.settings;
@@ -109,10 +110,10 @@ export function mountSimSetup(root, { data, switchScenario }) {
       field('Handoff', set.handoffMode), field('Charge nurse', set.chargeNurse),
       field('PRN pre-check window (min)', set.prnPreCheckWindowMin), field('Delegation delay (min)', set.delegationDelayMin),
       field('Student priority scale', set.priorityScale),
-      h('label', { class: 'inline' }, set.tagsStudent, ' Students see the instructor\'s tags'),
-      h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags'),
-      h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain'),
-      h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes'),
+      h('label', { class: 'inline' }, set.tagsStudent, ' Students see the instructor\'s tags ', helpTip('setup.tags-student')),
+      h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags ', helpTip('setup.tags-charge')),
+      h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain ', helpTip('setup.reveal-manual-vitals')),
+      h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes ', helpTip('setup.pause-on-close')),
       h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings')),
     groupsBox,
     h('div', { class: 'controls' }, h('button', { class: 'btn', onclick: addGroup }, 'Add group'), h('button', { class: 'btn btn-primary', onclick: create }, 'Create sim')),

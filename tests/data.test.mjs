@@ -23,6 +23,7 @@ const schemaFor = {
   ui: load('schemas/ui.schema.json'),
   vitalsPresets: load('schemas/vitals-presets.schema.json'),
   rhythms: load('schemas/rhythms.schema.json'),
+  help: load('schemas/help.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {
@@ -79,4 +80,15 @@ test('broken references are reported clearly', async () => {
 test('C14: the demo scenario named in ui.json exists', () => {
   const ui = load(manifest.catalogs.ui);
   assert.ok(manifest.scenarios.map(load).some((s) => s.id === ui.demo.scenarioId));
+});
+
+test('C15: every literal field label in setup/editor/builder has help text in help.json', async () => {
+  const { helpSlug } = await import('../js/screens/shared/help.js');
+  const help = load(manifest.catalogs.help);
+  const { readFileSync: read } = await import('node:fs');
+  for (const [file, screen] of [['sim-setup', 'setup'], ['patient-editor', 'editor'], ['change-builder', 'change']]) {
+    const src = read(new URL(`../js/screens/instructor/${file}.js`, import.meta.url), 'utf8');
+    for (const [, label] of src.matchAll(/field\('([^']+)'/g)) assert.ok(help[`${screen}.${helpSlug(label)}`], `${screen}: "${label}"`);
+    for (const [, key] of src.matchAll(/helpTip\('([^']+)'\)/g)) assert.ok(help[key], key);
+  }
 });

@@ -101,6 +101,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/call-light-sound.js` | `litLights` (pure) + per-tab watcher (beep on new light, gentle repeat, remembered on/off) | built |
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
 | `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |

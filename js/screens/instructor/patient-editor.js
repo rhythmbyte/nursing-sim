@@ -2,6 +2,7 @@
 // scenario changes (timeline + builder), outcome and code branch. Works on a copy (`work`); Save validates
 // and stores it in this browser. "Advanced: edit JSON" stays available but hidden.
 
+import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
 import { toast } from '../shared/toast.js';
@@ -14,7 +15,7 @@ import { openChangeBuilder } from './change-builder.js';
 import { patientTimeline } from './patient-timeline.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
-const field = (label, el, hint) => h('label', { class: 'field' }, h('span', {}, label), el, hint ? h('span', { class: 'muted small' }, hint) : null);
+const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
 
 export function mountPatientEditor(root, { data, reloadData, editorTarget, scenario, catalogs }) {
   const startClock = scenario.startClock;

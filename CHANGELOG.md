@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## C15. Help text on settings and editor fields
+- A small **?** next to every Sim setup setting, patient editor field and scenario-change field opens a plain-language explanation. All text lives in `data/catalogs/help.json` (keys `<screen>.<label slug>`). A test fails if a field label has no help entry.
+- Tests: 113 passing.
+
 ## C14. Start demo sim
 - **Start demo sim** on Live control: one click switches to the starter scenario, clears the session, joins a test student ("Demo Student" on Student 1) and starts the clock. The scenario and student are data (`ui.json demo`). It asks first if a sim is running.
 - Tests: 111 passing.

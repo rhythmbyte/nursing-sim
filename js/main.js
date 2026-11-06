@@ -5,6 +5,7 @@ import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure } from './storage.js';
 import { openModal } from './screens/shared/modal.js';
+import { setHelp } from './screens/shared/help.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
 import { withDefaults } from './engine/settings.js';
@@ -171,6 +172,7 @@ async function boot() {
   const root = document.getElementById('app');
   try {
     let data = await loadAll();
+    setHelp(data.catalogs.help);
     if (data.problems.length) console.warn('Data validation problems:', data.problems);
     if (!data.scenarios.length) throw new Error('No valid scenarios loaded.');
     let teardown = null;

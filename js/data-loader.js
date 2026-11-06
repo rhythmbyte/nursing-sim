@@ -27,6 +27,7 @@ const SCHEMAS = {
   ui: 'schemas/ui.schema.json',
   vitalsPresets: 'schemas/vitals-presets.schema.json',
   rhythms: 'schemas/rhythms.schema.json',
+  help: 'schemas/help.schema.json',
 };
 
 async function fetchJson(base, rel) {
