@@ -7,7 +7,7 @@ import { addAlert } from './alerts.js';
 import { append } from './log.js';
 import { progressOrder, findOrder } from './orders.js';
 import { drawLabs } from './labs.js';
-import { deviceValues, scriptedSnapshot } from './vitals.js';
+import { deviceValues, scriptedSnapshot, revealsManualVitals, SCRIPTED_MANUAL_KEYS } from './vitals.js';
 
 export const DEFAULT_DELEGATION_DELAY_MIN = 10;
 
@@ -40,8 +40,10 @@ function complete(draft, patientId, task, ctx) {
   let values = null;
 
   if (iv?.vitalsCapture) {
-    // Staff measure everything the intervention lists (they report temp/RR/pain too).
-    values = { ...deviceValues(ps, iv.chartFields), ...Object.fromEntries(iv.chartFields.filter((k) => ps.vitals[k] != null).map((k) => [k, ps.vitals[k]])) };
+    // Staff report device values; temp/RR/pain only when the scenario reveals manual vitals
+    // (otherwise they come from the manikin/instructor, like the student's own checks).
+    const manual = revealsManualVitals(draft.settings) ? iv.chartFields.filter((k) => SCRIPTED_MANUAL_KEYS.includes(k) && ps.vitals[k] != null) : [];
+    values = { ...deviceValues(ps, iv.chartFields), ...Object.fromEntries(manual.map((k) => [k, ps.vitals[k]])) };
     ps.flowsheet.push({ atMin: at, source: 'delegated', values, by: task.to });
   }
   if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs);

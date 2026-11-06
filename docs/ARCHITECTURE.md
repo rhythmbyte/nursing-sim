@@ -27,6 +27,10 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **The live loop:** `main.js` calls `runner.tick()` every 250 ms. The runner asks `session.tick()` for any events due at the current sim minute. If state changed, it calls `store.set({ session })` and persists the session. It always emits `store.emit('tick', simMin)`. Screens subscribe to `set` to re-render, and they use `tick` for cheap updates such as the clock and elapsed times. User actions (Start, Fire now, Answer) call runner methods, which follow the same path.
 
+**Processors (timed work besides events):** `session.advance()` runs the monitor cycle, lab results and delegated tasks as processors (`{ due(state, upto), apply(draft, upto, ctx) }`, listed in `PROCESSORS` in `session.js`). It interleaves them with events in time order, so a monitor reading at 08:15 sees the vitals change that fires at 08:15, and a skip or catch-up fills in every reading in between. To add timed work, write a processor in its own engine file and add it to `PROCESSORS`.
+
+**Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), or include another check (`includes`, e.g. full vitals include a BP) is set in `data/catalogs/interventions.json`, not in code.
+
 **Event groups:** events that are one moment in the story share a `group` string within one patient, for example Robert's call light, vitals change and new findings at 08:15. "Fire now" on any member fires the whole group, so all of their fired counts move together and the scheduled time can't half-fire the group later. The loader rejects a file whose group members don't share `atMin`, `trigger` and repeat settings.
 
 **Pause on close:** if the scenario's `settings.pauseOnClose` is on (the default), `main.js` pauses a running clock on `pagehide`. It also saves a heartbeat every 5 s, and on boot it pauses a still-running sim as of the last heartbeat. That covers a crash or freeze where `pagehide` never fired.
@@ -63,13 +67,16 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule | planned, phase 5 |
-| `js/engine/vitals.js`, `labs.js` | Monitor cycles, lab delays | planned, phase 4 |
+| `js/engine/vitals.js` | Monitor cycle (processor), device vs manual vitals, `measureManual` (respects `revealManualVitals`), scripted snapshots for the debrief | built |
+| `js/engine/labs.js` | `initLabs`, `drawLabs`, result-delay processor, `releaseLab` (instructor) | built |
+| `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
+| `js/engine/orders.js` | `progressOrder`, `findOrder` (shared by chart actions and delegation) | built |
 | `js/engine/assignment.js` | `studentSlots()`: interim rule where student tab N fills the Nth slot. Randomizer and join codes come in phase 6 | in progress |
 | `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
 | `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `placeholder.js` | built |
-| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
+| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` + `live-labs.js` (pending labs, Release now) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
 | `js/screens/student/` | `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
-| `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `util.js` display helpers | built (flowsheet/labs get more in phase 4) |
+| `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
 | `js/screens/charge/` | Charge nurse screens | planned, phase 7 |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |

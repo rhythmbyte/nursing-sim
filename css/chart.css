@@ -61,3 +61,11 @@
   .chart-grid.two { grid-template-columns: 1fr; }
   .allergy-box { max-width: none; }
 }
+
+/* Phase 4 */
+.banner-other-lights { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); background: var(--pending-bg); color: var(--pending-text); }
+.vitals-inputs { display: flex; flex-direction: column; gap: var(--space-2); }
+.table-wrap { overflow-x: auto; }
+.flowsheet tr.src-monitor td { color: var(--muted); }
+.flowsheet tr.src-delegated td { font-style: italic; }
+tr.needs-attention td { background: var(--review-bg); }

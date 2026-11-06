@@ -135,3 +135,12 @@ test('PRN pre-check: a delegated BP counts only once reported; full vitals inclu
   s = tick(s, 70);
   assert.deepEqual(warn(s, 70), ['requires'], 'monitor readings do not count as the pre-check');
 });
+
+test('delegation with revealManualVitals=false reports device values only', () => {
+  let { s, tick } = started({ revealManualVitals: false });
+  s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', delegatedTo: 'CNA' }, ctx(5));
+  s = tick(s, 16);
+  const row = s.patients[RM].flowsheet.at(-1);
+  assert.deepEqual(Object.keys(row.values).sort(), ['bp', 'hr', 'o2', 'spo2']);
+  assert.doesNotMatch(s.alerts.at(-1).message, /Temp|RR|pain/);
+});

@@ -2,7 +2,7 @@
 // Re-renders only each section's dynamic parts on store changes, so forms keep what the student typed.
 
 import { h, clear } from '../shared/dom.js';
-import { simClock } from '../shared/timer.js';
+import { simClock, elapsed } from '../shared/timer.js';
 import { load, save } from '../../storage.js';
 import { chartSections } from '../chart/index.js';
 
@@ -12,7 +12,7 @@ function allergyText(view) {
 }
 
 export function mountPatientView(root, ctx) {
-  const { store, runner, pid, view, user, scenario, onBack } = ctx;
+  const { store, runner, pid, view, user, scenario, onBack, onOpenPatient, views } = ctx;
   const d = view.demographics;
   const SECTION_KEY = `ui.${user.userId}.section`;
   const sections = chartSections(scenario.settings.handoffMode);
@@ -41,13 +41,28 @@ export function mountPatientView(root, ctx) {
     }, s.label, s.id === 'orders' && newOrders ? h('span', { class: 'tab-count' }, String(newOrders)) : null)));
   }
 
+  // This patient's call light (answer here) + unanswered lights on the student's OTHER patients (go to them).
   function renderLight() {
-    const light = runner.state.patients[pid].callLight;
-    clear(lightBanner).append(light ? h('div', { class: 'banner banner-review call-banner' },
-      h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
-      h('strong', {}, 'Call light on: '), light.message, ' ',
-      h('button', { class: 'btn btn-primary btn-small', onclick: () => runner.answerCallLight(pid, user) }, 'Answer'),
-    ) : '');
+    const state = runner.state;
+    const light = state.patients[pid].callLight;
+    const groupId = state.patients[pid].groupId;
+    const simMin = runner.simMin();
+    const others = Object.entries(state.patients)
+      .filter(([id, ps]) => id !== pid && ps.groupId === groupId && ps.present && ps.callLight)
+      .sort((a, b) => a[1].callLight.since - b[1].callLight.since);
+    clear(lightBanner).append(...[
+      light ? h('div', { class: 'banner banner-review call-banner' },
+        h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
+        h('strong', {}, 'Call light on: '), light.message, ' ',
+        h('button', { class: 'btn btn-primary btn-small', onclick: () => runner.answerCallLight(pid, user) }, 'Answer'),
+      ) : null,
+      others.length ? h('div', { class: 'banner banner-other-lights', role: 'status' },
+        h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
+        h('strong', {}, 'Other call lights: '),
+        others.map(([id, ps]) => h('button', { class: 'btn btn-small', onclick: () => onOpenPatient(id) },
+          `Rm ${views[id].demographics.room} ${views[id].demographics.name} · ${elapsed(simMin, ps.callLight.since)}`)),
+      ) : null,
+    ].filter(Boolean));
   }
 
   function mountSection() {
@@ -82,5 +97,8 @@ export function mountPatientView(root, ctx) {
     renderLight();
     mounted.update(runner.state);
   });
-  return () => { off(); clock.destroy(); if (mounted?.destroy) mounted.destroy(); };
+  // Elapsed times in the call-light banners change every sim minute.
+  let lastMin = -1;
+  const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); renderLight(); } });
+  return () => { off(); offTick(); clock.destroy(); if (mounted?.destroy) mounted.destroy(); };
 }

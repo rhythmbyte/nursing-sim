@@ -1,5 +1,5 @@
 // Labs: resulted values and pending labs. Pending values are never shown.
-// Phase 4 adds ordering from orders and result delays.
+// Draw a lab by charting the lab-draw intervention for its order; results arrive after the lab's delay.
 
 import { h, clear } from '../shared/dom.js';
 import { at } from './util.js';
@@ -25,7 +25,9 @@ export default {
               h('td', {}, l.label || cat.name || l.code),
               h('td', {}, resulted && l.value != null ? `${l.value} ${l.unit || cat.unit || ''}`.trim() : '—'),
               h('td', {}, cat.refRange || ''),
-              h('td', {}, resulted ? (l.resultedAtMin != null ? `Resulted ${at(state, l.resultedAtMin)}` : 'Resulted') : h('span', { class: 'badge badge-pending' }, 'Pending')),
+              h('td', {}, resulted
+                ? (l.resultedAtMin != null ? `Resulted ${at(state, l.resultedAtMin)}` : 'Resulted')
+                : h('span', { class: 'badge badge-pending' }, l.drawnAtMin == null ? 'Not drawn' : `Drawn ${at(state, l.drawnAtMin)} · pending`)),
             );
           })),
         ));

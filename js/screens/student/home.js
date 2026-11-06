@@ -75,7 +75,7 @@ export function mountStudentHome(root, ctx) {
     if (cleanupChild) cleanupChild();
     save(OPEN_KEY, pid);
     runner.chart('openPatient', pid, {}, user);
-    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], onBack: showHome });
+    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, onBack: showHome, onOpenPatient: openPatient });
   }
 
   function mountHome() {

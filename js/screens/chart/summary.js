@@ -27,11 +27,11 @@ export default {
     return {
       update(state) {
         const ps = state.patients[pid];
-        const v = latestVitals(state, pid, view);
+        const v = latestVitals(ps);
         clear(vitals).append(h('dl', { class: 'vitals' },
           ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'].filter((k) => v.values[k] != null)
-            .map((k) => [h('dt', {}, k === 'tempF' ? 'Temp' : k.toUpperCase()), h('dd', {}, String(v.values[k]))])),
-        h('p', { class: 'muted' }, v.label));
+            .map((k) => [h('dt', {}, k === 'tempF' ? 'Temp' : k === 'spo2' ? 'SpO₂' : k.toUpperCase()),
+              h('dd', {}, String(v.values[k]), h('span', { class: 'muted small' }, ` · ${at(state, v.times[k])}`))])));
 
         const items = state.alerts.filter((a) => a.patientId === pid && a.audience.includes('student')).reverse().slice(0, 5);
         clear(alerts).append(items.length

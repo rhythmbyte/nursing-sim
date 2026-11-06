@@ -2,6 +2,22 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Phase 4: vitals, labs, delegation
+- **Monitor cycle** (Off / q5 / q10 / q15) on the Flowsheet: BP, HR, SpO₂ and O₂ fill in automatically from the patient's current vitals.
+- **Charting vitals:** monitor values are read from the device. Temp, RR and pain are typed, with a **Measure** button when `settings.revealManualVitals` is on (new setting, default `true`). Other manual entries: GCS, glucose, I&O, weight, neuro. The debrief gets the scripted values at each charting.
+- **Labs:**
+  - "Draw / send labs" for an order starts the result delay.
+  - Labs show Not drawn → Drawn · pending → Resulted.
+  - Instructor **Pending labs** panel with Release now; labs with no scripted value ask the instructor for one.
+- **Delegation outcomes:** an LPN or CNA reports back after `settings.delegationDelayMin` (new setting, default 10) as a staff message. Vitals land on the flowsheet, labs get drawn and orders move along at that time. Intervention history shows "due ~07:10" or "reported 07:10".
+- **Call-light banner on every chart page:** shows unanswered lights on the student's other patients, with buttons to go to them.
+- PRN pre-check: full vitals count as a BP; a delegated BP counts once reported; monitor readings don't count.
+- SPEC §14: questions for the instructor. The prn-limit rule (phase 5) flags overrides red.
+- **Fixes found in browser testing:**
+  - flowsheet rows were out of time order after a delegated report or Skip;
+  - delegated reports revealed temp/RR/pain when the setting was off.
+- Tests: 48 passing.
+
 ## Phase 3: student chart
 - **Student home:** click a patient to open the chart. Patient rows show new-order and pending-lab badges and "Last seen" times, and call lights can be answered from the home list or the chart.
 - **Handoff popup** (`handoffMode: "once"`): an SBAR report with a notes box. It can't be dismissed with Esc, and once closed it's gone for good while the notes stay on the Summary. Opened and closed times and duration are logged. `"always"` mode gets a Handoff tab instead.

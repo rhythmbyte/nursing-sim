@@ -1,48 +1,95 @@
-// Flowsheet: vitals over time. Phase 3 shows the prior-shift baseline + vitals the student charts
-// (vs-full / vs-bp interventions). Phase 4 adds the monitor cycle and manual entries (GCS, glucose, I&O…).
+// Flowsheet: monitor cycle (BP/HR/SpO₂ auto-populate), charted vitals, manual entries, delegated reports.
+// Rows come from session state (patients[id].flowsheet), built by the engine.
 
 import { h, clear } from '../shared/dom.js';
-import { at, byWhom } from './util.js';
+import { toast } from '../shared/toast.js';
+import { at, fieldLabel } from './util.js';
+import { vitalsInputs } from './vitals-form.js';
 
-const COLS = [['bp', 'BP'], ['hr', 'HR'], ['rr', 'RR'], ['tempF', 'Temp'], ['spo2', 'SpO₂'], ['o2', 'O₂'], ['pain', 'Pain']];
-const VITALS_INTERVENTIONS = new Set(['vs-full', 'vs-bp']);
+const COLS = ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'];
+const SHORT = { tempF: 'Temp', spo2: 'SpO₂', o2: 'O₂', intakeMl: 'In (mL)', outputMl: 'Out (mL)', weightKg: 'Wt (kg)', glucose: 'Gluc' };
+const SOURCE = { prior: 'Prior shift', monitor: 'Monitor', charted: 'Charted', delegated: 'Reported' };
+const who = (by) => by.replace(/^student-(\d+)$/, 'Student $1');
 
-/** Charted vitals rows, oldest first: [{ atMin, values, by, prior }]. */
-export function vitalsRows(state, pid, view) {
-  const rows = [{ atMin: 0, values: view.vitalsBaseline, by: 'Prior shift', prior: true }];
-  for (const l of state.log) {
-    if (l.patientId === pid && l.action === 'intervention' && VITALS_INTERVENTIONS.has(l.details.interventionId)) {
-      const values = Object.fromEntries(Object.entries(l.details.fields || {}).filter(([, v]) => v !== '' && v != null));
-      if (Object.keys(values).length) rows.push({ atMin: l.simMin, values, by: byWhom(l), prior: false });
-    }
-  }
-  return rows;
+/**
+ * Flowsheet rows in time order (oldest first). Rows are stored in the order they were recorded, which
+ * isn't time order: a delegated report or a catch-up after "Skip" can land behind later rows.
+ */
+export function rowsByTime(ps) {
+  return ps.flowsheet.map((r, i) => ({ r, i })).sort((a, b) => a.r.atMin - b.r.atMin || a.i - b.i).map((x) => x.r);
 }
 
-/** Most recent charted vitals for the Summary: { values, label }. */
-export function latestVitals(state, pid, view) {
-  const r = vitalsRows(state, pid, view).at(-1);
-  return { values: r.values, label: r.prior ? `${at(state, 0)} · prior shift` : `Charted ${at(state, r.atMin)} · ${r.by}` };
+/** Latest value of each measure across the flowsheet: { values, times } (for the Summary). */
+export function latestVitals(ps) {
+  const values = {};
+  const times = {};
+  for (const r of rowsByTime(ps)) {
+    for (const [k, v] of Object.entries(r.values)) { values[k] = v; times[k] = r.atMin; }
+  }
+  return { values, times };
 }
 
 export default {
   id: 'flowsheet',
   label: 'Flowsheet',
-  mount(root, { pid, view }) {
-    const body = h('div', {});
-    root.append(h('section', { class: 'panel' },
-      h('h3', {}, 'Vital signs'),
-      body,
-      h('p', { class: 'muted' }, 'To add vitals, chart "Vital signs" or "Blood pressure" under Interventions. Monitor cycles arrive in phase 4.'),
+  mount(root, { pid, act, runner, scenario, catalogs }) {
+    // The catalog's full vital-signs intervention (vitalsCapture + temp): counts for VS orders and PRN pre-checks.
+    const fullVitals = catalogs.interventions.interventions.find((i) => i.vitalsCapture && i.chartFields.includes('tempF'));
+    const reveal = scenario.settings.revealManualVitals !== false;
+    const cycle = h('select', {
+      'aria-label': 'Monitor cycle',
+      onchange: (e) => { act('setMonitor', { intervalMin: Number(e.target.value) }); toast(Number(e.target.value) ? `Monitor cycling q${e.target.value} min` : 'Monitor cycle off'); },
+    }, [0, 5, 10, 15].map((m) => h('option', { value: m }, m ? `q${m} min` : 'Off')));
+    const defaultCycle = scenario.settings.vitalsCycleDefaultMin;
+    const monitorNote = h('span', { class: 'muted small' });
+
+    const form = vitalsInputs(['tempF', 'rr', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'], { reveal, measure: () => runner.measure(pid) });
+    const withDevice = h('input', { type: 'checkbox', checked: true });
+    const table = h('div', { class: 'table-wrap' });
+
+    root.append(h('div', { class: 'chart-grid two' },
+      h('section', { class: 'panel' },
+        h('h3', {}, 'Monitor'),
+        h('div', { class: 'controls' }, h('label', { class: 'inline' }, 'NIBP cycle ', cycle), monitorNote),
+        h('h3', {}, 'Chart vitals & measurements'),
+        h('form', {
+          class: 'iv-form',
+          onsubmit: (e) => {
+            e.preventDefault();
+            const v = form.values();
+            const vitals = Object.fromEntries(Object.entries(v).filter(([k]) => ['tempF', 'rr', 'pain'].includes(k)));
+            const other = Object.fromEntries(Object.entries(v).filter(([k]) => !['tempF', 'rr', 'pain'].includes(k)));
+            if (withDevice.checked) {
+              act('chartIntervention', { interventionId: fullVitals.id, fields: vitals });
+              if (Object.keys(other).length) act('flowsheetEntry', { values: other });
+            } else if (Object.keys(v).length) {
+              act('flowsheetEntry', { values: v });
+            } else { toast('Nothing to save'); return; }
+            form.reset();
+            toast('Charted');
+          },
+        },
+          h('label', { class: 'inline' }, withDevice, ' Include BP / HR / SpO₂ from the monitor (full vital signs)'),
+          form.el,
+          h('button', { class: 'btn btn-primary', type: 'submit' }, 'Save'),
+        ),
+      ),
+      h('section', { class: 'panel' }, h('h3', {}, 'Flowsheet'), table),
     ));
+
     return {
       update(state) {
-        clear(body).append(h('table', { class: 'data-table flowsheet' },
-          h('thead', {}, h('tr', {}, h('th', {}, 'Time'), COLS.map(([, l]) => h('th', {}, l)), h('th', {}, 'By'))),
-          h('tbody', {}, vitalsRows(state, pid, view).map((r) => h('tr', { class: r.prior ? 'is-prior' : '' },
+        const ps = state.patients[pid];
+        cycle.value = String(ps.monitor?.intervalMin ?? 0);
+        monitorNote.textContent = ps.monitor ? `Started ${at(state, ps.monitor.fromMin)}` : (defaultCycle ? `Unit default q${defaultCycle} min` : '');
+        const rows = rowsByTime(ps).reverse();
+        const used = COLS.filter((c) => rows.some((r) => r.values[c] != null));
+        clear(table).append(h('table', { class: 'data-table flowsheet' },
+          h('thead', {}, h('tr', {}, h('th', {}, 'Time'), used.map((c) => h('th', {}, SHORT[c] || fieldLabel(c))), h('th', {}, 'Source'))),
+          h('tbody', {}, rows.map((r) => h('tr', { class: `src-${r.source}` },
             h('td', {}, at(state, r.atMin)),
-            COLS.map(([k]) => h('td', {}, r.values[k] != null ? String(r.values[k]) : '')),
-            h('td', {}, r.by),
+            used.map((c) => h('td', {}, r.values[c] != null ? String(r.values[c]) : '')),
+            h('td', {}, r.source === 'charted' ? who(r.by) : r.source === 'delegated' ? `${r.by} report` : SOURCE[r.source]),
           ))),
         ));
       },

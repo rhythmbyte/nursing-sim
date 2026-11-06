@@ -147,7 +147,9 @@ data/
     "chargeNurse": "student" | "instructor" | "off",
     "showTagsToStudents": false,
     "vitalsCycleDefaultMin": 5,
-    "pauseOnClose": true                  // pause a running sim when the page closes/reloads (default true)
+    "pauseOnClose": true,                 // pause a running sim when the page closes/reloads (default true)
+    "revealManualVitals": true,           // "Measure" reveals scripted temp/RR/pain (default true). false = from manikin/instructor
+    "delegationDelayMin": { "LPN": 10, "CNA": 10 }  // or one number; when delegated staff report back (default 10)
   },
   "groups": [
     {
@@ -205,11 +207,14 @@ Tabs, left to right:
 1. **Summary** — banner (name, age, room, allergies, code status), active problems, latest vitals, alerts.
 2. **Orders** — active orders, with a status per order (new / acknowledged / done). New orders highlight until acknowledged.
 3. **Flowsheet** — vitals table over time.
-   - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min). BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle.
+   - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min). BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle. Monitor values (BP, HR, SpO2) **always** come from the device, whether by cycle or a charted vital-signs check; the student never types them.
    - **Manual entries:** anything a monitor doesn't give (temp, RR, pain, GCS, glucose, I&O, weight, neuro checks) is typed in by the student, and their value is compared with the scripted value in the debrief.
+     - `settings.revealManualVitals: true` (default, for demos): a **Measure** button fills temp/RR/pain with the current scripted values.
+     - `false`: nothing is revealed; the student gets temp/RR/pain from the manikin or instructor. Delegated staff also report only monitor values.
+     - Either way the log stores the scripted values at that moment for the debrief comparison (never shown to students).
 4. **MAR** — scheduled/PRN meds. Give, hold (with reason), or not given. PRN limits (e.g. nitro max 3, interval, required BP check first) **warn** before giving; the student can proceed and the dose is logged with the warning for the debrief (see DECISIONS.md, pending instructor confirmation).
-5. **Labs** — student orders labs from orders; they show "Pending" until `resultDelayMin` passes (instructor can override or release early).
-6. **Interventions** — category buttons → intervention buttons → small form (chartFields) → Save. Each save is time-stamped. "Delegate to LPN / CNA" is an option on every intervention.
+5. **Labs** — student draws labs by charting "Draw / send labs" for an order with `labCodes`; they show "Pending" until `resultDelayMin` (or the catalog default) passes after the draw. Pending labs no order can draw count as drawn at sim start. A lab with no scripted value (e.g. Robert's repeat troponin) waits for the instructor to enter one; the instructor can also release any lab early.
+6. **Interventions** — category buttons → intervention buttons → small form (chartFields) → Save. Each save is time-stamped. "Delegate to LPN / CNA" is an option on every intervention. A delegated task is done after `settings.delegationDelayMin`; the staff member then reports back as a staff message (vitals land on the flowsheet, labs get drawn, the order moves along). Effects happen at report time, not at delegation.
 7. **Notes** — free-text nursing notes, time-stamped. Plus quick actions: "Notified provider", "Called rapid response", "Notified charge nurse", "Escalated".
 
 Every action → `log.append({ simMin, wallTime, userId, role, patientId, action, details })`.
@@ -228,7 +233,7 @@ Rules run on every log append and on clock ticks. Each returns flags: `{ severit
 | `parameter-breach` | A parameter order's condition is met and the required action wasn't charted in time |
 | `inappropriate-delegation` | A non-delegable intervention was delegated (e.g. assessment of chest pain to CNA) |
 | `allergy-conflict` | A med given that matches a patient allergy |
-| `prn-limit` | PRN given beyond max or before interval / without its required pre-check |
+| `prn-limit` | PRN given beyond max or before interval / without its required pre-check. **Red.** The MAR warns and lets the student "Give anyway"; every override is logged with its warning codes and shows as a red flag in the debrief (pending instructor confirmation, §14) |
 | `left-unattended` | (instructor-marked) student left an unstable patient — instructor toggles |
 
 Rule file shape: `{ id, label, evaluate(state, logEntry?) → flags[] }`.
@@ -313,3 +318,15 @@ Things in the prototype that will need to change for the real website (logins, b
 | The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
 | One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
 | Student tab N gets the Nth group slot | Students join with a code; placement is manual or random (SPEC §10) | `js/engine/assignment.js` |
+
+---
+
+## 14. Questions for the instructor
+
+Open questions to confirm with the instructor. Answers update the relevant section and DECISIONS.md.
+
+1. **PRN limits: warn or block?** The prototype warns and lets the student "Give anyway" (e.g. a 4th nitro, or nitro without a BP first), logs the override, and flags it red in the debrief. Should the MAR hard-block instead?
+2. **Manual vitals in class:** for live sessions, should `revealManualVitals` be off (temp/RR/pain from the manikin or instructor), with the debrief comparing charted vs scripted values?
+3. **Delegation timing:** is 10 sim-minutes a sensible default for LPN/CNA tasks, and should it differ by task (vitals vs. lab draw)?
+4. **Robert's repeat troponin** has no scripted value. Rising or flat? (The instructor currently enters it live when it comes due.)
+5. **PRN pre-check window:** a BP must be charted within 15 sim-minutes before nitro (`prn.requiresWithinMin`, default 15). Is that right? Monitor-cycle readings do not count as the check.

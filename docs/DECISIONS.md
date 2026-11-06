@@ -4,10 +4,42 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Monitor values always come from the device; manual vitals reveal is a setting
+- **Decision:** BP/HR/SpO₂/O₂ are never typed. They come from the patient's current vitals via the monitor cycle or a charted vital-signs check. Temp/RR/pain are typed. With `settings.revealManualVitals` on (the default), a Measure button fills them with the scripted values. With it off, nothing is revealed (delegated staff report only monitor values too), and the student gets them from the manikin or instructor. The log keeps a scripted snapshot so the debrief can compare charted vs scripted values.
+- **Why:** On-screen demos need values to come from somewhere, while live classes with a manikin need the student to measure.
+- **Alternatives:** Always typed (unusable without a manikin); always revealed (no measurement skill in class).
+
+## 2026-11-05: Monitor-cycle readings don't satisfy PRN pre-checks
+- **Decision:** A required check like "BP before nitro" is met only by the student charting it (a BP, or full vitals, which `include` a BP) or a completed delegated check, within `requiresWithinMin` (default 15). A q15 cycle reading from 14 minutes ago doesn't count.
+- **Why:** The teaching point is checking BP right before giving nitro. **Open question for the instructor** (SPEC §14).
+- **Alternatives:** Count any BP in the window, including monitor readings.
+
+## 2026-11-05: Delegation effects happen when staff report back
+- **Decision:** Delegating queues a task due after `settings.delegationDelayMin` (number or `{ LPN, CNA }`, default 10). At completion the staff member posts a staff message, and vitals/labs/order effects apply at that time. A request alone doesn't count for PRN pre-checks. The request is logged as `intervention` with `delegatedTo`, and completion as `delegation-completed` (role `staff`).
+- **Why:** Delegation has a real cost (time) and visible results, and the debrief sees both when it was delegated and when it got done.
+- **Alternatives:** Instant completion (delegation would be free); the instructor completing tasks by hand (too much work live).
+
+## 2026-11-05: Labs start their delay when drawn; null results wait for the instructor
+- **Decision:** Pending labs that an order can draw start undrawn, and the delay runs from the draw. A second draw of a code with no scripted result creates an "unscripted" lab. Labs with no value raise an instructor-only alert when due and are released from Live control with a value.
+- **Why:** Matches SPEC ("pending until resultDelayMin passes") and the data (Robert's repeat troponin has no scripted value).
+- **Alternatives:** Delay counted from sim start (labs would result before they were drawn); inventing a value (clinical content, not ours to choose).
+
+## 2026-11-05: Timed work runs as processors interleaved with events
+- **Decision:** Monitor cycle, lab results and delegated tasks are processors in `session.advance()`, run up to each event's instant before that event fires.
+- **Why:** Correct values at shared instants (e.g. a reading at 08:15 after the 08:15 vitals change) and correct catch-up after Skip.
+- **Alternatives:** Running processors after all events (catch-up readings would all show the newest vitals).
+
+## 2026-11-05: Session shape v3
+- **Decision:** Added `settings`, and per patient `flowsheet`, `monitor`, `delegations` and lab draw fields, so `SESSION_VERSION` is 3 and older saves are discarded.
+- **Why / alternatives:** Same as v2.
+
+---
+
 ## 2026-11-05: PRN limits warn and log instead of blocking
 - **Decision:** Giving a PRN beyond its max, before its interval, or without its required pre-check (e.g. a BP within 15 min before nitro) opens a warning. The student can cancel or "Give anyway". The dose is logged with the warning codes.
 - **Why:** A sim should let students make the mistake so the debrief can catch it. A hard block hides the decision. The `prn-limit` rule (phase 5) flags these doses using the same `engine/prn.js` helper.
-- **Alternatives:** Hard block (SPEC §6 says "enforced"; this is the softer reading. **Confirm with the instructor**); no warning at all (too easy to miss in a demo).
+- **Alternatives:** Hard block (SPEC §6 says "enforced"; this is the softer reading. **Confirm with the instructor**, SPEC §14); no warning at all (too easy to miss in a demo).
+- **Update:** Confirmed by the project owner: keep warn-and-override, log it, and make every override a **red** flag in the debrief (prn-limit rule, phase 5).
 
 ## 2026-11-05: Findings are revealed by assessing, and copied into session state
 - **Decision:** Catalog interventions with `revealsFindings: true` (focused and head-to-toe assessment) copy the baseline findings, plus any finding changes that have fired, into `patients[id].revealed` with a time. A delegated assessment reveals nothing. The Summary never hints that unrevealed changes exist.
