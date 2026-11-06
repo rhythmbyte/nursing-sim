@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Full check after suggestions 3, 2, 1, 6, 4
+- Full browser run through every tab: two students, a student charge nurse, instructor views, the monitor with **Silence alarm**, the standalone monitor page in a second tab, print all report sheets, debrief **Print summary**, reflection vs. should recognize, and the builder's rhythm picker. No console errors.
+- README demo guide covers the new features. Tests: 122 passing.
+
 ## Reflection vs. should recognize (suggestion 4)
 - The debrief's Reflection section shows the student's answers beside each patient's **should recognize** items (patient-level plus per-scenario-change). Items whose key words appear in the answers get a **possible mention** badge (hover shows the matched words). It's labelled as a reading aid, not a grade.
 - Tests: 122 passing.

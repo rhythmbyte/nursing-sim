@@ -51,9 +51,9 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - **Interventions → Cardiac → 12-lead ECG → Save.**
    - **Interventions → Assessment → Focused assessment → Save.** The Summary now shows his new findings.
    - Set **My priority** in the chart banner. Students never see your tags; the debrief compares their priorities with yours. Tags show a shape as well as a color (▲ ◆ ● ✕).
-   - **Monitor** tab: **Connect to monitor**, watch the ECG and pleth, try **Full screen** (a tablet or TV next to the manikin). On Live control, **Adjust vitals** (e.g. rhythm → AFib, or the Deteriorate preset) and watch the monitor follow and alarm.
+   - **Monitor** tab: **Connect to monitor**, watch the ECG and pleth, try **Full screen**, or **Open in new tab** for a monitor-only page (a tablet or TV next to the manikin; same browser). On Live control, **Adjust vitals** (e.g. rhythm → AFib, or the Deteriorate preset) and watch the monitor follow and alarm. The student presses **Silence alarm** (response time is logged and graded).
    - **Interventions:** type "EKG" or "foley" in the search box; the **Recent** row fills in. Mark an entry **Entered in error** (reason required): it stays visible, struck through.
-   - **Print report sheet** on the student home gives one page per patient.
+   - **Print report sheet** on the student home gives one page per patient (instructor: **Print all report sheets** on Live control).
    - **MAR → Give** nitroglycerin twice quickly. The second dose warns "too soon". Click **Give anyway** to show an override.
 5. **Student 1 → Linda.**
    - Skip to her 08:00 deterioration first if you haven't.
@@ -62,7 +62,8 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 6. **Charge tab.** Skip to 09:30. James waits on the **Admissions board**. **Assign now** to the group. He appears on Student 1's list.
 7. **End the shift** (Live control → **End**, or let it reach 15:00). The student gets a short **reflection** form. Then the **Debrief tab.** Walk through:
    - the red/amber flags (nitro override, Foley before bolus, missed notifications);
-   - the student's reflection answers;
+   - the student's reflection answers beside each patient's "should recognize" list (possible mentions marked);
+   - **Print summary** for a one-page-style handout per student;
    - priorities vs. your tags over time;
    - response times;
    - the order sequence (done vs. correct);
@@ -70,6 +71,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - Then **Export CSV**.
 8. Optional:
    - **Instructor → Review queue:** every AI-drafted item with Approve.
+   - **Monitor-only event:** in the patient editor, add a scenario change with "Silent" and a new **Rhythm (monitor)**, and see who notices.
    - **Keyboard:** on Live control, Space pauses/resumes, N skips to the next event, ? lists shortcuts.
    - **Help:** every Sim setup and editor field has a ? with a plain-language explanation.
    - **Patient editor:** open a patient, click a timeline marker to see a scenario change, or **Add scenario change** (e.g. 09:45 call light, new vitals, a tier 1 order), then drag it on the timeline.
