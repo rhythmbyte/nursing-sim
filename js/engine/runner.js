@@ -15,8 +15,8 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
   function commit(next) {
     if (next === state) return;
     state = next;
+    persist(state); // persist first: a screen error while notifying must never lose the action
     store.set({ session: state });
-    persist(state);
   }
 
   const ctx = () => ({ now: now(), templatesById });

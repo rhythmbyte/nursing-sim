@@ -4,6 +4,15 @@
 // - subscribe(fn): fn(state) on every set; returns an unsubscribe function
 // - on(name, fn) / emit(name, data): named events (e.g. "log:append", "clock:tick")
 
+// One failing subscriber (a screen bug) must not stop the others or the caller.
+function safely(fn, arg) {
+  try {
+    fn(arg);
+  } catch (err) {
+    console.error('Store subscriber failed:', err);
+  }
+}
+
 export function createStore(initial = {}) {
   let state = { ...initial };
   const subscribers = new Set();
@@ -14,7 +23,7 @@ export function createStore(initial = {}) {
 
     set(patch) {
       state = { ...state, ...patch };
-      for (const fn of subscribers) fn(state);
+      for (const fn of subscribers) safely(fn, state);
     },
 
     subscribe(fn) {
@@ -29,7 +38,7 @@ export function createStore(initial = {}) {
     },
 
     emit(name, data) {
-      for (const fn of handlers.get(name) || []) fn(data);
+      for (const fn of handlers.get(name) || []) safely(fn, data);
     },
   };
 }

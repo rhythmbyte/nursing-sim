@@ -207,7 +207,7 @@ Tabs, left to right:
 3. **Flowsheet** — vitals table over time.
    - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min). BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle.
    - **Manual entries:** anything a monitor doesn't give (temp, RR, pain, GCS, glucose, I&O, weight, neuro checks) is typed in by the student, and their value is compared with the scripted value in the debrief.
-4. **MAR** — scheduled/PRN meds. Give, hold (with reason), or not given. PRN limits enforced (e.g. nitro max 3).
+4. **MAR** — scheduled/PRN meds. Give, hold (with reason), or not given. PRN limits (e.g. nitro max 3, interval, required BP check first) **warn** before giving; the student can proceed and the dose is logged with the warning for the debrief (see DECISIONS.md, pending instructor confirmation).
 5. **Labs** — student orders labs from orders; they show "Pending" until `resultDelayMin` passes (instructor can override or release early).
 6. **Interventions** — category buttons → intervention buttons → small form (chartFields) → Save. Each save is time-stamped. "Delegate to LPN / CNA" is an option on every intervention.
 7. **Notes** — free-text nursing notes, time-stamped. Plus quick actions: "Notified provider", "Called rapid response", "Notified charge nurse", "Escalated".
@@ -304,7 +304,7 @@ Things in the prototype that will need to change for the real website (logins, b
 | Schemas validated in the browser only | Same JSON schemas also validated on the server before saving (never trust the client) | `data/schemas/`, `js/validate.js` |
 | `storage.js` writes to `localStorage` (per browser, per device) | Backend client; sim state and logs are server-owned and shared across devices | `js/storage.js` |
 | One page with a tab per role; anyone can open any tab | Each user sees only their role's screens after login; role comes from the auth session, not a tab | `js/screens/shell.js`, `js/main.js` |
-| Instructor-only content (`debrief`, `reviewNotes`, `teachingNote`, etc.) ships to every browser in the patient JSON. Phase 3 adds a student-view filter, but it is a **UI convenience only, not security**: the full JSON is still downloaded and visible in dev tools | Server strips instructor-only fields before sending patient data to students. This is the real protection | `js/screens/student/` filter (phase 3) → API |
+| Instructor-only content (`debrief`, `reviewNotes`, `teachingNote`, etc.) ships to every browser in the patient JSON. Phase 3 adds a student-view filter, but it is a **UI convenience only, not security**: the full JSON is still downloaded and visible in dev tools | Server strips instructor-only fields before sending patient data to students. This is the real protection | `js/engine/student-view.js` (allow-list) → API |
 | Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` |
 | Pause on close (`settings.pauseOnClose`): the browser pauses its own sim on `pagehide`, or on boot using a heartbeat | The server owns the clock, so closing one device never pauses the sim. Drop the pagehide/heartbeat code. Pausing becomes an explicit instructor action (maybe an auto-pause when the instructor disconnects) | `js/main.js`, `session.pauseForClose` |
 | Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |

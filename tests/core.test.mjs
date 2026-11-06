@@ -32,3 +32,18 @@ test('store merges patches, notifies subscribers, and routes named events', () =
   store.emit('log:append', { id: 1 });
   assert.deepEqual(got, { id: 1 });
 });
+
+test('store: a failing subscriber does not stop other subscribers', () => {
+  const store = createStore();
+  const seen = [];
+  const origError = console.error;
+  console.error = () => {};
+  try {
+    store.subscribe(() => { throw new Error('screen bug'); });
+    store.subscribe((s) => seen.push(s.x));
+    store.set({ x: 1 });
+  } finally {
+    console.error = origError;
+  }
+  assert.deepEqual(seen, [1]);
+});

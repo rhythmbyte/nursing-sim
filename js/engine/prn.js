@@ -11,9 +11,9 @@ export function dosesGiven(log, patientId, orderId) {
 
 /**
  * Problems with giving this PRN dose at `simMin`. Empty array = OK.
- * Each: { code: 'max' | 'interval' | 'requires', message }
+ * Each: { code: 'max' | 'interval' | 'requires', message }. labelOf maps intervention ids to display names.
  */
-export function prnWarnings(order, { log, patientId, simMin }) {
+export function prnWarnings(order, { log, patientId, simMin, labelOf = (id) => id }) {
   const prn = order.prn;
   if (!prn) return [];
   const doses = dosesGiven(log, patientId, order.id);
@@ -31,7 +31,7 @@ export function prnWarnings(order, { log, patientId, simMin }) {
   for (const req of prn.requiresBefore || []) {
     const done = log.some((l) => l.action === 'intervention' && l.patientId === patientId
       && l.details.interventionId === req && simMin - l.simMin <= within && simMin >= l.simMin);
-    if (!done) warnings.push({ code: 'requires', message: `Required check "${req}" not charted in the last ${within} min.` });
+    if (!done) warnings.push({ code: 'requires', message: `Required check "${labelOf(req)}" not charted in the last ${within} min.` });
   }
   return warnings;
 }

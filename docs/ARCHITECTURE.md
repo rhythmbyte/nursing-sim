@@ -31,6 +31,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Pause on close:** if the scenario's `settings.pauseOnClose` is on (the default), `main.js` pauses a running clock on `pagehide`. It also saves a heartbeat every 5 s, and on boot it pauses a still-running sim as of the last heartbeat. That covers a crash or freeze where `pagehide` never fired.
 
+**Error isolation:** the runner persists the new session *before* notifying the store, and the store catches errors per subscriber. A bug in one screen can't lose a charted action or stop other screens from updating.
+
 **Screen lifecycle:** a tab's `mount(root)` may return a cleanup function, which unsubscribes from the store. The shell calls it before mounting the next tab. Any screen that subscribes **must** return a cleanup.
 
 ---
@@ -41,7 +43,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 |---|---|---|
 | `index.html` | Page shell; loads `css/base.css` and `js/main.js` | built |
 | `css/base.css` | Design tokens (colors, triage colors, spacing), dark mode, shared component styles | built |
-| `css/chart.css` | Epic-style chart look | planned, phase 3 |
+| `css/chart.css` | Epic-lite chart, handoff modal, forms, toasts | built |
 | `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms), the pause-on-close hooks (`pagehide` + a 5 s heartbeat), and the prototype user identities | built |
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`; keys prefixed `nursing-sim:`) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
@@ -55,16 +57,20 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/events/` | One file per event type + `index.js` that registers them all (all SPEC §5 types except `ems-arrival`) | built |
 | `js/engine/alerts.js` | `addAlert()` for alerts raised by events | built |
 | `js/engine/log.js` | Append-only action log; every entry has `userId` + `role` | built |
+| `js/engine/chart.js` | Student chart actions (open patient, handoff open/close/notes, acknowledge/complete order, chart intervention, MAR give/hold/not given, note, escalate). Reveals findings on assessment | built |
+| `js/engine/prn.js` | `prnWarnings()` / `dosesGiven()`: the one PRN check (max, interval, required pre-check). Used by the MAR now and by the prn-limit rule in phase 5 | built |
+| `js/engine/student-view.js` | `studentView(template)`: allow-list filter for student screens. **UI convenience only, not security** | built |
 | `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule | planned, phase 5 |
 | `js/engine/vitals.js`, `labs.js` | Monitor cycles, lab delays | planned, phase 4 |
 | `js/engine/assignment.js` | `studentSlots()`: interim rule where student tab N fills the Nth slot. Randomizer and join codes come in phase 6 | in progress |
 | `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
-| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `placeholder.js` | built |
+| `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `placeholder.js` | built |
 | `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
-| `js/screens/student/home.js` | Student home: assigned patients, call lights with Answer, alerts | in progress (phase 3 adds chart + handoff) |
-| `js/screens/chart/`, `charge/` | Chart sections, charge nurse screens | planned, phases 3 and 7 |
+| `js/screens/student/` | `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `util.js` display helpers | built (flowsheet/labs get more in phase 4) |
+| `js/screens/charge/` | Charge nurse screens | planned, phase 7 |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
@@ -92,8 +98,9 @@ These rules are what make the move to the real website a swap instead of a rewri
 | B8 | **Every log entry has `userId` and `role`.** | Logins in the full build fill in real IDs without changing the log format. |
 | B9 | **Data is validated against `data/schemas/`** on load (and by the tests). | Bad data fails loudly instead of breaking a screen mid-sim. The full build reuses the same schemas on the server. |
 | B10 | **Text from data is never inserted as HTML.** Build elements with `h()` from `screens/shared/dom.js`. | Data can't inject markup. This matters more once instructors edit content and other users see it. |
+| B11 | **Student screens only read `studentView()` templates** plus live session state, never the full patient template. Findings reach students only by the engine copying them into session state when they assess. | Keeps answer-key content off student screens by accident. **UI convenience only, not security:** the JSON is still downloaded. The full build moves this filter to the server. |
 
-Things that are UI conveniences only, **not** security: hiding instructor-only fields from student tabs (phase 3). The full JSON is still downloaded. See SPEC §13.
+Things that are UI conveniences only, **not** security: B11's student filter. The full JSON is still downloaded. See SPEC §13.
 
 ---
 
@@ -122,8 +129,13 @@ Things that are UI conveniences only, **not** security: hiding instructor-only f
 2. Register it from `js/engine/rules/index.js` (create that file with the first rule, same pattern as events).
 3. Add tests with a log that should and shouldn't flag.
 
-### Add a chart section (phase 3; update this when it's built)
-Planned contract: one file per section in `js/screens/chart/`, exporting `{ id, label, mount(root, ctx) }` and listed once in `js/screens/chart/index.js` so the tab order lives in one place. Sections read from the store and call engine functions; no sim rules in them.
+### Add a chart section
+1. Create `js/screens/chart/<id>.js` that default-exports `{ id, label, mount(root, ctx) }`.
+   - `mount` builds static parts (forms) once and returns `{ update(state), destroy?() }`. `update` re-renders **only** dynamic parts, so a sim event never wipes out what the student is typing.
+   - `ctx` = `{ store, runner, pid, view (student view), user, catalogs, scenario, act(name, args), patientState() }`. Change state only through `act(...)`, which calls `engine/chart.js`. No sim rules in the section.
+   - Use `h()` and spread arrays into `append(...)`. `Element.append` does not flatten arrays.
+2. Add one import and one list entry in `js/screens/chart/index.js` (that list is the tab order).
+3. If the section needs a new action, add a pure function to `engine/chart.js` (logged with `userId`/`role`) and a test in `tests/chart.test.mjs`.
 
 ### Add a screen or tab
 Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passed to `mountShell`. Put the screen in the right `js/screens/<role>/` folder.

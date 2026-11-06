@@ -4,6 +4,38 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: PRN limits warn and log instead of blocking
+- **Decision:** Giving a PRN beyond its max, before its interval, or without its required pre-check (e.g. a BP within 15 min before nitro) opens a warning. The student can cancel or "Give anyway". The dose is logged with the warning codes.
+- **Why:** A sim should let students make the mistake so the debrief can catch it. A hard block hides the decision. The `prn-limit` rule (phase 5) flags these doses using the same `engine/prn.js` helper.
+- **Alternatives:** Hard block (SPEC §6 says "enforced"; this is the softer reading. **Confirm with the instructor**); no warning at all (too easy to miss in a demo).
+
+## 2026-11-05: Findings are revealed by assessing, and copied into session state
+- **Decision:** Catalog interventions with `revealsFindings: true` (focused and head-to-toe assessment) copy the baseline findings, plus any finding changes that have fired, into `patients[id].revealed` with a time. A delegated assessment reveals nothing. The Summary never hints that unrevealed changes exist.
+- **Why:** Students must reassess to discover a change, which is what the scenario teaches. Copying into state means student screens never need the template's findings (B11). Which interventions reveal is data, not code (B1).
+- **Alternatives:** Reveal on any chart open (removes the point of assessing); hard-coded intervention ids in JS (breaks B1).
+
+## 2026-11-05: Charting against an order moves it along
+- **Decision:** An intervention or MAR "given" saved "For order X" acknowledges X if it's new, and marks a one-time order done. PRN, scheduled and continuous orders stay open. Students can also Acknowledge or Mark done directly.
+- **Why:** It records which order the work was for, which the priority-order and tier-timeout rules (phase 5) need. The form preselects the first matching open order.
+- **Alternatives:** Guessing the order from the intervention id (ambiguous, since `med-give` matches every med order).
+
+## 2026-11-05: Quick actions chart catalog interventions
+- **Decision:** "Notified provider", "Called rapid response" and "Notified charge nurse" on the Notes tab log as the matching catalog interventions. "Escalated" is its own `escalated` log action.
+- **Why:** Parameter-breach rules look for `notify-provider` no matter which button the student used.
+- **Alternatives:** A separate quick-action log type (every rule would need to check two shapes).
+
+## 2026-11-05: Persist before notify; isolate subscriber errors
+- **Decision:** `runner.commit` saves to storage before `store.set`, and the store wraps each subscriber in try/catch.
+- **Why:** Found in testing: a screen bug threw inside `store.set` and the action was never saved.
+- **Alternatives:** Only fixing the screen bug (the next one would lose data the same way).
+
+## 2026-11-05: Session shape v2 discards older saved sessions
+- **Decision:** Adding `students` and `revealed` bumped `SESSION_VERSION` to 2. A saved v1 session is ignored and a fresh one starts.
+- **Why:** The prototype has no real data worth migrating, and a half-shaped session would crash screens.
+- **Alternatives:** Write migrations (worth doing in the full build, where sessions are real records).
+
+---
+
 ## 2026-11-05: Linked events share a `group` field
 - **Decision:** Events that make up one moment carry the same `group` string (scoped to the patient). "Fire now" fires every member, and the loader requires members to share timing.
 - **Why:** Firing a call light early used to leave its vitals and findings waiting for the scheduled time, so the story contradicted itself. With a group, the members' fired counts always move together.

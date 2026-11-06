@@ -1,22 +1,31 @@
-// Student → Home (phase 2 slice): sim clock, assigned patients, call lights with "Answer", alerts.
-// Phase 3 adds the handoff popup, the chart, and the student-view data filter.
+// Student tab: home (patient list) ↔ patient chart. The open patient is remembered per student.
+// Student screens only see `studentView` templates (UI convenience only, not security; see engine/student-view.js).
 
 import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { badge } from '../shared/badge.js';
 import { formatShiftTime } from '../../engine/time.js';
+import { studentView } from '../../engine/student-view.js';
+import { load, save } from '../../storage.js';
+import { mountPatientView } from './patient-view.js';
+import { openHandoffModal } from './handoff-modal.js';
 
-function patientRow(pid, ps, t, { runner, user, showTags, simMin }) {
-  const d = t.demographics;
+function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen }) {
+  const d = view.demographics;
   const newOrders = Object.values(ps.orders).filter((o) => o.status === 'new').length;
+  const pendingLabs = ps.labs.filter((l) => l.status === 'pending').length;
   return h('li', { class: `student-patient${ps.callLight ? ' has-light' : ''}` },
-    h('div', { class: 'sp-main' },
-      h('span', { class: 'room' }, `Rm ${d.room}`),
-      h('strong', {}, d.name),
-      h('span', { class: 'muted' }, `${d.age}${d.sex} · ${t.admittingDx}`),
-      showTags ? triageChip(ps.tag) : null,
-      newOrders ? badge(`${newOrders} new order${newOrders > 1 ? 's' : ''}`, 'pending') : null,
+    h('button', { class: 'sp-open', onclick: () => onOpen(pid), 'aria-label': `Open chart: ${d.name}, room ${d.room}` },
+      h('div', { class: 'sp-main' },
+        h('span', { class: 'room' }, `Rm ${d.room}`),
+        h('strong', {}, d.name),
+        h('span', { class: 'muted' }, `${d.age}${d.sex} · ${view.admittingDx}`),
+        view.tag ? triageChip(ps.tag) : null,
+        newOrders ? badge(`${newOrders} new order${newOrders > 1 ? 's' : ''}`, 'pending') : null,
+        pendingLabs ? badge(`${pendingLabs} lab${pendingLabs > 1 ? 's' : ''} pending`, 'neutral') : null,
+      ),
+      h('div', { class: 'sp-seen muted' }, seenAt != null ? `Last seen ${formatShiftTime(runner.state.startClock, seenAt)}` : 'Not seen yet'),
     ),
     ps.callLight ? h('div', { class: 'sp-light' },
       h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
@@ -27,42 +36,86 @@ function patientRow(pid, ps, t, { runner, user, showTags, simMin }) {
   );
 }
 
-export function mountStudentHome(root, { store, runner, templatesById, scenario, slot, user }) {
-  const clock = simClock(store, runner);
-  const list = h('ul', { class: 'student-patients' });
-  const alerts = h('div', {});
-  const showTags = scenario.settings.showTagsToStudents;
+export function mountStudentHome(root, ctx) {
+  const { store, runner, templatesById, scenario, slot, user } = ctx;
+  const OPEN_KEY = `ui.${user.userId}.patient`;
+  const views = Object.fromEntries(Object.keys(runner.state.patients).map((pid) => [
+    pid, studentView(templatesById[pid], { showTags: scenario.settings.showTagsToStudents })]));
+  let cleanupChild = null;
 
-  function render() {
-    const state = runner.state;
-    const simMin = runner.simMin();
-    const mine = Object.entries(state.patients).filter(([, ps]) => ps.groupId === slot.groupId && ps.present);
-    clear(list).append(...(mine.length
-      ? mine.map(([pid, ps]) => patientRow(pid, ps, templatesById[pid], { runner, user, showTags, simMin }))
-      : [h('li', { class: 'muted' }, 'No patients assigned.')]));
-
-    const ids = new Set(mine.map(([pid]) => pid));
-    const recent = state.alerts.filter((a) => a.audience.includes('student') && (!a.patientId || ids.has(a.patientId))).reverse().slice(0, 8);
-    clear(alerts).append(recent.length
-      ? h('ol', { class: 'feed' }, recent.map((a) => h('li', {},
-        h('span', { class: 'feed-time' }, formatShiftTime(state.startClock, a.simMin)),
-        a.patientId ? h('span', { class: 'feed-room' }, `Rm ${templatesById[a.patientId].demographics.room}`) : null,
-        h('span', {}, a.message))))
-      : h('p', { class: 'muted' }, 'No alerts yet.'));
+  function showHome() {
+    if (cleanupChild) cleanupChild();
+    save(OPEN_KEY, null);
+    cleanupChild = mountHome();
   }
 
-  root.append(
-    h('header', { class: 'screen-header' },
-      h('h2', {}, `${user.name} · ${slot.groupName}`),
-      clock.el,
-    ),
-    h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
-    h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
-    h('p', { class: 'muted' }, 'Prototype: the full chart, handoff, and join form arrive in phase 3.'),
-  );
-  render();
-  const offSet = store.subscribe(render);
-  let lastMin = -1;
-  const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
-  return () => { clock.destroy(); offSet(); offTick(); };
+  function openPatient(pid) {
+    const mode = scenario.settings.handoffMode;
+    const handoff = runner.state.students[user.userId]?.handoff?.[pid];
+    if (mode === 'once' && !handoff && views[pid].handoff) {
+      runner.chart('openHandoff', pid, {}, user);
+      openHandoffModal({ view: views[pid], onClose: (notes) => {
+        runner.chart('closeHandoff', pid, { notes }, user);
+        showPatient(pid);
+      } });
+      return;
+    }
+    if (mode === 'once' && handoff && handoff.closedAt == null) {
+      // Page reloaded mid-handoff: the report is still open, so show it again.
+      openHandoffModal({ view: views[pid], notes: handoff.notes, onClose: (notes) => {
+        runner.chart('closeHandoff', pid, { notes }, user);
+        showPatient(pid);
+      } });
+      return;
+    }
+    showPatient(pid);
+  }
+
+  function showPatient(pid) {
+    if (cleanupChild) cleanupChild();
+    save(OPEN_KEY, pid);
+    runner.chart('openPatient', pid, {}, user);
+    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], onBack: showHome });
+  }
+
+  function mountHome() {
+    const clock = simClock(store, runner);
+    const list = h('ul', { class: 'student-patients' });
+    const alerts = h('div', {});
+
+    function render() {
+      const state = runner.state;
+      const simMin = runner.simMin();
+      const seen = state.students[user.userId]?.seen || {};
+      const mine = Object.entries(state.patients).filter(([, ps]) => ps.groupId === slot.groupId && ps.present);
+      clear(list).append(...(mine.length
+        ? mine.map(([pid, ps]) => patientRow(pid, ps, views[pid], { runner, user, simMin, seenAt: seen[pid], onOpen: openPatient }))
+        : [h('li', { class: 'muted' }, 'No patients assigned.')]));
+
+      const ids = new Set(mine.map(([pid]) => pid));
+      const recent = state.alerts.filter((a) => a.audience.includes('student') && (!a.patientId || ids.has(a.patientId))).reverse().slice(0, 8);
+      clear(alerts).append(recent.length
+        ? h('ol', { class: 'feed' }, recent.map((a) => h('li', {},
+          h('span', { class: 'feed-time' }, formatShiftTime(state.startClock, a.simMin)),
+          a.patientId ? h('span', { class: 'feed-room' }, `Rm ${views[a.patientId].demographics.room}`) : null,
+          h('span', {}, a.message))))
+        : h('p', { class: 'muted' }, 'No alerts yet.'));
+    }
+
+    clear(root).append(
+      h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${slot.groupName}`), clock.el),
+      h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
+      h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
+    );
+    render();
+    const offSet = store.subscribe(render);
+    let lastMin = -1;
+    const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
+    return () => { clock.destroy(); offSet(); offTick(); };
+  }
+
+  const reopen = load(OPEN_KEY);
+  if (reopen && views[reopen] && runner.state.patients[reopen]?.present) openPatient(reopen);
+  else cleanupChild = mountHome();
+  return () => { if (cleanupChild) cleanupChild(); };
 }

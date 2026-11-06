@@ -2,6 +2,25 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Phase 3: student chart
+- **Student home:** click a patient to open the chart. Patient rows show new-order and pending-lab badges and "Last seen" times, and call lights can be answered from the home list or the chart.
+- **Handoff popup** (`handoffMode: "once"`): an SBAR report with a notes box. It can't be dismissed with Esc, and once closed it's gone for good while the notes stay on the Summary. Opened and closed times and duration are logged. `"always"` mode gets a Handoff tab instead.
+- **Chart tabs:**
+  - **Summary:** problems, latest vitals, alerts, revealed findings, my handoff notes, HPI.
+  - **Orders:** New / Active / Done, with Acknowledge and Mark done.
+  - **Flowsheet:** charted vitals over time.
+  - **MAR:** Give, Hold with a reason, Not given with a reason. PRN warnings cover max doses, interval, and a required pre-check.
+  - **Labs:** pending values are never shown.
+  - **Interventions:** category → intervention → form, "For order", and "Performed by" Me / LPN / CNA.
+  - **Notes:** free text plus quick actions.
+- **Assessment findings** are revealed only when the student charts a focused or head-to-toe assessment. New findings need a reassessment.
+- **Student-view filter** (UI convenience only, not security).
+- **Fixes found in browser testing:**
+  - screens now read session state correctly;
+  - an action is saved before screens update, so a screen bug can't lose it;
+  - a failing screen no longer breaks the others.
+- Tests: 38 passing.
+
 ## Linked events, pause on close, skip to next event
 - **Linked events:** events share a `group` field, and "Fire now" (shown as **Fire group**) fires all of them, so the scheduled time stays in sync. The starter patients' 1–3 linked events per moment are grouped. The loader and tests require members to share timing.
 - **Pause on close:** a running sim pauses when the page closes or reloads, and after a crash (as of the last heartbeat). New scenario setting `settings.pauseOnClose`, default `true`.

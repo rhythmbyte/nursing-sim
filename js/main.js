@@ -61,12 +61,12 @@ function startApp(root, data, scenarioId, restart) {
   const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
   const store = createStore({ data });
   const runner = createRunner({
-    store, scenario, templatesById,
+    store, scenario, templatesById, catalogs: data.catalogs,
     saved: load(SESSION_KEY),
     persist: (s) => save(SESSION_KEY, s),
   });
 
-  const ctx = { store, runner, data, scenario, templatesById, instructorUser: INSTRUCTOR };
+  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR };
   const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
     const started = runner.state.clock.status !== 'ready';
     if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {

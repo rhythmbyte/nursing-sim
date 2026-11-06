@@ -22,6 +22,7 @@ function append(el, children) {
   }
 }
 
+/** Empties `el` and returns it. Note: Element.append() does NOT flatten arrays or skip null; spread arrays. */
 export function clear(el) {
   el.replaceChildren();
   return el;
