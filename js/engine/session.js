@@ -291,6 +291,14 @@ export function startBreak(state, { now, user, minutes }) {
   return draft;
 }
 
+/** "Extend break": the planned return moves later by `minutes` (shown on every screen). Logged. */
+export function extendBreak(state, { now, user, minutes }) {
+  if (!state.break) return state;
+  const draft = { ...state, break: { ...state.break, until: state.break.until + minutes * 60000, minutes: state.break.minutes + minutes }, log: [...state.log] };
+  append(draft, { simMin: simMinOf(draft, now), wallTime: now, ...user, action: 'break-extended', details: { minutes } });
+  return draft;
+}
+
 /** End of the break: resumes the sim (also when the instructor simply presses Resume). */
 export function endBreak(state, { now, user }) {
   if (!state.break) return state;

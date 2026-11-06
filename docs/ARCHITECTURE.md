@@ -147,6 +147,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/shared/coalesce.js` | `coalesce(fn, ms)`: one trailing render per burst of store updates (Command center, Live control) | built |
 | `js/screens/shared/drafts.js` | Drafts: `formDraft` (any form, restored in order), `textDraft`, `saveDraft`/`loadDraft`/`clearDraft`, `draftNote` | built |
 | `js/screens/shared/nav.js` | In-app history: `navPush`, `onNav`, `installNav` (Back between screens; asks before leaving) | built |
+| `js/screens/shared/shared-computer.js` | "End of sim on this computer": `studentKeys`, `instructorKeys`, `sharedComputerButton`, `markFreshDevice` | built |
 | `js/screens/shared/labels.js`, `text.js` | `patientLabel` ("Rm 204 Linda Garcia"); `lines` (textarea → non-empty lines) | built |
 | `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |

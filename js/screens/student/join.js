@@ -6,6 +6,7 @@ import { mountStudentHome } from './home.js';
 import { createCallLightSound } from './call-light-sound.js';
 import { createWakeLock } from '../shared/wake-lock.js';
 import { load, save } from '../../storage.js';
+import { markFreshDevice } from '../shared/shared-computer.js';
 
 // Rejoin (SPEC §10): this device remembers who it is (device.<tab>) and a rejoin token per join code and name.
 const norm = (s) => String(s || '').trim().toLowerCase();
@@ -19,6 +20,7 @@ export function mountStudentTab(root, ctx) {
   let cleanup = null;
   let joined = null;
   let waiting = null; // { name } while the instructor confirms a rejoin
+  ctx.signOut = () => { become(markFreshDevice(ctx.user.userId)); }; // shared computer: this tab is now a new device
   const become = (id) => { me = id; save(DEVICE, id); user = { ...ctx.user, userId: id }; joined = null; render(); };
 
   function render() {
@@ -32,7 +34,7 @@ export function mountStudentTab(root, ctx) {
     if (entry) {
       joined = entry;
       const sound = createCallLightSound({ store, runner, user, groupId: entry.groupId, config: ctx.catalogs.ui?.callLightSound });
-      const stopHome = mountStudentHome(clear(root), { ...ctx, user: { ...user, name: entry.name }, groupId: entry.groupId, sound });
+      const stopHome = mountStudentHome(clear(root), { ...ctx, user: { ...user, name: entry.name }, groupId: entry.groupId, sound, tabId: ctx.user.userId, signOut: () => ctx.signOut() });
       cleanup = () => { stopHome(); sound.destroy(); };
       return;
     }
@@ -67,7 +69,12 @@ export function mountStudentTab(root, ctx) {
 
   // Screen stays awake while the sim runs (released on pause, break or end).
   const wake = createWakeLock(() => runner.state.clock.status === 'running');
+  // Presence: while this student's screen is open and visible, tell the sim they're here (Live control shows Away otherwise).
+  const beat = () => { if (document.visibilityState === 'visible' && runner.state.roster[user.userId]) runner.heartbeat(user.userId); };
+  beat();
+  const beatTimer = setInterval(beat, 10000);
+  document.addEventListener('visibilitychange', beat);
   render();
   const off = store.subscribe(() => { render(); wake.update(); });
-  return () => { off(); wake.destroy(); if (cleanup) cleanup(); };
+  return () => { off(); wake.destroy(); clearInterval(beatTimer); document.removeEventListener('visibilitychange', beat); if (cleanup) cleanup(); };
 }

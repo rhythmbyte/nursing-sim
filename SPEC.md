@@ -494,3 +494,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 54. **Queued delegation and overload** (proposed): students may queue a task when no helper is free (on by default); waiting more than 10 min is late, 20 min very late; delegating more than 4 tasks in 15 min is flagged amber. Right?
 55. **Sim length and breaks** (for you and school IT): how long are your sims usually (1, 2, 4 hours)? Do you take breaks mid-sim, and how long? (The prototype has a Break button with a "back at" banner.)
 56. **Lab computers** (school IT): do lab or shared computers enforce an idle logout or screen lock? If so, after how long, and can it be paused during a sim (the full build would show students as "away" instead)?
+57. **Away status** (`awayAfterSec`, 45 s): how long a student's device may be silent before Live control shows them as away? And on shared lab computers, should students always use "End of sim on this computer" at the end (school IT)?

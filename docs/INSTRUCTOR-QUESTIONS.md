@@ -258,6 +258,11 @@ Right now: the prototype never logs anyone out and keeps student screens awake w
 Do lab or shared computers enforce an idle logout or screen lock? After how long? Can it be relaxed during a sim?
 Your answer: ______________________________________________
 
+**6.9c Away status and shared computers** [57]
+Right now: a student shows "Away / reconnecting" when their device has been silent for 45 seconds during the sim. "End of sim on this computer" clears their drafts and saved place.
+Is 45 seconds right? On shared lab computers, should students always use "End of sim on this computer" at the end?
+Your answer: ______________________________________________
+
 **6.10 Message senders and oxygen devices** [47]
 Right now: messages can come from the CNA, LPN, charge nurse, provider, family, patient, RT, pharmacy or lab. Oxygen devices: room air, nasal cannula, simple mask, Venturi, non-rebreather, high-flow, BiPAP/CPAP.
 Anything to add or remove?

@@ -134,6 +134,8 @@ export function buildDebrief(fullState, userId, ctx) {
       durationMin: handoff[pid].closedAt != null ? round2(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
     timeliness: debriefTimeliness(fullState, pids, ctx),
     tasks: taskReview(fullState, userId, pids, ctx),
+    timeAway: (() => { const e = fullState.log.filter((l) => ((l.action === 'reconnected' || l.action === 'student-rejoined') && l.userId === userId) || (l.action === 'rejoin-approved' && l.details?.studentId === userId)).filter((l) => l.details?.awayMin != null);
+      return { totalMin: Math.round(e.reduce((s, l) => s + l.details.awayMin, 0) * 10) / 10, times: e.length }; })(),
     delegation: delegationReview(fullState, userId, pids, ctx),
     assessments: (() => { const t = debriefTimeliness(fullState, pids, ctx); return { rows: assessmentRows(fullState, ctx, pids), reassess: t.rows.filter((r) => r.kind === 'assessment') }; })(),
     scripts: pids.filter((pid) => fullState.patients[pid].script && ctx.templatesById[pid]?.script).map((pid) => ({ patientId: pid, rows: stateTimeline(fullState, pid, ctx.templatesById[pid], ctx.catalogs), penalties: penaltyTimeline(fullState, pid, ctx.templatesById[pid], ctx.catalogs), ownRanges: ctx.templatesById[pid]?.normalRanges || null })),

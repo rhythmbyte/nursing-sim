@@ -84,7 +84,7 @@ test('group status from data and command center ordering', () => {
   s = tick(s, 96); // ECG very late, call lights unanswered
   const cc = commandCenter(s, ctx(96, s), sc);
   assert.equal(cc[0].status, 'needs-attention');
-  assert.deepEqual(cc[0].students, [{ userId: 'student-1', name: 'Ana', inPatient: RM, busy: null, back: null }]);
+  assert.deepEqual(cc[0].students, [{ userId: 'student-1', name: 'Ana', away: null, inPatient: RM, busy: null, back: null }]);
   assert.ok(cc[0].counts.veryLate >= 1 && cc[0].counts.callLights >= 1 && cc[0].counts.redFlags >= 1);
   assert.equal(cc[0].patients[0].worst.tag, 'open-very-late', 'worst patient first');
 });

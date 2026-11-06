@@ -46,6 +46,7 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'rejoin-approved': return `Instructor approved ${d.name || 'a student'} rejoining`;
     case 'rejoin-denied': return `Instructor denied ${d.name || 'a student'} rejoining`;
     case 'reconnected': return `Reconnected${d.awayMin != null ? ` after ${d.awayMin} min` : ''}`;
+    case 'break-extended': return `Break extended by ${d.minutes} min`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

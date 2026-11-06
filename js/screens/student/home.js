@@ -5,6 +5,7 @@ import { textDraft, draftNote } from '../shared/drafts.js';
 import { navPush, onNav } from '../shared/nav.js';
 import { h, clear } from '../shared/dom.js';
 import { busyBanner } from './busy-banner.js';
+import { sharedComputerButton, studentKeys } from '../shared/shared-computer.js';
 import { staffPanel } from './staff-panel.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -100,16 +101,18 @@ export function mountStudentHome(root, ctx) {
   }
 
   // End-of-sim reflection (questions: data/catalogs/reflection.json). Built once, so typing isn't lost on re-render.
+  const signOutBtn = () => (ctx.signOut ? sharedComputerButton({ who: user.name || 'this student', pred: studentKeys(user.userId, ctx.tabId || user.userId), after: () => ctx.signOut() }) : null);
   let reflectionForm = null;
   function reflectionPanel(state) {
     const done = state.reflections?.[user.userId];
-    if (done) return h('section', { class: 'panel' }, h('h3', {}, 'Reflection'), h('p', {}, 'Thanks, your reflection was submitted.'));
+    if (done) return h('section', { class: 'panel' }, h('h3', {}, 'Reflection'), h('p', {}, 'Thanks, your reflection was submitted.'), h('p', { class: 'small' }, 'On a shared computer: ', signOutBtn()));
     if (reflectionForm) return reflectionForm;
     const qs = ctx.catalogs.reflection?.questions || [];
     const boxes = Object.fromEntries(qs.map((q) => [q.id, h('textarea', { class: 'input', rows: 3, 'aria-label': q.text })]));
     const drafts = Object.entries(boxes).map(([id, el]) => textDraft(el, `reflection.${user.userId}.${id}`));
     const err = h('p', { class: 'form-error', role: 'alert' });
     reflectionForm = h('section', { class: 'panel reflection' }, h('h3', {}, 'The shift is over: reflection'),
+      h('p', { class: 'muted small' }, 'On a shared computer? After you submit, use ', h('strong', {}, 'End of sim on this computer'), ' so the next person starts fresh. ', signOutBtn()),
       drafts.some((d) => d.restored) ? draftNote(() => { Object.values(boxes).forEach((el) => { el.value = ''; }); drafts.forEach((d) => d.clear()); }) : null,
       qs.map((q) => h('label', { class: 'field' }, h('span', {}, q.text), boxes[q.id])), err,
       h('button', { class: 'btn btn-primary', onclick: () => {
@@ -159,6 +162,7 @@ export function mountStudentHome(root, ctx) {
           refreshViews();
           printReportSheet(runner.state, user.userId, mine, views, user.name);
         } }, 'Print report sheet'),
+        signOutBtn(),
         clock.el),
       busy.el,
       reflectBox,

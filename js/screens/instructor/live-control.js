@@ -4,6 +4,7 @@
 import { patientLabel } from '../shared/labels.js';
 import { coalesce } from '../shared/coalesce.js';
 import { openModal } from '../shared/modal.js';
+import { sharedComputerButton, instructorKeys } from '../shared/shared-computer.js';
 import { helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
@@ -35,14 +36,17 @@ function clockControls(runner, user, startDemo) {
     btn('Start', 'start', s === 'ready', 'btn-primary'),
     btn('Pause', 'pause', s === 'running'),
     btn('Resume', 'resume', s === 'paused', 'btn-primary'),
+    ...(runner.state.break ? [h('button', { class: 'btn', title: 'Move the return time 5 min later', onclick: () => runner.extendBreak(5, user) }, 'Extend break +5')]
+      : [5, 10, 15].map((m) => h('button', { class: 'btn btn-small', disabled: !(s === 'running' || s === 'paused'), title: `Break for ${m} minutes`, onclick: () => runner.startBreak(m, user) }, `Break ${m}`))),
     h('button', { class: 'btn', disabled: !(s === 'running' || s === 'paused') || Boolean(runner.state.break), title: 'Pause for a break; every screen shows when you\'re back',
       onclick: () => {
         const mins = h('select', { 'aria-label': 'Break length' }, [5, 10, 15, 20, 30, 45, 60].map((m) => h('option', { value: m, selected: m === 15 }, `${m} min`)));
         openModal({ title: 'Break', body: h('label', { class: 'field' }, h('span', {}, 'How long? ', helpTip('live.break')), mins), actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Start break', kind: 'primary', onClick: () => { runner.startBreak(Number(mins.value), user); return true; } }] });
-      } }, 'Break'),
+      } }, 'Break…'),
     btn('End', 'end', s === 'running' || s === 'paused', 'btn-danger'),
     h('label', { class: 'inline' }, 'Speed ', speed),
     skipButton(runner, user),
+    sharedComputerButton({ who: 'the instructor', pred: instructorKeys, after: () => window.location.reload() }),
     h('button', {
       class: 'btn btn-ghost',
       onclick: () => {
@@ -170,6 +174,7 @@ export function mountLiveControl(root, ctx) {
       lastMin = Math.floor(simMin);
       clear(lights).append(callLights(runner, templatesById));
       clear(flags).append(flagsPanel(runner, templatesById, instructorUser)); // time-based flags change with the clock
+      clear(roster).append(rosterPanel(runner, templatesById, scenario, instructorUser)); // "Away" appears when a device goes silent
       rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter)); // countdowns can start or end
     }
   });

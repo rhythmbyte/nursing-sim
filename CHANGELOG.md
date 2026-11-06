@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Away status, time away, shared computers, break presets (Part A)
+- **Away / reconnecting:** while a student's screen is open it checks in every 10 s (presence, not logged). Live control → Students and the Command center show "⚠ Away / reconnecting (2 min)" when it has been silent longer than `awayAfterSec` (45 s) during the sim. When it checks in again, `reconnected` is logged with the time away. Live control's Students table now refreshes every sim minute.
+- **Debrief:** a "↻ away N min (k×)" total per student (reconnects, rejoins and approvals).
+- **End of sim on this computer** (student home, the reflection / sim-ended panel, and Live control for the instructor): after a confirmation, clears that user's drafts, rejoin token and saved place on this computer (`storage.removeMatching`). A student's tab then acts as a new device, so signing back in as them needs the token or your approval. Their charting in the sim is kept.
+- **Break 5 / 10 / 15** buttons, **Break…** for another length, and **Extend break +5** while on a break (logged).
+- Fixed: the Command center read the wall clock inside the engine; `now` is now passed in (B4).
+- Tests: 211 passing.
+
 ## Crash safety and rejoin tests (Part E)
 - **Fixed (found by the kill tests): a killed browser could lose the last ~5 seconds** (Chromium writes localStorage to disk in batches), including a just-started task or delegation. `storage.js` now also writes every save to IndexedDB, which reaches disk at once, and `restoreBackup()` puts newer copies back before the app loads. Reset demo waits for both to clear.
 - **Fixed:** after a crash the instructor came back to the Command center instead of their view, because "picked a view" lived in sessionStorage. It's now remembered per sim. The rejoin "waiting for your instructor" message now shows.

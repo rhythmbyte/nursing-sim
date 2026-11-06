@@ -21,6 +21,7 @@
         "rules": { "type": "object" },
         "staffPool": { "type": "object", "properties": { "CNA": { "type": "integer", "minimum": 0 }, "LPN": { "type": "integer", "minimum": 0 } } },
         "delegationQueue": { "type": "boolean" },
+        "awayAfterSec": { "type": "number", "minimum": 5 },
         "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
         "delegatedAssessmentRevealsFindings": { "type": "boolean" },
         "codeTag": { "enum": ["red", "yellow", "green", "black"] },

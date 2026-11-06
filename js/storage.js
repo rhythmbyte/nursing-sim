@@ -105,6 +105,21 @@ export function remove(key) {
   }
 }
 
+/** Removes this app's keys for which pred(key, value) is true (e.g. one user on a shared computer). Returns how many. */
+export function removeMatching(pred) {
+  const a = area();
+  if (!a) return 0;
+  const keys = [];
+  for (let i = 0; i < a.length; i++) { const k = a.key(i); if (k?.startsWith(PREFIX)) keys.push(k.slice(PREFIX.length)); }
+  let n = 0;
+  for (const k of keys) {
+    let v = null;
+    try { v = JSON.parse(a.getItem(PREFIX + k)); } catch { /* not JSON */ }
+    if (pred(k, v)) { remove(k); n++; }
+  }
+  return n;
+}
+
 /** Removes every key this app stored (Reset demo). Resolves when the IndexedDB copy is cleared too. */
 export function clearAll() {
   let done = Promise.resolve();

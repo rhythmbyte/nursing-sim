@@ -64,6 +64,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         select,
         h('span', { class: 'flag-chip flag-red' }, `${d.counts.red} red`),
         h('span', { class: 'flag-chip flag-amber' }, `${d.counts.amber} amber`),
+        d.timeAway?.times ? h('span', { class: 'flag-chip', title: 'Reloads, crashes, closed tabs and rejoins' }, `↻ away ${d.timeAway.totalMin} min (${d.timeAway.times}×)`) : null,
         h('span', { class: 'muted' }, `as of ${at(runner.simMin())}`),
         h('div', { class: 'debrief-actions' },
           h('button', { class: 'btn', onclick: () => downloadCsv(`debrief-${runner.state.roster[userId].name.replace(/\W+/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`, csvFor(d, at)) }, 'Export CSV'),

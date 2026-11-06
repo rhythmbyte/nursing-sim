@@ -38,7 +38,7 @@ export function rosterPanel(runner, templatesById, scenario, user = null) {
           h('td', {}, opened ? `Rm ${templatesById[opened.patientId].demographics.room} (since ${at(opened.simMin)})` : '—'),
           (() => { const b = runner.busy(uid); const pz = runner.paused(uid); return h('td', {}, pz ? h('div', { class: 'muted small' }, `⏸ paused: ${pz.label} (${Math.ceil(pz.leftSec / 60)} min left)`) : null, b ? [`${b.label} · Rm ${templatesById[b.patientId]?.demographics.room ?? '?'} · ${b.leftSec >= 60 ? `${Math.ceil(b.leftSec / 60)} min` : `${b.leftSec} s`} left `,
             user ? h('button', { class: 'btn btn-small', title: 'Finish this task now (counts as done)', onclick: () => runner.endTaskNow(uid, user) }, 'End now') : null] : '—'); })(),
-          (() => { const c = conn(uid); return h('td', { class: 'small' }, c ? `↻ ${c.action === 'reconnected' ? 'reconnected' : 'rejoined'}${c.details?.awayMin != null ? ` after ${c.details.awayMin} min` : ''} (${at(c.simMin)})` : '—'); })(),
+          (() => { const c = conn(uid); const a = runner.away(uid); if (a) return h('td', { class: 'small away' }, `⚠ Away / reconnecting (${a.awayMin} min)`); return h('td', { class: 'small' }, c ? `↻ ${c.action === 'reconnected' ? 'reconnected' : 'rejoined'}${c.details?.awayMin != null ? ` after ${c.details.awayMin} min` : ''} (${at(c.simMin)})` : '—'); })(),
           h('td', {}, act ? `${at(act.simMin)} · ${act.action.replace(/-/g, ' ')}` : '—'),
         );
       })),

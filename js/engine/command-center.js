@@ -3,6 +3,7 @@
 
 import { totalPercent } from './penalties.js';
 import { staffView } from './staff.js';
+import { awayStatus } from './roster.js';
 import { timelinessItems, timelinessConfig, tagRank, isLate, isVeryLate } from './timeliness.js';
 import { evaluateRules } from './rules/index.js';
 import { vitalNumber } from './vitals.js';
@@ -83,7 +84,8 @@ export function commandCenter(state, ctx, scenario) {
       // Reconnected / rejoined in the last 10 sim minutes (shown as "↻ reconnected after 2 min").
       const c = [...state.log].reverse().find((l) => (l.action === 'reconnected' || l.action === 'student-rejoined') && l.userId === uid);
       const back = c && ctx.simMin - c.simMin <= 10 ? { awayMin: c.details.awayMin, atMin: c.simMin } : null;
-      return { userId: uid, name: r.name, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null, back };
+      const away = ctx.now != null ? awayStatus(state, uid, ctx.now) : null; // wall time comes in via ctx (B4)
+      return { userId: uid, name: r.name, away, inPatient: lastOpened(uid), busy: t ? { label: t.label, patientId: t.patientId, leftMin: Math.max(0, t.endsAt - ctx.simMin) } : null, back };
     });
     return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients, staffing: staffing(state, g.id, ctx) };
   });

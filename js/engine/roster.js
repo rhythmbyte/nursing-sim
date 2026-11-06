@@ -66,3 +66,26 @@ export function logReconnect(state, { userId, role, awayMin, now }) {
   append(draft, { simMin: simMinOf(state, now), wallTime: now, userId, role, action: 'reconnected', details: { awayMin } });
   return draft;
 }
+
+/**
+ * A student's device is still here (sent every few seconds while their screen is open). Coming back after more than
+ * settings.awayAfterSec logs 'reconnected' with the time away. presence[userId] = last heartbeat (wall ms); not logged.
+ */
+export function heartbeat(state, userId, { now }) {
+  const last = state.presence?.[userId];
+  const awayMs = (state.settings.awayAfterSec ?? 45) * 1000;
+  const draft = { ...state, presence: { ...(state.presence || {}), [userId]: now } };
+  if (last != null && now - last > awayMs && state.clock.status !== 'ready') {
+    draft.log = [...state.log];
+    append(draft, { simMin: simMinOf(state, now), wallTime: now, userId, role: 'student', action: 'reconnected', details: { awayMin: Math.round((now - last) / 6000) / 10, via: 'heartbeat' } });
+  }
+  return draft;
+}
+
+/** Away right now: { awayMin } when the sim is running and the student's device has been silent too long, else null. */
+export function awayStatus(state, userId, now) {
+  const last = state.presence?.[userId];
+  if (last == null || state.clock.status !== 'running') return null;
+  const ms = now - last;
+  return ms > (state.settings.awayAfterSec ?? 45) * 1000 ? { awayMin: Math.round(ms / 6000) / 10 } : null;
+}

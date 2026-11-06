@@ -9,7 +9,7 @@ import * as staffOps from './staff.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
 import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight } from './instructor.js';
-import { joinSim, decideRejoin, logReconnect } from './roster.js';
+import { joinSim, decideRejoin, logReconnect, heartbeat, awayStatus } from './roster.js';
 import { assignAdmission, holdAdmission } from './admissions.js';
 import { assignPriority } from './priority.js';
 import { adjustVitals } from './vitals-control.js';
@@ -70,6 +70,10 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     },
 
     startBreak(minutes, user) { commit(session.startBreak(state, { now: now(), user, minutes })); store.emit('tick', runner.simMin()); },
+    extendBreak(minutes, user) { commit(session.extendBreak(state, { now: now(), user, minutes })); },
+    /** Student device heartbeat (presence); away = silent longer than settings.awayAfterSec while running. */
+    heartbeat(userId) { if (state.roster[userId]) commit(heartbeat(state, userId, { now: now() })); },
+    away: (userId) => awayStatus(state, userId, now()),
     endBreak(user) { commit(session.endBreak(state, { now: now(), user })); runner.tick(); },
 
     fireNow(key, user) {
@@ -206,7 +210,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
 
     /** Context the rules and the debrief need (responsibility comes from the joined roster). */
     rulesCtx: () => ({
-      templatesById: eff(), catalogs, simMin: runner.simMin(),
+      templatesById: eff(), catalogs, simMin: runner.simMin(), now: now(),
       studentIdsForGroup: (g) => studentIdsForGroup(state.roster, g),
       groupOfStudent: (u) => groupOfStudent(state.roster, u),
     }),

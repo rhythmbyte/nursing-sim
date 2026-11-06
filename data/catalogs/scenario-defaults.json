@@ -11,6 +11,7 @@
     "revealManualVitals": true,
     "staffPool": { "CNA": 2, "LPN": 1 },
     "delegationQueue": true,
+    "awayAfterSec": 45,
     "prnPreCheckWindowMin": 15,
     "delegatedAssessmentRevealsFindings": false,
     "codeTag": "black",
