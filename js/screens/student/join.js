@@ -53,7 +53,7 @@ export function mountStudentTab(root, ctx) {
           const r = runner.lastJoin() || {};
           if (r.token && !r.rejoinAs) save(tokenKey(c, name.value), { userId: user.userId, token: r.token });
           if (r.rejoinAs && r.rejoinAs !== user.userId) { become(r.rejoinAs); return; }
-          if (r.pending) waiting = { name: name.value.trim() };
+          if (r.pending) { waiting = { name: name.value.trim() }; render(); return; } // the join re-rendered the form; show the wait
           err.textContent = error || '';
         },
       },

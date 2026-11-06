@@ -6,6 +6,7 @@ import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { createWindowLock } from './window-lock.js';
+import { restoreBackup } from './storage.js';
 import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
 import { setHelp } from './screens/shared/help.js';
@@ -133,8 +134,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
       clearInterval(timer);
       clearInterval(heartbeat);
       window.removeEventListener('pagehide', onPageHide);
-      clearAll();
-      window.location.reload();
+      clearAll().then(() => window.location.reload());
     },
   }, 'Reset demo');
   const brk = breakBanner(store, () => runner.state);
@@ -221,6 +221,7 @@ function startWindowLock() {
 }
 
 async function boot() {
+  await restoreBackup(); // crash safety: newer copies from IndexedDB first (storage.js)
   watchSaveFailures();
   window.addEventListener('beforeunload', onBeforeUnload);
   const root = document.getElementById('app');

@@ -4,6 +4,7 @@
 import { patientLabel } from '../shared/labels.js';
 import { coalesce } from '../shared/coalesce.js';
 import { openModal } from '../shared/modal.js';
+import { helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -37,7 +38,7 @@ function clockControls(runner, user, startDemo) {
     h('button', { class: 'btn', disabled: !(s === 'running' || s === 'paused') || Boolean(runner.state.break), title: 'Pause for a break; every screen shows when you\'re back',
       onclick: () => {
         const mins = h('select', { 'aria-label': 'Break length' }, [5, 10, 15, 20, 30, 45, 60].map((m) => h('option', { value: m, selected: m === 15 }, `${m} min`)));
-        openModal({ title: 'Break', body: h('label', { class: 'field' }, h('span', {}, 'How long?'), mins), actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Start break', kind: 'primary', onClick: () => { runner.startBreak(Number(mins.value), user); return true; } }] });
+        openModal({ title: 'Break', body: h('label', { class: 'field' }, h('span', {}, 'How long? ', helpTip('live.break')), mins), actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Start break', kind: 'primary', onClick: () => { runner.startBreak(Number(mins.value), user); return true; } }] });
       } }, 'Break'),
     btn('End', 'end', s === 'running' || s === 'paused', 'btn-danger'),
     h('label', { class: 'inline' }, 'Speed ', speed),

@@ -20,7 +20,7 @@ export function mountInstructor(root, ctx) {
   const editorTarget = { get: () => load(EDITOR_KEY), set: (id) => save(EDITOR_KEY, id) };
   const openEditor = (id) => { editorTarget.set(id); active = 'editor'; save(VIEW_KEY, active); render(); };
   // Command center → Live control with a group or patient filter (shown in Live control with "Show all").
-  const openLive = (filter) => { if (!canLeave()) return; save('ui.live.filter', filter); active = 'live'; save(VIEW_KEY, active); saveSession('ui.instructor.chosen', true); render(); };
+  const openLive = (filter) => { if (!canLeave()) return; save('ui.live.filter', filter); active = 'live'; save(VIEW_KEY, active); save('ui.instructor.chosenFor', ctx.runner.state.joinCode); render(); };
   const vctx = { ...ctx, editorTarget, openEditor, openLive };
   const views = [
     { id: 'command', label: 'Command center', mount: (el) => mountCommandCenter(el, vctx) },
@@ -31,8 +31,10 @@ export function mountInstructor(root, ctx) {
     { id: 'library', label: 'Patient library', mount: (el) => mountLibrary(el, vctx) },
   ];
   let active = views.some((v) => v.id === load(VIEW_KEY)) ? load(VIEW_KEY) : 'live';
-  // While a sim is in progress (running or paused) the command center is the default, until the instructor picks a view this session.
-  if (['running', 'paused'].includes(ctx.runner.state.clock.status) && !loadSession('ui.instructor.chosen', false)) active = 'command';
+  // While a sim is in progress the command center is the default, until the instructor picks a view in THIS sim
+  // (remembered per sim in storage, so a reload, crash or rejoin comes back to the same view).
+  const chosenHere = () => load('ui.instructor.chosenFor') === ctx.runner.state.joinCode;
+  if (['running', 'paused'].includes(ctx.runner.state.clock.status) && !chosenHere()) active = 'command';
   let cleanup = null;
   const nav = h('nav', { class: 'subnav', 'aria-label': 'Instructor views' });
   const body = h('div', {});
@@ -41,7 +43,7 @@ export function mountInstructor(root, ctx) {
     clear(nav).append(...views.map((v) => h('button', {
       class: `subnav-btn${v.id === active ? ' active' : ''}`,
       'aria-pressed': v.id === active ? 'true' : 'false',
-      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); saveSession('ui.instructor.chosen', true); if (v.id === 'live') save('ui.live.filter', null); render(); navPush({ tab: 'instructor', view: v.id }); },
+      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); save('ui.instructor.chosenFor', ctx.runner.state.joinCode); if (v.id === 'live') save('ui.live.filter', null); render(); navPush({ tab: 'instructor', view: v.id }); },
     }, v.label)));
     if (typeof cleanup === 'function') cleanup();
     cleanup = views.find((v) => v.id === active).mount(clear(body));

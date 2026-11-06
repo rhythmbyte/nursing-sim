@@ -2,6 +2,48 @@
 // Full build: swap this file's internals for a backend client; keep the API.
 
 const PREFIX = 'nursing-sim:';
+const STAMP = 'nursing-sim-at:'; // when each key was last saved here (to compare with the IndexedDB copy)
+
+// Crash safety: Chromium writes localStorage to disk in batches (about every 5 s), so a killed browser or a crashed
+// tablet can lose the last seconds (the soak/crash tests showed it). Every save is also written to IndexedDB, which
+// reaches disk at once; restoreBackup() puts any newer IndexedDB copy back into localStorage before the app loads.
+let dbp = null;
+function db() {
+  if (dbp || typeof indexedDB === 'undefined') return dbp;
+  dbp = new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('nursing-sim', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('kv');
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(null);
+    } catch { resolve(null); }
+  });
+  return dbp;
+}
+function mirror(key, json, at) {
+  db()?.then((d) => { if (!d) return; try { const tx = d.transaction('kv', 'readwrite'); tx.objectStore('kv')[json == null ? 'delete' : 'put'](json == null ? key : { json, at }, json == null ? undefined : key); } catch { /* best effort */ } });
+}
+/** Boot: copy IndexedDB entries newer than localStorage's back into it. Resolves to how many were restored. */
+export async function restoreBackup() {
+  const d = await db();
+  const a = area();
+  if (!d || !a) return 0;
+  return new Promise((resolve) => {
+    let n = 0;
+    try {
+      const tx = d.transaction('kv', 'readonly');
+      const req = tx.objectStore('kv').openCursor();
+      req.onsuccess = () => {
+        const cur = req.result;
+        if (!cur) { resolve(n); return; }
+        const at = Number(a.getItem(STAMP + cur.key) || 0);
+        if (cur.value.at > at) { try { a.setItem(PREFIX + cur.key, cur.value.json); a.setItem(STAMP + cur.key, String(cur.value.at)); n++; } catch { /* full */ } }
+        cur.continue();
+      };
+      req.onerror = () => resolve(n);
+    } catch { resolve(n); }
+  });
+}
 
 function area() {
   try {
@@ -41,7 +83,11 @@ export function save(key, value) {
     return false;
   }
   try {
-    a.setItem(PREFIX + key, JSON.stringify(value));
+    const json = JSON.stringify(value);
+    const at = Date.now();
+    a.setItem(PREFIX + key, json);
+    a.setItem(STAMP + key, String(at));
+    mirror(key, json, at);
     return true;
   } catch (err) {
     reportFailure(key, err);
@@ -52,23 +98,30 @@ export function save(key, value) {
 export function remove(key) {
   try {
     area()?.removeItem(PREFIX + key);
+    area()?.removeItem(STAMP + key);
+    mirror(key, null);
   } catch (err) {
     console.warn(`storage.remove(${key}) failed:`, err);
   }
 }
 
-/** Removes every key this app stored (Reset demo). */
+/** Removes every key this app stored (Reset demo). Resolves when the IndexedDB copy is cleared too. */
 export function clearAll() {
+  let done = Promise.resolve();
   try {
     const a = area();
-    if (!a) return;
+    if (!a) return done;
     // Standard Storage API (length/key) rather than Object.keys, so it works in every implementation.
     const keys = [];
     for (let i = 0; i < a.length; i++) keys.push(a.key(i));
-    for (const k of keys) if (k?.startsWith(PREFIX)) a.removeItem(k);
+    for (const k of keys) if (k?.startsWith(PREFIX) || k?.startsWith(STAMP)) a.removeItem(k);
+    done = Promise.resolve(db()).then((d) => new Promise((resolve) => {
+      try { const tx = d.transaction('kv', 'readwrite'); tx.objectStore('kv').clear(); tx.oncomplete = resolve; tx.onerror = resolve; } catch { resolve(); }
+    }));
   } catch (err) {
     console.warn('storage.clearAll failed:', err);
   }
+  return done;
 }
 
 // Per-browser-session values (cleared when the browser session ends; survive reloads), e.g. "welcome shown".

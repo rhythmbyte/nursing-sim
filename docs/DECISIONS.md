@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Every save is mirrored to IndexedDB
+- **Decision:** `storage.save` writes localStorage (synchronous, what the app reads) and also IndexedDB (best effort), with a timestamp for each. At boot, `restoreBackup()` copies IndexedDB entries newer than localStorage's back.
+- **Why:** the kill tests lost the last seconds of work because Chromium flushes localStorage to disk in ~5 s batches; IndexedDB commits at once. This keeps the one-file storage boundary (B2) and the synchronous API.
+- **Full build:** the server is the source of truth (SPEC §13); this mirror stands in for "acknowledged by the server".
+
+---
+
 ## 2026-11-07: Rejoin by name with a device token; approval when the token is missing
 - **Decision:** `joinSim` treats a known name as a rejoin. The same device, or a device holding that student's rejoin token (issued at the first join, kept in storage per code and name), rejoins at once. Otherwise a request goes to Live control, and approving it switches the requesting tab to that student (`device.<tab>` mapping).
 - **Why:** A student who loses a tablet mid-sim must not lose their patients, timers or debrief history, and must not appear twice. In the full build the login does this (SPEC §13); the token is the prototype stand-in.

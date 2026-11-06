@@ -2,6 +2,20 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Crash safety and rejoin tests (Part E)
+- **Fixed (found by the kill tests): a killed browser could lose the last ~5 seconds** (Chromium writes localStorage to disk in batches), including a just-started task or delegation. `storage.js` now also writes every save to IndexedDB, which reaches disk at once, and `restoreBackup()` puts newer copies back before the app loads. Reset demo waits for both to clear.
+- **Fixed:** after a crash the instructor came back to the Command center instead of their view, because "picked a view" lived in sessionStorage. It's now remembered per sim. The rejoin "waiting for your instructor" message now shows.
+- **Headless crash / rejoin tests**, 13 + 6 checks, all passing. Each compares the saved state (roster, students' handoffs and task timers, delegations, priorities) before and after:
+  - reload;
+  - tab closed and reopened;
+  - browser killed mid-typing, mid-task-timer and mid-delegation (relaunched with the same profile: form restored, sim paused at the last heartbeat, then the timer and the delegation resume and finish);
+  - browser killed mid-editor-edit (unsaved name restored, same view);
+  - Back button;
+  - rejoin by re-entering the code (token on the device: same student, no duplicate);
+  - rejoin with the token missing (Live control → Approve, the tab becomes that student).
+- Questions added for the instructor and school IT: typical sim length and breaks, lab-computer idle logouts.
+- Tests: 209 passing.
+
 ## Rejoin at the same spot (Part D)
 - A student who reloads, crashes, closes the tab or goes Back and returns lands exactly where they were: same identity and group, open chart and section, drafts, running task timer, pending or queued delegations, alerts and priorities. Handoff "show once" stays closed (notes kept); a submitted reflection doesn't come back.
 - **Re-entering the join code with the same name rejoins** that student (same userId and group) instead of "already joined" or a duplicate. This device: at once. Another device with the saved **rejoin token**: at once. Token missing: Live control shows "Ana is rejoining from another device" with **Approve / Deny**, and the waiting device switches to Ana when approved.
