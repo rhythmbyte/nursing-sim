@@ -69,3 +69,16 @@ test('builder: new change creates linked events, keyframe, findings, order set, 
   assert.equal(gone.events.length, t.events.length);
   assert.equal(gone.orders.length, t.orders.length);
 });
+
+test('B9: intervention search uses catalog synonyms; recent = last distinct for this user', async () => {
+  const { searchInterventions, recentInterventions } = await import('../js/screens/chart/search.js');
+  const { catalogs } = await import('./fixtures.mjs');
+  const cat = catalogs.interventions;
+  assert.equal(searchInterventions(cat, 'foley')[0].id, 'foley');
+  assert.equal(searchInterventions(cat, 'indwelling')[0].id, 'foley');
+  assert.equal(searchInterventions(cat, 'EKG')[0].id, 'ecg-12lead');
+  assert.equal(searchInterventions(cat, 'fingerstick')[0].id, 'glucose-poc');
+  assert.deepEqual(searchInterventions(cat, '   '), []);
+  const log = ['vs-bp', 'foley', 'vs-bp', 'ecg-12lead'].map((id, i) => ({ userId: i === 1 ? 'student-2' : 'student-1', action: 'intervention', details: { interventionId: id } }));
+  assert.deepEqual(recentInterventions(log, 'student-1', cat).map((i) => i.id), ['ecg-12lead', 'vs-bp']);
+});

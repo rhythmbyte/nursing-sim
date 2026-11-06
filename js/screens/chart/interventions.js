@@ -6,6 +6,7 @@ import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, byWhom, fieldLabel, patientLog } from './util.js';
 import { vitalsInputs } from './vitals-form.js';
+import { searchInterventions, recentInterventions } from './search.js';
 
 function pendingNote(state, pid, taskId) {
   const t = state.patients[pid].delegations.find((d) => d.id === taskId);
@@ -24,6 +25,8 @@ export default {
     let category = cat.categories[0].id;
     let selected = null;
 
+    const search = h('input', { class: 'input iv-search', type: 'search', placeholder: 'Search interventions (e.g. foley, EKG, vitals)', 'aria-label': 'Search interventions', oninput: () => renderBars() });
+    const recentRow = h('div', { class: 'pill-row', role: 'group', 'aria-label': 'Recent' });
     const catBar = h('div', { class: 'pill-row', role: 'group', 'aria-label': 'Categories' });
     const ivBar = h('div', { class: 'pill-row', role: 'group', 'aria-label': 'Interventions' });
     const form = h('div', {});
@@ -35,7 +38,12 @@ export default {
         'aria-pressed': c.id === category ? 'true' : 'false',
         onclick: () => { category = c.id; selected = null; renderBars(); renderForm(); },
       }, c.label)));
-      clear(ivBar).append(...cat.interventions.filter((i) => i.category === category).map((i) => h('button', {
+      const recent = recentInterventions(runner.state.log, ctx.user.userId, cat);
+      clear(recentRow).append(...(recent.length ? [h('span', { class: 'muted small' }, 'Recent:'), ...recent.map((i) => h('button', { class: 'pill pill-iv', onclick: () => { selected = i; search.value = ''; renderBars(); renderForm(); } }, i.label))] : []));
+      const q = search.value.trim();
+      catBar.hidden = Boolean(q);
+      const list = q ? searchInterventions(cat, q) : cat.interventions.filter((i) => i.category === category);
+      clear(ivBar).append(...(q && !list.length ? [h('span', { class: 'muted' }, 'No match. Try another word.')] : []), ...list.map((i) => h('button', {
         class: `pill pill-iv${selected?.id === i.id ? ' active' : ''}`,
         'aria-pressed': selected?.id === i.id ? 'true' : 'false',
         onclick: () => { selected = i; renderBars(); renderForm(); },
@@ -74,7 +82,7 @@ export default {
     }
 
     root.append(h('div', { class: 'chart-grid two' },
-      h('section', { class: 'panel' }, h('h3', {}, 'Chart an intervention'), catBar, ivBar, form),
+      h('section', { class: 'panel' }, h('h3', {}, 'Chart an intervention'), search, recentRow, catBar, ivBar, form),
       h('section', { class: 'panel' }, h('h3', {}, 'Charted this shift'), recent),
     ));
     renderBars();

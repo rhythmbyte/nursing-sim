@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## B9. Intervention search and Recent
+- Type-to-find across all categories in the Interventions tab: label, id and catalog `synonyms` (e.g. "foley" or "indwelling" → Insert Foley catheter; "EKG" → 12-lead ECG; "fingerstick" → glucose). The synonyms are data in `interventions.json` (proposed).
+- A **Recent** row shows the student's last-used interventions.
+- Tests: 107 passing.
+
 ## A. Bedside patient monitor
 - **Monitor** tab in the student chart, with **Full screen** for a tablet or TV next to the manikin.
 - Real-monitor look: dark background, large numbers. HR/ECG green, SpO₂ cyan, NIBP white (red when alarming), RR yellow. Shows NIBP time of the last cycle, O₂ device, and temp only with a temp probe (`monitor.tempProbe`).

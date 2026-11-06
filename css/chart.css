@@ -156,3 +156,4 @@ details.advanced summary { cursor: pointer; color: var(--muted); }
 @keyframes mon-flash { 50% { background: #5a0b0b; } }
 @media (prefers-reduced-motion: reduce) { .mon-tile.mon-alarm { animation: none; background: #5a0b0b; } }
 @media (max-width: 760px) { .mon-body { grid-template-columns: 1fr; } .mon-value { font-size: 1.8rem; } }
+.iv-search { margin-bottom: var(--space-2); }
