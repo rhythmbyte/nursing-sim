@@ -4,6 +4,17 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: B3 extended to cover instructor saves (approved by the project owner)
+- **Decision:** Boundary B3 now reads "`data-loader.js` is the only file that knows where data comes from **and where instructor edits go**". Patient, scenario and catalog edits save through `saveLocal`/`saveLocalCatalog` there (which use `storage.js`).
+- **Why:** It still protects the single swap point: the full build replaces this one module with API reads and writes. This change was made before asking; the owner reviewed it afterwards and approved keeping it.
+- **Alternatives:** A separate library-store module (two places to swap, and B3 would no longer be true as written).
+
+## 2026-11-05: Catalogs in the review queue; Reset demo
+- **Decision:** The review queue also lists each catalog's proposed items (Approve, Export JSON, Revert to file). Approvals save in this browser like patient edits. A header **Reset demo** button stops the tick and heartbeat, clears every app key in storage (`storage.clearAll`) and reloads.
+- **Why:** Catalog values (rule thresholds, delegability, vitals settings, defaults) are instructor decisions too. Reset gives a clean slate before showing the demo.
+
+---
+
 ## 2026-11-05: Instructor edits save in the browser; publishing is export + commit
 - **Decision:** Patient edits, approvals and new sims are validated and saved through `data-loader.saveLocal()` (`storage.js`), and overlay the files at load. Each local item can be exported, reverted (to the file) or deleted (browser-only items).
 - **Why:** A static GitHub Pages site can't write files. Keeping reads and writes in `data-loader.js` leaves B3 intact (the B3 wording was extended to say so, without changing what it guards).

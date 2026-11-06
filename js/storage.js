@@ -38,3 +38,14 @@ export function remove(key) {
     console.warn(`storage.remove(${key}) failed:`, err);
   }
 }
+
+/** Removes every key this app stored (Reset demo). */
+export function clearAll() {
+  try {
+    const a = area();
+    if (!a) return;
+    for (const k of Object.keys(a)) if (k.startsWith(PREFIX)) a.removeItem(k);
+  } catch (err) {
+    console.warn('storage.clearAll failed:', err);
+  }
+}

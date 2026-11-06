@@ -18,10 +18,10 @@ export function needsReview(obj) {
   return Boolean(obj) && NEEDS_REVIEW.has(obj.review);
 }
 
-/** Readable label for a reviewable node at `path` in a patient template. */
-function labelFor(path, node) {
+/** Readable label for a reviewable node at `path` (patient templates; catalogs use rootLabel). */
+function labelFor(path, node, rootLabel) {
   const [top, idx, sub] = path;
-  if (!path.length) return 'Whole patient file';
+  if (!path.length) return rootLabel;
   if (top === 'orders') return `Order: ${node.text}`;
   if (top === 'events') return `Event (${node.type}): ${node.payload?.message || node.id}`;
   if (top === 'labs') return `Lab: ${node.label || node.code}${node.value != null ? ` = ${node.value}` : ''}`;
@@ -31,12 +31,12 @@ function labelFor(path, node) {
 }
 
 /** Every node tagged proposed/partial: [{ path, label, status }] (root first). */
-export function reviewItems(template) {
+export function reviewItems(template, rootLabel = 'Whole patient file') {
   const out = [];
   (function walk(node, path) {
     if (Array.isArray(node)) { node.forEach((x, i) => walk(x, [...path, i])); return; }
     if (!node || typeof node !== 'object') return;
-    if (NEEDS_REVIEW.has(node.review)) out.push({ path, label: labelFor(path, node), status: node.review });
+    if (NEEDS_REVIEW.has(node.review)) out.push({ path, label: labelFor(path, node, rootLabel), status: node.review });
     for (const [k, v] of Object.entries(node)) if (v && typeof v === 'object') walk(v, [...path, k]);
   })(template, []);
   return out;

@@ -31,12 +31,27 @@ async function fetchJson(base, rel) {
 // Instructor edits made in the browser (patient editor, review approvals, sim setup) overlay the files.
 // Prototype: they live in this browser via storage.js; publish by exporting JSON and committing it.
 // Full build: these become API writes (SPEC §13).
-const LOCAL_KEYS = { patient: 'library.patients', scenario: 'library.scenarios' };
+const LOCAL_KEYS = { patient: 'library.patients', scenario: 'library.scenarios', catalog: 'library.catalogs' };
 
 /** Validate a patient or scenario object: schema + cross-field checks. Returns error strings. */
 export function validateItem(kind, data, schemas) {
   const errors = validate(data, schemas[kind]);
   return errors.length || !EXTRA_CHECKS[kind] ? errors : EXTRA_CHECKS[kind](data);
+}
+
+/** Save an edited catalog (e.g. review approval) by name. Returns error strings. */
+export function saveLocalCatalog(name, data, schemas) {
+  const errors = validate(data, schemas[name]);
+  if (errors.length) return errors;
+  const all = load(LOCAL_KEYS.catalog, {});
+  all[name] = data;
+  return save(LOCAL_KEYS.catalog, all) ? [] : ['Could not save (browser storage is full or blocked).'];
+}
+
+export function removeLocalCatalog(name) {
+  const all = load(LOCAL_KEYS.catalog, {});
+  delete all[name];
+  save(LOCAL_KEYS.catalog, all);
 }
 
 /** Save a local edit/new item. Returns error strings (nothing saved if any). */
@@ -104,15 +119,25 @@ export async function loadAll(base = 'data/') {
     ),
   ]);
 
+  // Catalog edits from this browser (review approvals) replace the file version when valid.
+  const localCatalogs = load(LOCAL_KEYS.catalog, {});
+  const catalogsOut = Object.fromEntries(catalogEntries.map(([k, v]) => [k, v || null]));
+  const localCatalogNames = new Set();
+  for (const [name, cat] of Object.entries(localCatalogs)) {
+    const errors = schemas[name] ? validate(cat, schemas[name]) : [`Unknown catalog ${name}`];
+    if (errors.length) { problems.push({ file: `browser edit: catalog ${name}`, errors }); continue; }
+    catalogsOut[name] = cat;
+    localCatalogNames.add(name);
+  }
   const pts = overlay('patient', patients.filter(Boolean), schemas, problems);
   const scs = overlay('scenario', scenarios.filter(Boolean), schemas, problems);
   return {
     patients: pts.items,
     scenarios: scs.items,
     schemas,
-    local: { patients: pts.localIds, scenarios: scs.localIds },
+    local: { patients: pts.localIds, scenarios: scs.localIds, catalogs: localCatalogNames },
     fileIds: { patients: pts.fileIds, scenarios: scs.fileIds },
-    catalogs: Object.fromEntries(catalogEntries.map(([k, v]) => [k, v || null])),
+    catalogs: catalogsOut,
     problems,
   };
 }

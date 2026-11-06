@@ -3,7 +3,7 @@
 
 import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
-import { load, save, remove } from './storage.js';
+import { load, save, remove, clearAll } from './storage.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
 import { withDefaults } from './engine/settings.js';
@@ -94,7 +94,20 @@ function startApp(root, data, scenarioId, restart, reloadData) {
   const heartbeat = setInterval(() => save(HEARTBEAT_KEY, Date.now()), HEARTBEAT_MS);
   save(HEARTBEAT_KEY, Date.now());
 
-  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: picker });
+  // Reset demo: clears this browser's sim, edits, approvals and created sims, then reloads the page.
+  const resetDemo = h('button', {
+    class: 'btn btn-ghost btn-small',
+    onclick: () => {
+      if (!window.confirm('Reset the demo? This clears the running sim and every edit, approval and sim created in this browser.')) return;
+      // Stop everything that writes to storage first, so nothing re-saves between clear and reload.
+      clearInterval(timer);
+      clearInterval(heartbeat);
+      window.removeEventListener('pagehide', onPageHide);
+      clearAll();
+      window.location.reload();
+    },
+  }, 'Reset demo');
+  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo) });
   const timer = setInterval(() => runner.tick(), TICK_MS);
   runner.tick();
   return () => {
