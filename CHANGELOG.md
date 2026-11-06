@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Command center: flash on worse status
+- A group card flashes for 4 seconds when its status gets worse (On track → Falling behind → Needs attention), so a change stands out on a TV. With reduced motion turned on, it shows a steady red outline for those 4 seconds instead. The ranking comes from one engine helper, `statusWorsened`, which also orders the cards. It's a UI cue only, so nothing is logged.
+- Tests: 142 passing.
+
 ## Command center and timeliness tags
 - **Timeliness** (`engine/timeliness.js`, one source): every timed order, scheduled med due time, call light and monitor alarm gets **On time / Late / Very late**, or while still open **Open / Open – late / Open – very late** (and **Never done** in the debrief after the sim ends). Thresholds per tier and per kind are data in `rules.json rules.timeliness` (proposed); scenarios can override them. tier-timeout, call-light-response and alarm-response now read these tags, so the command center, debrief and flags can't disagree.
 - **Command center** (new instructor sub-view, the default while a sim is in progress): one card per group, worst first. Each card shows the students and which chart they're in; a status of On track / Falling behind / Needs attention (rule is data); counts of open orders, late, very late, meds overdue, call lights (longest wait), monitor alarms and red/amber flags; and per patient the instructor tag, a vitals trend arrow (thresholds in `vitals.json trend`) and the worst open item ("◉ Open – very late: 12-lead ECG, 30 min"). Click a group or patient → Live control filtered to it ("Show all" clears it).

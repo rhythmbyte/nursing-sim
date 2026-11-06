@@ -26,6 +26,11 @@ export function groupStatus(counts, rule = {}) {
 }
 const STATUS_RANK = { 'needs-attention': 2, 'falling-behind': 1, 'on-track': 0 };
 
+/** True when a group's status moved to a worse one (e.g. on-track → falling-behind). Unknown/first → false. */
+export function statusWorsened(prev, next) {
+  return prev != null && (STATUS_RANK[next] ?? 0) > (STATUS_RANK[prev] ?? 0);
+}
+
 /** ctx: runner.rulesCtx() (templatesById, catalogs, simMin, studentIdsForGroup, …). */
 export function commandCenter(state, ctx, scenario) {
   const items = timelinessItems(state, ctx);

@@ -8,7 +8,7 @@ import { joinSim } from '../js/engine/roster.js';
 import { studentIdsForGroup } from '../js/engine/assignment.js';
 import { evaluateRules } from '../js/engine/rules/index.js';
 import { tagFor, timelinessItems, medDueTimes, timelinessCounts } from '../js/engine/timeliness.js';
-import { commandCenter, groupStatus, vitalsTrend } from '../js/engine/command-center.js';
+import { commandCenter, groupStatus, statusWorsened, vitalsTrend } from '../js/engine/command-center.js';
 import { adjustVitals } from '../js/engine/vitals-control.js';
 
 const INS = { userId: 'instructor', role: 'instructor' };
@@ -108,4 +108,12 @@ test('debrief timeliness: worst first, never done after the end, summary and tie
   assert.equal(d.rows[0].tag, 'never', 'worst first');
   assert.equal(d.summary.medianTier1Min, 3);
   assert.equal(d.summary.onTime + d.summary.late + d.summary.veryLate + d.summary.never, d.rows.length);
+});
+
+test('statusWorsened: only a move to a worse status counts', () => {
+  assert.equal(statusWorsened('on-track', 'falling-behind'), true);
+  assert.equal(statusWorsened('falling-behind', 'needs-attention'), true);
+  assert.equal(statusWorsened('needs-attention', 'on-track'), false);
+  assert.equal(statusWorsened('on-track', 'on-track'), false);
+  assert.equal(statusWorsened(undefined, 'needs-attention'), false);
 });

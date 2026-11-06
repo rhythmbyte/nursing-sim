@@ -74,7 +74,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 8. Optional:
    - **Instructor → Review queue:** every AI-drafted item with Approve.
    - **Monitor-only event:** in the patient editor, add a scenario change with "Silent" and a new **Rhythm (monitor)**, and see who notices.
-   - **Command center** (Instructor, the default while a sim runs): one card per group, worst first, with late / very late work, overdue meds, call lights, alarms and flags. Click a group or patient to jump to Live control. The debrief adds a **Timeliness** table.
+   - **Command center** (Instructor, the default while a sim runs): one card per group, worst first, with late / very late work, overdue meds, call lights, alarms and flags. Click a group or patient to jump to Live control. A card flashes for a few seconds when its status gets worse. The debrief adds a **Timeliness** table.
    - **Keyboard:** on Live control, Space pauses/resumes, N skips to the next event, ? lists shortcuts.
    - **Help:** every Sim setup and editor field has a ? with a plain-language explanation.
    - **Patient editor:** open a patient, click a timeline marker to see a scenario change, or **Add scenario change** (e.g. 09:45 call light, new vitals, a tier 1 order), then drag it on the timeline.

@@ -236,4 +236,8 @@ body.standalone-monitor { background: #000; }
 .cc-trend { font-weight: 700; } .cc-trend-worse { color: var(--triage-red); } .cc-trend-better { color: var(--triage-green); }
 .cc-alarm { color: var(--error-text); font-weight: 700; font-size: 0.8rem; }
 .cc-worst { flex-basis: 100%; padding-left: 1em; }
+/* Status got worse: flash for 4 s (FLASH_MS in command-center.js). Reduced motion: a steady outline instead. */
+.cc-flash { animation: cc-flash 1s ease-in-out 4; }
+@keyframes cc-flash { 50% { box-shadow: 0 0 0 4px var(--triage-red); background: var(--surface-2); } }
+@media (prefers-reduced-motion: reduce) { .cc-flash { animation: none; box-shadow: 0 0 0 4px var(--triage-red); } }
 @media (min-width: 1800px) { .cc-grid { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); } .cc-card { font-size: 1.15rem; } .cc-count strong { font-size: 2rem; } }

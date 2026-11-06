@@ -8,15 +8,19 @@ import { triageChip } from '../shared/triage-chip.js';
 import { toneChip } from '../shared/tone-chip.js';
 import { patientLabel } from '../shared/labels.js';
 import { helpTip } from '../shared/help.js';
-import { commandCenter } from '../../engine/command-center.js';
+import { commandCenter, statusWorsened } from '../../engine/command-center.js';
 import { timelinessConfig } from '../../engine/timeliness.js';
 
 const TREND = { worse: ['↘', 'Vitals worsening'], better: ['↗', 'Vitals improving'], steady: ['→', 'Vitals steady'] };
 const KIND = { order: '', med: 'Med: ', callLight: '', alarm: '' };
+const FLASH_MS = 4000; // how long a card flashes after its status gets worse (CSS .cc-flash matches)
 
 export function mountCommandCenter(root, { store, runner, scenario, openLive }) {
   const clock = simClock(store, runner);
   const grid = h('div', { class: 'cc-grid' });
+  const lastStatus = {}; // groupId → status at the previous render
+  const flashFrom = {}; // groupId → wall ms when its status last got worse
+  let flashTimer = null;
 
   function render() {
     const state = runner.state;
@@ -27,8 +31,13 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
     const groups = commandCenter(state, runner.rulesCtx(), scenario);
     clear(grid).append(...groups.map((g) => {
       const c = g.counts;
+      if (statusWorsened(lastStatus[g.groupId], g.status)) flashFrom[g.groupId] = Date.now();
+      lastStatus[g.groupId] = g.status;
+      const since = Date.now() - (flashFrom[g.groupId] ?? -Infinity);
+      const flashing = since < FLASH_MS;
       const count = (n, label, warn) => h('div', { class: `cc-count${warn && n ? ` cc-warn-${warn}` : ''}` }, h('strong', {}, String(n)), h('span', {}, label));
-      return h('section', { class: `cc-card cc-${g.status}` },
+      // A re-render mid-flash rebuilds the card, so a negative delay resumes the animation where it was.
+      return h('section', { class: `cc-card cc-${g.status}${flashing ? ' cc-flash' : ''}`, style: flashing ? `animation-delay: -${since}ms` : null },
         h('button', { class: 'cc-head', onclick: () => openLive({ groupId: g.groupId }), title: 'Open this group in Live control' },
           h('h3', {}, g.name), toneChip(statusLabels[g.status])),
         h('div', { class: 'cc-students' }, g.students.length
@@ -49,6 +58,10 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
         })),
       );
     }));
+    // Re-render once the newest flash ends so the class is removed.
+    const left = Math.max(0, ...Object.values(flashFrom).map((t) => FLASH_MS - (Date.now() - t)));
+    clearTimeout(flashTimer);
+    flashTimer = left > 0 ? setTimeout(render, left + 50) : null;
   }
 
   root.append(
@@ -60,5 +73,5 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
   const off = store.subscribe(render);
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
-  return () => { off(); offTick(); clock.destroy(); };
+  return () => { off(); offTick(); clock.destroy(); clearTimeout(flashTimer); };
 }
