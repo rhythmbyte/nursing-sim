@@ -118,13 +118,16 @@ test('patient editor round-trip keeps every starter patient valid and intact', a
   const { load } = await import('./fixtures.mjs');
   const schema = load('schemas/patient.schema.json');
   for (const t of Object.values(templatesById)) {
-    const back = fromForm(toForm(t), t, t.orders);
+    const back = fromForm(toForm(t), t);
     assert.deepEqual(validate(back, schema), [], t.id);
-    for (const k of ['demographics', 'orders', 'events', 'labs', 'pmh', 'hpi', 'debrief', 'outcome', 'codeBranch', 'tag']) assert.deepEqual(back[k], t[k], `${t.id}.${k}`);
+    for (const k of ['demographics', 'orders', 'events', 'labs', 'pmh', 'hpi', 'debrief', 'outcome', 'codeBranch', 'tag', 'reviewNotes']) assert.deepEqual(back[k], t[k], `${t.id}.${k}`);
     assert.deepEqual(back.vitals, t.vitals, `${t.id}.vitals`);
     assert.deepEqual(back.allergies.map((a) => a.agent), t.allergies.map((a) => a.agent));
   }
-  assert.throws(() => fromForm({ ...toForm(templatesById['p1-robert-miller']), advanced: '{oops' }, templatesById['p1-robert-miller'], []), /Advanced JSON/);
+  const linda = templatesById['p4-linda-garcia'];
+  const cb = fromForm({ ...toForm(linda), cbEnabled: true, cbByMin: '120' }, linda).codeBranch;
+  assert.deepEqual([cb.enabled, cb.trigger.byMin, cb.event.payload.rhythm, cb.review], [true, 120, 'PEA', 'proposed'], 'code branch form keeps the rest');
+  assert.equal(fromForm({ ...toForm(linda), cbOn: false }, linda).codeBranch, null);
   const blank = blankPatient('p-new');
   assert.ok(validate({ ...blank, demographics: { ...blank.demographics, name: 'X', room: '210' }, admittingDx: 'Dx' }, schema).length === 0);
 });

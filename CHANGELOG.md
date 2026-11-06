@@ -2,6 +2,20 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Instructor-friendly patient scripting
+- **Scenario-change builder** in the patient editor: time (shift clock) or instructor-triggered, how it starts (call light / staff message / silent), what the patient says, new vitals, new findings, new orders with tiers, and what students should recognize. Saving generates the linked events; Edit reopens the same form.
+- **Per-patient timeline:** shift clock across the top with one marker per change. Click to edit; drag to retime (snaps to 5 min).
+- **No JSON boxes:**
+  - orders and labs are editable tables with Add and Remove;
+  - outcome, code branch and review notes are form fields;
+  - "Advanced: edit JSON" is collapsed.
+- **Duplicates:** **Duplicate patient** and **Duplicate change** (+15 min).
+- **Debrief:** each change's "should recognize" notes now appear in the debrief.
+- SPEC §13: AI conversion of a pasted case write-up (full build, needs a backend).
+- **Fix found by the round-trip test:** keyframe extras (GCS, notes, review tags) would have been lost on save.
+- No new starter content was added, so nothing new to mark proposed.
+- Tests: 96 passing.
+
 ## Live vitals control
 - **Live control → Adjust vitals** per patient:
   - current values (BP, HR, RR, temp, SpO₂, O₂ device, pain, GCS, glucose);

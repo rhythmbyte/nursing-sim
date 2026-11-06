@@ -64,6 +64,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - Then **Export CSV**.
 8. Optional:
    - **Instructor → Review queue:** every AI-drafted item with Approve.
+   - **Patient editor:** open a patient, click a timeline marker to see a scenario change, or **Add scenario change** (e.g. 09:45 call light, new vitals, a tier 1 order), then drag it on the timeline.
    - **Sim setup:** build a two-group sim with random tag counts.
 
 Content marked "Needs review" was drafted by AI and is waiting on the instructor. Open clinical questions are listed in SPEC.md §14.

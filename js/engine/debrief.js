@@ -109,7 +109,11 @@ export function buildDebrief(state, userId, ctx) {
     priorities: pids.filter((pid) => state.patients[pid].present).map((pid) => ({
       patientId: pid, segments: priorityTimeline(state, userId, pid, activeScale(state.settings, ctx.catalogs), ctx.simMin),
     })),
-    shouldRecognize: pids.map((pid) => ({ patientId: pid, items: ctx.templatesById[pid].debrief?.shouldRecognize || [] })),
+    // Patient-level items plus each scenario change's notes (debrief.byChange, written in the change builder).
+    shouldRecognize: pids.map((pid) => {
+      const d = ctx.templatesById[pid].debrief || {};
+      return { patientId: pid, items: [...(d.shouldRecognize || []), ...Object.values(d.byChange || {}).flat()] };
+    }),
     timeline: timeline(state, userId, pids, flags),
   };
 }

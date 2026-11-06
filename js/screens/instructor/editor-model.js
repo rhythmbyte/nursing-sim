@@ -1,7 +1,7 @@
-// Patient editor ⇄ template JSON. The simple sections are form fields; the nested ones (labs, events,
-// vitals changes, finding changes, outcome, code branch, review notes) are edited as JSON. No DOM.
-
-export const ADVANCED_KEYS = ['reviewNotes', 'labs', 'events', 'outcome', 'codeBranch'];
+// Patient editor ⇄ template JSON (no JSON in the normal workflow). Form fields cover demographics, H&P,
+// SBAR, baseline vitals, findings, debrief, outcome, code branch and review notes; orders and labs come
+// from their tables; events/vitals changes/finding changes are edited as scenario changes (change-model.js).
+// No DOM.
 
 const lines = (s) => String(s || '').split('\n').map((x) => x.trim()).filter(Boolean);
 const pipes = (line) => line.split('|').map((x) => x.trim());
@@ -28,20 +28,30 @@ export function toForm(t) {
     ...Object.fromEntries(Object.entries(t.vitals.baseline).map(([k, v]) => [`v_${k}`, String(v)])),
     findings: t.findings.baseline.join('\n'),
     shouldRecognize: (t.debrief?.shouldRecognize || []).join('\n'), instructorNotes: (t.debrief?.instructorNotes || []).join('\n'),
-    keyframes: JSON.stringify(t.vitals.keyframes || [], null, 2),
-    findingChanges: JSON.stringify(t.findings.changes || [], null, 2),
-    advanced: JSON.stringify(Object.fromEntries(ADVANCED_KEYS.map((k) => [k, t[k] ?? null])), null, 2),
+    reviewNotes: (t.reviewNotes || []).join('\n'),
+    outcomeMode: t.outcome?.mode || 'survive', outcomeNotes: t.outcome?.notes || '',
+    cbOn: Boolean(t.codeBranch), cbEnabled: Boolean(t.codeBranch?.enabled), cbDescription: t.codeBranch?.description || '',
+    cbIfNotCharted: (t.codeBranch?.trigger?.ifNotCharted || []).join(', '), cbByMin: t.codeBranch?.trigger?.byMin ?? '',
+    cbRhythm: t.codeBranch?.event?.payload?.rhythm || '', cbMessage: t.codeBranch?.event?.payload?.message || '',
   };
 }
 
 const num = (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? v : Number(v));
 
-/** Builds a template from form values over `base` (keeps fields the form doesn't show). Throws on bad JSON. */
-export function fromForm(f, base, orders) {
-  const parse = (label, text) => {
-    try { return JSON.parse(text); } catch (e) { throw new Error(`${label}: ${e.message}`); }
+function codeBranchFrom(f, base) {
+  if (!f.cbOn) return null;
+  const prev = base.codeBranch || {};
+  return {
+    ...prev,
+    enabled: Boolean(f.cbEnabled),
+    description: f.cbDescription,
+    trigger: { ...(prev.trigger || {}), ifNotCharted: f.cbIfNotCharted.split(',').map((x) => x.trim()).filter(Boolean), byMin: num(f.cbByMin) },
+    event: { id: prev.event?.id || `e-${base.id.split('-')[0]}-code`, type: 'code', ...(prev.event || {}), payload: { ...(prev.event?.payload || {}), rhythm: f.cbRhythm, message: f.cbMessage } },
   };
-  const adv = parse('Advanced JSON', f.advanced);
+}
+
+/** Builds a template from form values over `base` (keeps everything the form doesn't show). */
+export function fromForm(f, base, { orders = base.orders, labs = base.labs } = {}) {
   const baseline = Object.fromEntries(Object.entries(f).filter(([k, v]) => k.startsWith('v_') && v !== '').map(([k, v]) => [k.slice(2), ['hr', 'rr', 'tempF', 'spo2'].includes(k.slice(2)) ? num(v) : v]));
   const t = {
     ...base,
@@ -52,12 +62,15 @@ export function fromForm(f, base, orders) {
     hpi: f.hpi, pmh: lines(f.pmh),
     homeMeds: lines(f.homeMeds).map(pipes).map(([name, dose, freq]) => ({ name, ...(dose ? { dose } : {}), ...(freq ? { freq } : {}) })),
     handoff: { ...(base.handoff || {}), situation: f.situation, background: f.background, assessment: f.assessment, recommendation: f.recommendation },
-    vitals: { ...base.vitals, baseline, keyframes: parse('Vitals changes', f.keyframes) },
-    findings: { ...base.findings, baseline: lines(f.findings), changes: parse('Finding changes', f.findingChanges) },
+    vitals: { ...base.vitals, baseline },
+    findings: { ...base.findings, baseline: lines(f.findings) },
     orders,
+    labs,
+    reviewNotes: lines(f.reviewNotes),
+    outcome: { ...(base.outcome || {}), mode: f.outcomeMode, notes: f.outcomeNotes },
+    codeBranch: codeBranchFrom(f, base),
     debrief: { ...(base.debrief || {}), shouldRecognize: lines(f.shouldRecognize), instructorNotes: lines(f.instructorNotes) },
   };
   if (f.allergyText.trim()) t.allergyText = f.allergyText.trim(); else delete t.allergyText;
-  for (const k of ADVANCED_KEYS) if (k in adv) t[k] = adv[k];
   return t;
 }

@@ -91,7 +91,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/templates.js` | `effectiveTemplates`: file templates + instructor ad-hoc orders | built |
 | `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
 | `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `download.js` | built |
-| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js`, `live-labs.js`, `live-flags.js`, `live-roster.js` (join code, students), `live-patients.js` (push order, call light, code/ROSC); `sim-setup.js`; `review-queue.js`; `patient-editor.js` + `editor-model.js` (form ⇄ JSON) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
+| `js/screens/instructor/` | patient editor: `patient-editor.js` (working copy, sections), `editor-model.js` (form ⇄ template), `editor-tables.js` (orders, labs), `change-model.js` (scenario changes ⇄ events/keyframes/findings/order sets, pure + tested), `change-builder.js` (the form), `patient-timeline.js` (click/drag markers); `index.js` (sub-views), `live-control.js` + `live-events.js`, `live-labs.js`, `live-flags.js`, `live-roster.js` (join code, students), `live-patients.js` (push order, call light, code/ROSC); `sim-setup.js`; `review-queue.js`; `patient-editor.js` + `editor-model.js` (form ⇄ JSON) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
 | `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
@@ -132,6 +132,7 @@ Things that are UI conveniences only, **not** security: B11's student filter. Th
 ## 4. How to…
 
 ### Add a patient
+In the app: **Instructor → Patient editor → New patient** (or **Duplicate patient**), fill in the sections, add **scenario changes**, then Save and **Export JSON** and commit it (steps 3–4 below). By hand:
 1. Copy an existing file in `data/patients/` and rename it `pN-first-last.json`. The `id` inside must match the pattern in `patient.schema.json` (`p…`).
 2. Fill it in following SPEC §4.1. Tag anything drafted by AI with `"review": "proposed"`, and never remove those tags.
 3. Add the path to `data/manifest.json` → `patients`.

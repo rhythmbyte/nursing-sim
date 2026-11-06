@@ -4,6 +4,17 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Scenario changes: the editor's unit for scripting
+- **Decision:** The editor presents a patient's events as **scenario changes**: one per linked-event group (an ungrouped event is its own change). The builder form (time or instructor-triggered, how it starts, message, vitals, findings, orders with tiers, what to recognize) is converted by `change-model.js` into a call-light/staff-message event, a vitals-change plus keyframe, a findings-change plus finding change, a new-orders event plus order set, and `debrief.byChange[group]`. Saving reuses existing event ids and keyframe/finding ids, keeps extra payload, vitals and keyframe fields, and keeps unmanaged event types (admission, code, lab-result) and retimes them with the change.
+- **Why:** It mirrors how the instructor writes cases, and nothing technical shows. A round-trip test proves that every starter change opened and saved in the builder leaves the patient unchanged. That test caught real data loss (GCS and notes fields in keyframes) before it shipped.
+- **Alternatives:** Editing events one by one (the instructor would have to understand groups, keyframes and order sets).
+
+## 2026-11-05: No JSON in the normal editor workflow
+- **Decision:** Labs and orders are editable tables (add/remove). Outcome, code branch and review notes are fields. Events, keyframes and finding changes are scenario changes. The editor works on a copy with an "Unsaved changes" badge. "Advanced: edit JSON" is a collapsed section for fields without a form (PRN limits, parameter orders).
+- **Full build:** AI conversion of a pasted case write-up into a draft patient (SPEC §13), everything tagged proposed.
+
+---
+
 ## 2026-11-05: Live vitals control with a single vitals history
 - **Decision:** The instructor can adjust any vital now or trend it over N minutes. Numbers and BP step linearly once per sim minute (the trend processor runs before the monitor). Text values (O₂ device, pain description) change at once. Every change goes into `vitalsHistory`, and the monitor and delegated reports read `vitalsAt()` at their reading time. Parameter rules use the history instead of re-deriving scripted keyframes from the log. Logged as `vitals-adjusted` (old → new, over, preset).
 - **Scripted vs. live:** the next scripted vitals event applies and ends the instructor's trend (`settings.scriptedVitalsAfterInstructor: "apply"`); `"skip"` keeps the instructor in control (SPEC §14 Q22).
