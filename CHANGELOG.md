@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Unsaved editor changes are protected
+- The patient editor now asks before you leave with unsaved changes: switching instructor sub-views, switching top-level tabs, or closing/reloading the page (browser prompt). Typing in any editor field counts as a change (before, only builder/timeline/JSON changes did). Saving clears it.
+- Tests: 129 passing; checked in the browser (clean editor leaves silently; unsaved + Cancel stays; OK leaves).
+
 ## Full check after cleanup
 - Full browser run through every tab (instructor views, two students, student charge nurse, monitor + silence + full screen, print preview, reflection, debrief) with no console errors.
 - Accessibility probe: every visible control in every view now has an accessible name (the last one, the editor's Advanced JSON box, is labelled).

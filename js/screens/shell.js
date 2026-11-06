@@ -5,6 +5,7 @@
 
 import { h, clear } from './shared/dom.js';
 import { load, save } from '../storage.js';
+import { canLeave } from './shared/leave-guard.js';
 
 const TAB_KEY = 'ui.tab';
 
@@ -27,7 +28,7 @@ export function mountShell(root, tabs, { headerExtra = null } = {}) {
       role: 'tab',
       id: `tab-${t.id}`,
       'aria-selected': t.id === active ? 'true' : 'false',
-      onclick: () => activate(t.id),
+      onclick: () => { if (t.id !== active && canLeave()) activate(t.id); },
     }, t.label)));
     panel.setAttribute('aria-labelledby', `tab-${active}`);
     runCleanup();

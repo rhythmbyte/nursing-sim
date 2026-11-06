@@ -105,6 +105,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/instructor/shortcuts.js` | `shortcutAction` (pure) + `installShortcuts` (Live control only, cleaned up on leave) | built |
+| `js/screens/shared/leave-guard.js` | `setLeaveGuard` / `canLeave` / `onBeforeUnload`: "unsaved changes" protection checked by the shell tabs and instructor sub-views | built |
 | `js/screens/shared/labels.js`, `text.js` | `patientLabel` ("Rm 204 Linda Garcia"); `lines` (textarea → non-empty lines) | built |
 | `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |

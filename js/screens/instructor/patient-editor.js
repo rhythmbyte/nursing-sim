@@ -13,6 +13,7 @@ import { ordersTable, labsTable } from './editor-tables.js';
 import { listChanges, minToClock, retimeChange, duplicateChange, deleteChange } from './change-model.js';
 import { openChangeBuilder } from './change-builder.js';
 import { patientTimeline } from './patient-timeline.js';
+import { setLeaveGuard, clearLeaveGuard } from '../shared/leave-guard.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
 const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
@@ -62,6 +63,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       const errors = saveLocal('patient', work, data.schemas);
       if (errors.length) { showErrors(errors); return; }
       editorTarget.set(work.id);
+      dirty = false; // saved: nothing to protect any more
       toast('Saved in this browser');
       await reloadData();
     }
@@ -149,5 +151,11 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
 
   load(id);
   root.append(body);
+  // Typing anywhere in the form counts as an unsaved change (builder/timeline/JSON changes go through update()).
+  body.addEventListener('input', () => { dirty = true; });
+  body.addEventListener('change', (e) => { if (!e.target.closest('.screen-header')) dirty = true; });
+  const guard = { isDirty: () => dirty, message: 'The patient editor has unsaved changes. Leave and discard them?' };
+  setLeaveGuard(guard);
   render();
+  return () => clearLeaveGuard(guard);
 }

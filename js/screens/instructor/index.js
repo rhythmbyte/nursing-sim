@@ -3,6 +3,7 @@
 
 import { h, clear } from '../shared/dom.js';
 import { load, save } from '../../storage.js';
+import { canLeave } from '../shared/leave-guard.js';
 import { mountLibrary } from './library.js';
 import { mountLiveControl } from './live-control.js';
 import { mountReviewQueue } from './review-queue.js';
@@ -32,7 +33,7 @@ export function mountInstructor(root, ctx) {
     clear(nav).append(...views.map((v) => h('button', {
       class: `subnav-btn${v.id === active ? ' active' : ''}`,
       'aria-pressed': v.id === active ? 'true' : 'false',
-      onclick: () => { active = v.id; save(VIEW_KEY, v.id); render(); },
+      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); render(); },
     }, v.label)));
     if (typeof cleanup === 'function') cleanup();
     cleanup = views.find((v) => v.id === active).mount(clear(body));

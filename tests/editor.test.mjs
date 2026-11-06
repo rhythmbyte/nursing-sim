@@ -127,3 +127,18 @@ test('every action the engine logs has a readable debrief description', async ()
   }).map((a) => a);
   assert.deepEqual(missing, [], 'actions falling back to the generic description');
 });
+
+test('Suggestion 2: leave guard asks only while there are unsaved changes', async () => {
+  const { setLeaveGuard, clearLeaveGuard, canLeave } = await import('../js/screens/shared/leave-guard.js');
+  let dirty = false; let asked = 0;
+  const g = { isDirty: () => dirty, message: 'unsaved' };
+  const confirmNo = () => { asked++; return false; };
+  setLeaveGuard(g);
+  assert.equal(canLeave(confirmNo), true, 'clean: no question');
+  dirty = true;
+  assert.equal(canLeave(confirmNo), false, 'dirty + "Cancel": stay');
+  assert.equal(canLeave(() => true), true, 'dirty + "OK": leave');
+  assert.equal(asked, 1);
+  clearLeaveGuard(g);
+  assert.equal(canLeave(confirmNo), true, 'guard removed when the editor unmounts');
+});

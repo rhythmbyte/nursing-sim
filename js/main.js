@@ -7,6 +7,7 @@ import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, 
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { openModal } from './screens/shared/modal.js';
 import { setHelp } from './screens/shared/help.js';
+import { onBeforeUnload } from './screens/shared/leave-guard.js';
 import { setTagStyles } from './screens/shared/triage-chip.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
@@ -171,6 +172,7 @@ function watchSaveFailures() {
 
 async function boot() {
   watchSaveFailures();
+  window.addEventListener('beforeunload', onBeforeUnload);
   const root = document.getElementById('app');
   try {
     let data = await loadAll();
