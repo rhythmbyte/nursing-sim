@@ -2,6 +2,7 @@
 // at the bedside. DISPLAY ONLY: it reads the session the main tab saves (same browser, via storage.js) and
 // never writes. Full build: it would subscribe to the server's realtime channel instead (SPEC §13).
 
+import { patientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { createMonitor } from './bedside-monitor.js';
 import { monitorView } from '../../engine/monitor.js';
@@ -16,7 +17,7 @@ export function standaloneView(session, pid, templatesById, catalogs, now) {
   const simMin = simMinutes(session.clock, now);
   const view = monitorView(session, pid, templates[pid], catalogs, simMin);
   view.bpTime = view.bpAtMin != null ? formatShiftTime(session.startClock, view.bpAtMin) : null;
-  return { view, running: session.clock.status === 'running', title: `Rm ${templatesById[pid].demographics.room} ${templatesById[pid].demographics.name}` };
+  return { view, running: session.clock.status === 'running', title: patientLabel(templatesById[pid]) };
 }
 
 export function mountStandaloneMonitor(root, { pid, templatesById, catalogs, loadSession, onSessionChange }) {

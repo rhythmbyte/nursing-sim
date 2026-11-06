@@ -1,5 +1,6 @@
 // Monitor alarm episodes, acknowledgement (silence) and the alarm tick processor. Pure, no DOM.
 // Separate from monitor.js so session.js can list the processor without an import cycle at load time.
+import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { monitorView } from './monitor.js';
@@ -41,7 +42,7 @@ export function acknowledgeAlarm(state, patientId, _args, { now, user, catalogs 
   const al = draft.patients[patientId].alarm;
   const first = al.ackAt == null;
   Object.assign(al, { ackAt: first ? simMin : al.ackAt, silencedUntil: simMin + silence });
-  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'alarm-acknowledged', details: { alarms: al.active, responseMin: Math.round((simMin - al.since) * 100) / 100, first } });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'alarm-acknowledged', details: { alarms: al.active, responseMin: round2(simMin - al.since), first } });
   return draft;
 }
 

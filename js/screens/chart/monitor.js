@@ -1,6 +1,7 @@
 // Chart → Monitor: the bedside monitor for this patient, "Connect to monitor" (logged) and Full screen
 // (so a tablet or TV next to the manikin can run it as a standalone display).
 
+import { patientLabel } from '../shared/labels.js';
 import { h } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { createMonitor } from '../monitor/bedside-monitor.js';
@@ -20,7 +21,7 @@ export default {
     } }, 'Full screen');
     const popout = h('button', { class: 'btn', title: 'A monitor-only page for a bedside tablet or TV (same browser)', onclick: () => window.open(`${location.pathname}?monitor=${encodeURIComponent(pid)}`, `monitor-${pid}`) }, 'Open in new tab');
     root.append(h('div', { class: 'controls' }, connectBtn, full, popout), wrap);
-    const mon = createMonitor(wrap, { isRunning: () => runner.state.clock.status === 'running', title: `Rm ${view.demographics.room} ${view.demographics.name}`,
+    const mon = createMonitor(wrap, { isRunning: () => runner.state.clock.status === 'running', title: patientLabel(view),
       onSilence: () => { act('acknowledgeAlarm', {}); toast('Alarm silenced'); } });
     return {
       update(state) {

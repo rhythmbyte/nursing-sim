@@ -1,6 +1,7 @@
 // Builds the debrief for one student from the session. Pure, no DOM (the screen only renders it).
 // ctx: { templatesById, catalogs, simMin, studentIdsForGroup(groupId), groupOfStudent(userId) }
 
+import { round2 } from './time.js';
 import { evaluateRules } from './rules/index.js';
 import { isTracked, ruleConfig } from './rules/helpers.js';
 import { conditionMetAt, requiredActionAt } from './rules/parameter-breach.js';
@@ -10,7 +11,6 @@ import { activeScale, priorityTimeline } from './priority.js';
 import { withoutStruck } from './struck.js';
 import { alarmEpisodes } from './monitor-alarms.js';
 
-const round = (n) => Math.round(n * 100) / 100;
 
 // Words too common to count as a match between a reflection and a "should recognize" item.
 const STOP = new Set(['should', 'their', 'there', 'about', 'which', 'would', 'could', 'patient', 'patients', 'student', 'students', 'before', 'after', 'while', 'these', 'those', 'other', 'appropriate', 'recognize', 'condition', 'change']);
@@ -37,7 +37,7 @@ function responseTimes(state, pids, ctx) {
     // Repeats of a lit light ring the same light, so pair each answer with the light it closed.
     for (const a of answered) lights.push({ patientId: pid, litAtMin: a.details.litAtMin, answeredAtMin: a.simMin, responseMin: a.details.responseMin, by: a.userId });
     const light = state.patients[pid].callLight;
-    if (light) lights.push({ patientId: pid, litAtMin: light.since, answeredAtMin: null, responseMin: null, openMin: round(ctx.simMin - light.since) });
+    if (light) lights.push({ patientId: pid, litAtMin: light.since, answeredAtMin: null, responseMin: null, openMin: round2(ctx.simMin - light.since) });
 
     const t = ctx.templatesById[pid];
     for (const o of t.orders) {
@@ -45,7 +45,7 @@ function responseTimes(state, pids, ctx) {
       const met = conditionMetAt(state, pid, o, t);
       if (met == null) continue;
       const done = requiredActionAt(state, pid, o, met);
-      params.push({ patientId: pid, order: o.text, metAtMin: met, actionAtMin: done?.simMin ?? null, responseMin: done ? round(done.simMin - met) : null,
+      params.push({ patientId: pid, order: o.text, metAtMin: met, actionAtMin: done?.simMin ?? null, responseMin: done ? round2(done.simMin - met) : null,
         windowMin: o.parameter.withinMin, pending: !done && ctx.simMin <= met + o.parameter.withinMin });
     }
 
@@ -53,10 +53,10 @@ function responseTimes(state, pids, ctx) {
     if (code) {
       const ids = ctx.catalogs?.rules?.codeResponse?.interventionIds || [];
       const first = state.log.find((l) => l.patientId === pid && l.action === 'intervention' && ids.includes(l.details.interventionId) && l.simMin >= code.startedMin);
-      codes.push({ patientId: pid, startedAtMin: code.startedMin, firstResponseAtMin: first?.simMin ?? null, responseMin: first ? round(first.simMin - code.startedMin) : null });
+      codes.push({ patientId: pid, startedAtMin: code.startedMin, firstResponseAtMin: first?.simMin ?? null, responseMin: first ? round2(first.simMin - code.startedMin) : null });
     }
   }
-  const alarms = pids.flatMap((pid) => alarmEpisodes(state.log, pid).map((e) => ({ patientId: pid, startedAtMin: e.start, ackAtMin: e.ack, clearedAtMin: e.end, alarms: e.alarms, responseMin: e.ack != null ? round(e.ack - e.start) : null })));
+  const alarms = pids.flatMap((pid) => alarmEpisodes(state.log, pid).map((e) => ({ patientId: pid, startedAtMin: e.start, ackAtMin: e.ack, clearedAtMin: e.end, alarms: e.alarms, responseMin: e.ack != null ? round2(e.ack - e.start) : null })));
   return { callLights: lights.sort((a, b) => a.litAtMin - b.litAtMin), parameters: params, codes, alarms };
 }
 
@@ -126,7 +126,7 @@ export function buildDebrief(fullState, userId, ctx) {
     orderSequences: orderSequences(state, pids, ctx),
     vitalsCompare: vitalsCompare(state, userId, ctx),
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
-      durationMin: handoff[pid].closedAt != null ? round(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
+      durationMin: handoff[pid].closedAt != null ? round2(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
     reflection: fullState.reflections?.[userId] || null,
     reflectionCoverage: fullState.reflections?.[userId] ? pids.map((pid) => {
       const d = ctx.templatesById[pid].debrief || {};

@@ -3,7 +3,7 @@
 // from their tables; events/vitals changes/finding changes are edited as scenario changes (change-model.js).
 // No DOM.
 
-const lines = (s) => String(s || '').split('\n').map((x) => x.trim()).filter(Boolean);
+import { lines } from '../shared/text.js';
 const pipes = (line) => line.split('|').map((x) => x.trim());
 
 export function blankPatient(id) {

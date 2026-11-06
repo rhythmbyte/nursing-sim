@@ -2,6 +2,7 @@
 // Signature: fn(state, patientId, args, ctx) → new state.  ctx = { now, user, templatesById, catalogs }
 // Per-student UI state (last seen, handoff) lives in state.students[userId].
 
+import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { progressOrder, findOrder } from './orders.js';
@@ -51,7 +52,7 @@ export function closeHandoff(state, patientId, { notes = '' }, ctx) {
   const h = studentRec(draft, ctx.user).handoff[patientId];
   if (!h || h.closedAt != null) return state;
   Object.assign(h, { closedAt: simMin, notes });
-  log(draft, simMin, ctx, patientId, 'handoff-closed', { durationMin: Math.round((simMin - h.openedAt) * 100) / 100, notes });
+  log(draft, simMin, ctx, patientId, 'handoff-closed', { durationMin: round2(simMin - h.openedAt), notes });
   return draft;
 }
 

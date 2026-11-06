@@ -25,3 +25,6 @@ export function formatRemaining(min) {
   const h = Math.floor(m / 60);
   return `${h ? `${h}h ` : ''}${m % 60}m left`;
 }
+
+/** Round to 2 decimals (sim minutes in logs and response times). */
+export const round2 = (n) => Math.round(n * 100) / 100;

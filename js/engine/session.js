@@ -12,7 +12,7 @@ import * as clock from './clock.js';
 import { dueEvents, groupMembers, nextAt } from './scheduler.js';
 import { append, SYSTEM } from './log.js';
 import { addAlert } from './alerts.js';
-import { shiftLengthMin } from './time.js';
+import { shiftLengthMin, round2 } from './time.js';
 import { initLabs, labsProcessor } from './labs.js';
 import { initFlowsheet, monitorProcessor } from './vitals.js';
 import { delegationProcessor } from './delegation.js';
@@ -204,7 +204,7 @@ export function skipToNext(state, { now, refs, templatesById, catalogs, user }) 
   if (to == null) return state;
   const from = simMinOf(state, now);
   const draft = { ...state, clock: clock.jumpTo(state.clock, to, now), log: [...state.log] };
-  append(draft, { simMin: to, wallTime: now, ...user, action: 'clock-skip', details: { fromMin: Math.round(from * 100) / 100, toMin: to } });
+  append(draft, { simMin: to, wallTime: now, ...user, action: 'clock-skip', details: { fromMin: round2(from), toMin: to } });
   return advance(draft, { now, refs, templatesById, catalogs }).state;
 }
 
@@ -217,7 +217,7 @@ export function answerCallLight(state, patientId, { now, user }) {
   draft.patients[patientId].callLight = null;
   append(draft, {
     simMin, wallTime: now, ...user, patientId, action: 'call-light-answered',
-    details: { eventId: light.eventId, litAtMin: light.since, responseMin: Math.round((simMin - light.since) * 100) / 100, rings: light.rings },
+    details: { eventId: light.eventId, litAtMin: light.since, responseMin: round2(simMin - light.since), rings: light.rings },
   });
   return draft;
 }

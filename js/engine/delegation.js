@@ -1,7 +1,7 @@
 // Delegation: an intervention delegated to an LPN/CNA is done after a delay
 // (settings.delegationDelayMin[role], from scenario-defaults.json unless the scenario overrides), then the staff member reports
 // back as a staff message. Effects (order progress, vitals row, lab draw) happen at completion, not at request.
-// Whether delegating was APPROPRIATE is judged by the inappropriate-delegation rule (phase 5), not here.
+// Whether delegating was APPROPRIATE is judged by the inappropriate-delegation rule, not here.
 
 import { addAlert } from './alerts.js';
 import { append } from './log.js';

@@ -1,5 +1,5 @@
 // PRN checks for one med order. Pure, no DOM. Single source of truth: the MAR warns with it now,
-// and the prn-limit flag rule (phase 5) reuses it.
+// and the prn-limit flag rule reuses it.
 // order.prn: { max?, intervalMin?, requiresBefore?: [interventionId], requiresWithinMin? }
 // requiresWithinMin falls back to the scenario setting prnPreCheckWindowMin (via prnOptions).
 

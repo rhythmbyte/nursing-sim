@@ -2,7 +2,7 @@
 // scenario changes (timeline + builder), outcome and code branch. Works on a copy (`work`); Save validates
 // and stores it in this browser. "Advanced: edit JSON" stays available but hidden.
 
-import { helpField, helpTip } from '../shared/help.js';
+import { helpField } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
 import { toast } from '../shared/toast.js';

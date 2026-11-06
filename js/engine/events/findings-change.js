@@ -1,5 +1,5 @@
 // findings-change: queues new assessment findings (findings.changes[eventId === payload.change]).
-// They're revealed to the student the next time they chart an assessment (phase 3).
+// They're revealed to the student the next time they chart an assessment.
 
 export default {
   type: 'findings-change',

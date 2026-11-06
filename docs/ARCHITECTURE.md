@@ -73,7 +73,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/integrity.js` | `patientReferenceProblems` / `scenarioReferenceProblems`: ids that point at nothing (interventions, labs, events, keyframes, finding changes, order sets, forOrder, scenario patients). Run by the loader and the tests | built |
 | `js/engine/settings.js` | `effectiveSettings` / `withDefaults`: scenario settings over `scenario-defaults.json`. Applied once in `main.js`; the engine reads only `state.settings` | built |
 | `js/engine/findings.js` | `revealFindings` (shared by chart actions and delegation) | built |
-| `js/engine/time.js` | `parseClock`, `formatShiftTime(startClock, simMin)` | built |
+| `js/engine/time.js` | `parseClock`, `formatShiftTime`, `shiftLengthMin`, `formatRemaining`, `round2` | built |
 | `js/engine/clock.js` | Sim clock as a serializable snapshot + pure functions (`start`, `pause`, `resume`, `end`, `setSpeed`, `simMinutes`). `now` is always passed in | built |
 | `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats; event groups (`groupMembers`, `eventGroupProblems`) | built |
 | `js/engine/registry.js` | Event-type and flag-rule registries | built |
@@ -105,6 +105,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/instructor/shortcuts.js` | `shortcutAction` (pure) + `installShortcuts` (Live control only, cleaned up on leave) | built |
+| `js/screens/shared/labels.js`, `text.js` | `patientLabel` ("Rm 204 Linda Garcia"); `lines` (textarea → non-empty lines) | built |
 | `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |

@@ -1,6 +1,6 @@
 // Interventions: category → intervention → small form (chartFields) → Save. Each save is time-stamped.
 // "Performed by" offers Me / LPN / CNA on every intervention; whether delegating was appropriate is
-// judged by the inappropriate-delegation rule (phase 5), not here.
+// judged by the inappropriate-delegation rule, not here.
 
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';

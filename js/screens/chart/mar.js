@@ -1,6 +1,6 @@
 // MAR: active med orders. Give / Hold (with reason) / Not given (with reason).
 // PRN checks come from engine/prn.js (max doses, interval, required pre-check). The student is
-// warned and can still proceed; the choice is logged and the prn-limit rule flags it in phase 5.
+// warned and can still proceed; the choice is logged and the prn-limit rule flags it.
 
 import { h, clear } from '../shared/dom.js';
 import { confirmWarnings, promptText } from '../shared/modal.js';

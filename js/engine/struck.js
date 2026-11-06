@@ -1,8 +1,6 @@
 // "Entered in error" support. Rules, PRN checks and debrief comparisons use the active log (struck entries
 // removed); the debrief timeline still shows struck entries, marked. Pure.
 
-export const isStruck = (state, logId) => Boolean(state.struck?.[logId]);
-
 /** The log without struck entries (and without the strike records themselves). */
 export function activeLog(state) {
   if (!state.struck || !Object.keys(state.struck).length) return state.log;

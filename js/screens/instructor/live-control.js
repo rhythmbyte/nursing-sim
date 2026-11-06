@@ -1,6 +1,7 @@
-// Instructor → Live control (phase 2 slice): clock controls, call lights, alert feed, event timeline.
-// Full live control (per-student view, ad-hoc orders, lab release, code controls) is phase 6.
+// Instructor → Live control: clock controls (+ keyboard shortcuts), Start demo sim, unit strip, call lights,
+// activity, students (join code), flags, patients (adjust vitals, push order, call light, code), labs, events.
 
+import { patientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -60,7 +61,7 @@ function callLights(runner, templatesById) {
     const t = templatesById[pid];
     return h('li', { class: 'call-light-item' },
       h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
-      h('strong', {}, `Rm ${t.demographics.room} ${t.demographics.name}`),
+      h('strong', {}, patientLabel(t)),
       ` · lit ${elapsed(simMin, ps.callLight.since)}`,
       ps.callLight.rings > 1 ? ` · rang ${ps.callLight.rings}x` : '',
       h('div', { class: 'muted' }, ps.callLight.message),

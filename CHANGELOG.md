@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Cleanup: dead code, stale notes, shared helpers
+- Removed an unused import, an unused export (`isStruck`) and a dead CSS rule (`.is-prior`). Rewrote stale comments that still talked about "phase N" or said features were coming that already exist; CSS section headings now name features, not phases.
+- One helper each for repeated bits: `round2()` (engine/time.js) replaces seven inline two-decimal roundings; `patientLabel()` (screens/shared/labels.js) replaces hand-built "Rm 204 Linda Garcia" labels in seven screens; `lines()` (screens/shared/text.js) is shared by the patient editor and the scenario-change model.
+- No behavior changes. Tests: 122 passing.
+
 ## Full check after suggestions 3, 2, 1, 6, 4
 - Full browser run through every tab: two students, a student charge nurse, instructor views, the monitor with **Silence alarm**, the standalone monitor page in a second tab, print all report sheets, debrief **Print summary**, reflection vs. should recognize, and the builder's rhythm picker. No console errors.
 - README demo guide covers the new features. Tests: 122 passing.

@@ -5,6 +5,7 @@
 // (order activeOnEvent, parameter watchEvent, keyframe/finding eventIds). Event types the builder doesn't
 // manage (admission, code, lab-result) are kept and retimed with the change.
 
+import { lines } from '../shared/text.js';
 const MANAGED = ['call-light', 'staff-message', 'vitals-change', 'findings-change', 'new-orders'];
 const VITAL_KEYS = ['rhythm', 'bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'];
 const NUMERIC = ['hr', 'rr', 'tempF', 'spo2', 'gcs', 'glucose'];
@@ -65,7 +66,6 @@ export function changeToForm(t, key, startClock) {
 }
 
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24) || 'change';
-const lines = (s) => String(s || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
 /** New template with the change written from the form. Returns { template, key }. */
 export function formToChange(t, f, startClock) {

@@ -1,4 +1,5 @@
 // Instructor live actions (besides clock/event control): left unattended, ad-hoc orders, codes, call lights. No DOM.
+import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { getEventType } from './registry.js';
@@ -71,7 +72,7 @@ export function setCodeOutcome(state, patientId, outcome, { now, user }) {
   }
   recordVitals(ps, simMin);
   addAlert(draft, { simMin, patientId, kind: 'code', message: outcome === 'rosc' ? state.settings.messages.rosc : state.settings.messages.noRosc, audience: ['student', 'instructor', 'charge'] });
-  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-outcome', details: { outcome, durationMin: Math.round((simMin - code.startedMin) * 100) / 100 } });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-outcome', details: { outcome, durationMin: round2(simMin - code.startedMin) } });
   return draft;
 }
 

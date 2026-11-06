@@ -1,4 +1,4 @@
-// Instructor → Patient library (read-only in phase 1).
+// Instructor → Patient library (read-only overview; edit in the Patient editor).
 // Left: patient cards. Right: the selected patient's full template.
 
 import { h, clear } from '../shared/dom.js';

@@ -23,7 +23,7 @@
 .status-acknowledged { background: var(--pending-bg); color: var(--pending-text); }
 .status-done { background: var(--ok-bg); color: var(--ok-text); }
 .orders-table tr.order-new td { background: var(--review-bg); }
-.data-table tr.is-done td, .flowsheet tr.is-prior td { color: var(--muted); }
+.data-table tr.is-done td, .flowsheet tr.src-prior td { color: var(--muted); }
 .row-actions { display: flex; gap: var(--space-1); flex-wrap: wrap; justify-content: flex-end; }
 
 .pill-row { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-2); }
@@ -62,7 +62,7 @@
   .allergy-box { max-width: none; }
 }
 
-/* Phase 4 */
+/* Flowsheet, labs, call-light banners */
 .banner-other-lights { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); background: var(--pending-bg); color: var(--pending-text); }
 .vitals-inputs { display: flex; flex-direction: column; gap: var(--space-2); }
 .table-wrap { overflow-x: auto; }
@@ -71,7 +71,7 @@
 tr.needs-attention td { background: var(--review-bg); }
 .panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
 
-/* Phase 5: flags + debrief */
+/* Flags and debrief */
 .flag-chip { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0 8px; border-radius: 999px; text-transform: capitalize; }
 .flag-red { background: var(--triage-red); color: #fff; }
 .flag-amber { background: var(--triage-yellow); color: #1a1a1a; }
@@ -99,7 +99,7 @@ tr.needs-attention td { background: var(--review-bg); }
 .flag-msg { flex: 1 1 auto; min-width: 0; }
 .flag-list .feed-time, .flag-list .feed-room, .flag-list .flag-chip { flex: none; }
 
-/* Phase 6 */
+/* Join code and roster */
 .join-code { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
 .join-code .code { font-size: 1.6rem; letter-spacing: 0.15em; font-variant-numeric: tabular-nums; }
 .join-panel { max-width: 420px; }

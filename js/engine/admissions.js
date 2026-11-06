@@ -1,9 +1,9 @@
 // Charge nurse decisions on the admissions board (SPEC §9). Pure; every decision is logged with time.
+import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { addAlert } from './alerts.js';
 
-const round = (n) => Math.round(n * 100) / 100;
 
 /** Assign a waiting (pending or held) admission to a group: the patient arrives for that group's students. */
 export function assignAdmission(state, patientId, { groupId }, { now, user, scenario }) {
@@ -22,7 +22,7 @@ export function assignAdmission(state, patientId, { groupId }, { now, user, scen
     if (os.activeAtMin < simMin) Object.assign(os, { orderedAtMin: os.activeAtMin, activeAtMin: simMin });
   }
   addAlert(draft, { simMin, patientId, kind: 'admission', message: `New admission assigned to you: ${ps.admission.message}`, audience: ['student', 'instructor', 'charge'] });
-  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'admission-assigned', details: { groupId, waitMin: round(simMin - a.arrivedAtMin) } });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'admission-assigned', details: { groupId, waitMin: round2(simMin - a.arrivedAtMin) } });
   return draft;
 }
 
@@ -33,7 +33,7 @@ export function holdAdmission(state, patientId, { reason = '' }, { now, user }) 
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
   Object.assign(draft.patients[patientId].admission, { status: 'held', heldAtMin: simMin, reason });
-  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'admission-held', details: { reason, waitMin: round(simMin - a.arrivedAtMin) } });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'admission-held', details: { reason, waitMin: round2(simMin - a.arrivedAtMin) } });
   return draft;
 }
 
