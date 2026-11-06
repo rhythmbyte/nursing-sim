@@ -22,7 +22,7 @@
     "assessmentTools": "public",
     "revealAssessmentFindings": true,
     "gradeAssessments": true,
-    "taskTimerMode": "screen-only",
+    "taskTimerMode": "manikin",
     "taskTimerManikinFactor": 0.25,
     "taskTimerMinLockoutSec": 5,
     "roscTag": "red",

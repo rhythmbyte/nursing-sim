@@ -42,7 +42,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
     delegationQueue: h('input', { type: 'checkbox', checked: defaults.delegationQueue }),
     revealAssessmentFindings: h('input', { type: 'checkbox', checked: defaults.revealAssessmentFindings }),
     gradeAssessments: h('input', { type: 'checkbox', checked: defaults.gradeAssessments }),
-    taskTimerMode: h('select', {}, [['screen-only', 'Screen only: full task time (no manikins)'], ['manikin', 'Manikin: short lockout only'], ['off', 'Off']].map(([v, l]) => h('option', { value: v, selected: v === defaults.taskTimerMode }, l))),
+    taskTimerMode: h('select', {}, [['manikin', 'Manikin: short lockout only (default)'], ['screen-only', 'Screen only: full task time (no manikins)'], ['off', 'Off']].map(([v, l]) => h('option', { value: v, selected: v === defaults.taskTimerMode }, l))),
     taskTimerManikinFactor: h('input', { class: 'input', type: 'number', min: 0, max: 1, step: 0.05, value: defaults.taskTimerManikinFactor }),
     taskTimerMinLockoutSec: h('input', { class: 'input', type: 'number', min: 0, value: defaults.taskTimerMinLockoutSec }),
   };

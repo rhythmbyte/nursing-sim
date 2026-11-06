@@ -123,7 +123,7 @@ Realistic for students?
 Your answer: ______________________________________________
 
 **3.1a Busy rules** [51]
-Right now: with no manikin, the student waits the whole time; with manikins, only a quarter of it (at least 5 s), because the real task already happened. While busy they can still answer call lights, silence alarms, call rapid response or a code, and notify charge.
+Right now: by default (manikin mode) the screen locks for a quarter of the task time (at least 5 s), because the real task already happened on the manikin. For sims without manikins you can choose "screen only": the student waits the whole time. While busy they can still answer call lights, silence alarms, call rapid response or a code, and notify charge.
 Right? Anything else they should be able to do while busy?
 Your answer: ______________________________________________
 

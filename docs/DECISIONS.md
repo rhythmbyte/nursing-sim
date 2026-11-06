@@ -4,6 +4,12 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Task timers default to manikin mode
+- **Decision:** `taskTimerMode` defaults to `manikin` (short lockout), not `screen-only`.
+- **Why:** In class the real task happens on the manikin, so the screen lockout only needs to stop rapid-fire charting. Full screen-only waits made the demo slow (an 8-minute head-to-toe at 1x). Sims without manikins choose screen-only in Sim setup.
+
+---
+
 ## 2026-11-07: Delegation goes to helpers with their own time
 - **Decision:** `state.staff` holds helpers per group, built from `settings.staffPool` and the group's `staff`. `placeDelegation` gives a task to a free helper of the requested role (time = task duration × speedFactor + travel, the same durations as task timers) or throws `NoHelperError` with the next free time. Queued tasks start in order when the delegation processor frees a helper. Charge and instructor controls change the pool, all logged.
 - **Why:** A limited pool makes delegation a real prioritization choice and limits spamming naturally. One duration source serves both students and helpers.

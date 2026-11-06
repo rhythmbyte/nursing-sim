@@ -2,6 +2,9 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Task timers default to manikin mode
+- `taskTimerMode` now defaults to **manikin** (scenario-defaults and the starter scenario): a short lockout (¼ of the task time, at least 5 s), since the task really happens on the manikin. Screen only (full time) and off are still in Sim setup, which lists manikin first. Demo guide updated.
+
 ## Delegation staff pool (Part B)
 - **Each group has helpers** (Sim setup → per group "CNA helpers" / "LPN helpers"; default `staffPool` { CNA: 2, LPN: 1 }, proposed). **This replaces the flat `delegationDelayMin`.**
 - **Delegating assigns a free helper** of that role, who is busy for the task's own time × the role's `speedFactor` plus `travelSec` (`staff.json`: CNA ×1.2, LPN ×1, 60 s walk, proposed), then reports back as before.
