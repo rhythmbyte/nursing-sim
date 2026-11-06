@@ -31,6 +31,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Vitals history:** `patients[id].vitalsHistory` records every change (scripted keyframe, instructor adjustment, each sim minute of a trend). The monitor cycle and delegated reports read `vitalsAt(ps, t)` at their own reading time, parameter rules scan the history, and charting snapshots `ps.vitals` for the debrief. So a live change reaches everything, including catch-up after Skip.
 
+**Data checks on load:** schema, then cross-field checks, then broken references (`engine/integrity.js`). A broken browser edit is skipped (the file version stays in use). A broken file patient is left out. A scenario runs without missing patients and is dropped only if none are left. All of this is shown at the top of the Instructor tab.
+
 **Settings:** every scenario setting has a default in `data/catalogs/scenario-defaults.json`, merged under the scenario's own settings by `withDefaults()` in `main.js`. Engine and screens read the merged settings. **No setting or clinical default lives in code.** If one is missing, the code throws a clear error instead of guessing.
 
 **Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), can be satisfied by a monitor reading (`satisfiedByMonitor`), or appears as a Notes quick action (`quickAction`) is set in `data/catalogs/interventions.json`, not in code. Code-start and ROSC alert text is `settings.messages`. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
@@ -57,11 +59,12 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `css/base.css` | Design tokens (colors, triage colors, spacing), dark mode, shared component styles | built |
 | `css/chart.css` | Epic-lite chart, handoff modal, forms, toasts | built |
 | `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms), the pause-on-close hooks (`pagehide` + a 5 s heartbeat), and the prototype user identities | built |
-| `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`; keys prefixed `nursing-sim:`) | built |
+| `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`, `clearAll`, per-session `loadSession`/`saveSession`; keys prefixed `nursing-sim:`). `onSaveFailure(fn)` reports full or blocked storage (main.js shows a banner) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks → overlay this browser's edits → `{ patients, scenarios, catalogs, schemas, local, fileIds, problems }`. Also `validateItem`, `saveLocal`, `removeLocal` (instructor edits via `storage.js`) | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
+| `js/engine/integrity.js` | `patientReferenceProblems` / `scenarioReferenceProblems`: ids that point at nothing (interventions, labs, events, keyframes, finding changes, order sets, forOrder, scenario patients). Run by the loader and the tests | built |
 | `js/engine/settings.js` | `effectiveSettings` / `withDefaults`: scenario settings over `scenario-defaults.json`. Applied once in `main.js`; the engine reads only `state.settings` | built |
 | `js/engine/findings.js` | `revealFindings` (shared by chart actions and delegation) | built |
 | `js/engine/time.js` | `parseClock`, `formatShiftTime(startClock, simMin)` | built |

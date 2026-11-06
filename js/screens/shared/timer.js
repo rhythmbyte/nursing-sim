@@ -2,19 +2,22 @@
 // Returns { el, destroy }.
 
 import { h } from './dom.js';
-import { formatShiftTime } from '../../engine/time.js';
+import { formatShiftTime, formatRemaining } from '../../engine/time.js';
 
 const STATUS = { ready: 'Not started', running: 'Running', paused: 'Paused', ended: 'Ended' };
 
 export function simClock(store, runner) {
   const time = h('span', { class: 'sim-time' });
   const meta = h('span', { class: 'sim-meta' });
-  const el = h('div', { class: 'sim-clock', role: 'timer', 'aria-live': 'off' }, time, meta);
+  const left = h('span', { class: 'sim-left' });
+  const el = h('div', { class: 'sim-clock', role: 'timer', 'aria-live': 'off' }, time, meta, left);
 
   function update() {
     const s = runner.state;
     time.textContent = formatShiftTime(s.startClock, runner.simMin());
     meta.textContent = `${STATUS[s.clock.status]} · ${s.clock.speed}x`;
+    // Time remaining until the scenario's end clock (none for open-ended scenarios).
+    left.textContent = s.endMin == null ? '' : s.clock.status === 'ended' ? 'Shift over' : formatRemaining(s.endMin - runner.simMin());
     el.dataset.status = s.clock.status;
   }
 

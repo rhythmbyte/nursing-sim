@@ -172,3 +172,25 @@ test('pause on close: pauses at the close time; respects pauseOnClose=false', ()
   assert.equal(session.pauseForClose(noPause, { atWall: 10 * MIN, now: 30 * MIN }), noPause);
   assert.equal(session.pauseForClose(paused, { atWall: 40 * MIN, now: 50 * MIN }), paused, 'already paused: no-op');
 });
+
+test('end of shift: events up to endClock fire, the clock ends exactly there, skip stops at the end', async () => {
+  const { formatRemaining, shiftLengthMin } = await import('../js/engine/time.js');
+  assert.equal(shiftLengthMin('07:00', '15:00'), 480);
+  assert.equal(shiftLengthMin('19:00', '07:00'), 720, 'overnight');
+  assert.equal(formatRemaining(465.2), '7h 46m left');
+  assert.equal(formatRemaining(-3), '0m left');
+  const sc = { ...scenarioWith(), endClock: '09:35' };          // 155 min: James's admit orders are at 155
+  const refs = collectEvents(session.scenarioPatients(sc).map((p) => p.id), templatesById, sc);
+  let s = session.controlClock(session.createSession(sc, templatesById, catalogs), 'start', { now: 0, user: instructor });
+  assert.equal(s.endMin, 155);
+  assert.equal(session.nextEventMin(s, refs, 154 * MIN), 155);
+  ({ state: s } = session.tick(s, { now: 400 * MIN, refs, templatesById, catalogs }));
+  assert.equal(s.clock.status, 'ended');
+  assert.equal(session.simMinOf(s, 999 * MIN), 155, 'stopped exactly at the end');
+  assert.ok(s.log.some((l) => l.action === 'event-fired' && l.details.eventId === 'e-p6-admit-orders'), 'event at the end still fires');
+  assert.ok(!s.log.some((l) => l.action === 'event-fired' && l.simMin > 155), 'nothing after the end');
+  assert.deepEqual(s.log.at(-1).details, { reason: 'end-of-shift' });
+  assert.equal(session.nextEventMin(s, refs, 999 * MIN), null);
+  const open = session.createSession(scenarioWith(), templatesById, catalogs);
+  assert.equal(open.endMin, 480, 'starter scenario ends 15:00');
+});

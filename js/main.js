@@ -3,7 +3,7 @@
 
 import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
-import { load, save, remove, clearAll, loadSession, saveSession } from './storage.js';
+import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure } from './storage.js';
 import { openModal } from './screens/shared/modal.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
@@ -132,7 +132,27 @@ function showWelcome(welcome) {
   });
 }
 
+// Visible warning when the browser can't save (storage full or blocked). Stays until dismissed;
+// repeated failures update it instead of stacking.
+function watchSaveFailures() {
+  let banner = null;
+  onSaveFailure(({ key, error }) => {
+    const full = /quota/i.test(`${error?.name} ${error?.message}`);
+    const text = full
+      ? 'This browser\'s storage is full, so the sim is NOT being saved. Export what you need, then use Reset demo to free space.'
+      : `This browser isn't letting the sim save (${error?.message || 'storage blocked'}). A reload will lose the current sim.`;
+    if (!banner || !banner.isConnected) {
+      banner = h('div', { class: 'banner banner-error save-warning', role: 'alert' },
+        h('strong', {}, 'Not saved. '), h('span', { class: 'msg' }, text), ' ',
+        h('button', { class: 'btn btn-small', onclick: () => banner.remove() }, 'Dismiss'));
+      document.body.prepend(banner);
+    } else banner.querySelector('.msg').textContent = text;
+    banner.dataset.key = key;
+  });
+}
+
 async function boot() {
+  watchSaveFailures();
   const root = document.getElementById('app');
   try {
     let data = await loadAll();

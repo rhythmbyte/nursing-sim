@@ -11,6 +11,8 @@ import { getEventType } from './registry.js';
 import * as clock from './clock.js';
 import { dueEvents, groupMembers, nextAt } from './scheduler.js';
 import { append, SYSTEM } from './log.js';
+import { addAlert } from './alerts.js';
+import { shiftLengthMin } from './time.js';
 import { initLabs, labsProcessor } from './labs.js';
 import { initFlowsheet, monitorProcessor } from './vitals.js';
 import { delegationProcessor } from './delegation.js';
@@ -19,7 +21,7 @@ import { trendProcessor } from './vitals-control.js';
 // Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
 const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 8; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 9; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -73,6 +75,7 @@ export function createSession(scenario, templatesById, catalogs, { joinCode = nu
     version: SESSION_VERSION,
     scenarioId: scenario.id,
     startClock: scenario.startClock,
+    endMin: scenario.endClock ? shiftLengthMin(scenario.startClock, scenario.endClock) : null, // sim ends here (null = open-ended)
     settings: { ...scenario.settings },
     clock: clock.createClock(scenario.speed),
     patients,
@@ -129,7 +132,17 @@ function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
 /** Advance to the current sim time: fire due events, activate timed orders. Returns { state, fired }. */
 export function tick(state, { now, refs, templatesById, catalogs }) {
   if (state.clock.status !== 'running') return { state, fired: 0 };
-  return advance(state, { now, refs, templatesById, catalogs });
+  const { state: next, fired } = advance(state, { now, refs, templatesById, catalogs });
+  if (state.endMin != null && simMinOf(next, now) >= state.endMin) return { state: endShift(next, now), fired };
+  return { state: next, fired };
+}
+
+/** End of shift: the clock stops exactly at endMin (events due up to then have fired). */
+function endShift(state, now) {
+  const draft = { ...state, clock: { ...state.clock, status: 'ended', baseMs: state.endMin * 60000, anchorWall: null }, log: [...state.log], alerts: [...state.alerts] };
+  append(draft, { simMin: state.endMin, wallTime: now, ...SYSTEM, action: 'clock-end', details: { reason: 'end-of-shift' } });
+  addAlert(draft, { simMin: state.endMin, kind: 'clock', message: 'End of shift. The sim has ended.', audience: ['student', 'instructor', 'charge'] });
+  return draft;
 }
 
 function runProcessors(draft, upto, ctx) {
@@ -138,7 +151,7 @@ function runProcessors(draft, upto, ctx) {
 
 /** Fire everything due at the clock's current sim minute (any clock status). Returns { state, fired }. */
 function advance(state, { now, refs, templatesById, catalogs }) {
-  const simMin = simMinOf(state, now);
+  const simMin = Math.min(simMinOf(state, now), state.endMin ?? Infinity); // nothing past the end of shift
   const due = dueEvents(refs, state.fired, simMin);
   if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin))) {
     return { state, fired: 0 };
@@ -175,7 +188,7 @@ export function fireNow(state, ref, { now, refs = [ref], templatesById, user }) 
 /** Sim minute of the next scheduled firing after now, or null if nothing is left. */
 export function nextEventMin(state, refs, now) {
   const simMin = simMinOf(state, now);
-  const times = refs.map((r) => nextAt(r, state.fired)).filter((t) => t != null && t > simMin);
+  const times = refs.map((r) => nextAt(r, state.fired)).filter((t) => t != null && t > simMin && (state.endMin == null || t <= state.endMin));
   return times.length ? Math.min(...times) : null;
 }
 

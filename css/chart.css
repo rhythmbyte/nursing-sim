@@ -131,3 +131,4 @@ tr.needs-attention td { background: var(--review-bg); }
 .tl-marker:active { cursor: grabbing; }
 .change-list li { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: baseline; }
 details.advanced summary { cursor: pointer; color: var(--muted); }
+.save-warning { position: sticky; top: 0; z-index: 20; margin: 0; border-radius: 0; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }

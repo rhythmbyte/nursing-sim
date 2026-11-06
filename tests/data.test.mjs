@@ -48,3 +48,29 @@ test('validator catches bad data', () => {
   assert.ok(errs.some((e) => e.includes('missing required "demographics"')));
   assert.ok(errs.some((e) => e.includes('"purple" is not one of')));
 });
+
+test('no broken references in any starter file', async () => {
+  const { patientReferenceProblems, scenarioReferenceProblems } = await import('../js/engine/integrity.js');
+  const catalogs = Object.fromEntries(Object.entries(manifest.catalogs).map(([k, rel]) => [k, load(rel)]));
+  const patients = manifest.patients.map(load);
+  for (const t of patients) assert.deepEqual(patientReferenceProblems(t, catalogs), [], t.id);
+  const ids = new Set(patients.map((t) => t.id));
+  for (const rel of manifest.scenarios) assert.deepEqual(scenarioReferenceProblems(load(rel), ids), [], rel);
+});
+
+test('broken references are reported clearly', async () => {
+  const { patientReferenceProblems, scenarioReferenceProblems } = await import('../js/engine/integrity.js');
+  const catalogs = Object.fromEntries(Object.entries(manifest.catalogs).map(([k, rel]) => [k, load(rel)]));
+  const t = structuredClone(load('patients/p1-robert-miller.json'));
+  t.orders[0].interventionIds = ['teleport'];
+  t.orders[0].labCodes = ['unobtainium'];
+  t.events.find((e) => e.type === 'vitals-change').payload.keyframe = 'e-missing';
+  t.labs[0].code = 'zz';
+  t.orders[1].activeOnEvent = 'e-nope';
+  const p = patientReferenceProblems(t, catalogs);
+  for (const re of [/intervention "teleport" is not in data\/catalogs\/interventions.json/, /lab "unobtainium"/, /no vitals keyframe "e-missing"/, /labs\[0\]: lab "zz"/, /activeOnEvent: no event "e-nope"/]) {
+    assert.ok(p.some((x) => re.test(x)), re.source);
+  }
+  const sc = { groups: [{ id: 'g1', patients: ['p-ghost'] }], manualStudents: { g9: [] } };
+  assert.equal(scenarioReferenceProblems(sc, new Set()).length, 2);
+});

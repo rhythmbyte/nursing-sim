@@ -5,6 +5,7 @@ import { validate } from './validate.js';
 import { eventGroupProblems } from './engine/scheduler.js';
 import { load, save } from './storage.js';
 import { scaleProblems } from './engine/priority.js';
+import { patientReferenceProblems, scenarioReferenceProblems } from './engine/integrity.js';
 
 // Checks JSON Schema can't express (cross-field rules), per kind of file.
 const EXTRA_CHECKS = {
@@ -76,13 +77,18 @@ export function removeLocal(kind, id) {
   save(LOCAL_KEYS[kind], all);
 }
 
-function overlay(kind, fileItems, schemas, problems) {
+function overlay(kind, fileItems, schemas, problems, extraCheck = () => []) {
   const local = load(LOCAL_KEYS[kind], {});
   const byId = new Map(fileItems.map((x) => [x.id, x]));
   const localIds = new Set();
   for (const [id, item] of Object.entries(local)) {
     const errors = validateItem(kind, item, schemas);
-    if (errors.length) { problems.push({ file: `browser edit: ${id}`, errors }); continue; }
+    if (!errors.length) errors.push(...extraCheck(item));
+    if (errors.length) {
+      const kept = byId.has(id) ? ' (the file version is used instead)' : '';
+      problems.push({ file: `browser edit: ${id}${kept}`, errors });
+      continue;
+    }
     byId.set(id, item);
     localIds.add(id);
   }
@@ -134,8 +140,24 @@ export async function loadAll(base = 'data/') {
     catalogsOut[name] = cat;
     localCatalogNames.add(name);
   }
-  const pts = overlay('patient', patients.filter(Boolean), schemas, problems);
+  // Broken references (ids pointing at nothing) would fail mid-sim. A broken browser edit is skipped (the
+  // file version stays); a broken file patient is left out. Either way the reason is shown to the instructor.
+  const refCheck = (t) => patientReferenceProblems(t, catalogsOut);
+  const pts = overlay('patient', patients.filter(Boolean), schemas, problems, refCheck);
+  pts.items = pts.items.filter((t) => {
+    const refs = pts.localIds.has(t.id) ? [] : refCheck(t);
+    if (refs.length) problems.push({ file: `patient ${t.id} (left out)`, errors: refs });
+    return !refs.length;
+  });
   const scs = overlay('scenario', scenarios.filter(Boolean), schemas, problems);
+  const libraryIds = new Set(pts.items.map((t) => t.id));
+  // A scenario still loads without a missing patient (the session skips it); only one with no patients left is dropped.
+  scs.items = scs.items.filter((sc) => {
+    const refs = scenarioReferenceProblems(sc, libraryIds);
+    const anyLeft = sc.groups.some((g) => [...(g.patients || []), ...(g.admissions || [])].some((id) => libraryIds.has(id)));
+    if (refs.length) problems.push({ file: `scenario ${sc.id}${anyLeft ? ' (runs without the missing patients)' : ' (left out: no patients left)'}`, errors: refs });
+    return anyLeft;
+  });
   return {
     patients: pts.items,
     scenarios: scs.items,

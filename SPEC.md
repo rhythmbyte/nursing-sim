@@ -64,6 +64,7 @@ data/
 - All scheduled events use `atMin` (minutes after start). The patient editor shows both: "atMin 75 = 08:15".
 - Every log entry records sim time AND real wall time.
 - Pausing freezes all timers (events, vitals cycles, lab delays, call lights).
+- **End of shift:** if the scenario has an `endClock`, the sim ends there automatically (events due up to then still fire; Skip won't jump past it). Every sim clock shows the time remaining ("6h 45m left"). No `endClock` = open-ended.
 
 ---
 

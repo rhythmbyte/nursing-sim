@@ -21,6 +21,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
 
   const name = h('input', { class: 'input', value: 'New sim' });
   const startClock = h('input', { class: 'input', type: 'time', value: '07:00' });
+  const endClock = h('input', { class: 'input', type: 'time', value: '15:00' });
   const speed = h('select', {}, SPEEDS.map((s) => h('option', { value: s, selected: s === 1 }, `${s}x`)));
   const assignment = h('select', { onchange: () => renderGroups() }, h('option', { value: 'random' }, 'Random'), h('option', { value: 'manual' }, 'Manual (named roster)'));
   const set = {
@@ -70,7 +71,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
     const manual = assignment.value === 'manual';
     const scenario = {
       id: `sc-${name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sim'}-${Date.now().toString(36)}`,
-      name: name.value.trim(), startClock: startClock.value, speed: Number(speed.value),
+      name: name.value.trim(), startClock: startClock.value, ...(endClock.value ? { endClock: endClock.value } : {}), speed: Number(speed.value),
       settings: {
         handoffMode: set.handoffMode.value, chargeNurse: set.chargeNurse.value, showTagsTo: ['instructor', ...(set.tagsStudent.checked ? ['student'] : []), ...(set.tagsCharge.checked ? ['charge'] : [])], priorityScale: set.priorityScale.value,
         revealManualVitals: set.revealManualVitals.checked, pauseOnClose: set.pauseOnClose.checked,
@@ -103,7 +104,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
     h('header', { class: 'screen-header' }, h('h2', {}, 'Sim setup')),
     h('p', { class: 'muted' }, 'Creating a sim saves it in this browser, switches to it, and makes a new join code. Settings start from data/catalogs/scenario-defaults.json.'),
     h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Sim'),
-      field('Name', name), field('Shift start', startClock), field('Speed', speed), field('Assignment', assignment)),
+      field('Name', name), field('Shift start', startClock), field('Shift end (sim stops; blank = no end)', endClock), field('Speed', speed), field('Assignment', assignment)),
     h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Settings'),
       field('Handoff', set.handoffMode), field('Charge nurse', set.chargeNurse),
       field('PRN pre-check window (min)', set.prnPreCheckWindowMin), field('Delegation delay (min)', set.delegationDelayMin),

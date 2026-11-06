@@ -174,3 +174,5 @@ select { font: inherit; color: var(--text); background: var(--surface); border: 
   .header-extra { margin-left: 0; }
 }
 .linked-note { font-size: 0.75rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 999px; padding: 0 6px; white-space: nowrap; }
+.sim-left { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sim-left:not(:empty)::before { content: "· "; }

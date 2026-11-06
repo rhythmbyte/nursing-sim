@@ -38,6 +38,13 @@ export function mountInstructor(root, ctx) {
     cleanup = views.find((v) => v.id === active).mount(clear(body));
   }
 
+  // Data problems (schema or broken references) show on every instructor view, not just the library.
+  const problems = ctx.data.problems || [];
+  if (problems.length) {
+    root.append(h('details', { class: 'banner banner-error', role: 'alert' },
+      h('summary', {}, `${problems.length} data problem${problems.length > 1 ? 's' : ''} (what was skipped or left out, and why). Details`),
+      h('ul', {}, problems.map((p) => h('li', {}, h('code', {}, p.file), h('ul', {}, p.errors.slice(0, 8).map((e) => h('li', {}, e))))))));
+  }
   root.append(nav, body);
   render();
   return () => { if (typeof cleanup === 'function') cleanup(); };

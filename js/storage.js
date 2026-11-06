@@ -21,12 +21,30 @@ export function load(key, fallback = null) {
   }
 }
 
+// Save failures (storage full or blocked) are reported to listeners so the UI can warn the user visibly.
+const failureListeners = new Set();
+export function onSaveFailure(fn) {
+  failureListeners.add(fn);
+  return () => failureListeners.delete(fn);
+}
+function reportFailure(key, err) {
+  console.warn(`storage.save(${key}) failed:`, err);
+  for (const fn of failureListeners) {
+    try { fn({ key, error: err }); } catch (e) { console.error(e); }
+  }
+}
+
 export function save(key, value) {
+  const a = area();
+  if (!a) {
+    reportFailure(key, new Error('Browser storage is not available (blocked or private mode).'));
+    return false;
+  }
   try {
-    area()?.setItem(PREFIX + key, JSON.stringify(value));
+    a.setItem(PREFIX + key, JSON.stringify(value));
     return true;
   } catch (err) {
-    console.warn(`storage.save(${key}) failed:`, err);
+    reportFailure(key, err);
     return false;
   }
 }

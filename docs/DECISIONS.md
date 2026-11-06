@@ -4,6 +4,16 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Broken-reference checks, visible save failures, end of shift
+- **References:** `engine/integrity.js` checks that every id points at something: order interventions, lab codes, activeOnEvent, PRN pre-checks, parameter watch/requires, event keyframes, finding changes and order sets, lab forOrder, code-branch interventions, and scenario patients and groups. The loader and the tests run it.
+  - A broken browser edit is skipped and the file version stays (found in testing: excluding the patient cascaded into excluding the scenario, and the app wouldn't start).
+  - A scenario runs without missing patients and is dropped only if none are left.
+  - The Instructor tab shows every problem with the field and the missing id.
+- **Save failures:** `storage.save` reports failures, including blocked storage, which used to "succeed" silently, to `onSaveFailure` listeners. `main.js` shows a sticky banner that explains "full" vs "blocked" and stays until dismissed.
+- **End of shift:** `session.endMin` comes from the scenario's `endClock`. A tick that reaches it fires everything due up to the end, then ends the clock exactly at the end (`clock-end`, reason `end-of-shift`, with an alert to everyone). `nextEventMin` ignores events after the end. Sim clocks show the time remaining. Sim setup has an optional Shift end. Session shape v9.
+
+---
+
 ## 2026-11-05: Scenario changes: the editor's unit for scripting
 - **Decision:** The editor presents a patient's events as **scenario changes**: one per linked-event group (an ungrouped event is its own change). The builder form (time or instructor-triggered, how it starts, message, vitals, findings, orders with tiers, what to recognize) is converted by `change-model.js` into a call-light/staff-message event, a vitals-change plus keyframe, a findings-change plus finding change, a new-orders event plus order set, and `debrief.byChange[group]`. Saving reuses existing event ids and keyframe/finding ids, keeps extra payload, vitals and keyframe fields, and keeps unmanaged event types (admission, code, lab-result) and retimes them with the change.
 - **Why:** It mirrors how the instructor writes cases, and nothing technical shows. A round-trip test proves that every starter change opened and saved in the builder leaves the patient unchanged. That test caught real data loss (GCS and notes fields in keyframes) before it shipped.

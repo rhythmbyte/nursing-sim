@@ -60,3 +60,21 @@ test('review items: lists proposed nodes with labels; approveAt marks one approv
   assert.equal(countNeedsReview(approved), countNeedsReview(t) - 1);
   assert.equal(t.orders[ecg.path[1]].review, 'proposed', 'original untouched');
 });
+
+test('storage: a failed save returns false and notifies listeners (full or blocked)', async () => {
+  const store = {};
+  globalThis.window = { localStorage: { setItem(k, v) { if (v.length > 20) { const e = new Error('exceeded'); e.name = 'QuotaExceededError'; throw e; } store[k] = v; }, getItem: (k) => store[k] ?? null } };
+  const { save, onSaveFailure } = await import('../js/storage.js?full');
+  const seen = [];
+  const off = onSaveFailure((f) => seen.push([f.key, f.error.name]));
+  const origWarn = console.warn; console.warn = () => {};
+  try {
+    assert.equal(save('small', 1), true);
+    assert.equal(save('big', 'x'.repeat(50)), false);
+    globalThis.window = {};
+    Object.defineProperty(globalThis.window, 'localStorage', { get() { throw new Error('blocked'); } });
+    assert.equal(save('blocked', 1), false);
+  } finally { console.warn = origWarn; off(); delete globalThis.window; }
+  assert.deepEqual(seen.map((s) => s[0]), ['big', 'blocked']);
+  assert.equal(seen[0][1], 'QuotaExceededError');
+});
