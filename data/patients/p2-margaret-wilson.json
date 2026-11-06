@@ -59,7 +59,7 @@
   "script": {"review": "proposed", "initialState": "baseline", "states": [{"id": "baseline", "label": "Post-op day 1", "review": "proposed"}], "reactions": [{"id": "r-p2-oxy-poss", "label": "Oxycodone given: drowsier (POSS 2) and pain eases", "review": "proposed", "when": {"kind": "med", "orderId": "o-p2-oxy"}, "then": [{"type": "assessment", "answers": {"poss": {"level": 2}, "pain-nrs": {"score": 4}}}], "repeat": true, "maxFires": 4}, {"id": "r-p2-poss-high", "label": "POSS 3 or more charted: CNA mentions {he/she}'s hard to keep awake", "review": "proposed", "when": {"kind": "assessment", "toolId": "poss", "op": ">=", "value": 3}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "{firstName} keeps nodding off in the middle of talking to me."}}}]}]},
   "assessments": { "review": "proposed", "baseline": {"poss": {"level": 1}, "pain-nrs": {"score": 3, "location": "Right knee", "quality": "Aching, 6/10 with movement"}, "braden": {"sensory": 4, "moisture": 3, "activity": 3, "mobility": 3, "nutrition": 3, "friction": 2}} },
   "labs": [
-    { "code": "wbc", "value": "11.8", "range": [10.6, 12.6], "rangeReview": "proposed", "status": "resulted" },
+    { "code": "wbc", "value": "11.8", "range": [11.2, 12.6], "rangeReview": "proposed", "status": "resulted" },
     { "code": "hgb", "value": "10.8", "status": "resulted" },
     { "code": "hct", "value": "32", "status": "resulted" },
     { "code": "plt", "value": "220", "status": "resulted" },

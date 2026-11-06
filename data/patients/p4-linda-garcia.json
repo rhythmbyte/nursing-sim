@@ -64,7 +64,7 @@
   "labs": [
     { "code": "wbc", "value": "17.8", "range": [16.0, 19.5], "rangeReview": "proposed", "status": "resulted" },
     { "code": "hgb", "value": "12.0", "status": "resulted" },
-    { "code": "na", "value": "133", "range": [132, 135], "rangeReview": "proposed", "status": "resulted" },
+    { "code": "na", "value": "133", "range": [131, 134], "rangeReview": "proposed", "status": "resulted" },
     { "code": "k", "value": "4.6", "status": "resulted" },
     { "code": "cr", "value": "1.4", "teachingPoint": true, "status": "resulted", "notes": "Baseline 0.9" },
     { "code": "glu", "value": "214", "range": [190, 240], "rangeReview": "proposed", "status": "resulted" },
