@@ -66,7 +66,9 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/student-view.js` | `studentView(template)`: allow-list filter for student screens. **UI convenience only, not security** | built |
 | `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
-| `js/engine/rules/` | One file per flag rule | planned, phase 5 |
+| `js/engine/rules/` | One file per flag rule (8, SPEC §7) + `helpers.js` (config merge, tracked orders, responsibility) + `index.js` (`evaluateRules`) | built |
+| `js/engine/debrief.js` | `buildDebrief(state, userId, ctx)`: flags, response times, order sequences, charted vs scripted, handoffs, should-recognize, timeline | built |
+| `js/engine/instructor.js` | `markLeftUnattended` | built |
 | `js/engine/vitals.js` | Monitor cycle (processor), device vs manual vitals, `measureManual` (respects `revealManualVitals`), scripted snapshots for the debrief | built |
 | `js/engine/labs.js` | `initLabs`, `drawLabs`, result-delay processor, `releaseLab` (instructor) | built |
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
@@ -77,12 +79,13 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` + `live-labs.js` (pending labs, Release now) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
 | `js/screens/student/` | `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
+| `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
 | `js/screens/charge/` | Charge nurse screens | planned, phase 7 |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json`, `staff.json` | built |
+| `data/catalogs/` | `interventions.json`, `labs.json`, `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |
@@ -131,10 +134,13 @@ Things that are UI conveniences only, **not** security: B11's student filter. Th
 4. Add a test in `tests/` that fires it against a small fixture.
 5. Update SPEC §5 if it's a new kind of event.
 
-### Add a flag rule (phase 5; the registry exists now)
-1. Create `js/engine/rules/<id>.js` that exports `{ id, label, evaluate(state, logEntry?) }` returning `[{ severity: 'red'|'amber', patientId, message, logIds }]`.
-2. Register it from `js/engine/rules/index.js` (create that file with the first rule, same pattern as events).
-3. Add tests with a log that should and shouldn't flag.
+### Add a flag rule
+1. Create `js/engine/rules/<id>.js` that default-exports `{ id, label, evaluate(state, ctx) }` returning flags built with `flag()` from `helpers.js`: `{ ruleId, severity, patientId, userIds, message, atMin, logIds }`.
+   - It must be **pure**: read the log and session state, never store anything. Flags are recomputed on demand.
+   - Put every threshold and severity in `data/catalogs/rules.json` under `rules.<id>` and read it with `ruleConfig(state, ctx, id)` (scenarios can override). Add the defaults to SPEC §14 as instructor questions.
+   - Who's responsible: the acting entry's `userId`, or `responsible(state, ctx, patientId)` for time-based flags.
+2. Add one import and one array entry in `js/engine/rules/index.js`.
+3. Add tests in `tests/rules.test.mjs`: a case that flags and one that doesn't.
 
 ### Add a chart section
 1. Create `js/screens/chart/<id>.js` that default-exports `{ id, label, mount(root, ctx) }`.

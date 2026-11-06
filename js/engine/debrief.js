@@ -26,7 +26,8 @@ function responseTimes(state, pids, ctx) {
       const met = conditionMetAt(state, pid, o, t);
       if (met == null) continue;
       const done = requiredActionAt(state, pid, o, met);
-      params.push({ patientId: pid, order: o.text, metAtMin: met, actionAtMin: done?.simMin ?? null, responseMin: done ? round(done.simMin - met) : null, windowMin: o.parameter.withinMin });
+      params.push({ patientId: pid, order: o.text, metAtMin: met, actionAtMin: done?.simMin ?? null, responseMin: done ? round(done.simMin - met) : null,
+        windowMin: o.parameter.withinMin, pending: !done && ctx.simMin <= met + o.parameter.withinMin });
     }
 
     const code = state.patients[pid].code;

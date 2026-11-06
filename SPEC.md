@@ -223,7 +223,9 @@ Every action → `log.append({ simMin, wallTime, userId, role, patientId, action
 
 ## 7. Flag rules (one file each in `js/engine/rules/`)
 
-Rules run on every log append and on clock ticks. Each returns flags: `{ severity: "red" | "amber", patientId, message, logIds }`.
+Rules are pure functions of the session, re-evaluated whenever flags are shown (live control refreshes them each sim minute, the debrief on open). That's equivalent to running on every log append and clock tick, with nothing stored. Each returns flags: `{ ruleId, severity: "red" | "amber", patientId, userIds, message, atMin, logIds }`.
+
+**Thresholds and severities are data:** `data/catalogs/rules.json` (marked proposed), overridable per scenario under `settings.rules.<ruleId>`. Defaults are listed as instructor questions in §14.
 
 | Rule | Flags when |
 |---|---|
@@ -236,7 +238,7 @@ Rules run on every log append and on clock ticks. Each returns flags: `{ severit
 | `prn-limit` | PRN given beyond max or before interval / without its required pre-check. **Red.** The MAR warns and lets the student "Give anyway"; every override is logged with its warning codes and shows as a red flag in the debrief (pending instructor confirmation, §14) |
 | `left-unattended` | (instructor-marked) student left an unstable patient — instructor toggles |
 
-Rule file shape: `{ id, label, evaluate(state, logEntry?) → flags[] }`.
+Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templates, catalogs, current sim minute, group → students).
 
 ---
 
@@ -250,7 +252,7 @@ Rule file shape: `{ id, label, evaluate(state, logEntry?) → flags[] }`.
    - assignment manual or random
    - "Create sim" → generates a 6-character join code
 4. **Live control** — clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
-5. **Debrief** — per student: timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view.
+5. **Debrief** — per student: timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
 
 ---
 
@@ -330,4 +332,14 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 3. **Delegation timing:** is 10 sim-minutes a sensible default for LPN/CNA tasks, and should it differ by task (vitals vs. lab draw)?
 4. **Robert's repeat troponin** has no scripted value. Rising or flat? (The instructor currently enters it live when it comes due.)
 5. **PRN pre-check (BP before nitro):** any BP in the last 15 sim-minutes counts, whether a monitor-cycle reading, "Take BP now", a charted BP or full vitals, or a BP reported back by delegated staff. The student doesn't have to chart a separate BP. Is that right, and is 15 minutes the right window? (Data: `prn.requiresWithinMin` per order, default 15; catalog `satisfiedByMonitor: true` on the BP check.)
-6. **Linda's lactates:** the scripted repeat value (4.1) belongs to the STAT lactate in the sepsis order set (`forOrder`). If the "repeat in 2–4 hours" order is also drawn, its result is unscripted and the instructor enters it. Confirm the 4.1 value and which order it belongs to.
+7. **Flag rule defaults** (`data/catalogs/rules.json`, all proposed):
+   - **tier-timeout:** tier 1 within 5 min (red), tier 2 within 15 (amber), counted from when the order arrived. Orders already in place at shift start aren't timed (`includeShiftStartOrders: false`). Only one-time orders and event-triggered PRNs (e.g. "ECG now") are tracked.
+   - **priority-order:** amber, within an order set, same tracked orders.
+   - **call-light-response:** amber after 5 min, red after 10.
+   - **parameter-breach**, **inappropriate-delegation**, **allergy-conflict**, **prn-limit**, **left-unattended:** red.
+   - Are these windows and severities right?
+8. **Allergy classes:** penicillin, sulfa and codeine lists in `rules.json`. Should penicillin allergy also flag cephalosporins (e.g. ceftriaxone)? Should codeine flag other opioids?
+9. **Code response:** the first `code-respond` or `rapid-response` charted after a code counts as the response. Right?
+10. **Charted vs scripted tolerance:** temp ±0.3 °F, RR ±2, pain ±1 before the debrief marks "differs". Right?
+11. **Left unattended** is attributed to every student in the patient's group. Should the instructor pick one student?
+12. **Linda's lactates:** the scripted repeat value (4.1) belongs to the STAT lactate in the sepsis order set (`forOrder`). If the "repeat in 2–4 hours" order is also drawn, its result is unscripted and the instructor enters it. Confirm the 4.1 value and which order it belongs to.

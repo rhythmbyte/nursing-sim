@@ -2,6 +2,29 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Phase 5: flag rules and debrief
+- **All 8 flag rules** from SPEC §7, one file each:
+  - priority-order and tier-timeout;
+  - call-light-response and parameter-breach (vitals, lab or event conditions);
+  - inappropriate-delegation and allergy-conflict (name or drug class);
+  - prn-limit (MAR overrides are red) and left-unattended (instructor marks it).
+- **Rule defaults are data:** `data/catalogs/rules.json` (proposed), with per-scenario overrides under `settings.rules`. The defaults are SPEC §14 questions 7–11.
+- **Live control:** a **Flags (live)** panel and a **Left unattended → Mark** control.
+- **Debrief tab**, per student:
+  - red/amber counts and the flag list;
+  - response times for call lights, parameter orders and codes;
+  - order sequence per set, done vs. correct, with out-of-order items highlighted;
+  - charted vs scripted vitals;
+  - handoff notes and durations;
+  - "should recognize" (instructor only);
+  - the full timeline with flags inline.
+  - **Export CSV** and a **Print** view.
+- **Fixes found in browser testing:**
+  - flag text wrapped badly;
+  - parameter rows still inside their window showed "none" instead of "pending";
+  - the order sequence listed sets nobody had touched.
+- Tests: 64 passing.
+
 ## Nitro pre-check, Take BP now, Charted-only toggle, lactate routing
 - **Nitro pre-check:** a monitor BP (cycle or the new **Take BP now**) within the window now counts, so no separate charted BP is needed. Set by catalog flag `satisfiedByMonitor`.
 - **Take BP now** button on the Flowsheet: starts the NIBP immediately, logged as a student action, and doesn't change the cycle.

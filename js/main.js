@@ -10,6 +10,7 @@ import { mountShell } from './screens/shell.js';
 import { mountInstructor } from './screens/instructor/index.js';
 import { mountStudentHome } from './screens/student/home.js';
 import { placeholder } from './screens/shared/placeholder.js';
+import { mountDebrief } from './screens/debrief/index.js';
 import { h } from './screens/shared/dom.js';
 
 const TICK_MS = 250;
@@ -44,7 +45,7 @@ function buildTabs(ctx) {
   tabs.push({
     id: 'debrief',
     label: 'Debrief',
-    mount: (root) => { root.append(placeholder('Debrief', 5, 'Per-student timeline, flags, order sequence, response times, CSV export.')); },
+    mount: (root) => mountDebrief(root, ctx),
   });
   return tabs;
 }

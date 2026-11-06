@@ -167,3 +167,9 @@ test('debrief: counts, response times, order sequence, charted vs scripted, time
   assert.ok(d.timeline.some((t) => t.kind === 'action' && t.flags.length));
   assert.ok(d.shouldRecognize.find((x) => x.patientId === RM).items.length);
 });
+
+test('CSV: quotes commas, quotes, newlines; JSON for objects', async () => {
+  const { toCsv } = await import('../js/screens/debrief/csv.js');
+  const text = toCsv(['a', 'b'], [['x,y', 'say "hi"'], ['line\nbreak', { k: 1 }]]);
+  assert.equal(text, 'a,b\r\n"x,y","say ""hi"""\r\n"line\nbreak","{""k"":1}"\r\n');
+});

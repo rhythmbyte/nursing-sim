@@ -4,6 +4,30 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Flags are recomputed from the log, never stored
+- **Decision:** Rules are pure `evaluate(state, ctx)` functions. Live control and the debrief call `evaluateRules` when they render (live control each sim minute), and nothing is written to state.
+- **Why:** Flags can't drift from the log, there's no de-duplication or undo, and late or time-based flags ("still not done", "unanswered for 7 min") fall out naturally. The full build can run the same functions on the server.
+- **Alternatives:** Evaluate on each log append and store the flags (SPEC's original wording). That needs de-duplication and re-evaluation when time passes, for the same result.
+
+## 2026-11-05: Rule thresholds, severities and allergy classes are data (`rules.json`)
+- **Decision:** `data/catalogs/rules.json` (proposed) holds every rule's thresholds and severity, the allergy drug classes, the code-response interventions and the vitals-compare tolerances. Scenarios override per rule with `settings.rules.<id>`.
+- **Why:** These are clinical and grading choices the instructor owns (CLAUDE.md). See SPEC §14 questions 7–11.
+
+## 2026-11-05: Which orders the timing and priority rules track
+- **Decision:** One-time orders plus PRNs switched on by an event (e.g. "ECG now" on the chest-pain call light). Shift-start orders aren't timed by default. "Done" means the first own charting for the order (or its intervention without picking the order), a completed delegation, a med given, or Mark done (`firstWork` in `engine/orders.js`).
+- **Why:** Standing PRNs, continuous and parameter orders are never "done", so including them would flag everything. Shift-start orders would all time out in the first minutes.
+- **Alternatives:** Track every order (all noise); require "For order" on every charting (students forget, and the fallback covers it).
+
+## 2026-11-05: Flag responsibility
+- **Decision:** A flag tied to an action goes to whoever did it. A time-based flag (timeout, unanswered light, missed parameter) goes to every student in the patient's group. "Left unattended" goes to the group's students.
+- **Why:** With the interim one-student-per-slot mapping this is exact. With shared groups, whether everyone owns a missed action is an instructor question (SPEC §14 Q11).
+
+## 2026-11-05: Debrief data is built by a pure engine function
+- **Decision:** `engine/debrief.js` builds everything the debrief shows. The screen and the CSV only render it.
+- **Why:** Testable in Node, and the full build can produce the same report server-side (e.g. emailed or stored per student).
+
+---
+
 ## 2026-11-05: Monitor BP readings satisfy the BP pre-check (supersedes the earlier decision)
 - **Decision:** The project owner changed this. A monitor BP (cycle or "Take BP now") within the window counts as the "BP before nitro" check. It's data-driven: the catalog marks the BP check `satisfiedByMonitor: true`, and `prnOptions()` in `engine/prn.js` builds the check options in one place for every caller. "Take BP now" adds a monitor reading immediately, is logged as `nibp-now` (student), and doesn't change the auto cycle.
 - **Why:** Charting a separate BP when the monitor just took one is busywork. Still an open instructor question (SPEC §14).

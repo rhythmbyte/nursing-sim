@@ -8,6 +8,7 @@ import { formatShiftTime } from '../../engine/time.js';
 import { SPEEDS } from '../../engine/clock.js';
 import { eventsPanel } from './live-events.js';
 import { labsPanel } from './live-labs.js';
+import { flagsPanel } from './live-flags.js';
 
 function clockControls(runner, user) {
   const s = runner.state.clock.status;
@@ -89,6 +90,7 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
   const feed = h('div', {});
   const events = h('div', {});
   const labs = h('div', {});
+  const flags = h('div', {});
   const unitList = h('div', { class: 'unit-strip' });
 
   function render() {
@@ -98,6 +100,7 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
     clear(feed).append(alertFeed(runner.state, templatesById));
     clear(events).append(eventsPanel(runner, templatesById, instructorUser));
     clear(labs).append(labsPanel(runner, templatesById, instructorUser));
+    clear(flags).append(flagsPanel(runner, templatesById, instructorUser));
   }
 
 
@@ -109,6 +112,7 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
       h('section', { class: 'panel' }, h('h3', {}, 'Call lights'), lights),
       h('section', { class: 'panel' }, h('h3', {}, 'Recent activity'), feed),
     ),
+    h('section', { class: 'panel' }, h('h3', {}, 'Flags (live)'), flags),
     h('section', { class: 'panel' }, h('h3', {}, 'Pending labs'), labs),
     h('section', { class: 'panel' }, h('h3', {}, 'Event timeline'), events),
   );
@@ -121,6 +125,7 @@ export function mountLiveControl(root, { store, runner, templatesById, scenario,
     if (Math.floor(simMin) !== lastMin) {
       lastMin = Math.floor(simMin);
       clear(lights).append(callLights(runner, templatesById));
+      clear(flags).append(flagsPanel(runner, templatesById, instructorUser)); // time-based flags change with the clock
     }
   });
   return () => { clock.destroy(); offSet(); offTick(); };

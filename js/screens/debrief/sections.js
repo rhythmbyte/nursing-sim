@@ -1,0 +1,83 @@
+// Debrief sections (render only; data comes from engine/debrief.js).
+
+import { h } from '../shared/dom.js';
+
+const sevChip = (s) => h('span', { class: `flag-chip flag-${s}` }, s === 'red' ? 'Red' : 'Amber');
+const empty = (text) => h('p', { class: 'muted' }, text);
+
+export function flagsSection(d, { at, room }) {
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Flags'),
+    d.flags.length ? h('ul', { class: 'flag-list' }, d.flags.map((f) => h('li', {},
+      sevChip(f.severity), h('span', { class: 'feed-time' }, at(f.atMin)), h('span', { class: 'feed-room' }, room(f.patientId)),
+      h('span', { class: 'flag-msg' }, f.message, h('span', { class: 'muted small' }, ` · ${f.ruleId}`)))))
+      : empty('No flags.'));
+}
+
+export function responseSection(d, { at, room }) {
+  const rt = d.responseTimes;
+  const row = (cells) => h('tr', {}, cells.map((c) => h('td', {}, c)));
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Response times'),
+    h('h4', {}, 'Call lights'),
+    rt.callLights.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Patient', 'Lit', 'Answered', 'Response'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, rt.callLights.map((c) => row([room(c.patientId), at(c.litAtMin), c.answeredAtMin != null ? at(c.answeredAtMin) : 'Not answered',
+        c.responseMin != null ? `${c.responseMin} min` : `${c.openMin} min and counting`])))) : empty('None.'),
+    h('h4', {}, 'Parameter orders (condition → action)'),
+    rt.parameters.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Patient', 'Order', 'Condition met', 'Action', 'Response'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, rt.parameters.map((p) => row([room(p.patientId), p.order, at(p.metAtMin), p.actionAtMin != null ? at(p.actionAtMin) : '—',
+        p.responseMin != null ? `${p.responseMin} min (window ${p.windowMin})` : p.pending ? `pending (window ${p.windowMin})` : `none (window ${p.windowMin})`])))) : empty('None triggered.'),
+    h('h4', {}, 'Codes'),
+    rt.codes.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Patient', 'Code started', 'First response', 'Response'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, rt.codes.map((c) => row([room(c.patientId), at(c.startedAtMin), c.firstResponseAtMin != null ? at(c.firstResponseAtMin) : '—',
+        c.responseMin != null ? `${c.responseMin} min` : 'none'])))) : empty('No codes.'),
+  );
+}
+
+export function orderSequenceSection(d, { at, room }) {
+  // Only sets the student worked on; untouched sets are listed in one line.
+  const worked = d.orderSequences.filter((s) => s.done.length);
+  const untouched = d.orderSequences.filter((s) => !s.done.length);
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Order sequence by order set (done vs. correct)'),
+    untouched.length ? h('p', { class: 'muted small' }, `No work yet: ${untouched.map((s) => `${room(s.patientId)} · ${s.orderSet}`).join('; ')}`) : null,
+    worked.length ? worked.map((s) => h('div', { class: 'seq' },
+      h('h4', {}, `${room(s.patientId)} · ${s.orderSet}`),
+      h('div', { class: 'seq-cols' },
+        h('div', {}, h('strong', {}, 'Done'), h('ol', {}, s.done.map((o, i) => h('li', { class: s.correct[i]?.tier !== o.tier ? 'seq-off' : '' },
+          `${at(o.atMin)} · T${o.tier} · ${o.text}`)), s.open.map((o) => h('li', { class: 'seq-open' }, `not done · T${o.tier} · ${o.text}`)))),
+        h('div', {}, h('strong', {}, 'Correct (by tier)'), h('ol', {}, s.correct.map((o) => h('li', {}, `T${o.tier} · ${o.text}`)))),
+      ))) : empty('No order-set work yet.'),
+  );
+}
+
+export function vitalsSection(d, { at, room }) {
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Charted vs scripted vitals'),
+    d.vitalsCompare.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Time', 'Patient', 'Measure', 'Charted', 'Scripted', ''].map((c) => h('th', {}, c)))),
+      h('tbody', {}, d.vitalsCompare.map((v) => h('tr', { class: v.differs ? 'needs-attention' : '' },
+        h('td', {}, at(v.atMin)), h('td', {}, room(v.patientId)), h('td', {}, v.field), h('td', {}, String(v.charted)), h('td', {}, String(v.scripted)),
+        h('td', {}, v.differs ? 'Differs' : ''))))) : empty('No charted vitals to compare.'),
+  );
+}
+
+export function handoffSection(d, { at, room }) {
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Handoff'),
+    d.handoffs.length ? h('ul', { class: 'feed' }, d.handoffs.map((x) => h('li', {},
+      h('span', { class: 'feed-room' }, room(x.patientId)),
+      h('span', {}, `opened ${at(x.openedAt)}${x.durationMin != null ? `, ${x.durationMin} min` : ', still open'}`,
+        x.notes ? h('div', { class: 'pre muted' }, x.notes) : h('div', { class: 'muted' }, 'No notes.'))))) : empty('No handoffs opened.'),
+  );
+}
+
+export function recognizeSection(d, { room }) {
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Should recognize (instructor only)'),
+    d.shouldRecognize.filter((x) => x.items.length).map((x) => h('div', {}, h('h4', {}, room(x.patientId)), h('ul', {}, x.items.map((i) => h('li', {}, i))))),
+  );
+}
