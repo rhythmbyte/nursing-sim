@@ -1,0 +1,176 @@
+{
+ "review": "proposed",
+ "_comment": "Drug classes for case templates (engine/cases.js). A home med or order can be 'any from class X'; one drug is picked per class per patient at instantiation and used everywhere (texts via {med.<class>} placeholders, order.med, frequency). Typical adult doses; instructor to review (SPEC §14). frequencyMin: scheduled-order interval.",
+ "classes": [
+  {
+   "id": "ace-inhibitor",
+   "label": "ACE inhibitors",
+   "drugs": [
+    {
+     "id": "lisinopril",
+     "name": "lisinopril",
+     "dose": "10 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    },
+    {
+     "id": "enalapril",
+     "name": "enalapril",
+     "dose": "5 mg",
+     "route": "PO",
+     "freq": "twice daily",
+     "frequencyMin": 720
+    },
+    {
+     "id": "ramipril",
+     "name": "ramipril",
+     "dose": "5 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    }
+   ]
+  },
+  {
+   "id": "arb",
+   "label": "Angiotensin receptor blockers",
+   "drugs": [
+    {
+     "id": "losartan",
+     "name": "losartan",
+     "dose": "50 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    },
+    {
+     "id": "valsartan",
+     "name": "valsartan",
+     "dose": "80 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    }
+   ]
+  },
+  {
+   "id": "beta-blocker",
+   "label": "Beta blockers",
+   "drugs": [
+    {
+     "id": "metoprolol",
+     "name": "metoprolol",
+     "dose": "25 mg",
+     "route": "PO",
+     "freq": "twice daily",
+     "frequencyMin": 720
+    },
+    {
+     "id": "carvedilol",
+     "name": "carvedilol",
+     "dose": "6.25 mg",
+     "route": "PO",
+     "freq": "twice daily",
+     "frequencyMin": 720
+    }
+   ]
+  },
+  {
+   "id": "statin",
+   "label": "Statins",
+   "drugs": [
+    {
+     "id": "atorvastatin",
+     "name": "atorvastatin",
+     "dose": "40 mg",
+     "route": "PO",
+     "freq": "at bedtime",
+     "frequencyMin": 1440
+    },
+    {
+     "id": "rosuvastatin",
+     "name": "rosuvastatin",
+     "dose": "10 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    },
+    {
+     "id": "simvastatin",
+     "name": "simvastatin",
+     "dose": "20 mg",
+     "route": "PO",
+     "freq": "at bedtime",
+     "frequencyMin": 1440
+    }
+   ]
+  },
+  {
+   "id": "doac",
+   "label": "Direct oral anticoagulants",
+   "drugs": [
+    {
+     "id": "apixaban",
+     "name": "apixaban",
+     "dose": "5 mg",
+     "route": "PO",
+     "freq": "twice daily",
+     "frequencyMin": 720
+    },
+    {
+     "id": "rivaroxaban",
+     "name": "rivaroxaban",
+     "dose": "20 mg",
+     "route": "PO",
+     "freq": "daily with the evening meal",
+     "frequencyMin": 1440
+    }
+   ]
+  },
+  {
+   "id": "ppi",
+   "label": "Proton pump inhibitors",
+   "drugs": [
+    {
+     "id": "pantoprazole",
+     "name": "pantoprazole",
+     "dose": "40 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    },
+    {
+     "id": "omeprazole",
+     "name": "omeprazole",
+     "dose": "20 mg",
+     "route": "PO",
+     "freq": "daily",
+     "frequencyMin": 1440
+    }
+   ]
+  },
+  {
+   "id": "opioid-po",
+   "label": "Oral opioid analgesics",
+   "drugs": [
+    {
+     "id": "oxycodone",
+     "name": "oxycodone",
+     "dose": "5 mg",
+     "route": "PO",
+     "freq": "every 4 hours as needed",
+     "frequencyMin": 240
+    },
+    {
+     "id": "hydromorphone-po",
+     "name": "hydromorphone",
+     "dose": "2 mg",
+     "route": "PO",
+     "freq": "every 4 hours as needed",
+     "frequencyMin": 240
+    }
+   ]
+  }
+ ]
+}

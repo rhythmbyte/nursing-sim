@@ -6,6 +6,7 @@ import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { createWindowLock } from './window-lock.js';
+import { instantiateScenario } from './engine/cases.js';
 import { restoreBackup } from './storage.js';
 import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
@@ -69,8 +70,10 @@ function scenarioPicker(scenarios, currentId, onChange) {
 /** Mounts the whole app for one scenario. Returns a teardown function. */
 function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = false } = {}) {
   // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
-  const scenario = withDefaults(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.catalogs);
-  const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
+  // Case templates → this sim's concrete patients (seeded; identical across reloads, rejoins and the debrief).
+  const inst = instantiateScenario(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.patients, data.catalogs);
+  const scenario = withDefaults(inst.scenario, data.catalogs);
+  const templatesById = { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...inst.templatesById };
   const store = createStore({ data });
   const runner = createRunner({
     store, scenario, templatesById, catalogs: data.catalogs,
@@ -232,7 +235,8 @@ async function boot() {
     // index.html?monitor=<patientId>: standalone bedside monitor only (display-only, no app, no welcome).
     const monitorPid = new URLSearchParams(window.location.search).get('monitor');
     if (monitorPid) {
-      mountStandaloneMonitor(root, { pid: monitorPid, templatesById: Object.fromEntries(data.patients.map((p) => [p.id, p])), catalogs: data.catalogs,
+      const sc = data.scenarios.find((s) => s.id === load(SCENARIO_KEY)) || data.scenarios[0];
+      mountStandaloneMonitor(root, { pid: monitorPid, templatesById: { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...instantiateScenario(sc, data.patients, data.catalogs).templatesById }, catalogs: data.catalogs,
         loadSession: () => load(SESSION_KEY), onSessionChange: (fn) => onExternalChange(SESSION_KEY, fn) });
       return;
     }

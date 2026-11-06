@@ -16,7 +16,9 @@
     "reactionTemplates": "catalogs/reaction-templates.json",
     "assessmentTools": "catalogs/assessment-tools.json",
     "patientTags": "catalogs/patient-tags.json",
-    "taskTiming": "catalogs/task-timing.json"
+    "taskTiming": "catalogs/task-timing.json",
+    "names": "catalogs/names.json",
+    "medClasses": "catalogs/med-classes.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

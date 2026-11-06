@@ -1,0 +1,70 @@
+{
+  "title": "Medication classes",
+  "type": "object",
+  "required": [
+    "classes"
+  ],
+  "properties": {
+    "review": {
+      "enum": [
+        "approved",
+        "proposed",
+        "partial"
+      ]
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "drugs"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "drugs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "dose",
+                "route",
+                "freq"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "dose": {
+                  "type": "string"
+                },
+                "route": {
+                  "type": "string"
+                },
+                "freq": {
+                  "type": "string"
+                },
+                "frequencyMin": {
+                  "type": "number",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

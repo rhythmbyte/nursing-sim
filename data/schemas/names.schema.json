@@ -1,0 +1,47 @@
+{
+  "title": "Name pools",
+  "type": "object",
+  "required": [
+    "first",
+    "last"
+  ],
+  "properties": {
+    "review": {
+      "enum": [
+        "approved",
+        "proposed",
+        "partial"
+      ]
+    },
+    "first": {
+      "type": "object",
+      "required": [
+        "M",
+        "F"
+      ],
+      "properties": {
+        "M": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "F": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "last": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

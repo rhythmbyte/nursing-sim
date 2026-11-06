@@ -37,6 +37,8 @@ const SCHEMAS = {
   assessmentTools: 'schemas/assessment-tools.schema.json',
   patientTags: 'schemas/patient-tags.schema.json',
   taskTiming: 'schemas/task-timing.schema.json',
+  names: 'schemas/names.schema.json',
+  medClasses: 'schemas/med-classes.schema.json',
 };
 
 async function fetchJson(base, rel) {
