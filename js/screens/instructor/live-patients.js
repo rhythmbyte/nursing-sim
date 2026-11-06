@@ -41,10 +41,10 @@ function pushOrderModal(runner, pid, name, catalogs, user) {
   text.focus();
 }
 
-export function patientsPanel(runner, templatesById, catalogs, user) {
+export function patientsPanel(runner, templatesById, catalogs, user, filter = null) {
   const state = runner.state;
   const at = (m) => formatShiftTime(state.startClock, m);
-  const rows = Object.entries(state.patients).filter(([, ps]) => ps.present);
+  const rows = Object.entries(state.patients).filter(([pid, ps]) => ps.present && (!filter?.groupId || ps.groupId === filter.groupId) && (!filter?.patientId || pid === filter.patientId));
   const scale = activeScale(state.settings, catalogs);
   return h('table', { class: 'data-table' },
     h('thead', {}, h('tr', {}, ['Patient', 'Tag', 'Vitals', 'Student priorities', 'Status', 'Actions'].map((c) => h('th', {}, c)))),

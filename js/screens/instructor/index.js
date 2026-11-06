@@ -9,6 +9,8 @@ import { mountLiveControl } from './live-control.js';
 import { mountReviewQueue } from './review-queue.js';
 import { mountPatientEditor } from './patient-editor.js';
 import { mountSimSetup } from './sim-setup.js';
+import { mountCommandCenter } from './command-center.js';
+import { loadSession, saveSession } from '../../storage.js';
 
 const VIEW_KEY = 'ui.instructor.view';
 
@@ -16,15 +18,20 @@ export function mountInstructor(root, ctx) {
   const EDITOR_KEY = 'ui.instructor.editorPatient';
   const editorTarget = { get: () => load(EDITOR_KEY), set: (id) => save(EDITOR_KEY, id) };
   const openEditor = (id) => { editorTarget.set(id); active = 'editor'; save(VIEW_KEY, active); render(); };
-  const vctx = { ...ctx, editorTarget, openEditor };
+  // Command center → Live control with a group or patient filter (shown in Live control with "Show all").
+  const openLive = (filter) => { if (!canLeave()) return; save('ui.live.filter', filter); active = 'live'; save(VIEW_KEY, active); saveSession('ui.instructor.chosen', true); render(); };
+  const vctx = { ...ctx, editorTarget, openEditor, openLive };
   const views = [
+    { id: 'command', label: 'Command center', mount: (el) => mountCommandCenter(el, vctx) },
     { id: 'live', label: 'Live control', mount: (el) => mountLiveControl(el, vctx) },
     { id: 'setup', label: 'Sim setup', mount: (el) => mountSimSetup(el, vctx) },
     { id: 'review', label: 'Review queue', mount: (el) => mountReviewQueue(el, vctx) },
     { id: 'editor', label: 'Patient editor', mount: (el) => mountPatientEditor(el, vctx) },
     { id: 'library', label: 'Patient library', mount: (el) => mountLibrary(el, vctx) },
   ];
-  let active = views.some((v) => v.id === load(VIEW_KEY)) ? load(VIEW_KEY) : views[0].id;
+  let active = views.some((v) => v.id === load(VIEW_KEY)) ? load(VIEW_KEY) : 'live';
+  // While a sim is in progress (running or paused) the command center is the default, until the instructor picks a view this session.
+  if (['running', 'paused'].includes(ctx.runner.state.clock.status) && !loadSession('ui.instructor.chosen', false)) active = 'command';
   let cleanup = null;
   const nav = h('nav', { class: 'subnav', 'aria-label': 'Instructor views' });
   const body = h('div', {});
@@ -33,7 +40,7 @@ export function mountInstructor(root, ctx) {
     clear(nav).append(...views.map((v) => h('button', {
       class: `subnav-btn${v.id === active ? ' active' : ''}`,
       'aria-pressed': v.id === active ? 'true' : 'false',
-      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); render(); },
+      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); saveSession('ui.instructor.chosen', true); if (v.id === 'live') save('ui.live.filter', null); render(); },
     }, v.label)));
     if (typeof cleanup === 'function') cleanup();
     cleanup = views.find((v) => v.id === active).mount(clear(body));

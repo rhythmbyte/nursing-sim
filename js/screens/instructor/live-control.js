@@ -13,6 +13,7 @@ import { flagsPanel } from './live-flags.js';
 import { rosterPanel } from './live-roster.js';
 import { patientsPanel } from './live-patients.js';
 import { installShortcuts } from './shortcuts.js';
+import { load, save } from '../../storage.js';
 
 function clockControls(runner, user, startDemo) {
   const s = runner.state.clock.status;
@@ -91,6 +92,14 @@ function unitChips(state, templatesById) {
 export function mountLiveControl(root, ctx) {
   const { store, runner, scenario, instructorUser, catalogs } = ctx;
   const templatesById = runner.templates(); // demographics only here; orders come via the runner
+  // Filter from the command center ({ groupId } or { patientId }); "Show all" clears it.
+  let filter = load('ui.live.filter');
+  const filterBar = h('div', {});
+  function renderFilter() {
+    const label = filter?.patientId ? patientLabel(templatesById[filter.patientId]) : filter?.groupId ? scenario.groups.find((g) => g.id === filter.groupId)?.name : null;
+    clear(filterBar).append(...(label ? [h('div', { class: 'banner banner-review live-filter' }, `Showing ${label} (patients and events). `,
+      h('button', { class: 'btn btn-small', onclick: () => { filter = null; save('ui.live.filter', null); renderFilter(); render(); } }, 'Show all'))] : []));
+  }
   const clock = simClock(store, runner);
   const controls = h('div', {});
   const lights = h('div', {});
@@ -107,17 +116,18 @@ export function mountLiveControl(root, ctx) {
     clear(unitList).append(...unitChips(runner.state, templatesById));
     clear(lights).append(callLights(runner, templatesById));
     clear(feed).append(alertFeed(runner.state, templatesById));
-    clear(events).append(eventsPanel(runner, templatesById, instructorUser));
+    clear(events).append(eventsPanel(runner, templatesById, instructorUser, filter));
     clear(labs).append(labsPanel(runner, templatesById, instructorUser));
     clear(flags).append(flagsPanel(runner, templatesById, instructorUser));
     clear(roster).append(rosterPanel(runner, templatesById, scenario));
-    clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser));
+    clear(patients).append(patientsPanel(runner, templatesById, catalogs, instructorUser, filter));
   }
 
 
   root.append(
     h('header', { class: 'screen-header' }, h('h2', {}, `Live control · ${scenario.name}`), h('span', { class: 'muted small' }, 'Keys: Space pause/resume · N next event · ? help'), clock.el),
     controls,
+    filterBar,
     unitList,
     h('div', { class: 'live-grid' },
       h('section', { class: 'panel' }, h('h3', {}, 'Call lights'), lights),
@@ -131,6 +141,7 @@ export function mountLiveControl(root, ctx) {
     h('section', { class: 'panel' }, h('h3', {}, 'Pending labs'), labs),
     h('section', { class: 'panel' }, h('h3', {}, 'Event timeline'), events),
   );
+  renderFilter();
   render();
 
   const offSet = store.subscribe(render);

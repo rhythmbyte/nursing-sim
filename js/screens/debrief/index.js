@@ -7,7 +7,8 @@ import { formatShiftTime } from '../../engine/time.js';
 import { load, save } from '../../storage.js';
 import { describeEntry } from './describe.js';
 import { toCsv, downloadCsv } from './csv.js';
-import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection, reflectionSection } from './sections.js';
+import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection, reflectionSection, timelinessSection } from './sections.js';
+import { timelinessConfig } from '../../engine/timeliness.js';
 import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
@@ -30,7 +31,9 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         l?.action ?? 'flag', l ? describeEntry(l, { labelOf, orderText, patientName }) : '',
         f.map((x) => x.severity).join('|'), f.map((x) => x.ruleId).join('|'), f.map((x) => x.message).join(' | '), l ? JSON.stringify(l.details) : ''];
     });
-    return toCsv(header, rows);
+    // Timeliness rows (one per order/med) after the timeline rows.
+    const tl = d.timeliness.rows.map((r) => [at(r.startAt), r.startAt, '', '', '', '', r.patientId, 'timeliness', r.label, r.tag, 'timeliness', `${Math.round(r.minutes)} min${r.doneAt != null ? `, done ${at(r.doneAt)}` : ''}`, JSON.stringify({ kind: r.kind, tier: r.tier, startAt: r.startAt, doneAt: r.doneAt, minutes: r.minutes, tag: r.tag })]);
+    return toCsv(header, [...rows, ...tl]);
   }
 
   function render() {
@@ -69,6 +72,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         ),
       ),
       flagsSection(d, helpers),
+      timelinessSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       reflectionSection(d, { ...helpers, questions: catalogs.reflection?.questions || [] }),
       prioritySection(d, helpers),
       responseSection(d, helpers),

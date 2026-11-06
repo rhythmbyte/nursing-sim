@@ -211,3 +211,29 @@ body.standalone-monitor { background: #000; }
   body.print-debrief-summary .debrief-detail { display: none !important; }
   body.print-debrief-summary .panel { margin-bottom: 6px; padding: 6px 10px; }
 }
+
+/* Command center + timeliness chips (symbol + word + color) */
+.tone-chip { display: inline-block; font-size: 0.8rem; font-weight: 700; padding: 1px 8px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent; }
+.tone-green { background: var(--ok-bg); color: var(--ok-text); }
+.tone-yellow { background: var(--review-bg); color: var(--review-text); border-color: var(--triage-yellow); }
+.tone-red { background: var(--error-bg); color: var(--error-text); border-color: var(--triage-red); }
+.tone-neutral { background: var(--surface-2); color: var(--muted); }
+.cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--space-3); }
+.cc-card { background: var(--surface); border: 1px solid var(--border); border-left-width: 6px; border-radius: var(--radius); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
+.cc-needs-attention { border-left-color: var(--triage-red); } .cc-falling-behind { border-left-color: var(--triage-yellow); } .cc-on-track { border-left-color: var(--triage-green); }
+.cc-head { all: unset; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.cc-head:focus-visible, .cc-patient:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cc-head h3 { margin: 0; font-size: 1.05rem; color: var(--text); text-transform: none; letter-spacing: 0; }
+.cc-students { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); }
+.cc-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); }
+.cc-count { display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--surface-2); border-radius: 6px; padding: 4px 2px; font-size: 0.72rem; color: var(--muted); }
+.cc-count strong { font-size: 1.4rem; color: var(--text); line-height: 1.1; }
+.cc-warn-yellow { box-shadow: inset 0 -3px 0 var(--triage-yellow); } .cc-warn-red { box-shadow: inset 0 -3px 0 var(--triage-red); }
+.cc-patients { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cc-patient { all: unset; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; padding: 4px 6px; border-radius: 6px; font-size: 0.85rem; }
+.cc-patient:hover { background: var(--surface-2); }
+.cc-room { font-weight: 600; min-width: 11em; }
+.cc-trend { font-weight: 700; } .cc-trend-worse { color: var(--triage-red); } .cc-trend-better { color: var(--triage-green); }
+.cc-alarm { color: var(--error-text); font-weight: 700; font-size: 0.8rem; }
+.cc-worst { flex-basis: 100%; padding-left: 1em; }
+@media (min-width: 1800px) { .cc-grid { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); } .cc-card { font-size: 1.15rem; } .cc-count strong { font-size: 2rem; } }

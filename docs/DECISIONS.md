@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-06: One timeliness helper feeds the command center, debrief and timing rules
+- **Decision:** `engine/timeliness.js` turns work into items `{ kind, patientId, startAt, doneAt, minutes, tag }` using `rules.timeliness` thresholds (per tier; scheduled meds; call lights; alarms), the shared timed-order definition (`timeliness.tracking`) and the active log (struck entries don't count). tier-timeout, call-light-response and alarm-response map late → amber (or the tier's severity) and very late → red from these items. `engine/command-center.js` summarizes per group with a data-driven status rule; `debriefTimeliness` gives the per-student table. parameter-breach keeps its per-order window (it's part of each order's data).
+- **Why:** Three screens and three rules used to compute lateness separately. Now they share one function and can't disagree.
+- **Alternatives:** Command-center-only lateness logic (would drift from the flags).
+
+---
+
 ## 2026-11-05: One writer window via a storage lock
 - **Decision:** `js/window-lock.js` keeps `{ id, at }` in storage (via `storage.js`), refreshed every 2 s by the writer window. A window that sees a fresh lock it doesn't own becomes read-only: the tick, saves, heartbeat and pause-on-close are all gated on `isWriter()`, and a non-dismissable notice offers Take over. Read-only windows never claim a lock on their own; they offer Continue once it's free or stale (> 6 s). Take over skips the lock release during its own reload. The window id lives in sessionStorage so a reload keeps it.
 - **Why:** Two windows writing one session overwrote each other (last write wins).

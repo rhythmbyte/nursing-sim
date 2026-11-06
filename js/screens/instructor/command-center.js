@@ -1,0 +1,64 @@
+// Instructor → Command center: one card per group, worst first, so you can see who's struggling at a glance.
+// Data: engine/command-center.js (built on engine/timeliness.js and the flag rules). Updates live.
+// Click a group → Live control filtered to it; click a patient → Live control filtered to that patient.
+
+import { h, clear } from '../shared/dom.js';
+import { simClock } from '../shared/timer.js';
+import { triageChip } from '../shared/triage-chip.js';
+import { toneChip } from '../shared/tone-chip.js';
+import { patientLabel } from '../shared/labels.js';
+import { helpTip } from '../shared/help.js';
+import { commandCenter } from '../../engine/command-center.js';
+import { timelinessConfig } from '../../engine/timeliness.js';
+
+const TREND = { worse: ['↘', 'Vitals worsening'], better: ['↗', 'Vitals improving'], steady: ['→', 'Vitals steady'] };
+const KIND = { order: '', med: 'Med: ', callLight: '', alarm: '' };
+
+export function mountCommandCenter(root, { store, runner, scenario, openLive }) {
+  const clock = simClock(store, runner);
+  const grid = h('div', { class: 'cc-grid' });
+
+  function render() {
+    const state = runner.state;
+    const t = runner.templates();
+    const cfg = timelinessConfig(state, runner.rulesCtx().catalogs);
+    const tags = cfg.tags || {};
+    const statusLabels = cfg.groupStatus?.labels || {};
+    const groups = commandCenter(state, runner.rulesCtx(), scenario);
+    clear(grid).append(...groups.map((g) => {
+      const c = g.counts;
+      const count = (n, label, warn) => h('div', { class: `cc-count${warn && n ? ` cc-warn-${warn}` : ''}` }, h('strong', {}, String(n)), h('span', {}, label));
+      return h('section', { class: `cc-card cc-${g.status}` },
+        h('button', { class: 'cc-head', onclick: () => openLive({ groupId: g.groupId }), title: 'Open this group in Live control' },
+          h('h3', {}, g.name), toneChip(statusLabels[g.status])),
+        h('div', { class: 'cc-students' }, g.students.length
+          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`))
+          : h('span', { class: 'muted' }, 'Nobody joined yet')),
+        h('div', { class: 'cc-counts' },
+          count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'),
+          count(c.callLights, c.callLights ? `call lights (longest ${Math.round(c.longestCallLightMin)} min)` : 'call lights', c.longestCallLightMin > (cfg.callLights?.lateMin ?? 5) ? 'red' : 'yellow'),
+          count(c.alarms, 'monitor alarms', 'red'), count(c.redFlags, 'red flags', 'red'), count(c.amberFlags, 'amber flags', 'yellow')),
+        h('ul', { class: 'cc-patients' }, g.patients.map((p) => {
+          const [arrow, trendText] = TREND[p.trend];
+          return h('li', {}, h('button', { class: 'cc-patient', onclick: () => openLive({ patientId: p.patientId }), title: 'Open this patient in Live control' },
+            h('span', { class: 'cc-room' }, patientLabel(t[p.patientId])),
+            triageChip(p.tag),
+            h('span', { class: `cc-trend cc-trend-${p.trend}`, title: trendText, 'aria-label': trendText }, arrow),
+            p.alarm ? h('span', { class: 'cc-alarm', title: 'Monitor alarm' }, '⚠ alarm') : null,
+            p.worst ? h('span', { class: 'cc-worst' }, toneChip(tags[p.worst.tag]), ` ${KIND[p.worst.kind]}${p.worst.label.length > 60 ? `${p.worst.label.slice(0, 58)}…` : p.worst.label}, ${Math.round(p.worst.minutes)} min`) : h('span', { class: 'muted' }, 'Nothing open')));
+        })),
+      );
+    }));
+  }
+
+  root.append(
+    h('header', { class: 'screen-header' }, h('h2', {}, 'Command center'), helpTip('command.status'), clock.el),
+    h('p', { class: 'muted small' }, 'Worst first. Click a group or a patient to open it in Live control.'),
+    grid,
+  );
+  render();
+  const off = store.subscribe(render);
+  let lastMin = -1;
+  const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
+  return () => { off(); offTick(); clock.destroy(); };
+}

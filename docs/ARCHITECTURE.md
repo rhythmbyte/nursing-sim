@@ -68,6 +68,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/reflection.js` | `submitReflection` (after sim end, once, questions from `reflection.json`) | built |
 | `js/engine/monitor-alarms.js` | `alarmProcessor` (alarm episodes), `acknowledgeAlarm` (silence + response time), `alarmEpisodes` (rule and debrief) | built |
 | `js/engine/struck.js` | `activeLog` / `withoutStruck` ("entered in error" entries removed for rules and comparisons), `isStruck` | built |
+| `js/engine/timeliness.js` | `timelinessItems` (orders, scheduled meds, call lights, alarms → tags), `timelinessConfig`, `tagFor`, `medDueTimes`, `debriefTimeliness`. Read by the command center, debrief and the tier-timeout / call-light-response / alarm-response rules | built |
+| `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |
 | `js/screens/monitor/` | Reusable bedside monitor display: `waveforms.js` (pure ECG/pleth math), `bedside-monitor.js` (canvas sweep, tiles, alarms, mute; one shared animation loop) | built |
@@ -105,6 +107,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/student/call-light-sound.js` | `litLights` (pure) + per-tab watcher (beep on new light, gentle repeat, remembered on/off) | built |
 | `js/screens/student/report-sheet.js` | `sheetData` (pure) + `printReportSheet` (print-only container) | built |
 | `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/instructor/command-center.js` | Command center sub-view (default while a sim is in progress); group/patient click → Live control filter | built |
+| `js/screens/shared/tone-chip.js` | Symbol + word + color chips for timeliness tags and group status (data) | built |
 | `js/screens/instructor/shortcuts.js` | `shortcutAction` (pure) + `installShortcuts` (Live control only, cleaned up on leave) | built |
 | `js/screens/shared/leave-guard.js` | `setLeaveGuard` / `canLeave` / `onBeforeUnload`: "unsaved changes" protection checked by the shell tabs and instructor sub-views | built |
 | `js/screens/shared/labels.js`, `text.js` | `patientLabel` ("Rm 204 Linda Garcia"); `lines` (textarea → non-empty lines) | built |

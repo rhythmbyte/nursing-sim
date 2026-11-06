@@ -50,6 +50,10 @@ test('scheduled meds: due times and late/very late; a struck dose does not count
   const apix = templatesById[DE].orders.find((o) => o.id === 'o-p5-apixaban');
   assert.deepEqual(medDueTimes(apix, { activeAtMin: 0 }, 200), [120]);
   assert.deepEqual(medDueTimes({ frequencyMin: 720 }, { activeAtMin: 155 }, 900), [155, 875]);
+  assert.deepEqual(medDueTimes({ frequencyMin: 1440, activeFromMin: 0 }, { activeAtMin: 0 }, 300, 120), [120], 'shift-start daily med first due at 09:00');
+  assert.deepEqual(medDueTimes({ frequencyMin: 1440, activeFromMin: 0 }, { activeAtMin: 0 }, 100, 120), [], 'not due yet');
+  assert.deepEqual(medDueTimes({}, { activeAtMin: 0 }, 100, 120), [], 'no frequency, not due yet');
+  assert.deepEqual(medDueTimes({}, { activeAtMin: 0 }, 130, 120), [120]);
   let { s, ctx } = started();
   const med = (st, m) => timelinessItems(st, ctx(m, st)).find((i) => i.orderId === 'o-p5-apixaban');
   assert.equal(med(s, 140).tag, 'open');
@@ -90,4 +94,18 @@ test('vitals trend arrow (data thresholds)', () => {
   s = adjustVitals(s, DE, { values: { spo2: 88 } }, { now: 10 * MIN, user: INS });
   assert.equal(vitalsTrend(s.patients[DE], 12, catalogs.vitals.trend), 'worse');
   assert.equal(vitalsTrend(s.patients[RM], 12, catalogs.vitals.trend), 'steady');
+});
+
+test('debrief timeliness: worst first, never done after the end, summary and tier-1 median', async () => {
+  const { debriefTimeliness } = await import('../js/engine/timeliness.js');
+  let { s, ctx, tick } = started();
+  s = tick(s, 76);
+  s = chart.chartIntervention(s, RM, { interventionId: 'ecg-12lead', orderId: 'o-p1-ecg' }, c(78)); // 3 min: on time
+  s = session.controlClock(s, 'end', { now: 200 * MIN, user: INS });
+  const d = debriefTimeliness(s, [RM, DE], ctx(200, s));
+  assert.equal(d.rows.find((r) => r.orderId === 'o-p1-ecg').tag, 'on-time');
+  assert.equal(d.rows.find((r) => r.orderId === 'o-p5-apixaban').tag, 'never', 'open at the end = never done');
+  assert.equal(d.rows[0].tag, 'never', 'worst first');
+  assert.equal(d.summary.medianTier1Min, 3);
+  assert.equal(d.summary.onTime + d.summary.late + d.summary.veryLate + d.summary.never, d.rows.length);
 });

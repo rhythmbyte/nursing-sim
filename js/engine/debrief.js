@@ -10,6 +10,7 @@ import { vitalNumber } from './vitals.js';
 import { activeScale, priorityTimeline } from './priority.js';
 import { withoutStruck } from './struck.js';
 import { alarmEpisodes } from './monitor-alarms.js';
+import { debriefTimeliness } from './timeliness.js';
 
 
 // Words too common to count as a match between a reflection and a "should recognize" item.
@@ -127,6 +128,7 @@ export function buildDebrief(fullState, userId, ctx) {
     vitalsCompare: vitalsCompare(state, userId, ctx),
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
       durationMin: handoff[pid].closedAt != null ? round2(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
+    timeliness: debriefTimeliness(fullState, pids, ctx),
     reflection: fullState.reflections?.[userId] || null,
     reflectionCoverage: fullState.reflections?.[userId] ? pids.map((pid) => {
       const d = ctx.templatesById[pid].debrief || {};

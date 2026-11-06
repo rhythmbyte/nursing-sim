@@ -13,9 +13,10 @@ function linkedNote(members) {
   return h('span', { class: 'linked-note', title: members.map((m) => m.event.id).join(', ') }, `linked ×${members.length}`);
 }
 
-export function eventsPanel(runner, templatesById, user) {
+export function eventsPanel(runner, templatesById, user, filter = null) {
   const { state, refs } = { state: runner.state, refs: runner.refs };
-  const rows = refs.map((ref) => ({ ref, next: nextAt(ref, state.fired), count: state.fired[ref.key] || 0 }))
+  const inFilter = (pid) => (!filter?.patientId || pid === filter.patientId) && (!filter?.groupId || runner.state.patients[pid]?.groupId === filter.groupId);
+  const rows = refs.filter((r) => !filter || (r.patientId && inFilter(r.patientId))).map((ref) => ({ ref, next: nextAt(ref, state.fired), count: state.fired[ref.key] || 0 }))
     .sort((a, b) => (a.next ?? Infinity) - (b.next ?? Infinity) || (a.ref.event.atMin ?? Infinity) - (b.ref.event.atMin ?? Infinity));
 
   return h('table', { class: 'data-table events-table' },

@@ -2,6 +2,8 @@
 
 import { h } from '../shared/dom.js';
 import { triageChip } from '../shared/triage-chip.js';
+import { toneChip } from '../shared/tone-chip.js';
+import { helpTip } from '../shared/help.js';
 
 const sevChip = (s) => h('span', { class: `flag-chip flag-${s}` }, s === 'red' ? 'Red' : 'Amber');
 const empty = (text) => h('p', { class: 'muted' }, text);
@@ -117,4 +119,22 @@ export function reflectionSection(d, { at, room, questions }) {
         d.reflectionCoverage.map((p) => h('div', {}, h('strong', {}, room(p.patientId)),
           h('ul', {}, p.items.map((x) => h('li', {}, x.item, x.mentioned ? [' ', h('span', { class: 'badge badge-ok', title: `Matched words: ${x.words.join(', ')}` }, 'possible mention')] : null))))),
         h('p', { class: 'muted small' }, '"Possible mention" is a keyword match to help you read, not a grade.'))));
+}
+
+/** Timeliness: each order and scheduled med with ordered/due, done, minutes and tag, worst first. */
+export function timelinessSection(d, { at, room, tags }) {
+  const t = d.timeliness;
+  const s = t.summary;
+  const parts = [`${s.onTime} on time`, `${s.late} late`, `${s.veryLate} very late`, `${s.never} never done`, s.open ? `${s.open} still open` : null].filter(Boolean);
+  return h('section', { class: 'panel' },
+    h('h3', {}, 'Timeliness ', helpTip('debrief.timeliness')),
+    h('p', {}, h('strong', {}, parts.join(' · ')), s.medianTier1Min != null ? ` · median time to complete tier 1 orders: ${s.medianTier1Min} min` : ' · no tier 1 orders completed'),
+    t.rows.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Patient', 'Order / med', 'Ordered / due', 'Done', 'Minutes', ''].map((c) => h('th', {}, c)))),
+      h('tbody', {}, t.rows.map((r) => h('tr', {},
+        h('td', {}, room(r.patientId)),
+        h('td', {}, `${r.kind === 'med' ? 'Med: ' : `T${r.tier} · `}${r.label}${r.result && r.result !== 'given' ? ` (${r.result.replace('-', ' ')})` : ''}`),
+        h('td', {}, at(r.startAt)), h('td', {}, r.doneAt != null ? at(r.doneAt) : '—'), h('td', {}, String(Math.round(r.minutes))),
+        h('td', {}, toneChip(tags[r.tag])))))) : empty('No timed orders or scheduled meds for this student\'s patients.'),
+  );
 }

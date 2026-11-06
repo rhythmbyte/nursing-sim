@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Command center and timeliness tags
+- **Timeliness** (`engine/timeliness.js`, one source): every timed order, scheduled med due time, call light and monitor alarm gets **On time / Late / Very late**, or while still open **Open / Open – late / Open – very late** (and **Never done** in the debrief after the sim ends). Thresholds per tier and per kind are data in `rules.json rules.timeliness` (proposed); scenarios can override them. tier-timeout, call-light-response and alarm-response now read these tags, so the command center, debrief and flags can't disagree.
+- **Command center** (new instructor sub-view, the default while a sim is in progress): one card per group, worst first. Each card shows the students and which chart they're in; a status of On track / Falling behind / Needs attention (rule is data); counts of open orders, late, very late, meds overdue, call lights (longest wait), monitor alarms and red/amber flags; and per patient the instructor tag, a vitals trend arrow (thresholds in `vitals.json trend`) and the worst open item ("◉ Open – very late: 12-lead ECG, 30 min"). Click a group or patient → Live control filtered to it ("Show all" clears it).
+- **Debrief Timeliness** section: each order and scheduled med with ordered/due time, done time, minutes and tag, worst first. Summary: on time / late / very late / never done, plus the median time to complete tier 1 orders. Included in Print summary and as CSV rows.
+- Tags and statuses are color-blind safe (symbol + word + color, defined in data). Help text in `help.json`.
+- **Fixed during the browser check:** daily meds active at shift start counted as due at 07:00, so every group showed "Needs attention" within an hour; they're now first due at `scheduledMeds.shiftStartDueMin` (120 = 09:00, SPEC §14). Meds not yet due no longer show as open.
+- Tests: 141 passing.
+
 ## Full check (unsaved-changes guard, one writer window, catalog checks)
 - Full browser run through every tab with no console errors and no unlabelled controls; multi-window check with real tabs (second window read-only, Take over, monitor page unaffected).
 - README: one-window note. Tests: 134 passing.

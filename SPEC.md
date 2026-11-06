@@ -242,6 +242,8 @@ Every action → `log.append({ simMin, wallTime, userId, role, patientId, action
 
 Rules are pure functions of the session, re-evaluated whenever flags are shown (live control refreshes them each sim minute, the debrief on open). That's equivalent to running on every log append and clock tick, with nothing stored. Each returns flags: `{ ruleId, severity: "red" | "amber", patientId, userIds, message, atMin, logIds }`.
 
+**Timeliness:** tier-timeout, call-light-response and alarm-response read one helper (`engine/timeliness.js`) with thresholds in `rules.json rules.timeliness`, shared with the command center and debrief.
+
 **Thresholds and severities are data:** `data/catalogs/rules.json` (marked proposed), overridable per scenario under `settings.rules.<ruleId>`. Defaults are listed as instructor questions in §14.
 
 | Rule | Flags when |
@@ -269,8 +271,9 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
    - add groups; per group: student count, then pick patients OR enter tag counts
    - assignment manual or random
    - "Create sim" → generates a 6-character join code
+0. **Command center** (default while a sim is in progress) — one card per group, worst first: students and the chart they're in, On track / Falling behind / Needs attention, counts (open orders, late, very late, meds overdue, call lights with longest wait, monitor alarms, flags), and per patient the instructor tag, vitals trend arrow and worst open item with its timeliness tag. Click → Live control filtered to that group/patient.
 4. **Live control** — **Adjust vitals** per patient (edit any value; apply now or trend over N minutes; quick presets from `data/catalogs/vitals-presets.json` and the patient's `vitalsPresets`; logged old → new and shown on the debrief timeline), clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
-5. **Debrief** — per student (including their end-of-sim reflection answers): timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
+5. **Debrief** — per student (including their end-of-sim reflection answers and a **Timeliness** table: each order and scheduled med with ordered/due, done, minutes, tag, worst first, plus a summary and the median tier 1 time): timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view. Also: charted vs scripted vitals (tolerances in `rules.json` `vitalsCompare`) and each patient's "should recognize" list.
 
 ---
 
@@ -390,3 +393,7 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 28. **Breathing rate during an arrest:** pulseless rhythms (VF, pVT, PEA, asystole; `pulseless: true` in rhythms.json) now show RR "--" along with no SpO₂/pleth. Should RR instead show 0, or agonal breaths for a while? (Still open.)
 29. **Reflection questions** (`reflection.json`, proposed): which patient you saw first and why; what change you recognized and what you did; what you delegated and whether it was appropriate; what you'd do differently. Right questions? Required or optional?
 30. **Alarm response:** flag a monitor alarm not silenced within 2 min (amber) / 5 min (red) (`rules.json alarm-response`); alarms that clear on their own within 2 min aren't flagged. Silencing lasts 2 min (`vitals.json alarmSilenceMin`). Right thresholds? Should silencing require being in the patient's chart (it does today)?
+31. **Timeliness thresholds** (`rules.json timeliness`, proposed): tier 1 late > 5 / very late > 15 min; tier 2 > 15 / > 30; tier 3 > 60 / > 120; scheduled meds > 30 / > 60 min past due; call lights > 5 / > 10; alarms > 2 / > 5. Right numbers?
+32. **When are shift-start daily meds due?** Daily meds already active at 07:00 with no set time are first due at 09:00 (`scheduledMeds.shiftStartDueMin: 120`). Right, or should each med carry its own due time?
+33. **Group status rule:** Needs attention = any very late item or any red flag; Falling behind = any late item or amber flag (`timeliness.groupStatus`). Too sensitive?
+34. **Vitals trend arrow:** worsening if, over 15 min, SpO₂ drops ≥ 3, SBP drops ≥ 15 or HR rises ≥ 15 (`vitals.json trend`). Right?

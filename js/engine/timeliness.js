@@ -63,11 +63,15 @@ function orderItems(state, ctx, cfg) {
   return out;
 }
 
-/** Due times of a scheduled med up to simMin: dueAtMin, else every frequencyMin from activation, else at activation. */
-export function medDueTimes(order, os, simMin) {
+/**
+ * Due times of a scheduled med up to simMin: dueAtMin, else every frequencyMin from the first due time, else once.
+ * First due time: activation, except meds already active at shift start, which are first due at
+ * shiftStartDueMin (data: rules.timeliness.scheduledMeds; e.g. 120 = 09:00 morning meds; SPEC §14).
+ */
+export function medDueTimes(order, os, simMin, shiftStartDueMin = 0) {
   if (order.dueAtMin != null) return order.dueAtMin <= simMin ? [order.dueAtMin] : [];
-  const start = Math.max(os.activeAtMin, order.activeFromMin ?? os.activeAtMin);
-  if (!order.frequencyMin) return [start];
+  const start = os.activeAtMin === 0 ? shiftStartDueMin : Math.max(os.activeAtMin, order.activeFromMin ?? os.activeAtMin);
+  if (!order.frequencyMin) return start <= simMin ? [start] : [];
   const times = [];
   for (let t = start; t <= simMin; t += order.frequencyMin) times.push(t);
   return times;
@@ -83,7 +87,7 @@ function medItems(state, ctx, cfg) {
       // Each due dose is answered by the next MAR action (given / held / not given) from earlyWindowMin before it.
       const actions = state.log.filter((l) => l.patientId === pid && l.action === 'med' && l.details.orderId === o.id);
       let next = 0;
-      for (const due of medDueTimes(o, os, ctx.simMin)) {
+      for (const due of medDueTimes(o, os, ctx.simMin, th.shiftStartDueMin ?? 0)) {
         while (next < actions.length && actions[next].simMin < due - (th.earlyWindowMin ?? 60)) next++;
         const a = actions[next];
         if (a) next++;
@@ -135,4 +139,26 @@ export function timelinessCounts(items) {
     if (i.doneAt == null) c.open++;
   }
   return c;
+}
+
+/**
+ * Debrief view for a set of patients: orders and scheduled meds, worst first. After the sim ends, anything
+ * still open is "never". summary: { onTime, late, veryLate, never, open, medianTier1Min }.
+ */
+export function debriefTimeliness(state, pids, ctx) {
+  const ended = state.clock.status === 'ended';
+  const rows = timelinessItems(state, ctx)
+    .filter((i) => (i.kind === 'order' || i.kind === 'med') && pids.includes(i.patientId))
+    .map((i) => (ended && i.doneAt == null ? { ...i, tag: 'never' } : i))
+    .sort((a, b) => tagRank(b.tag) - tagRank(a.tag) || b.minutes - a.minutes);
+  const count = (pred) => rows.filter(pred).length;
+  const tier1 = rows.filter((r) => r.kind === 'order' && r.tier === 1 && r.doneAt != null).map((r) => r.minutes).sort((a, b) => a - b);
+  const mid = tier1.length ? (tier1.length % 2 ? tier1[(tier1.length - 1) / 2] : (tier1[tier1.length / 2 - 1] + tier1[tier1.length / 2]) / 2) : null;
+  return {
+    rows,
+    summary: {
+      onTime: count((r) => r.tag === 'on-time'), late: count((r) => r.tag === 'late'), veryLate: count((r) => r.tag === 'very-late'),
+      never: count((r) => r.tag === 'never'), open: count((r) => r.doneAt == null && r.tag !== 'never'), medianTier1Min: mid == null ? null : round2(mid),
+    },
+  };
 }
