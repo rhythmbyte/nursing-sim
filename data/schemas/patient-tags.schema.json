@@ -1,0 +1,11 @@
+{
+  "title": "Patient tags catalog",
+  "type": "object",
+  "required": ["groups"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "groups": { "type": "array", "items": { "type": "object", "required": ["id", "name", "tags"], "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "name": { "type": "string", "minLength": 1 },
+      "tags": { "type": "array", "items": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "label": { "type": "string", "minLength": 1 } } } } } } }
+  }
+}

@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Patient tags and filtered randomizer (Part B)
+- **Patient tags** (`data/catalogs/patient-tags.json`, proposed; always called "patient tags", never confused with the triage tag): groups License level (LPN, RN), Unit / location (Med-surg, Surgical, Cardiology, ED, ICU, OB, Peds, Psych, Neuro, Rehab), Topic (respiratory, cardiac, sepsis, neuro, post-op, pain, falls, heart failure, admission, discharge) and Age group (peds, adult, geriatric). A patient can have several tags in any group (`patientTags`).
+- **Patient editor:** tag chips per group (click to add or remove); **Add tag** and **Add group** right there, saved in this browser's copy of the catalog without losing unsaved edits.
+- **Library:** "Find patients": filter by tag chips and search by name, room, diagnosis or tag, with a live count ("2 of 6 match LPN").
+- **Sim setup randomizer:** pick allowed patient tags for the sim, and optionally per group. Within a group any tag matches; across groups all must ("RN AND (Med-surg OR Surgical)"). Combined with the triage color counts. Matching patients per color are shown before randomizing ("red 0/1 ⚠") with a clear warning when there aren't enough.
+- The six starter patients are tagged (proposed). Unknown tags are load errors.
+- Tests: 191 passing.
+
 ## Guided event builder (Part A)
 - **One "Add event" form everywhere events are made:** scenario changes, reaction effects (Then), patient states and **Live control → Add event** (new per-patient button; **Start code** now opens it on Code). Pick the type (vitals change, rhythm change, call light, staff message, new orders, lab result, assessment change, state change, code / cardiac arrest, admission; reactions also offer findings, fire an event and recovery penalty), then only the fields that type needs, all dropdowns where a catalog exists.
 - **Vitals rows:** vital (SpO₂, HR, BP systolic/diastolic, RR, temp, pain, GCS, glucose, O₂ device + L/min), direction (worsens / improves / set to; suggested from the normal range), **From auto-filled** with what the patient will be at that point (the dry run up to the change's time without the change; a reaction's state; the baseline for states; the live value in Live control), **To** with the patient's normal range as a hint, **Over** as a number + seconds / minutes / hours or instantly (stored in sim minutes), and a plain-English line ("SpO₂ worsens from 91% to 82% over 5 minutes.").

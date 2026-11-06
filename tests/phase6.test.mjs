@@ -63,7 +63,7 @@ test('tag-count fill: no patient reused across groups; warns when the library ru
   assert.equal(new Set(all).size, all.length, 'no reuse');
   assert.ok(!groups[0].patients.includes('p1-robert-miller'), 'explicit picks are reserved');
   assert.equal(groups[0].patients.length, 3);
-  assert.match(warnings[0], /B: wanted 3 red, library only had 1 unused/);
+  assert.match(warnings[0], /B: wanted 3 red, only 1 unused patient matches the patient tags/);
 });
 
 test('ad-hoc order: arrives new, shows in effective templates, and the rules see it', () => {

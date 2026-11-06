@@ -9,6 +9,8 @@
   "demographics": { "name": "Linda Garcia", "age": 63, "sex": "F", "room": "204" },
   "tag": "red",
   "priorityLabel": "High priority – possible clinical deterioration",
+  "patientTags": {"license": ["rn"], "unit": ["med-surg"], "topic": ["respiratory", "sepsis"], "age": ["adult"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Community-acquired pneumonia",
   "codeStatus": "Full code",
   "allergies": [],

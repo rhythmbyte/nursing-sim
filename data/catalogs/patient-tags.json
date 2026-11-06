@@ -1,0 +1,14 @@
+{
+  "review": "proposed",
+  "_comment": "Patient tags (NOT the red/yellow/green/black triage tag): groups of labels for finding and randomizing patients. A patient can have several tags in any group. Sim setup filter: within a group any selected tag matches; across groups all must match. Instructors can add groups and tags in the app (Patient editor → Patient tags).",
+  "groups": [
+    { "id": "license", "name": "License level", "tags": [{ "id": "lpn", "label": "LPN" }, { "id": "rn", "label": "RN" }] },
+    { "id": "unit", "name": "Unit / location", "tags": [
+      { "id": "med-surg", "label": "Med-surg" }, { "id": "surgical", "label": "Surgical" }, { "id": "cardiology", "label": "Cardiology" }, { "id": "ed", "label": "ED" }, { "id": "icu", "label": "ICU" },
+      { "id": "ob", "label": "OB" }, { "id": "peds", "label": "Peds" }, { "id": "psych", "label": "Psych" }, { "id": "neuro", "label": "Neuro" }, { "id": "rehab", "label": "Rehab" }] },
+    { "id": "topic", "name": "Topic", "tags": [
+      { "id": "respiratory", "label": "Respiratory" }, { "id": "cardiac", "label": "Cardiac" }, { "id": "sepsis", "label": "Sepsis" }, { "id": "neuro", "label": "Neuro" }, { "id": "post-op", "label": "Post-op" },
+      { "id": "pain", "label": "Pain" }, { "id": "falls", "label": "Falls" }, { "id": "heart-failure", "label": "Heart failure" }, { "id": "admission", "label": "Admission" }, { "id": "discharge", "label": "Discharge" }] },
+    { "id": "age", "name": "Age group", "tags": [{ "id": "peds", "label": "Peds" }, { "id": "adult", "label": "Adult" }, { "id": "geriatric", "label": "Geriatric" }] }
+  ]
+}

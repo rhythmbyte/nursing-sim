@@ -10,6 +10,8 @@
   "demographics": { "name": "Dorothy Evans", "age": 82, "sex": "F", "room": "205" },
   "tag": "red",
   "priorityLabel": "High priority – immediate post-fall assessment",
+  "patientTags": {"license": ["rn"], "unit": ["med-surg", "neuro"], "topic": ["neuro", "falls"], "age": ["geriatric"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Mechanical fall with head injury evaluation",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Codeine", "reaction": "Nausea" }],

@@ -9,6 +9,8 @@
   "demographics": { "name": "Robert Miller", "age": 68, "sex": "M", "room": "201" },
   "tag": "red",
   "priorityLabel": "High priority – immediate assessment",
+  "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "pain"], "age": ["geriatric"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Chest pain, rule out acute coronary syndrome (ACS)",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Penicillin", "reaction": "Rash" }],

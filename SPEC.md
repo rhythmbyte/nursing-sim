@@ -181,6 +181,10 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
 
 `{ joinCode, status, clock, groups, students: { id → { name, groupId, role } }, patientState: { id → { vitals, ordersStatus, callLight, tag, alive } }, log: [ … ] }`
 
+### 4.8 Patient tags (`data/catalogs/patient-tags.json` + `patientTags` in a patient file)
+
+Groups of labels (license level, unit, topic, age group, plus any the instructor adds) for finding and randomizing patients. `patientTags: { groupId: [tagIds] }`; several per group allowed. Filters: within a group any selected tag matches, across groups all must. Sim setup applies a sim-wide filter and optional per-group filters before filling triage color counts. Never shown as or confused with the triage tag.
+
 ### 4.7 Assessment tools (`data/catalogs/assessment-tools.json` + `assessments` in a patient file)
 
 - **Catalog:** each tool has `id`, `name`, `category` (neuro, falls, skin, pain, sedation, withdrawal, systems, early-warning), `items` (choice options with points, a 0–N scale, a number, or free text), `scoring` (sum, single, rule with `positiveIf`, auto from vitals, none), inclusive interpretation `bands` (with a tone), `reassessMin`, `delegableTo`, optional `vitalsField` (GCS and pain also go on the flowsheet) and `license` { `status`: public / permission-needed / unknown, `note` }. Starter tools: NIHSS, BE-FAST, GCS, pupils, Morse, Braden, numeric pain, Wong-Baker, FLACC, CPOT, POSS, RASS, CAM, CIWA-Ar, COWS, NEWS2 (auto, view-only) and head-to-toe. Licensed tools use paraphrased wording.
@@ -458,3 +462,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 46. **Which tools are delegable** (`delegableTo`): numeric pain to LPN/CNA; Morse, Braden and Wong-Baker to LPN; the rest RN only. Right for your scope of practice?
 47. **Message senders and O₂ devices** (`staff.json messageFrom`, `vitals.json o2Devices`): CNA, LPN, charge nurse, provider, family, patient, RT, pharmacy, lab; room air, nasal cannula, simple mask, Venturi, NRB, high-flow NC, BiPAP/CPAP. Anything to add or remove?
 48. **Normal ranges shown as hints and used for recovery** (`vitals.json recovery.normal`): SpO₂ 94–100, HR 60–100, RR 12–20, SBP 100–140, DBP 60–90, temp 97.0–99.5 °F, GCS 15, glucose 70–180, pain 0–3. Linda uses SpO₂ 88–92 (COPD). Right?
+49. **Patient tag groups and starter tags** (`patient-tags.json`, proposed): License (LPN, RN), Unit (Med-surg, Surgical, Cardiology, ED, ICU, OB, Peds, Psych, Neuro, Rehab), Topic (respiratory, cardiac, sepsis, neuro, post-op, pain, falls, heart failure, admission, discharge), Age (peds, adult, geriatric). Starter patients: Robert RN · Med-surg/Cardiology · cardiac/pain; Margaret LPN+RN · Med-surg/Surgical/Rehab · post-op/pain/falls; Harold LPN+RN · Med-surg · respiratory/discharge; Linda RN · Med-surg · respiratory/sepsis; Dorothy RN · Med-surg/Neuro · neuro/falls; James RN · Med-surg/Cardiology · cardiac/heart failure/admission. Which patients are appropriate for LPN students?

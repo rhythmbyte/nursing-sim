@@ -9,6 +9,9 @@ import { load, save } from '../../storage.js';
 import { patientDetail } from './library-detail.js';
 import { firstScheduled } from '../../engine/scheduler.js';
 import { formatShiftTime } from '../../engine/time.js';
+import { matchesTags, filterText } from '../../engine/patient-tags.js';
+import { tagChips } from './patient-tags-ui.js';
+import { helpTip } from '../shared/help.js';
 
 const SELECTED_KEY = 'ui.library.selected';
 
@@ -57,8 +60,20 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
   const list = h('div', { class: 'library-list', role: 'list' });
   const detail = h('div', { class: 'library-detail' });
 
+  // Filter by patient tags (any within a group, all across groups) and search name / room / diagnosis / tag labels.
+  let tagFilter = load('ui.library.tagFilter', {}) || {};
+  const search = h('input', { class: 'input', type: 'search', 'aria-label': 'Search patients', placeholder: 'Search name, room, diagnosis or tag', oninput: () => render() });
+  const tagLabels = (p) => Object.entries(p.patientTags || {}).flatMap(([g, ids]) => ids.map((id) => catalogs.patientTags?.groups.find((x) => x.id === g)?.tags.find((x) => x.id === id)?.label || id));
+  const count = h('span', { class: 'muted small' });
+  const chips = catalogs.patientTags ? tagChips(catalogs.patientTags, tagFilter, { label: 'Filter by patient tags', onChange: (v) => { tagFilter = v; save('ui.library.tagFilter', v); render(); } }) : null;
+  const shown = () => {
+    const q = search.value.trim().toLowerCase();
+    return sorted.filter((p) => matchesTags(p, tagFilter) && (!q || [p.demographics.name, p.demographics.room, p.admittingDx, ...tagLabels(p)].join(' ').toLowerCase().includes(q)));
+  };
   function render() {
-    clear(list).append(...sorted.map((p) => patientCard(p, p.id === selectedId, select, startClock)));
+    const vis = shown();
+    count.textContent = `${vis.length} of ${sorted.length} match ${filterText(tagFilter, catalogs.patientTags)}`;
+    clear(list).append(...(vis.length ? vis.map((p) => patientCard(p, p.id === selectedId, select, startClock)) : [h('p', { class: 'muted' }, 'No patients match these patient tags.')]));
     const p = sorted.find((x) => x.id === selectedId);
     clear(detail).append(p ? patientDetail(p, { catalogs, startClock }) : h('p', { class: 'muted' }, 'No patients loaded.'));
   }
@@ -75,6 +90,7 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
       h('span', { class: 'muted' }, `${sorted.length} patient template${sorted.length === 1 ? '' : 's'} · read-only`),
     ),
     problems.length ? problemsBanner(problems) : null,
+    h('details', { class: 'panel', open: Object.keys(tagFilter).length > 0 }, h('summary', {}, h('strong', {}, 'Find patients '), helpTip('library.patient-tags'), ' ', count), search, chips?.el),
     h('div', { class: 'library' }, list, detail),
     toolsPanel(catalogs),
   ];

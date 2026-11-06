@@ -8,6 +8,8 @@
   "demographics": { "name": "Harold Thompson", "age": 71, "sex": "M", "room": "203" },
   "tag": "green",
   "priorityLabel": "Lower priority – discharge planning",
+  "patientTags": {"license": ["lpn", "rn"], "unit": ["med-surg"], "topic": ["respiratory", "discharge"], "age": ["geriatric"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Community-acquired pneumonia",
   "codeStatus": "Full code",
   "allergies": [],

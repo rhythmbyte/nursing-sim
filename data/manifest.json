@@ -14,7 +14,8 @@
     "help": "catalogs/help.json",
     "reflection": "catalogs/reflection.json",
     "reactionTemplates": "catalogs/reaction-templates.json",
-    "assessmentTools": "catalogs/assessment-tools.json"
+    "assessmentTools": "catalogs/assessment-tools.json",
+    "patientTags": "catalogs/patient-tags.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

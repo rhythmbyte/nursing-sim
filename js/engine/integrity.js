@@ -5,6 +5,7 @@
 import { rhythmProblems } from './monitor.js';
 import { scriptProblems, reactionTemplateProblems } from './reactions/integrity.js';
 import { assessmentProblems } from './assessment-integrity.js';
+import { patientTagProblems } from './patient-tags.js';
 
 export { reactionTemplateProblems };
 
@@ -47,6 +48,7 @@ export function patientReferenceProblems(t, catalogs) {
   p.push(...rhythmProblems(t, catalogs));
   p.push(...scriptProblems(t, catalogs));
   p.push(...assessmentProblems(t, catalogs));
+  p.push(...patientTagProblems(t, catalogs?.patientTags));
   return p;
 }
 

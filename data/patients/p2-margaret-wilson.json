@@ -9,6 +9,8 @@
   "demographics": { "name": "Margaret Wilson", "age": 74, "sex": "F", "room": "202" },
   "tag": "yellow",
   "priorityLabel": "Moderate priority – pain and mobility management",
+  "patientTags": {"license": ["lpn", "rn"], "unit": ["med-surg", "surgical", "rehab"], "topic": ["post-op", "pain", "falls"], "age": ["geriatric"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Osteoarthritis, status post right total knee arthroplasty",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Sulfa medications", "reaction": "" }],

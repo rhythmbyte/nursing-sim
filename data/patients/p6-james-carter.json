@@ -8,6 +8,8 @@
   "demographics": { "name": "James Carter", "age": 76, "sex": "M", "room": "206" },
   "tag": "red",
   "priorityLabel": "High priority – unexpected admission",
+  "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "heart-failure", "admission"], "age": ["geriatric"]},
+  "patientTagsReview": "proposed",
   "admittingDx": "Acute decompensated heart failure (CHF exacerbation)",
   "codeStatus": "Full code",
   "allergies": [],

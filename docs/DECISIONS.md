@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Patient tags are a separate catalog with any-within, all-across matching
+- **Decision:** `patient-tags.json` groups → tags; patients store `patientTags { group: [tags] }`. One pure matcher (`engine/patient-tags.js matchesTags`) serves the library filter, the Sim setup counts and `fillByTagCounts`. A group's own filter replaces the sim-wide choice only in the tag groups it sets.
+- **Why:** "RN AND (Med-surg OR Surgical)" is how instructors describe a pool. One matcher means the counts shown always equal what the randomizer can pick. The name "patient tags" keeps it apart from the triage tag (B11 answer key).
+- **Alternatives:** Free-text keywords (typos, no grouping), or a single list of tags (can't express AND across kinds).
+
+---
+
 ## 2026-11-07: One guided event form with converters per place
 - **Decision:** `guided-model.js` defines one event shape and converts it to what each place stores: change-model forms (keyframes, starts, orders, kept events), reaction effects, state fields, and runner calls for Live control. `guided-form.js` is the only event form. Per-vital durations were added to `setVitalsTarget` (`overMinBy`) instead of separate trends.
 - **Why:** The same form everywhere means one place to fix and one way to think. Round-trip tests over every starter event prove nothing is lost. "From" uses the real dry run, so it shows what the patient will actually be.

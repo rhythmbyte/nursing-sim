@@ -81,6 +81,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/chart/assessments.js` | Assessments chart tab (tool picker, item form with Check patient, live score, NEWS2, Due list) | built |
 | `js/screens/instructor/assessment-answers.js` | Expected-answers editor (baseline, state, scenario change, reaction effect) | built |
 | `js/screens/debrief/assessment-section.js` | Debrief → Assessments | built |
+| `js/engine/patient-tags.js` | Patient tags (not triage): `matchesTags`, `filterText`, `countByTriage`, `mergeFilters`, `patientTagProblems`; used by `fillByTagCounts` | built |
+| `js/screens/instructor/patient-tags-ui.js` | `tagChips` (editor, library filter, Sim setup; Add tag / Add group saved locally) | built |
 | `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |
@@ -141,7 +143,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `assessment-tools.json` (scored nursing tools with licenses), `rhythms.json` (monitor rhythms and how they're drawn) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `assessment-tools.json` (scored nursing tools with licenses), `patient-tags.json` (patient tag groups for finding and randomizing), `rhythms.json` (monitor rhythms and how they're drawn) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |

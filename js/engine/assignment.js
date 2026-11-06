@@ -6,6 +6,7 @@
 // - Random: placed into a random group that still has open slots; a full group is never over-filled.
 // - More students than slots: the join is refused and the instructor is alerted.
 
+import { matchesTags, mergeFilters } from './patient-tags.js';
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I
 
 export function generateJoinCode(rng = Math.random, length = 6) {
@@ -46,20 +47,24 @@ export function placeStudent(roster, scenario, name, rng = Math.random) {
  * Tag-count fill: for each group with tagCounts, pick that many library patients per tag, never reusing
  * a patient across groups (explicitly listed patients are reserved first). Returns { groups, warnings }.
  */
-export function fillByTagCounts(groups, library, rng = Math.random) {
+/**
+ * groups[].tagCounts { red: n, … } are filled from the library at random (no patient twice). Patient tags filter the
+ * pool first: `filter` for the whole sim, merged with a group's own g.tagFilter (engine/patient-tags.js).
+ */
+export function fillByTagCounts(groups, library, rng = Math.random, filter = {}) {
   const used = new Set(groups.flatMap((g) => [...(g.patients || []), ...(g.admissions || [])]));
   const warnings = [];
   const out = groups.map((g) => {
     if (!g.tagCounts) return g;
     const picked = [];
     for (const [tag, n] of Object.entries(g.tagCounts)) {
-      const pool = library.filter((p) => p.tag === tag && !used.has(p.id));
+      const pool = library.filter((p) => p.tag === tag && !used.has(p.id) && matchesTags(p, mergeFilters(filter, g.tagFilter)));
       for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
       const take = pool.slice(0, n);
-      if (take.length < n) warnings.push(`${g.name}: wanted ${n} ${tag}, library only had ${take.length} unused.`);
+      if (take.length < n) warnings.push(`${g.name}: wanted ${n} ${tag}, only ${take.length} unused patient${take.length === 1 ? '' : 's'} match${take.length === 1 ? 'es' : ''} the patient tags.`);
       take.forEach((p) => { used.add(p.id); picked.push(p.id); });
     }
-    const { tagCounts, ...rest } = g;
+    const { tagCounts, tagFilter, ...rest } = g;
     return { ...rest, patients: [...(g.patients || []), ...picked], filledFrom: tagCounts };
   });
   return { groups: out, warnings };

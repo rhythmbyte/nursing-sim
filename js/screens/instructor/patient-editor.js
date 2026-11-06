@@ -17,6 +17,7 @@ import { setLeaveGuard, clearLeaveGuard } from '../shared/leave-guard.js';
 import { scriptSection } from './script-editor.js';
 import { parseO2, o2Text } from './guided-model.js';
 import { checkList } from './script-parts.js';
+import { tagChips } from './patient-tags-ui.js';
 import { answersEditor } from './assessment-answers.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
@@ -65,6 +66,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     };
     const orders = ordersTable(work.orders, catalogs);
     const labs = labsTable(work.labs, catalogs, work.orders);
+    const ptags = catalogs.patientTags ? tagChips(catalogs.patientTags, work.patientTags || {}, { data, onChange: () => { dirty = true; } }) : null;
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
@@ -73,7 +75,9 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       const values = Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.type === 'checkbox' ? el.checked : el.value]));
       const next = fromForm(values, work, { orders: orders.collect(work.id), labs: labs.collect() });
       const baseline = baselineAssess.value();
-      const { assessments, ...rest } = next;
+      const { assessments, patientTags: _pt, ...rest0 } = next;
+      const tags = ptags ? ptags.value() : next.patientTags;
+      const rest = tags && Object.keys(tags).length ? { ...rest0, patientTags: tags } : rest0;
       return Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest;
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
@@ -138,6 +142,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         field('Name', inp('name')), field('Age', inp('age', 'number')), field('Sex', inp('sex')), field('Room', inp('room')),
         field('Triage tag (yours)', sel('tag', TAGS)), field('Priority label', inp('priorityLabel')), field('Admitting diagnosis', inp('admittingDx')),
         field('Code status', inp('codeStatus')), field('Review status', sel('review', ['proposed', 'partial', 'approved'])), field('Source', inp('source'))),
+      ptags ? h('section', { class: 'panel' }, h('h3', {}, 'Patient tags ', helpTip('editor.patient-tags')), h('p', { class: 'muted small' }, 'For finding and randomizing patients (not the triage tag above). Click to add or remove; a patient can have several in a group.'), ptags.el) : null,
       h('section', { class: 'panel' }, h('h3', {}, 'H&P'),
         field('Allergies', area('allergies', 2), 'One per line: agent | reaction'), field('Allergy note', inp('allergyText'), 'e.g. "No known drug allergies"'),
         field('HPI', area('hpi', 5)), field('PMH', area('pmh', 3), 'One per line'), field('Home meds', area('homeMeds', 3), 'One per line: name | dose | frequency')),

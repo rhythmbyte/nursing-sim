@@ -278,3 +278,16 @@ body.standalone-monitor { background: #000; }
 .script-form h4 { margin: var(--space-3) 0 var(--space-1); }
 .test-step { align-items: center; }
 .test-results { margin-top: var(--space-2); overflow-x: auto; }
+
+/* Patient tags (not the triage tag) */
+.tag-chips { display: flex; flex-direction: column; gap: 4px; }
+.tag-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.tag-group { font-weight: 600; font-size: 0.8rem; min-width: 9em; color: var(--muted); }
+.tag-chip { border: 1px dashed var(--border); background: var(--surface); color: var(--text); border-radius: 6px; padding: 1px 8px; font-size: 0.8rem; cursor: pointer; }
+.tag-chip.on { border-style: solid; border-color: var(--accent); background: var(--surface-2); font-weight: 600; }
+.tag-chip:focus-visible { outline: 2px solid var(--accent); }
+.input-small { width: 9em; padding: 2px 6px; font-size: 0.8rem; }
+.tag-count { font-size: 0.85rem; }
+.guided-event { border: 1px solid var(--border); border-radius: 6px; padding: var(--space-2); margin-bottom: var(--space-2); background: var(--surface); }
+.guided-row { border-left: 3px solid var(--accent); padding-left: var(--space-2); margin-bottom: 4px; }
+.guided-summary { margin: 4px 0 0; font-style: italic; }
