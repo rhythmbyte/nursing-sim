@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: "Entered in error" strikes, never deletes
+- **Decision:** `strikeEntry` (own entries only, reason required) records `state.struck[logId]` plus an `entered-in-error` log entry. One helper, `engine/struck.js activeLog/withoutStruck`, gives rules, PRN checks and debrief comparisons the log without struck entries. The timeline keeps them, marked. Flowsheet rows link to their log entry so they strike too. Order progress or findings revealed by a struck entry are not undone.
+- **Why:** It matches real charting practice (corrections are visible and auditable), and the debrief can discuss the mistake.
+- **Alternatives:** Deleting entries (loses the audit trail); undoing order progress (ambiguous when other work also counted). Session shape v11.
+
+---
+
 ## 2026-11-05: Bedside monitor: engine view + reusable display module
 - **Decision:** `engine/monitor.js monitorView()` decides what may be shown (connections, rhythm via catalog aliases, alarms from `vitals.json alarmLimits`). It never includes pain or GCS, and temp only with `monitor.tempProbe`. The display lives in `js/screens/monitor/`: `waveforms.js` (pure ECG and pleth math from `rhythms.json draw`) and `bedside-monitor.js` (canvases and tiles, with one shared requestAnimationFrame loop that skips frames when the page is hidden or the sim isn't running). Codes set the monitor rhythm from the code's rhythm name, and ROSC / no ROSC use settings (`roscRhythm`, `noRoscRhythm`). Connection comes from catalog `monitorConnects` (tele → ECG, continuous pulse ox → SpO₂, NIBP cycle) or the student's logged Connect to monitor.
 - **Why:** Clinical and drawing choices stay in data, and the display can move unchanged to the full build (or a separate monitor device).

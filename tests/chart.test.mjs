@@ -97,3 +97,28 @@ test('student view drops instructor-only fields (allow-list)', () => {
   }
   assert.equal(studentView(templatesById[RM], { showTags: true }).tag, 'red');
 });
+
+test('B10: entered in error: own entries only, reason required, rules and PRN ignore it, nothing deleted', async () => {
+  const { evaluateRules } = await import('../js/engine/rules/index.js');
+  const { activeLog } = await import('../js/engine/struck.js');
+  const { buildDebrief } = await import('../js/engine/debrief.js');
+  let { s } = started();
+  s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', fields: { rr: '18' } }, ctx(5));
+  s = chart.medAction(s, RM, { orderId: 'o-p1-ntg', result: 'given', warnings: [{ code: 'requires' }] }, ctx(6));
+  const med = s.log.at(-1);
+  const rctx = { templatesById, catalogs, simMin: 10, studentIdsForGroup: () => ['student-1'], groupOfStudent: () => 'g1' };
+  assert.ok(evaluateRules(s, rctx).some((f) => f.ruleId === 'prn-limit'));
+  assert.throws(() => chart.strikeEntry(s, RM, { logId: med.id, reason: ' ' }, ctx(7)), /reason/);
+  assert.throws(() => chart.strikeEntry(s, RM, { logId: med.id, reason: 'x' }, { ...ctx(7), user: { userId: 'student-2', role: 'student' } }), /your own/);
+  s = chart.strikeEntry(s, RM, { logId: med.id, reason: 'wrong patient' }, ctx(7));
+  assert.equal(s.log.find((l) => l.id === med.id).details.med, 'Nitroglycerin 0.4 mg SL', 'original kept');
+  assert.equal(s.log.at(-1).action, 'entered-in-error');
+  assert.ok(!evaluateRules(s, rctx).some((f) => f.ruleId === 'prn-limit'), 'struck dose no longer flags');
+  assert.ok(!activeLog(s).some((l) => l.id === med.id));
+  const vs = s.log.find((l) => l.details?.interventionId === 'vs-full');
+  s = chart.strikeEntry(s, RM, { logId: vs.id, reason: 'charted on wrong patient' }, ctx(8));
+  assert.equal(s.patients[RM].flowsheet.find((r) => r.logId === vs.id).logId, vs.id, 'flowsheet row linked');
+  const d = buildDebrief(s, 'student-1', rctx);
+  assert.equal(d.vitalsCompare.length, 0, 'struck vitals not compared');
+  assert.ok(d.timeline.some((t) => t.struck?.reason === 'wrong patient'), 'debrief still shows it, marked');
+});

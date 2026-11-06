@@ -7,6 +7,7 @@ import { toast } from '../shared/toast.js';
 import { at, byWhom, fieldLabel, patientLog } from './util.js';
 import { vitalsInputs } from './vitals-form.js';
 import { searchInterventions, recentInterventions } from './search.js';
+import { strikeButton, struckMark } from './strike.js';
 
 function pendingNote(state, pid, taskId) {
   const t = state.patients[pid].delegations.find((d) => d.id === taskId);
@@ -93,12 +94,12 @@ export default {
       update(state) {
         const entries = patientLog(state, pid, 'intervention').slice(0, 15);
         clear(recent).append(entries.length
-          ? h('ul', { class: 'feed' }, entries.map((l) => h('li', {},
+          ? h('ul', { class: 'feed' }, entries.map((l) => h('li', { class: state.struck?.[l.id] ? 'struck' : '' },
             h('span', { class: 'feed-time' }, at(state, l.simMin)),
             h('span', {}, h('strong', {}, labelOf[l.details.interventionId] || l.details.interventionId),
               Object.entries(l.details.fields || {}).filter(([, v]) => v).map(([k, v]) => ` · ${fieldLabel(k)}: ${v}`).join(''),
               h('span', { class: 'muted' }, ` · ${byWhom(l)}`),
-              l.details.delegatedTo ? pendingNote(state, pid, l.details.taskId) : null))))
+              l.details.delegatedTo ? pendingNote(state, pid, l.details.taskId) : null, struckMark(state, l), strikeButton(state, l, ctx)))))
           : h('p', { class: 'muted' }, 'Nothing charted yet.'));
       },
     };

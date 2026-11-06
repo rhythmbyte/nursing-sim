@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## B10. Entered in error
+- Students can mark their own chart entries (interventions, flowsheet rows, MAR actions, notes, escalations) as **Entered in error**, with a required reason. Nothing is deleted: the original stays visible, struck through, with the reason, and both actions are logged.
+- Rules, PRN checks and debrief comparisons ignore struck entries; the debrief timeline still shows them, marked.
+- Tests: 108 passing.
+
 ## B9. Intervention search and Recent
 - Type-to-find across all categories in the Interventions tab: label, id and catalog `synonyms` (e.g. "foley" or "indwelling" → Insert Foley catheter; "EKG" → 12-lead ECG; "fingerstick" → glucose). The synonyms are data in `interventions.json` (proposed).
 - A **Recent** row shows the student's last-used interventions.

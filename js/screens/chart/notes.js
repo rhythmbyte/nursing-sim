@@ -5,11 +5,13 @@
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, byWhom, patientLog } from './util.js';
+import { strikeButton, struckMark } from './strike.js';
 
 export default {
   id: 'notes',
   label: 'Notes',
-  mount(root, { pid, act, catalogs }) {
+  mount(root, ctx) {
+    const { pid, act, catalogs } = ctx;
     const QUICK = [
       ...catalogs.interventions.interventions.filter((i) => i.quickAction).map((i) => ({ label: i.quickAction, interventionId: i.id })),
       { label: 'Escalated', escalate: true },
@@ -50,12 +52,12 @@ export default {
         const entries = patientLog(state, pid, ['note', 'escalated', 'intervention'])
           .filter((l) => l.action !== 'intervention' || quickIds.has(l.details.interventionId));
         clear(list).append(entries.length
-          ? h('ul', { class: 'feed notes-list' }, entries.map((l) => h('li', {},
+          ? h('ul', { class: 'feed notes-list' }, entries.map((l) => h('li', { class: state.struck?.[l.id] ? 'struck' : '' },
             h('span', { class: 'feed-time' }, at(state, l.simMin)),
             h('span', {},
               l.action === 'note' ? h('span', { class: 'pre' }, l.details.text)
                 : h('strong', {}, l.action === 'escalated' ? 'Escalated' : QUICK.find((q) => q.interventionId === l.details.interventionId).label),
-              h('span', { class: 'muted' }, ` · ${byWhom(l)}`)))))
+              h('span', { class: 'muted' }, ` · ${byWhom(l)}`), struckMark(state, l), strikeButton(state, l, ctx)))))
           : h('p', { class: 'muted' }, 'No notes yet.'));
       },
     };

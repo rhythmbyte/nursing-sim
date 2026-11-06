@@ -6,6 +6,7 @@ import { toast } from '../shared/toast.js';
 import { at, fieldLabel } from './util.js';
 import { vitalsInputs } from './vitals-form.js';
 import { load, save } from '../../storage.js';
+import { strikeButton } from './strike.js';
 
 const SHORT = { tempF: 'Temp', spo2: 'SpO₂', o2: 'O₂', intakeMl: 'In (mL)', outputMl: 'Out (mL)', weightKg: 'Wt (kg)', glucose: 'Gluc' };
 const SOURCE = { prior: 'Prior shift', monitor: 'Monitor', charted: 'Charted', delegated: 'Reported' };
@@ -32,7 +33,8 @@ export function latestVitals(ps) {
 export default {
   id: 'flowsheet',
   label: 'Flowsheet',
-  mount(root, { pid, act, runner, scenario, catalogs, user }) {
+  mount(root, ctx) {
+    const { pid, act, runner, scenario, catalogs, user } = ctx;
     const HIDE_KEY = `ui.${user.userId}.flowsheet.chartedOnly`;
     // The catalog's full vital-signs intervention (vitalsCapture + temp): counts for VS orders and PRN pre-checks.
     const fullVitals = catalogs.interventions.interventions.find((i) => i.vitalsCapture && i.chartFields.includes('tempF'));
@@ -97,10 +99,11 @@ export default {
         const used = COLS.filter((c) => rows.some((r) => r.values[c] != null));
         clear(table).append(h('table', { class: 'data-table flowsheet' },
           h('thead', {}, h('tr', {}, h('th', {}, 'Time'), used.map((c) => h('th', {}, SHORT[c] || fieldLabel(c))), h('th', {}, 'Source'))),
-          h('tbody', {}, rows.map((r) => h('tr', { class: `src-${r.source}` },
+          h('tbody', {}, rows.map((r) => h('tr', { class: `src-${r.source}${r.logId && state.struck?.[r.logId] ? ' struck' : ''}`, title: r.logId && state.struck?.[r.logId] ? `Entered in error: ${state.struck[r.logId].reason}` : null },
             h('td', {}, at(state, r.atMin)),
             used.map((c) => h('td', {}, r.values[c] != null ? String(r.values[c]) : '')),
-            h('td', {}, r.source === 'charted' ? who(r.by) : r.source === 'delegated' ? `${r.by} report` : SOURCE[r.source]),
+            h('td', {}, r.source === 'charted' ? who(r.by) : r.source === 'delegated' ? `${r.by} report` : SOURCE[r.source],
+              r.logId ? strikeButton(state, state.log.find((l) => l.id === r.logId), ctx) : null),
           ))),
         ));
     }

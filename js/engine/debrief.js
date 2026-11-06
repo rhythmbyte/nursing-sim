@@ -7,6 +7,7 @@ import { conditionMetAt, requiredActionAt } from './rules/parameter-breach.js';
 import { firstWork } from './orders.js';
 import { vitalNumber } from './vitals.js';
 import { activeScale, priorityTimeline } from './priority.js';
+import { withoutStruck } from './struck.js';
 
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -90,7 +91,9 @@ function timeline(state, userId, pids, flags) {
   return items.sort((a, b) => a.atMin - b.atMin);
 }
 
-export function buildDebrief(state, userId, ctx) {
+export function buildDebrief(fullState, userId, ctx) {
+  // Comparisons ignore struck entries; the timeline (below) still shows them, marked.
+  const state = withoutStruck(fullState);
   const groupId = ctx.groupOfStudent(userId);
   const pids = Object.entries(state.patients).filter(([, ps]) => ps.groupId === groupId).map(([pid]) => pid);
   const flags = evaluateRules(state, ctx).filter((f) => f.userIds.includes(userId));
@@ -114,6 +117,6 @@ export function buildDebrief(state, userId, ctx) {
       const d = ctx.templatesById[pid].debrief || {};
       return { patientId: pid, items: [...(d.shouldRecognize || []), ...Object.values(d.byChange || {}).flat()] };
     }),
-    timeline: timeline(state, userId, pids, flags),
+    timeline: timeline(fullState, userId, pids, flags).map((t) => (t.entry && fullState.struck?.[t.entry.id] ? { ...t, struck: fullState.struck[t.entry.id] } : t)),
   };
 }

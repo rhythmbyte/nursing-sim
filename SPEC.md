@@ -229,6 +229,8 @@ Tabs, left to right:
 
 Every action → `log.append({ simMin, wallTime, userId, role, patientId, action, details })`.
 
+**Entered in error:** students can strike their own chart entries with a required reason; the original stays visible struck through, both are logged, and rules ignore struck entries.
+
 ---
 
 ## 7. Flag rules (one file each in `js/engine/rules/`)

@@ -28,6 +28,7 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
       const ch = Object.entries(d.to || {}).map(([k, v]) => `${k} ${d.from?.[k] ?? '—'} → ${v}`).join(', ');
       return `Instructor adjusted vitals: ${ch}${d.overMin ? ` (over ${d.overMin} min)` : ''}${d.presetId ? ` [${d.presetId}]` : ''}`;
     }
+    case 'entered-in-error': return `Marked an entry as entered in error (${d.reason})`;
     case 'left-unattended': return `Instructor: left unattended${d.note ? ` (${d.note})` : ''}`;
     case 'clock-skip': return `Clock skipped ${d.fromMin} → ${d.toMin} min`;
     default: return l.action.replace(/-/g, ' ') + (d.reason ? ` (${d.reason})` : '');

@@ -7,6 +7,8 @@ import { confirmWarnings, promptText } from '../shared/modal.js';
 import { toast } from '../shared/toast.js';
 import { prnWarnings, dosesGiven, prnOptions } from '../../engine/prn.js';
 import { at } from './util.js';
+import { activeLog } from '../../engine/struck.js';
+import { strikeButton, struckMark } from './strike.js';
 
 function schedule(o, state) {
   if (o.type === 'prn') {
@@ -28,7 +30,7 @@ export default {
 
     async function give(o) {
       const state = runner.state;
-      const warnings = prnWarnings(o, { log: state.log, patientId: pid, simMin: runner.simMin(), ...prnOptions(catalogs, state.patients[pid], state.settings) });
+      const warnings = prnWarnings(o, { log: activeLog(state), patientId: pid, simMin: runner.simMin(), ...prnOptions(catalogs, state.patients[pid], state.settings) });
       if (warnings.length) {
         const ok = await confirmWarnings(`Give ${o.med}?`, 'Check before giving:', warnings.map((w) => w.message), 'Give anyway');
         if (!ok) return;
@@ -52,14 +54,15 @@ export default {
           h('thead', {}, h('tr', {}, ['Medication', 'Schedule', 'Given', 'Last action', ''].map((c) => h('th', {}, c)))),
           h('tbody', {}, active.map((o) => {
             const os = state.patients[pid].orders[o.id];
-            const doses = dosesGiven(state.log, pid, o.id);
+            const doses = dosesGiven(activeLog(state), pid, o.id);
             const last = state.log.filter((l) => l.action === 'med' && l.patientId === pid && l.details.orderId === o.id).at(-1);
             const done = os.status === 'done';
             return h('tr', { class: done ? 'is-done' : '' },
               h('td', {}, h('strong', {}, o.med), h('div', { class: 'muted small' }, o.text)),
               h('td', {}, schedule(o, state)),
               h('td', {}, String(doses.length)),
-              h('td', {}, last ? `${last.details.result.replace('-', ' ')} ${at(state, last.simMin)}${last.details.reason ? ` (${last.details.reason})` : ''}` : '—'),
+              h('td', { class: last && state.struck?.[last.id] ? 'struck' : '' }, last ? `${last.details.result.replace('-', ' ')} ${at(state, last.simMin)}${last.details.reason ? ` (${last.details.reason})` : ''}` : '—',
+                last ? struckMark(state, last) : null, last ? strikeButton(state, last, ctx) : null),
               h('td', { class: 'row-actions' },
                 h('button', { class: 'btn btn-primary btn-small', disabled: done, onclick: () => give(o) }, 'Give'),
                 h('button', { class: 'btn btn-small', disabled: done, onclick: () => withReason(o, 'held', 'Held') }, 'Hold'),

@@ -16,7 +16,7 @@ function begin(state, ctx) {
 }
 
 function log(draft, simMin, ctx, patientId, action, details = {}) {
-  append(draft, { simMin, wallTime: ctx.now, userId: ctx.user.userId, role: ctx.user.role, patientId, action, details });
+  return append(draft, { simMin, wallTime: ctx.now, userId: ctx.user.userId, role: ctx.user.role, patientId, action, details });
 }
 
 function studentRec(draft, user) {
@@ -112,12 +112,14 @@ export function chartIntervention(state, patientId, { interventionId, fields = {
     if (iv.vitalsCapture) {
       const vcat = ctx.catalogs.vitals;
       logFields = { ...deviceValues(ps, iv.chartFields, vcat), ...pickTyped(fields, iv.chartFields.filter((k) => vcat.manualScriptedFields.includes(k))) };
-      ps.flowsheet.push({ atMin: simMin, source: 'charted', values: logFields, by: ctx.user.userId });
+      extra.flowRow = ps.flowsheet.push({ atMin: simMin, source: 'charted', values: logFields, by: ctx.user.userId }) - 1;
       extra.scripted = scriptedSnapshot(ps, vcat);
     }
     if (iv.drawsLabs && order?.labCodes) extra.drawn = drawLabs(draft, patientId, order.labCodes, simMin, ctx.catalogs, order.id).map((l) => l.uid);
   }
-  log(draft, simMin, ctx, patientId, 'intervention', { interventionId, category: iv.category, fields: logFields, orderId, delegatedTo, ...extra });
+  const { flowRow, ...details } = extra;
+  const entry = log(draft, simMin, ctx, patientId, 'intervention', { interventionId, category: iv.category, fields: logFields, orderId, delegatedTo, ...details });
+  if (flowRow != null) ps.flowsheet[flowRow].logId = entry.id; // so "entered in error" can strike the row too
   return draft;
 }
 
@@ -128,8 +130,8 @@ export function flowsheetEntry(state, patientId, { values = {} }, ctx) {
   if (!Object.keys(typed).length) return state;
   const { draft, simMin } = begin(state, ctx);
   const ps = draft.patients[patientId];
-  ps.flowsheet.push({ atMin: simMin, source: 'charted', values: typed, by: ctx.user.userId });
-  log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps, vcat) });
+  const row = ps.flowsheet.push({ atMin: simMin, source: 'charted', values: typed, by: ctx.user.userId }) - 1;
+  ps.flowsheet[row].logId = log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps, vcat) }).id;
   return draft;
 }
 
@@ -176,5 +178,26 @@ export function addNote(state, patientId, { text }, ctx) {
 export function escalate(state, patientId, { to = 'unspecified' } = {}, ctx) {
   const { draft, simMin } = begin(state, ctx);
   log(draft, simMin, ctx, patientId, 'escalated', { to });
+  return draft;
+}
+
+/** Chart entries a student may mark "entered in error" (their own only). */
+export const STRIKEABLE = ['intervention', 'med', 'note', 'flowsheet-entry', 'escalated'];
+
+/**
+ * "Entered in error": strikes one of the student's own chart entries with a required reason.
+ * Nothing is deleted; state.struck[logId] records it, and rules/PRN checks ignore struck entries
+ * (engine/struck.js activeLog). Order progress or findings it caused are not undone.
+ */
+export function strikeEntry(state, patientId, { logId, reason }, ctx) {
+  const target = state.log.find((l) => l.id === logId);
+  if (!target || target.patientId !== patientId) throw new Error('Entry not found for this patient');
+  if (target.userId !== ctx.user.userId) throw new Error('You can only mark your own entries as entered in error');
+  if (!STRIKEABLE.includes(target.action)) throw new Error('This entry cannot be struck');
+  if (state.struck?.[logId]) return state;
+  if (!String(reason || '').trim()) throw new Error('A reason is required');
+  const { draft, simMin } = begin(state, ctx);
+  draft.struck[logId] = { atMin: simMin, by: ctx.user.userId, reason: reason.trim() };
+  log(draft, simMin, ctx, patientId, 'entered-in-error', { targetId: logId, targetAction: target.action, reason: reason.trim() });
   return draft;
 }

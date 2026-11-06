@@ -157,3 +157,6 @@ details.advanced summary { cursor: pointer; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .mon-tile.mon-alarm { animation: none; background: #5a0b0b; } }
 @media (max-width: 760px) { .mon-body { grid-template-columns: 1fr; } .mon-value { font-size: 1.8rem; } }
 .iv-search { margin-bottom: var(--space-2); }
+.struck, .struck td, li.struck > span:not(.struck-note) { text-decoration: line-through; color: var(--muted); }
+.struck-note { display: inline-block; text-decoration: none; color: var(--error-text); font-size: 0.8rem; margin-left: var(--space-1); }
+.strike-btn { font-size: 0.75rem; padding: 0 6px; }
