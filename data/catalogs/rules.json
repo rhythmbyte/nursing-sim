@@ -1,0 +1,39 @@
+{
+  "review": "proposed",
+  "_comment": "Defaults for flag rules (SPEC §7). Every threshold and severity here is a clinical/grading choice for the instructor to confirm (SPEC §14). A scenario can override any rule's fields under settings.rules.<ruleId>.",
+  "rules": {
+    "priority-order": {
+      "severity": "amber",
+      "trackedOrderTypes": ["once"],
+      "trackEventTriggeredPrn": true
+    },
+    "tier-timeout": {
+      "windowsMin": { "1": 5, "2": 15 },
+      "severity": { "1": "red", "2": "amber" },
+      "trackedOrderTypes": ["once"],
+      "trackEventTriggeredPrn": true,
+      "includeShiftStartOrders": false
+    },
+    "call-light-response": { "amberAfterMin": 5, "redAfterMin": 10 },
+    "parameter-breach": { "severity": "red" },
+    "inappropriate-delegation": { "severity": "red" },
+    "allergy-conflict": {
+      "severity": "red",
+      "classes": {
+        "penicillin": ["penicillin", "amoxicillin", "ampicillin", "piperacillin", "nafcillin", "oxacillin", "dicloxacillin"],
+        "sulfa": ["sulfamethoxazole", "trimethoprim-sulfamethoxazole", "bactrim", "sulfasalazine", "sulfadiazine"],
+        "codeine": ["codeine"]
+      }
+    },
+    "prn-limit": { "severity": "red" },
+    "left-unattended": { "severity": "red" }
+  },
+  "codeResponse": {
+    "_comment": "Debrief response time for a code: first of these interventions charted after the code starts.",
+    "interventionIds": ["code-respond", "rapid-response"]
+  },
+  "vitalsCompare": {
+    "_comment": "Debrief display only: a charted manual vital 'differs' from the scripted value when off by more than this.",
+    "tolerance": { "tempF": 0.3, "rr": 2, "pain": 1, "hr": 0, "spo2": 0 }
+  }
+}

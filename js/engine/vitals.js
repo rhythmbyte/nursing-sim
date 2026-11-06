@@ -58,3 +58,32 @@ export const monitorProcessor = {
     }
   },
 };
+
+/**
+ * The patient's scripted vitals over time: [{ atMin, values }], baseline first, then each fired
+ * vitals-change (from the log) merged in. Used by the parameter-breach rule.
+ */
+export function vitalsTimeline(state, patientId, template) {
+  const timeline = [{ atMin: 0, values: { ...template.vitals.baseline } }];
+  let current = { ...template.vitals.baseline };
+  const byEvent = Object.fromEntries(template.events.map((e) => [e.id, e]));
+  for (const l of state.log) {
+    if (l.patientId !== patientId || l.action !== 'event-fired' || l.details.type !== 'vitals-change') continue;
+    const kfId = byEvent[l.details.eventId]?.payload?.keyframe;
+    const kf = template.vitals.keyframes?.find((k) => k.eventId === kfId);
+    if (!kf) continue;
+    current = { ...current, ...kf.values };
+    timeline.push({ atMin: l.simMin, values: current });
+  }
+  return timeline;
+}
+
+/** Numeric reading of a vitals field for comparisons: sbp/dbp from "bp", leading number of pain, etc. */
+export function vitalNumber(values, field) {
+  if (field === 'sbp' || field === 'dbp') {
+    const m = /^(\d+)\/(\d+)/.exec(String(values.bp ?? ''));
+    return m ? Number(field === 'sbp' ? m[1] : m[2]) : null;
+  }
+  const n = parseFloat(String(values[field] ?? ''));
+  return Number.isFinite(n) ? n : null;
+}

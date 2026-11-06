@@ -2,7 +2,7 @@
 // Event type: { type, apply(draft, event, ctx), describe(event) }
 //   apply MUTATES `draft` (a fresh copy of session state made by the session for this firing).
 //   ctx = { simMin, patientId, template }  (template = the patient's JSON, or null for sim-level events)
-// Rule (phase 5): { id, label, evaluate(state, logEntry?) → flags[] }
+// Rule: { id, label, evaluate(state, ctx) → flags[] }  (see engine/rules/index.js)
 
 const eventTypes = new Map();
 const rules = new Map();

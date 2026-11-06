@@ -16,6 +16,7 @@ const SCHEMAS = {
   interventions: 'schemas/interventions.schema.json',
   labs: 'schemas/labs.schema.json',
   staff: 'schemas/staff.schema.json',
+  rules: 'schemas/rules.schema.json',
 };
 
 async function fetchJson(base, rel) {

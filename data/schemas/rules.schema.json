@@ -1,0 +1,23 @@
+{
+  "title": "Flag rule defaults",
+  "type": "object",
+  "required": ["rules"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "rules": {
+      "type": "object",
+      "properties": {
+        "priority-order": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
+        "tier-timeout": { "type": "object", "required": ["windowsMin", "severity"] },
+        "call-light-response": { "type": "object", "required": ["amberAfterMin", "redAfterMin"], "properties": { "amberAfterMin": { "type": "number", "minimum": 0 }, "redAfterMin": { "type": "number", "minimum": 0 } } },
+        "parameter-breach": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
+        "inappropriate-delegation": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
+        "allergy-conflict": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" }, "classes": { "type": "object" } } },
+        "prn-limit": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
+        "left-unattended": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } }
+      }
+    },
+    "vitalsCompare": { "type": "object", "properties": { "tolerance": { "type": "object" } } }
+  },
+  "$defs": { "severity": { "enum": ["red", "amber"] } }
+}

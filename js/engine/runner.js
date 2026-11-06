@@ -6,6 +6,10 @@ import * as session from './session.js';
 import * as chart from './chart.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
+import { markLeftUnattended } from './instructor.js';
+import { evaluateRules } from './rules/index.js';
+import { buildDebrief } from './debrief.js';
+import { studentIdsForGroup, groupOfStudent } from './assignment.js';
 import { collectEvents, groupMembers } from './scheduler.js';
 
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null }) {
@@ -83,6 +87,19 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     releaseLab(patientId, uid, value, user) {
       commit(releaseLab(state, patientId, { uid, value }, { now: now(), user, simMin: runner.simMin() }));
     },
+
+    markLeftUnattended(patientId, studentIds, note, user) {
+      commit(markLeftUnattended(state, patientId, { studentIds, note }, { now: now(), user }));
+    },
+
+    /** Context the rules and the debrief need. */
+    rulesCtx: () => ({
+      templatesById, catalogs, simMin: runner.simMin(),
+      studentIdsForGroup: (g) => studentIdsForGroup(scenario, g),
+      groupOfStudent: (u) => groupOfStudent(scenario, u),
+    }),
+    flags: () => evaluateRules(state, runner.rulesCtx()),
+    debrief: (userId) => buildDebrief(state, userId, runner.rulesCtx()),
 
     reset() {
       commit(fresh());

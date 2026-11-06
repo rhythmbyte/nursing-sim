@@ -18,6 +18,7 @@
         "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 },
         "pauseOnClose": { "type": "boolean" },
         "revealManualVitals": { "type": "boolean" },
+        "rules": { "type": "object" },
         "delegationDelayMin": {
           "type": ["integer", "object"],
           "minimum": 0,

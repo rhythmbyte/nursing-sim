@@ -10,3 +10,14 @@ export function studentSlots(scenario) {
   }
   return slots;
 }
+
+/** userIds of the students in a group (interim mapping above). */
+export function studentIdsForGroup(scenario, groupId) {
+  return studentSlots(scenario).filter((s) => s.groupId === groupId).map((s) => `student-${s.slot}`);
+}
+
+/** Group of a student userId (interim mapping above), or null. */
+export function groupOfStudent(scenario, userId) {
+  const n = Number(/^student-(\d+)$/.exec(userId)?.[1]);
+  return studentSlots(scenario).find((s) => s.slot === n)?.groupId ?? null;
+}

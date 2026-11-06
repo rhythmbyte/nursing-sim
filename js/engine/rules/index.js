@@ -1,0 +1,28 @@
+// Registers every flag rule and evaluates them. Adding a rule = one new file + one line here.
+// Rules are pure functions of the session: flags are recomputed on demand (live control, debrief),
+// never stored, so they can't drift from the log.
+import { registerRule, allRules } from '../registry.js';
+import priorityOrder from './priority-order.js';
+import tierTimeout from './tier-timeout.js';
+import callLightResponse from './call-light-response.js';
+import parameterBreach from './parameter-breach.js';
+import inappropriateDelegation from './inappropriate-delegation.js';
+import allergyConflict from './allergy-conflict.js';
+import prnLimit from './prn-limit.js';
+import leftUnattended from './left-unattended.js';
+
+[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended]
+  .forEach(registerRule);
+
+/** All flags for the session at ctx.simMin, sorted by time. ctx: { templatesById, catalogs, simMin, studentIdsForGroup } */
+export function evaluateRules(state, ctx) {
+  const flags = [];
+  for (const rule of allRules()) {
+    try {
+      flags.push(...rule.evaluate(state, ctx));
+    } catch (err) {
+      console.error(`Rule ${rule.id} failed:`, err);
+    }
+  }
+  return flags.sort((a, b) => a.atMin - b.atMin);
+}

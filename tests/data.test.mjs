@@ -16,6 +16,7 @@ const schemaFor = {
   interventions: load('schemas/interventions.schema.json'),
   labs: load('schemas/labs.schema.json'),
   staff: load('schemas/staff.schema.json'),
+  rules: load('schemas/rules.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {
