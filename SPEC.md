@@ -22,6 +22,8 @@ Permissions are decided by role, never hard-coded per screen. Every log entry ca
 
 ## 2. Folder structure
 
+Top-level layout below. The complete, current file-by-file map (every module, its status and the module boundaries) is `docs/ARCHITECTURE.md`; it wins if the two disagree.
+
 ```
 index.html                 tab shell (Instructor | Student 1..n | Charge | Debrief)
 css/
@@ -43,13 +45,16 @@ js/
     assignment.js          group building, randomizer, join codes
     log.js                 append-only action log (every chart entry/intervention)
   screens/
-    instructor/            library, patient-editor, sim-setup, live-control, debrief
-    student/               home (patient list), handoff-modal, patient-view
-    charge/                unit-overview, ems-board
-    chart/                 summary, flowsheet, mar, orders, labs, notes, interventions
-    shared/                timer, toast, badge, triage-chip, modal
+    instructor/            live control, sim setup, review queue, patient editor (+ scenario changes, timeline), library
+    student/               join, home (patient list), handoff modal, patient view, report sheet, call-light sound
+    charge/                admissions board, unit overview
+    chart/                 summary, monitor, orders, flowsheet, mar, labs, interventions, notes (+ handoff tab)
+    debrief/               per-student debrief, CSV, print
+    monitor/               bedside monitor display (also the standalone ?monitor= page)
+    shared/                dom builder, timer, toast, badge, triage chip, modal, help, sound, labels
 data/
-  catalogs/                interventions.json, labs.json, staff.json
+  catalogs/                interventions, labs, staff, rules, vitals, vitals-presets, rhythms, priority-scales,
+                           scenario-defaults, help, reflection, ui (prototype-only text)
   patients/                one JSON file per patient
   scenarios/               saved sim setups
   schemas/                 JSON schemas for validation (Claude Code writes these)
@@ -194,7 +199,7 @@ Every event: `{ id, type, atMin | trigger, group?, repeatEveryMin?, repeatCount?
 | `lab-result` | Releases a pending lab value |
 | `code` | Patient arrests: tag → black, code timer starts, instructor gets outcome controls |
 | `admission` | A new patient arrives on the unit (charge nurse assigns, or goes to a set group) |
-| `ems-arrival` | (phase 2) EMS crew arrives with a patient; charge decides accept now / hold the wall |
+| `ems-arrival` | (not built yet; build phase 9) EMS crew arrives with a patient; charge decides accept now / hold the wall |
 
 Adding a type = new file exporting `{ type, apply(state, event), describe(event) }` + register it.
 

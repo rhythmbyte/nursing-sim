@@ -43,7 +43,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Error isolation:** the runner persists the new session *before* notifying the store, and the store catches errors per subscriber. A bug in one screen can't lose a charted action or stop other screens from updating.
 
-**Instructor edits (phase 6):** the patient editor, review-queue approvals and Sim setup validate with the same schemas and save through `data-loader.saveLocal()`. `loadAll()` overlays them on the files, and `main.js reloadData()` re-reads and remounts. They live in this browser only. To publish, export the JSON and commit it to `data/`.
+**Instructor edits:** the patient editor, review-queue approvals and Sim setup validate with the same schemas and save through `data-loader.saveLocal()`. `loadAll()` overlays them on the files, and `main.js reloadData()` re-reads and remounts. They live in this browser only. To publish, export the JSON and commit it to `data/`.
 
 **Roster:** students join with `state.joinCode`. `state.roster[userId] = { name, groupId }` decides which patients a student sees, who a flag belongs to, and who appears in the debrief.
 
@@ -81,7 +81,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/alerts.js` | `addAlert()` for alerts raised by events | built |
 | `js/engine/log.js` | Append-only action log; every entry has `userId` + `role` | built |
 | `js/engine/chart.js` | Student chart actions (open patient, handoff open/close/notes, acknowledge/complete order, chart intervention, MAR give/hold/not given, note, escalate). Reveals findings on assessment | built |
-| `js/engine/prn.js` | `prnWarnings()` / `dosesGiven()`: the one PRN check (max, interval, required pre-check). Used by the MAR now and by the prn-limit rule in phase 5 | built |
+| `js/engine/prn.js` | `prnWarnings()` / `dosesGiven()`: the one PRN check (max, interval, required pre-check). Used by the MAR and by the prn-limit rule | built |
 | `js/engine/student-view.js` | `studentView(template)`: allow-list filter for student screens. **UI convenience only, not security** | built |
 | `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |

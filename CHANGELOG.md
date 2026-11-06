@@ -2,6 +2,9 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Docs match the code
+- SPEC §2 folder layout updated to what exists (and points to ARCHITECTURE.md as the detailed map); `ems-arrival` marked not built yet. ARCHITECTURE no longer says "phase N" for things that are built.
+
 ## Cleanup: naming and docs
 - The patient-editor timeline's CSS classes are now `ptl-*` (they shared the `tl-` prefix with the debrief timeline rows).
 - ARCHITECTURE folder map names every file again (priority picker, Adjust vitals panel, entered-in-error controls, monitor chart section, shared label/text helpers) and the rule count (10).
