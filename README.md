@@ -34,6 +34,8 @@ These validate every data file against `data/schemas/` and cover the pure module
 
 Live: https://rhythmbyte.github.io/nursing-sim/
 
+**Fastest start:** Instructor → Live control → **Start demo sim** (starter scenario, a joined test student, clock running).
+
 **Reset first.** Click **Reset demo** (top right) and confirm. That clears this browser's running sim, edits, approvals and created sims. Everything in the demo lives in your browser only, so it never affects anyone else.
 
 **5-minute click-through (The Busy Med-Surg Shift)**

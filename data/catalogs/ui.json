@@ -11,5 +11,11 @@
     "repeatSec": 30,
     "freq": 660,
     "repeatFreq": 520
+  },
+  "demo": {
+    "_comment": "Start demo sim: which scenario, and the test student's tab and name.",
+    "scenarioId": "sc-busy-medsurg-shift",
+    "studentUserId": "student-1",
+    "studentName": "Demo Student"
   }
 }

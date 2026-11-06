@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## C14. Start demo sim
+- **Start demo sim** on Live control: one click switches to the starter scenario, clears the session, joins a test student ("Demo Student" on Student 1) and starts the clock. The scenario and student are data (`ui.json demo`). It asks first if a sim is running.
+- Tests: 111 passing.
+
 ## B13. Tablet layout
 - Touch screens get ≥ 44 px targets (buttons, selects, inputs, pills, tabs) and larger checkboxes. Student and charge screens stack in portrait and stay two-column in landscape. Wide tables scroll inside their panel, not the page. There are no hover-only controls.
 - Browser check at 810×1080 and 1080×810 with touch emulation: no horizontal overflow on the student home, any chart tab, or charge; no small touch targets.

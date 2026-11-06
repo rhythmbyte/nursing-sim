@@ -12,7 +12,7 @@ import { flagsPanel } from './live-flags.js';
 import { rosterPanel } from './live-roster.js';
 import { patientsPanel } from './live-patients.js';
 
-function clockControls(runner, user) {
+function clockControls(runner, user, startDemo) {
   const s = runner.state.clock.status;
   const btn = (label, action, enabled, cls = '') => h('button', {
     class: `btn ${cls}`, disabled: !enabled, onclick: () => runner.clock(action, user),
@@ -23,6 +23,7 @@ function clockControls(runner, user) {
   }, SPEEDS.map((x) => h('option', { value: x, selected: x === runner.state.clock.speed }, `${x}x`)));
 
   return h('div', { class: 'controls' },
+    startDemo ? h('button', { class: 'btn', title: 'Starter scenario, a joined test student, clock running', onclick: () => startDemo() }, 'Start demo sim') : null,
     btn('Start', 'start', s === 'ready', 'btn-primary'),
     btn('Pause', 'pause', s === 'running'),
     btn('Resume', 'resume', s === 'paused', 'btn-primary'),
@@ -85,7 +86,8 @@ function unitChips(state, templatesById) {
   });
 }
 
-export function mountLiveControl(root, { store, runner, scenario, instructorUser, catalogs }) {
+export function mountLiveControl(root, ctx) {
+  const { store, runner, scenario, instructorUser, catalogs } = ctx;
   const templatesById = runner.templates(); // demographics only here; orders come via the runner
   const clock = simClock(store, runner);
   const controls = h('div', {});
@@ -99,7 +101,7 @@ export function mountLiveControl(root, { store, runner, scenario, instructorUser
   const unitList = h('div', { class: 'unit-strip' });
 
   function render() {
-    clear(controls).append(clockControls(runner, instructorUser));
+    clear(controls).append(clockControls(runner, instructorUser, ctx.startDemo));
     clear(unitList).append(...unitChips(runner.state, templatesById));
     clear(lights).append(callLights(runner, templatesById));
     clear(feed).append(alertFeed(runner.state, templatesById));

@@ -75,3 +75,8 @@ test('broken references are reported clearly', async () => {
   const sc = { groups: [{ id: 'g1', patients: ['p-ghost'] }], manualStudents: { g9: [] } };
   assert.equal(scenarioReferenceProblems(sc, new Set()).length, 2);
 });
+
+test('C14: the demo scenario named in ui.json exists', () => {
+  const ui = load(manifest.catalogs.ui);
+  assert.ok(manifest.scenarios.map(load).some((s) => s.id === ui.demo.scenarioId));
+});

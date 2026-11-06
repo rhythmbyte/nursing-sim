@@ -2,6 +2,7 @@
   "title": "Prototype UI text",
   "type": "object",
   "properties": {
+    "demo": { "type": "object", "required": ["scenarioId", "studentUserId", "studentName"], "properties": { "scenarioId": { "type": "string" }, "studentUserId": { "type": "string" }, "studentName": { "type": "string" } } },
     "callLightSound": { "type": "object", "properties": { "repeatSec": { "type": "number", "minimum": 5 }, "freq": { "type": "number" }, "repeatFreq": { "type": "number" } } },
     "welcome": {
       "type": "object",

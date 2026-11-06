@@ -77,7 +77,15 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     remove(SESSION_KEY);
     await reloadData(id);
   };
-  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario };
+  // Start demo sim: starter scenario, fresh session, a joined test student, clock running (ui.json demo).
+  const startDemo = async () => {
+    const demo = data.catalogs.ui?.demo;
+    if (!demo) return;
+    if (runner.state.clock.status !== 'ready' && !window.confirm('Start a fresh demo sim? This clears the current sim.')) return;
+    saveSession('pendingDemo', true);
+    await switchScenario(data.scenarios.some((s) => s.id === demo.scenarioId) ? demo.scenarioId : data.scenarios[0].id);
+  };
+  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo };
   const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
     const started = runner.state.clock.status !== 'ready';
     if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {
@@ -91,6 +99,13 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   // closed without warning (crash/freeze): pause it as of the last heartbeat.
   // Only at a real page load: an in-page remount (after an edit, approval or new sim) must not pause or rewind.
   if (pageLoad) runner.pauseForClose(load(HEARTBEAT_KEY));
+  if (loadSession('pendingDemo', false)) {
+    saveSession('pendingDemo', false);
+    const demo = data.catalogs.ui.demo;
+    const err = runner.join(demo.studentUserId, demo.studentName, runner.state.joinCode);
+    if (err) console.warn('Demo student could not join:', err);
+    runner.clock('start', INSTRUCTOR);
+  }
   const onPageHide = () => runner.pauseForClose(Date.now());
   window.addEventListener('pagehide', onPageHide);
   const heartbeat = setInterval(() => save(HEARTBEAT_KEY, Date.now()), HEARTBEAT_MS);
