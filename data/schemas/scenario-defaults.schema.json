@@ -14,7 +14,7 @@
         "vitalsCycleDefaultMin",
         "pauseOnClose",
         "revealManualVitals",
-        "delegationDelayMin",
+        "staffPool", "delegationQueue",
         "prnPreCheckWindowMin",
         "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "taskTimerMode", "taskTimerManikinFactor", "taskTimerMinLockoutSec", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
@@ -27,11 +27,8 @@
         "pauseOnClose": { "type": "boolean" },
         "revealManualVitals": { "type": "boolean" },
         "rules": { "type": "object" },
-        "delegationDelayMin": {
-          "type": ["integer", "object"],
-          "minimum": 0,
-          "properties": { "LPN": {"type": "integer", "minimum": 0}, "CNA": {"type": "integer", "minimum": 0} }
-        },
+        "staffPool": { "type": "object", "properties": { "CNA": { "type": "integer", "minimum": 0 }, "LPN": { "type": "integer", "minimum": 0 } } },
+        "delegationQueue": { "type": "boolean" },
         "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
         "delegatedAssessmentRevealsFindings": { "type": "boolean" },
         "codeTag": { "enum": ["red", "yellow", "green", "black"] },

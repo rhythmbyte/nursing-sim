@@ -74,7 +74,7 @@ export function recordAssessment(draft, pid, { toolId, answers, at, user, delega
  * Chart action: student completes a tool (or delegates it, if the catalog allows). args: { toolId, answers, delegatedTo? }.
  * ctx = { now, user, templatesById, catalogs }.
  */
-export function chartAssessment(state, pid, { toolId, answers = {}, delegatedTo = null }, ctx) {
+export function chartAssessment(state, pid, { toolId, answers = {}, delegatedTo = null, queue = false }, ctx) {
   const tool = toolById(ctx.catalogs, toolId);
   if (!tool) throw new Error(`Unknown assessment tool ${toolId}`);
   if (!availableTools(state.settings, ctx.catalogs).some((t) => t.id === toolId)) throw new Error(`${tool.name} is not available in this sim`);
@@ -82,9 +82,8 @@ export function chartAssessment(state, pid, { toolId, answers = {}, delegatedTo 
   const at = ctx.atMin ?? simMinOf(state, ctx.now); // atMin: finished timed task (engine/tasks.js)
   if (delegatedTo) {
     if (!tool.delegableTo.includes(delegatedTo)) throw new Error(`${tool.name} can't be delegated to ${delegatedTo}`);
-    const task = requestDelegation(draft, pid, { interventionId: `assessment:${toolId}`, orderId: ordersFor(ctx.templatesById[pid], toolId)[0]?.id || null, to: delegatedTo, fields: {}, simMin: at });
-    task.assessmentToolId = toolId;
-    append(draft, { simMin: at, wallTime: ctx.now, ...ctx.user, patientId: pid, action: 'assessment-delegated', details: { toolId, to: delegatedTo, taskId: task.id, dueAt: task.dueAt } });
+    const task = requestDelegation(draft, pid, { interventionId: `assessment:${toolId}`, orderId: ordersFor(ctx.templatesById[pid], toolId)[0]?.id || null, to: delegatedTo, fields: {}, simMin: at, queue, assessmentToolId: toolId, by: ctx.user.userId }, ctx);
+    append(draft, { simMin: at, wallTime: ctx.now, ...ctx.user, patientId: pid, action: 'assessment-delegated', details: { toolId, to: delegatedTo, taskId: task.id, dueAt: task.dueAt, helper: task.helperLabel || null, ...(task.status === 'queued' ? { queued: true } : {}) } });
     return draft;
   }
   recordAssessment(draft, pid, { toolId, answers, at, user: ctx.user, now: ctx.now, templatesById: ctx.templatesById, catalogs: ctx.catalogs });

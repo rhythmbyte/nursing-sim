@@ -7,7 +7,6 @@ import { collectEvents, eventKey } from '../js/engine/scheduler.js';
 import { prnWarnings, prnOptions } from '../js/engine/prn.js';
 import { releaseLab, initLabs } from '../js/engine/labs.js';
 import { measureManual } from '../js/engine/vitals.js';
-import { delegationDelay } from '../js/engine/delegation.js';
 
 const student = { userId: 'student-1', role: 'student' };
 const instructor = { userId: 'instructor', role: 'instructor' };
@@ -95,24 +94,19 @@ test('labs: a second draw of the same code creates an unscripted lab', () => {
   assert.ok(drawn.every((l) => l.unscripted), 'the scripted repeat lactate is reserved for the STAT order');
 });
 
-test('delegation: CNA vitals report back after the delay, with a flowsheet row and a staff message', () => {
+test('delegation: a CNA from the pool reports vitals back after the task time × speed + travel, with a flowsheet row and a staff message', () => {
   let { s, tick } = started();
-  s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', orderId: 'o-p1-vs', delegatedTo: 'CNA' }, ctx(70));
+  s = tick(s, 76); // after Robert's 08:15 change
+  s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', orderId: 'o-p1-vs', delegatedTo: 'CNA' }, ctx(76));
   assert.equal(s.patients[RM].flowsheet.length, 1, 'nothing until the CNA reports');
-  assert.equal(s.log.at(-1).details.dueAt, 80);
-  s = tick(s, 81);
+  assert.equal(s.log.at(-1).details.dueAt, 79.4, 'full vitals 120 s × CNA 1.2 + 60 s travel = 3.4 min');
+  assert.equal(s.log.at(-1).details.helper, 'CNA 1');
+  s = tick(s, 80);
   const row = s.patients[RM].flowsheet.at(-1);
   assert.deepEqual([row.source, row.by, row.values.hr, row.values.rr], ['delegated', 'CNA', 108, 24]);
   const done = s.log.find((l) => l.action === 'delegation-completed');
-  assert.deepEqual([done.role, done.userId, done.simMin], ['staff', 'staff-cna', 80]);
+  assert.deepEqual([done.role, done.userId, done.simMin], ['staff', 'staff-cna', 79.4]);
   assert.match(s.alerts.find((a) => a.patientId === RM && a.message.startsWith('CNA:')).message, /HR 108/);
-});
-
-test('delegation: delay is configurable per role or as one number (merged with scenario-defaults)', () => {
-  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: { LPN: 4 } }).settings, 'LPN'), 4);
-  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: { LPN: 4 } }).settings, 'CNA'), 10, 'CNA from the starter scenario');
-  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: 7 }).settings, 'CNA'), 7);
-  assert.throws(() => delegationDelay({ delegationDelayMin: {} }, 'CNA'));
 });
 
 test('delegated assessment reveals findings only when the scenario setting allows', () => {
@@ -124,7 +118,7 @@ test('delegated assessment reveals findings only when the scenario setting allow
   s = chart.chartIntervention(s, RM, { interventionId: 'assess-full', delegatedTo: 'LPN' }, ctx(5));
   assert.equal(s.patients[RM].revealed.length, 0, 'nothing until the LPN reports');
   s = tick(s, 16);
-  assert.deepEqual(s.patients[RM].revealed.map((r) => [r.source, r.atMin]), [['baseline', 15]]);
+  assert.deepEqual(s.patients[RM].revealed.map((r) => [r.source, r.atMin]), [['baseline', 14]], 'head-to-toe 480 s + 60 s travel = 9 min');
 });
 
 test('PRN pre-check window comes from the scenario setting when the order has none', () => {
@@ -146,13 +140,13 @@ test('lab delay falls back to the labs catalog fallbackDelayMin', () => {
 });
 
 test('PRN pre-check: delegated BP counts once reported; full vitals include BP; monitor BP counts', () => {
-  let { s, tick } = started({ delegationDelayMin: 5 });
+  let { s, tick } = started();
   const ntg = templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg');
   const warn = (st, min) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, ...prnOptions(catalogs, st.patients[RM], st.settings) }).map((w) => w.code);
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-bp', delegatedTo: 'LPN' }, ctx(10));
   assert.deepEqual(warn(s, 11), ['requires'], 'request alone is not a BP');
   s = tick(s, 16);
-  assert.deepEqual(warn(s, 16), [], 'LPN reported a BP at 15');
+  assert.deepEqual(warn(s, 16), [], 'LPN reported a BP (45 s + 60 s travel)');
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', fields: {} }, ctx(40));
   assert.deepEqual(warn(s, 41), [], 'full vitals include a BP');
   assert.deepEqual(warn(s, 60), ['requires'], 'nothing in the last 15 min');

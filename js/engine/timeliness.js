@@ -2,7 +2,7 @@
 // ONE source for the command center, the debrief and the tier-timeout / call-light-response /
 // alarm-response rules (thresholds: rules.json rules.timeliness; scenario overrides: settings.rules.timeliness).
 //
-// Item: { kind: 'order'|'med'|'assessment'|'callLight'|'alarm', patientId, label, tier?, startAt, doneAt|null, doneBy,
+// Item: { kind: 'order'|'med'|'assessment'|'delegation'|'callLight'|'alarm', patientId, label, tier?, startAt, doneAt|null, doneBy,
 //         minutes, tag, logId? }
 // Tags: on-time | late | very-late (done) · open | open-late | open-very-late (not done yet).
 
@@ -139,6 +139,15 @@ function assessmentItems(state, ctx, cfg) {
   return out;
 }
 
+/** Delegated tasks that waited in the queue for a free helper: from queued to started (rules.timeliness.delegationQueue). */
+function queueItems(state, ctx, cfg) {
+  const th = cfg.delegationQueue;
+  if (!th) return [];
+  const label = (t) => (t.assessmentToolId ? ctx.catalogs?.assessmentTools?.tools.find((x) => x.id === t.assessmentToolId)?.name : ctx.catalogs?.interventions?.interventions.find((i) => i.id === t.interventionId)?.label) || t.interventionId;
+  return Object.entries(state.patients).flatMap(([pid, ps]) => (ps.delegations || []).filter((t) => t.queuedAt != null)
+    .map((t) => item({ kind: 'delegation', patientId: pid, label: `Waiting for a ${t.to}: ${label(t)}`, doneBy: t.helperId ?? null }, t.queuedAt, t.status === 'queued' ? null : t.startedAt, ctx.simMin, th)));
+}
+
 function callLightItems(state, ctx, cfg) {
   const out = [];
   for (const l of state.log) {
@@ -167,7 +176,7 @@ function alarmItems(state, ctx, cfg) {
 export function timelinessItems(fullState, ctx) {
   const state = withoutStruck(fullState); // "entered in error" work doesn't count as done
   const cfg = timelinessConfig(state, ctx.catalogs);
-  return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...assessmentItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
+  return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...assessmentItems(state, ctx, cfg), ...queueItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
 }
 
 /** Counts used by the command center and debrief summaries. */

@@ -35,6 +35,7 @@
     "assessment-mismatch": { "review": "proposed", "_comment": "A charted tool vs the patient script: flag when the interpretation band differs or the score is off by scoreDiffMin or more. Red when a high-risk result was charted as lower risk.", "scoreDiffMin": 3, "severity": "amber", "missedHighRiskSeverity": "red" },
     "assessment-overdue": { "review": "proposed", "_comment": "Required reassessments (order.assessment) late / very late per rules.timeliness.assessments.", "lateSeverity": "amber", "veryLateSeverity": "red" },
     "required-assessment-missing": { "review": "proposed", "_comment": "One-time required assessments (e.g. Morse on admission) not done within withinMin of the order.", "withinMin": 60, "severity": "red" },
+    "delegation-overload": { "review": "proposed", "_comment": "A student delegating more than maxInWindow tasks within windowMin sim minutes (the staff pool already limits it).", "windowMin": 15, "maxInWindow": 4, "severity": "amber" },
     "timeliness": {
       "review": "proposed",
       "_comment": "One source for 'how late is late' (engine/timeliness.js): the command center, debrief and the tier-timeout / call-light-response / alarm-response rules all read it. Minutes from active/due to done. Instructor to confirm (SPEC §14). Scenarios can override parts under settings.rules.timeliness.",
@@ -46,6 +47,7 @@
       "tracking": { "trackedOrderTypes": ["once"], "trackEventTriggeredPrn": true, "includeShiftStartOrders": false },
       "scheduledMeds": { "lateMin": 30, "veryLateMin": 60, "earlyWindowMin": 60, "shiftStartDueMin": 120 },
       "assessments": { "lateMin": 30, "veryLateMin": 60, "earlyWindowMin": 30, "shiftStartDueMin": 60 },
+      "delegationQueue": { "lateMin": 10, "veryLateMin": 20 },
       "callLights": { "lateMin": 5, "veryLateMin": 10 },
       "alarms": { "lateMin": 2, "veryLateMin": 5 },
       "tags": {

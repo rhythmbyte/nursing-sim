@@ -5,11 +5,8 @@ export function effectiveSettings(scenarioSettings = {}, catalogs) {
   const defaults = catalogs?.scenarioDefaults?.settings;
   if (!defaults) throw new Error('Missing data/catalogs/scenario-defaults.json');
   const merged = { ...defaults, ...scenarioSettings };
-  // delegationDelayMin: a number applies to every role; an object overrides per role.
-  const own = scenarioSettings.delegationDelayMin;
-  merged.delegationDelayMin = typeof own === 'number'
-    ? Object.fromEntries(Object.keys(defaults.delegationDelayMin).map((role) => [role, own]))
-    : { ...defaults.delegationDelayMin, ...(own || {}) };
+  // staffPool: helpers per role for every group (a group's own `staff` overrides in the scenario); per-role merge.
+  merged.staffPool = { ...(defaults.staffPool || {}), ...(scenarioSettings.staffPool || {}) };
   merged.messages = { ...defaults.messages, ...(scenarioSettings.messages || {}) };
   return merged;
 }

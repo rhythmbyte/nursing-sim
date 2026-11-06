@@ -1,6 +1,5 @@
-// Delegation: an intervention delegated to an LPN/CNA is done after a delay
-// (settings.delegationDelayMin[role], from scenario-defaults.json unless the scenario overrides), then the staff member reports
-// back as a staff message. Effects (order progress, vitals row, lab draw) happen at completion, not at request.
+// Delegation: an intervention delegated to an LPN/CNA goes to a free helper from the group's staff pool (engine/staff.js),
+// who is busy for the task's time × their speed factor + travel, then reports back as a staff message. Effects (order progress, vitals row, lab draw) happen at completion, not at request.
 // Whether delegating was APPROPRIATE is judged by the inappropriate-delegation rule, not here.
 
 import { addAlert } from './alerts.js';
@@ -11,22 +10,17 @@ import { deviceValues, scriptedSnapshot } from './vitals.js';
 import { revealFindings } from './findings.js';
 import { vitalsAt } from './vitals-control.js';
 import { completeDelegatedAssessment } from './assessments.js';
+import { placeDelegation, releaseHelper, startQueued } from './staff.js';
 import { toolById } from './assessment-score.js';
 
-/** Delay for a role from merged settings (engine/settings.js turns a single number into per-role values). */
-export function delegationDelay(settings, to) {
-  const d = settings?.delegationDelayMin?.[to];
-  if (d == null) throw new Error(`No delegation delay for ${to}: set settings.delegationDelayMin`);
-  return d;
-}
-
-/** Mutates draft: queues a delegated task. */
-export function requestDelegation(draft, patientId, { interventionId, orderId, to, fields, simMin }) {
+/**
+ * Mutates draft: assigns (or queues) a delegated task to a helper from the group's staff pool (engine/staff.js).
+ * Throws NoHelperError when nobody of that role is free and it can't be queued. ctx = { catalogs, templatesById, now }.
+ */
+export function requestDelegation(draft, patientId, { interventionId, orderId, to, fields, simMin, queue = false, assessmentToolId = null, by = null }, ctx = {}) {
   const ps = draft.patients[patientId];
-  const task = {
-    id: `d${ps.delegations.length + 1}`, interventionId, orderId, to, fields,
-    requestedAt: simMin, dueAt: simMin + delegationDelay(draft.settings, to), status: 'pending',
-  };
+  const task = { id: `d${ps.delegations.length + 1}-${patientId.split('-')[0]}`, interventionId, orderId, to, fields, by, requestedAt: simMin, status: 'pending', ...(assessmentToolId ? { assessmentToolId } : {}) };
+  placeDelegation(draft, patientId, task, { simMin, queue, ctx });
   ps.delegations.push(task);
   return task;
 }
@@ -58,6 +52,7 @@ function complete(draft, patientId, task, ctx) {
   progressOrder(draft, patientId, order, at);
 
   Object.assign(task, { status: 'done', completedAt: at });
+  releaseHelper(draft, task);
   const label = iv?.label || toolById(catalogs, task.assessmentToolId)?.name || task.interventionId;
   const name = templatesById[patientId].demographics.name;
   addAlert(draft, { simMin: at, patientId, kind: 'staff-message', message: `${task.to}: ${label} done for ${name}${values ? `: ${summarize(values)}` : '.'}` });
@@ -67,16 +62,19 @@ function complete(draft, patientId, task, ctx) {
   });
 }
 
-/** Tick processor: completes delegated tasks due up to `upto`, in time order. */
+/** Tick processor: completes delegated tasks due up to `upto` in time order; a freed helper starts queued work then. */
 export const delegationProcessor = {
   due(state, upto) {
     return Object.values(state.patients).some((ps) => ps.delegations.some((t) => t.status === 'pending' && t.dueAt <= upto));
   },
   apply(draft, upto, ctx) {
-    const due = [];
-    for (const [pid, ps] of Object.entries(draft.patients)) {
-      for (const t of ps.delegations) if (t.status === 'pending' && t.dueAt <= upto) due.push([pid, t]);
+    for (let guard = 0; guard < 500; guard++) {
+      const due = [];
+      for (const [pid, ps] of Object.entries(draft.patients)) for (const t of ps.delegations) if (t.status === 'pending' && t.dueAt <= upto) due.push([pid, t]);
+      if (!due.length) return;
+      const [pid, t] = due.sort((a, b) => a[1].dueAt - b[1].dueAt)[0];
+      complete(draft, pid, t, ctx);
+      startQueued(draft, t.dueAt, ctx);
     }
-    due.sort((a, b) => a[1].dueAt - b[1].dueAt).forEach(([pid, t]) => complete(draft, pid, t, ctx));
   },
 };

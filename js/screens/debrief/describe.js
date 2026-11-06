@@ -32,6 +32,11 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'task-interrupted': return `Interrupted ${d.label || 'a task'} (not done)`;
     case 'task-ended-early': return `Instructor ended ${d.label || 'a task'} early`;
     case 'task-failed': return `Task could not be completed: ${d.label || ''}${d.error ? ` (${d.error})` : ''}`;
+    case 'delegation-started': return `Helper free: delegated task started after waiting ${d.waitedMin ?? '?'} min`;
+    case 'staff-moved': return `Moved ${d.label || 'a helper'} to another group`;
+    case 'staff-break': return `${d.label || 'A helper'} went on break`;
+    case 'staff-back': return `${d.label || 'A helper'} is back from break`;
+    case 'staff-count': return `${d.role || 'Helper'} count changed ${d.from ?? '?'} → ${d.to ?? '?'}`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

@@ -96,7 +96,7 @@ const pickTyped = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !=
  *   the log keeps the scripted values for the debrief.
  * - drawsLabs: draws the order's labCodes; results come after each lab's delay.
  */
-export function chartIntervention(state, patientId, { interventionId, fields = {}, orderId = null, delegatedTo = null }, ctx) {
+export function chartIntervention(state, patientId, { interventionId, fields = {}, orderId = null, delegatedTo = null, queue = false }, ctx) {
   const iv = ctx.catalogs.interventions.interventions.find((i) => i.id === interventionId);
   if (!iv) throw new Error(`Unknown intervention ${interventionId}`);
   const { draft, simMin } = begin(state, ctx);
@@ -106,9 +106,11 @@ export function chartIntervention(state, patientId, { interventionId, fields = {
   const extra = {};
 
   if (delegatedTo) {
-    const task = requestDelegation(draft, patientId, { interventionId, orderId, to: delegatedTo, fields, simMin });
+    const task = requestDelegation(draft, patientId, { interventionId, orderId, to: delegatedTo, fields, simMin, queue, by: ctx.user.userId }, ctx);
     extra.taskId = task.id;
     extra.dueAt = task.dueAt;
+    extra.helper = task.helperLabel || null;
+    if (task.status === 'queued') extra.queued = true;
   } else {
     progressOrder(draft, patientId, order, simMin);
     if (iv.revealsFindings) revealFindings(draft, patientId, ctx.templatesById[patientId], simMin);

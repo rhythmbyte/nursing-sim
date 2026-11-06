@@ -21,13 +21,14 @@ import { alarmProcessor } from './monitor-alarms.js';
 import { reactionsProcessor, initScript } from './reactions.js';
 import { penaltyProcessor } from './penalties.js';
 import { taskProcessor } from './tasks.js';
+import { initStaff } from './staff.js';
 
 // Order matters within one instant: trends step first, then reactions (which may change vitals), then
 // monitor readings (which read vitalsAt). A processor may expose nextAt(state, upto, ctx): the session
 // stops there first, so work it does at that moment happens in time order with the others.
 const PROCESSORS = [trendProcessor, taskProcessor, reactionsProcessor, penaltyProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
 
-export const SESSION_VERSION = 16; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 17; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -96,6 +97,7 @@ export function createSession(scenario, templatesById, catalogs, { joinCode = nu
     roster: {},    // userId → { name, groupId, joinedAtMin }
     priorities: {}, // userId → patientId → [{ atMin, levelId }] (student-assigned, engine/priority.js)
     reflections: {}, // userId → { atMin, answers } (engine/reflection.js)
+    staff: initStaff(scenario), // delegation helpers per group (engine/staff.js)
     struck: {},     // logId → { atMin, by, reason } ("entered in error", engine/struck.js)
     adhoc: {},     // patientId → { orders } pushed live by the instructor (engine/templates.js)
     students: {},

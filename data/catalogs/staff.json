@@ -2,8 +2,8 @@
   "review": "proposed",
   "messageFrom": ["CNA", "LPN", "Charge nurse", "Provider", "Family", "Patient", "RT", "Pharmacy", "Lab"],
   "staff": [
-    { "id": "lpn", "role": "LPN", "label": "LPN", "notes": "Can perform tasks marked delegableTo LPN; RN remains accountable for assessment, teaching, evaluation." },
-    { "id": "cna", "role": "CNA", "label": "Nursing assistant (CNA)", "notes": "Routine, stable-patient tasks only: vitals, ambulation, I&O, comfort." },
+    { "id": "lpn", "role": "LPN", "label": "LPN", "speedFactor": 1, "travelSec": 60, "review": "proposed", "notes": "Can perform tasks marked delegableTo LPN; RN remains accountable for assessment, teaching, evaluation." },
+    { "id": "cna", "role": "CNA", "label": "Nursing assistant (CNA)", "speedFactor": 1.2, "travelSec": 60, "review": "proposed", "notes": "Routine, stable-patient tasks only: vitals, ambulation, I&O, comfort." },
     { "id": "charge", "role": "Charge", "label": "Charge nurse", "notes": "Played by a student or the instructor, per sim settings." },
     { "id": "provider", "role": "Provider", "label": "Provider", "notes": "Played by the instructor (pushes orders live)." }
   ]
