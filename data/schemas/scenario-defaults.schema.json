@@ -16,7 +16,7 @@
         "revealManualVitals",
         "delegationDelayMin",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
+        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "taskTimerMode", "taskTimerManikinFactor", "taskTimerMinLockoutSec", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -43,6 +43,10 @@
         "assessmentTools": { "type": ["string", "array"] },
         "revealAssessmentFindings": { "type": "boolean" },
         "gradeAssessments": { "type": "boolean" },
+        "taskTimerMode": { "enum": ["screen-only", "manikin", "off"] },
+        "taskTimerManikinFactor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "taskTimerMinLockoutSec": { "type": "number", "minimum": 0 },
+        "taskDurations": { "type": "object" },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
         "roscRhythm": { "type": "string" },
         "noRoscRhythm": { "type": "string" },

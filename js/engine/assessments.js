@@ -79,7 +79,7 @@ export function chartAssessment(state, pid, { toolId, answers = {}, delegatedTo 
   if (!tool) throw new Error(`Unknown assessment tool ${toolId}`);
   if (!availableTools(state.settings, ctx.catalogs).some((t) => t.id === toolId)) throw new Error(`${tool.name} is not available in this sim`);
   const draft = structuredClone(state);
-  const at = simMinOf(state, ctx.now);
+  const at = ctx.atMin ?? simMinOf(state, ctx.now); // atMin: finished timed task (engine/tasks.js)
   if (delegatedTo) {
     if (!tool.delegableTo.includes(delegatedTo)) throw new Error(`${tool.name} can't be delegated to ${delegatedTo}`);
     const task = requestDelegation(draft, pid, { interventionId: `assessment:${toolId}`, orderId: ordersFor(ctx.templatesById[pid], toolId)[0]?.id || null, to: delegatedTo, fields: {}, simMin: at });

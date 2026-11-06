@@ -389,7 +389,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 420
   },
   {
    "id": "befast",
@@ -497,7 +498,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 60
   },
   {
    "id": "gcs",
@@ -619,7 +621,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 60
   },
   {
    "id": "pupils",
@@ -686,7 +689,8 @@
      ]
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 30
   },
   {
    "id": "morse",
@@ -820,7 +824,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 120
   },
   {
    "id": "braden",
@@ -1003,7 +1008,8 @@
      "tone": "green"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 180
   },
   {
    "id": "pain-nrs",
@@ -1064,7 +1070,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 30
   },
   {
    "id": "wong-baker",
@@ -1137,7 +1144,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 30
   },
   {
    "id": "flacc",
@@ -1272,7 +1280,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 120
   },
   {
    "id": "cpot",
@@ -1376,7 +1385,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 120
   },
   {
    "id": "poss",
@@ -1437,7 +1447,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 30
   },
   {
    "id": "rass",
@@ -1525,7 +1536,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 30
   },
   {
    "id": "cam",
@@ -1624,7 +1636,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 180
   },
   {
    "id": "ciwa",
@@ -1728,7 +1741,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 300
   },
   {
    "id": "cows",
@@ -2031,7 +2045,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 300
   },
   {
    "id": "news2",
@@ -2210,7 +2225,8 @@
      "tone": "red"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 10
   },
   {
    "id": "head-to-toe",
@@ -2265,7 +2281,8 @@
      "type": "text"
     }
    ],
-   "review": "proposed"
+   "review": "proposed",
+   "durationSec": 480
   }
  ]
 }

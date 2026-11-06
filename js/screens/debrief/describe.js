@@ -27,6 +27,11 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'recovery-limited': return `Recovery limited by penalty: ${(d.limited || []).map((x) => `${x.k} ${x.target} → ${x.effective}`).join(', ')}${d.slowedTo ? ` (slower: ${d.slowedTo} min)` : ''}`;
     case 'assessment': return `Assessment ${d.toolId ?? ''}${d.score != null ? `: ${d.score}` : ''}${d.band ? ` (${d.band})` : ''}${d.delegatedTo ? ` · by ${d.delegatedTo}` : ''}${d.complete === false ? ' · incomplete' : ''}`;
     case 'assessment-delegated': return `Delegated ${d.toolId ?? 'an assessment'} to ${d.to ?? 'staff'}`;
+    case 'task-started': return `Started ${d.label || 'a task'}${d.lockSec ? ` (busy ${Math.round(d.lockSec)} s)` : ''}`;
+    case 'task-finished': return `Finished ${d.label || 'a task'}${d.how === 'ended-early' ? ' (ended early by the instructor)' : ''}`;
+    case 'task-interrupted': return `Interrupted ${d.label || 'a task'} (not done)`;
+    case 'task-ended-early': return `Instructor ended ${d.label || 'a task'} early`;
+    case 'task-failed': return `Task could not be completed: ${d.label || ''}${d.error ? ` (${d.error})` : ''}`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

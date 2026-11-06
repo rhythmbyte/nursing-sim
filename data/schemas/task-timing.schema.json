@@ -1,0 +1,50 @@
+{
+  "title": "Task timing catalog",
+  "type": "object",
+  "required": [
+    "defaultSec",
+    "mar",
+    "allowedWhileBusy"
+  ],
+  "properties": {
+    "review": {
+      "enum": [
+        "approved",
+        "proposed",
+        "partial"
+      ]
+    },
+    "defaultSec": {
+      "type": "number",
+      "minimum": 0
+    },
+    "mar": {
+      "type": "object",
+      "properties": {
+        "given": {
+          "type": "number",
+          "minimum": 0
+        },
+        "held": {
+          "type": "number",
+          "minimum": 0
+        },
+        "not-given": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "allowedWhileBusy": {
+      "type": "object",
+      "properties": {
+        "interventions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

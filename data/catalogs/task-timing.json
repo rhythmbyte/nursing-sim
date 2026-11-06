@@ -1,0 +1,17 @@
+{
+  "review": "proposed",
+  "_comment": "Task timers (engine/tasks.js): how long charting work keeps a student busy, in sim seconds. Intervention and assessment-tool durations live on their catalog entries (durationSec); MAR actions here. A patient (taskDurations) or a scenario (settings.taskDurations) can override any: keys are an intervention id, tool:<toolId> or mar:<result>. allowedWhileBusy: chart work a busy student can still do at once (call lights, alarm silencing, priority, notes and orders aren't tasks, so they're always allowed). Instructor to confirm (SPEC §14).",
+  "defaultSec": 60,
+  "mar": {
+    "given": 180,
+    "held": 30,
+    "not-given": 30
+  },
+  "allowedWhileBusy": {
+    "interventions": [
+      "rapid-response",
+      "code-respond",
+      "notify-charge"
+    ]
+  }
+}

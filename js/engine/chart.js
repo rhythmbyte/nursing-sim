@@ -15,7 +15,8 @@ export { acknowledgeAlarm } from './monitor-alarms.js';
 export { chartAssessment } from './assessments.js';
 
 function begin(state, ctx) {
-  return { draft: structuredClone(state), simMin: simMinOf(state, ctx.now) };
+  // ctx.atMin: a timed task applied when it finishes (engine/tasks.js) happens at that sim minute.
+  return { draft: structuredClone(state), simMin: ctx.atMin ?? simMinOf(state, ctx.now) };
 }
 
 function log(draft, simMin, ctx, patientId, action, details = {}) {

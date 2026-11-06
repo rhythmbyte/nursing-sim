@@ -4,6 +4,7 @@
 
 import * as session from './session.js';
 import * as chart from './chart.js';
+import { taskPlan, beginTask, interruptTask, endTaskNow, busyView } from './tasks.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
 import { markLeftUnattended, pushOrder, startCode, setCodeOutcome, setCallLight } from './instructor.js';
@@ -99,7 +100,17 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
      */
     chart(name, patientId, args, user) {
       if (typeof chart[name] !== 'function') throw new Error(`Unknown chart action ${name}`);
+      // Timed tasks (engine/tasks.js): start the busy timer; the action is applied when it finishes. Returns { task } or { done }.
+      const plan = taskPlan(state, name, patientId, args || {}, { catalogs, templatesById: eff() });
+      if (plan) { commit(beginTask(state, patientId, name, args || {}, plan, { now: now(), user, templatesById: eff(), catalogs })); store.emit('tick', runner.simMin()); return { task: plan }; }
       commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById: eff(), catalogs }));
+      return { done: true };
+    },
+    /** The student's current task: { label, patientId, endsAt, leftSec, fraction } or null. */
+    busy: (userId) => busyView(state, userId, runner.simMin()),
+    interruptTask(user) { commit(interruptTask(state, { now: now(), user })); },
+    /** Instructor: end a student's task now (counts as done). */
+    endTaskNow(userId, user) { commit(endTaskNow(state, userId, { now: now(), user, templatesById: eff(), catalogs })); runner.tick();
     },
 
     /** Manual vitals a student would measure now ({} when settings.revealManualVitals is false). */

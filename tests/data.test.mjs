@@ -28,6 +28,7 @@ const schemaFor = {
   reactionTemplates: load('schemas/reaction-templates.schema.json'),
   assessmentTools: load('schemas/assessment-tools.schema.json'),
   patientTags: load('schemas/patient-tags.schema.json'),
+  taskTiming: load('schemas/task-timing.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

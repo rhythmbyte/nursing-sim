@@ -11,7 +11,8 @@ const rawScenario = load('scenarios/busy-medsurg-shift.json');
 
 /** The starter scenario with optional setting overrides, merged with scenario-defaults.json. */
 export function scenarioWith(settings = {}) {
-  return withDefaults({ ...rawScenario, settings: { ...rawScenario.settings, ...settings } }, catalogs);
+  // Task timers are off in tests unless a test turns them on (tests inject config; the app default is in scenario-defaults).
+  return withDefaults({ ...rawScenario, settings: { taskTimerMode: 'off', ...rawScenario.settings, ...settings } }, catalogs);
 }
 export const scenario = scenarioWith();
 export const MIN = 60000;
