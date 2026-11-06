@@ -20,6 +20,10 @@ export function scriptStatesSection(d, { at, room }) {
             h('td', {}, r.from ? `${r.fromLabel} → ` : '', h('strong', {}, r.label)),
             h('td', {}, r.nothingDone ? h('span', { class: 'tone-chip tone-red' }, '⚠ Nothing done') : null, ' ', r.causeText, r.by && r.cause?.kind === 'instructor' ? ` (${r.by})` : ''),
             h('td', {}, r.note || ''))))),
+        p.penalties?.length ? h('div', {}, h('h5', {}, 'Recovery penalties'),
+          h('table', { class: 'data-table' }, h('tbody', {}, p.penalties.map((x) => h('tr', { class: x.kind === 'earned' ? 'tl-amber' : '' },
+            h('td', {}, at(x.atMin)), h('td', {}, x.kind === 'earned' ? h('span', { class: 'tone-chip tone-yellow' }, '▼ Penalty') : x.kind === 'limited' ? h('span', { class: 'tone-chip tone-neutral' }, '↧ Limited') : ''),
+            h('td', {}, x.text, x.why ? h('div', { class: 'muted small' }, `Why: ${x.why}`) : null)))))) : null,
       );
     }));
 }

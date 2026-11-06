@@ -2,6 +2,7 @@
 
 import { armedTimers, maxFires } from '../reactions.js';
 import { names, triggerText, effectText, matcherText, reactionText, causeText } from './describe.js';
+import { strength, totalPercent } from '../penalties.js';
 
 const LISTENS = ['intervention', 'order', 'med', 'vitals', 'fired'];
 
@@ -14,14 +15,22 @@ function stateAllows(r, sc) {
  * { stateId, stateLabel, since, paused, states, timers: [{ id, label, deadline, without, then }],
  *   listening: [{ id, label, when, then }], reactions: [{ id, label, text, fires, max, disabled }] } or null.
  */
-export function scriptView(state, pid, template, catalogs) {
+export function scriptView(state, pid, template, catalogs, simMin = 0) {
   const sc = state.patients[pid]?.script;
   if (!sc || !template?.script) return null;
   const n = names(template, catalogs);
+  const ps = state.patients[pid];
+  const maxPercent = state.settings.recoveryPenaltyMaxPercent ?? 60;
   const thenText = (r) => r.then.map((e) => effectText(e, n)).join('; ');
   const usable = (r) => !sc.disabled[r.id] && (sc.fires[r.id] || 0) < maxFires(r, state.settings);
   return {
     stateId: sc.state, stateLabel: n.state(sc.state), since: sc.enteredAt, paused: sc.paused,
+    penaltiesOn: state.settings.recoveryPenalties !== false, maxPercent,
+    penaltyTotal: totalPercent(ps.penalties, simMin, maxPercent),
+    penalties: (ps.penalties || []).filter((p) => strength(p, simMin) > 0).map((p) => ({
+      id: p.id, label: p.label, percent: Math.round((p.percent || 0) * strength(p, simMin) * 10) / 10, basePercent: p.percent, caps: p.caps, vitals: p.vitals,
+      earnedAt: p.earnedAt, why: causeText(p.cause, n), wearing: p.wearOffMin ? (p.treatedAt != null ? `wearing off (gone ${p.treatedAt + p.wearOffMin} min)` : `wears off over ${p.wearOffMin} min once treated`) : 'stays for the rest of the sim',
+    })),
     states: template.script.states.map((s) => ({ id: s.id, label: s.label })),
     timers: armedTimers(sc, template, state.settings).filter((a) => stateAllows(a.reaction, sc)).sort((a, b) => a.deadline - b.deadline).map((a) => ({
       id: a.reaction.id, label: a.reaction.label || a.reaction.id, deadline: a.deadline,
@@ -53,4 +62,21 @@ export function stateTimeline(state, pid, template, catalogs) {
       note: template.script.states.find((s) => s.id === d.to)?.note || '',
     };
   })];
+}
+
+/**
+ * Debrief: recovery penalties for a patient, from the log. Rows { atMin, kind: earned|limited|changed|cleared|worn-off|skipped, text, why }.
+ */
+export function penaltyTimeline(state, pid, template, catalogs) {
+  const n = template?.script ? names(template, catalogs) : null;
+  const KIND = { 'penalty-earned': 'earned', 'recovery-limited': 'limited', 'penalty-changed': 'changed', 'penalty-cleared': 'cleared', 'penalty-worn-off': 'worn-off', 'penalty-skipped': 'skipped' };
+  return state.log.filter((l) => l.patientId === pid && KIND[l.action]).map((l) => {
+    const d = l.details;
+    const kind = KIND[l.action];
+    const text = kind === 'earned' ? `${d.label}${d.percent ? `: recovery −${d.percent}%` : ''}${d.caps ? ` (caps ${Object.entries(d.caps).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}${d.wearOffMin ? `, wears off over ${d.wearOffMin} min once treated` : ''}`
+      : kind === 'limited' ? `Recovery limited: ${d.limited.map((x) => `${x.k} ${x.effective} instead of ${x.target}`).join(', ')} (${Math.round(d.percent)}% penalty${d.slowedTo ? `, recovery takes ${d.slowedTo} min` : ''})`
+        : kind === 'changed' ? `Instructor set ${d.penaltyId} to ${d.percent}%` : kind === 'cleared' ? `Instructor cleared ${d.penaltyId || 'all penalties'}`
+          : kind === 'worn-off' ? `${d.label} wore off` : 'Not applied: penalties are off in this sim';
+    return { atMin: l.simMin, kind, text, why: kind === 'earned' && n ? causeText(d.cause, n) : '', by: l.userId };
+  });
 }

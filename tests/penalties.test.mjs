@@ -107,3 +107,15 @@ test('dry run with and without penalties, and the editor preview', () => {
   const r = linda.script.reactions.find((x) => x.id === 'r-p4-penalty-hypoxia');
   assert.match(penaltyPreview(r.when, r.then[0], linda, limitOne, normal), /^If spo2 <= 82 for 5\+ min: recovery reduced 20% .*Example: spo2 target 96 from 82 → ~93 instead of 96\./);
 });
+
+test('debrief: when penalties were earned, why, and how they limited recovery', async () => {
+  const { penaltyTimeline } = await import('../js/engine/reactions/view.js');
+  const L = live();
+  let s = L.tick(L.s, 84);
+  s = o2(s, L, 85, 6);
+  s = L.tick(s, 86);
+  const rows = penaltyTimeline(s, LG, linda, catalogs);
+  assert.deepEqual(rows.map((r) => r.kind), ['earned', 'earned', 'limited']);
+  assert.equal(rows[0].why, 'spo2 <= 82 for 5 min');
+  assert.match(rows[2].text, /spo2 84 instead of 90, rr 30 instead of 26 \(40% penalty, recovery takes 7.5 min\)/);
+});

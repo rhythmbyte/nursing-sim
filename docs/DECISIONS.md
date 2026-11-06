@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-06: Recovery penalties limit scripted targets, never worsening
+- **Decision:** Penalties are effects earned by reactions, stored on the patient (`patients[id].penalties`). Every scripted vitals target passes through `penalizeTarget` (the same path for state entry and vitals effects). The unpenalized target and the starting point are kept (`scriptTarget`), so wear-off and instructor changes recompute from where the recovery began. A once-a-minute processor moves the patient as penalties fade.
+- **Why:** One place does the math, so Live control, the dry run and the debrief agree. Keeping the starting point means a penalty fading from 40% to 0 ends at the full target instead of creeping. Limiting only recovery keeps "deterioration from neglect is reversible by the right treatment" true; only a scripted code or death is final.
+- **Details:** Caps mean "recovers no further than" in whichever direction is recovery (instructor to confirm, SPEC §14). Penalties don't affect the instructor's own Adjust vitals.
+- **Alternatives:** A per-state "penalized target" (duplicated numbers in data, couldn't stack or wear off).
+
+---
+
 ## 2026-11-06: The script builder is a form over a pure model; the dry run reuses the real session
 - **Decision:** `script-model.js` / `script-model-reactions.js` convert between forms and `template.script` (pure, tested: every starter reaction round-trips unchanged). The modals only build forms. "Test this patient" calls `engine/reactions/dry-run.js`, which runs the real session, chart actions and processors on a private copy.
 - **Why:** What the dry run shows is exactly what the live sim will do. Form bugs show up in Node tests, not mid-class.

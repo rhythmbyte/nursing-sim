@@ -6,6 +6,7 @@ import { h } from '../shared/dom.js';
 import { patientLabel } from '../shared/labels.js';
 import { helpTip } from '../shared/help.js';
 import { formatShiftTime } from '../../engine/time.js';
+import { select } from './script-parts.js';
 
 const left = (deadline, simMin) => {
   const sec = Math.max(0, Math.ceil((deadline - simMin) * 60)); // sim seconds
@@ -27,6 +28,7 @@ function patientScript(runner, pid, t, user) {
       v.paused ? h('span', { class: 'badge' }, '⏸ Scripting paused') : null,
       h('button', { class: 'btn btn-small', onclick: act('setScriptPaused', !v.paused), title: v.paused ? 'Resume: countdowns restart from now' : 'Stop this patient reacting until you resume' }, v.paused ? 'Resume scripting' : 'Pause scripting'),
     ),
+    penaltyBlock(v, act, at, t.demographics.name),
     v.timers.length ? h('ul', { class: 'script-armed' }, v.timers.map((x) => h('li', {},
       h('span', { class: 'script-countdown', 'data-deadline': x.deadline }, `⏱ ${left(x.deadline, simMin)}`), ' ',
       x.without.length ? `If no ${x.without.join(' or ')} by ${at(x.deadline)}` : `At ${at(x.deadline)}`, ` → ${x.then}`,
@@ -43,6 +45,20 @@ function patientScript(runner, pid, t, user) {
         h('td', {}, `${r.fires}/${r.max}`),
         h('td', {}, h('button', { class: 'btn btn-small', onclick: act('setReactionEnabled', r.id, r.disabled) }, r.disabled ? 'Enable' : 'Disable'))))))),
   );
+}
+
+function penaltyBlock(v, act, at, name) {
+  const amount = select(`Penalty to add for ${name}`, [10, 20, 30, 40].map((x) => [x, `${x}%`]), 20);
+  return h('div', { class: 'script-penalty' },
+    h('strong', {}, v.penaltyTotal ? `Recovery penalty ${Math.round(v.penaltyTotal)}% ` : 'No recovery penalty '), helpTip('live.penalty'),
+    v.penaltiesOn ? null : h('span', { class: 'muted small' }, ' (penalties are off in this sim)'),
+    v.penalties.length ? h('ul', {}, v.penalties.map((p) => h('li', {},
+      `${p.label}: `, p.percent ? `−${p.percent}%` : '', p.caps ? ` caps ${Object.entries(p.caps).map(([k, x]) => `${k} ${x}`).join(', ')}` : '',
+      h('span', { class: 'muted small' }, ` · ${at(p.earnedAt)} · ${p.why} · ${p.wearing}`), ' ',
+      p.basePercent > 0 ? h('button', { class: 'btn btn-small', onclick: act('setPenalty', p.id, Math.max(0, p.basePercent - 10)), title: 'Reduce by 10 points' }, '−10%') : null,
+      h('button', { class: 'btn btn-small btn-ghost', onclick: act('setPenalty', p.id, null) }, 'Clear')))) : null,
+    h('span', { class: 'controls' }, amount, h('button', { class: 'btn btn-small', onclick: () => act('addPenalty', { percent: Number(amount.value) })() }, 'Add penalty'),
+      v.penalties.length ? h('button', { class: 'btn btn-small btn-ghost', onclick: act('setPenalty', null, null) }, 'Clear all') : null));
 }
 
 /** The panel (null if no patient in the sim has a script). `filter` = Live control's group/patient filter. */

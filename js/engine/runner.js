@@ -144,7 +144,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
       commit(script[name](state, patientId, ...args, { ...ctx(), user, refs }));
       runner.tick();
     },
-    scriptView: (patientId) => scriptView(state, patientId, eff()[patientId], catalogs),
+    scriptView: (patientId) => scriptView(state, patientId, eff()[patientId], catalogs, runner.simMin()),
 
     /** Context the rules and the debrief need (responsibility comes from the joined roster). */
     rulesCtx: () => ({

@@ -7,13 +7,15 @@ import { openModal } from '../shared/modal.js';
 import { reactionToForm, formToReaction } from './script-model.js';
 import { scriptOptions, select, input, vitalLabel } from './script-parts.js';
 import { whenPart, ifPart } from './script-when.js';
+import { penaltyPreview } from '../../engine/reactions/describe.js';
+import { limitOne } from '../../engine/penalties.js';
 
 const field = (label, el, hint) => helpField('script', label, el, hint);
-const EFFECTS = [['state', 'Go to a state'], ['vitals', 'Change vitals'], ['findings', 'Reveal new findings'], ['event', 'Call light, message, orders, lab or code'], ['fire', 'Fire one of this patient\'s events']];
+const EFFECTS = [['state', 'Go to a state'], ['vitals', 'Change vitals'], ['penalty', 'Recovery penalty (late treatment helps less)'], ['findings', 'Reveal new findings'], ['event', 'Call light, message, orders, lab or code'], ['fire', 'Fire one of this patient\'s events']];
 const EVENT_TYPES = [['staff-message', 'Staff message'], ['call-light', 'Call light'], ['new-orders', 'New orders (order set)'], ['lab-result', 'Release a pending lab'], ['code', 'Start a code']];
 const VITALS = ['spo2', 'hr', 'rr', 'bp', 'tempF', 'o2', 'rhythm'];
 
-function effectRow(e, opts, n, onRemove) {
+function effectRow(e, opts, n, onRemove, preview) {
   const type = select(`Effect ${n}`, EFFECTS, e.type);
   const to = select(`Effect ${n} state`, opts.states.map((s) => [s.id, s.label]), e.to, { blank: '(pick a state)' });
   const values = Object.fromEntries(VITALS.map((k) => [k, k === 'rhythm'
@@ -29,7 +31,18 @@ function effectRow(e, opts, n, onRemove) {
   const lab = select(`Effect ${n} lab`, opts.pendingLabs.map((l) => [l.code, l.label]), p.code, { blank: '(pending lab)' });
   const codeRhythm = select(`Effect ${n} code rhythm`, opts.rhythms.map((r) => [r.id, r.label]), p.rhythm, { blank: '(arrest rhythm)' });
   const eventId = select(`Effect ${n} event`, opts.events.map((x) => [x.id, x.label]), e.eventId, { blank: '(pick an event)' });
+  const pLabel = input(`Effect ${n} penalty name`, e.label, { placeholder: 'Penalty name (debrief)' });
+  const pPercent = input(`Effect ${n} recovery reduced %`, e.percent, { type: 'number', min: 0, max: 100, placeholder: 'reduce recovery %' });
+  const pCaps = Object.fromEntries(['spo2', 'sbp', 'hr', 'rr'].map((k) => [k, input(`Effect ${n} ${k} recovers no further than`, e.caps?.[k] ?? '', { placeholder: `${vitalLabel(k)} cap` })]));
+  const pVitals = Object.fromEntries(['spo2', 'hr', 'rr', 'sbp', 'dbp', 'tempF'].map((k) => [k, h('input', { type: 'checkbox', checked: (e.vitals || []).includes(k), 'aria-label': `Effect ${n} limits ${k}` })]));
+  const pWear = input(`Effect ${n} wears off over min`, e.wearOffMin, { type: 'number', min: 0, placeholder: 'wears off over min (blank = stays)' });
+  const pSlow = input(`Effect ${n} recovery slower by`, e.slowFactor, { type: 'number', min: 1, step: 0.5, placeholder: 'slower ×' });
+  const pPreview = h('p', { class: 'muted small penalty-preview', 'aria-live': 'polite' });
+  const penaltyValue = () => ({ percent: Number(pPercent.value) || 0, caps: Object.fromEntries(Object.entries(pCaps).filter(([, x]) => x.value !== '').map(([k, x]) => [k, Number(x.value)])),
+    vitals: Object.entries(pVitals).filter(([, x]) => x.checked).map(([k]) => k), wearOffMin: Number(pWear.value) || null, slowFactor: Number(pSlow.value) || null });
   const parts = {
+    penalty: h('div', {}, h('div', { class: 'pick-row' }, pLabel, pPercent, ...Object.values(pCaps), pWear, pSlow),
+      h('div', { class: 'pick-row' }, 'Limits: ', ...Object.entries(pVitals).map(([k, x]) => h('label', { class: 'inline' }, x, ` ${vitalLabel(k)}`)), h('span', { class: 'muted small' }, '(none ticked = all)')), pPreview),
     state: h('div', {}, to),
     vitals: h('div', { class: 'pick-row' }, ...Object.values(values), overMin),
     findings: h('div', {}, findings),
@@ -42,12 +55,15 @@ function effectRow(e, opts, n, onRemove) {
     for (const [k, el] of Object.entries(parts)) el.hidden = type.value !== k;
     for (const [k, el] of Object.entries(evEls)) el.hidden = !evShow[k].includes(eventType.value);
   };
-  type.addEventListener('change', sync); eventType.addEventListener('change', sync); sync();
+  const showPreview = () => { pPreview.textContent = preview(penaltyValue()); };
+  parts.penalty.addEventListener('input', showPreview); parts.penalty.addEventListener('change', showPreview);
+  type.addEventListener('change', () => { sync(); showPreview(); }); eventType.addEventListener('change', sync); sync(); showPreview();
   const el = h('div', { class: 'effect-row' }, type, ...Object.values(parts), h('button', { class: 'btn btn-small btn-ghost', type: 'button', onclick: () => { el.remove(); onRemove(); } }, 'Remove'));
   return {
     el,
     value: () => ({ type: type.value, to: to.value, values: Object.fromEntries(Object.entries(values).map(([k, x]) => [k, x.value])), overMin: overMin.value,
       findingsText: findings.value, change: e.change, eventType: eventType.value, eventId: eventId.value,
+      label: pLabel.value, percent: pPercent.value, caps: Object.fromEntries(Object.entries(pCaps).map(([k, x]) => [k, x.value])), vitals: penaltyValue().vitals, wearOffMin: pWear.value, slowFactor: pSlow.value,
       payload: { from: from.value, message: message.value, orderSet: orderSet.value, code: lab.value, label: lab.value === p.code ? p.label || '' : '', rhythm: codeRhythm.value } }),
   };
 }
@@ -65,7 +81,13 @@ export function openReactionForm({ template, reactionId = null, catalogs, onSave
   const cond = ifPart(f.cond, opts);
   const rows = [];
   const thenBox = h('div', { class: 'effects' });
-  const add = (e = { type: 'state' }) => { const r = effectRow(e, opts, rows.length + 1, () => rows.splice(rows.indexOf(r), 1)); rows.push(r); thenBox.append(r.el); };
+  // Plain preview of a penalty against the trigger chosen above ("If SpO₂ ≤ 82 for 5+ min: recovery reduced 20%… → ~93 instead of 96").
+  const preview = (pe) => {
+    const w = when.value();
+    const data = { kind: w.kind, field: w.field, op: w.op, value: Number(w.value), forMin: Number(w.forMin), afterMin: Number(w.afterMin), without: w.without };
+    return penaltyPreview(['vitals', 'duration', 'elapsed'].includes(w.kind) ? data : null, pe, template, limitOne, catalogs.vitals?.recovery?.normal);
+  };
+  const add = (e = { type: 'state' }) => { const r = effectRow(e, opts, rows.length + 1, () => rows.splice(rows.indexOf(r), 1), preview); rows.push(r); thenBox.append(r.el); };
   f.then.forEach(add);
   if (!f.then.length) add();
   const err = h('p', { class: 'form-error', role: 'alert' });
@@ -78,7 +100,7 @@ export function openReactionForm({ template, reactionId = null, catalogs, onSave
       h('div', { class: 'editor-grid' }, field('Reaction name', label), field('Reaction id', id, 'Starts with r-'), field('Review status', review)),
       h('h4', {}, 'When ', helpTip('script.when')), when.el,
       h('h4', {}, 'If (optional) ', helpTip('script.if')), cond.el,
-      h('h4', {}, 'Then ', helpTip('script.then')), thenBox, h('button', { class: 'btn btn-small', type: 'button', onclick: () => add() }, 'Add effect'),
+      h('h4', {}, 'Then ', helpTip('script.then'), ' ', helpTip('script.penalty')), thenBox, h('button', { class: 'btn btn-small', type: 'button', onclick: () => add() }, 'Add effect'),
       h('div', { class: 'editor-grid' }, h('label', { class: 'inline' }, repeat, ' Can fire more than once ', helpTip('script.repeat')), field('Most times it can fire', maxFires)),
       err),
     actions: [

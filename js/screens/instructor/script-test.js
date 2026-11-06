@@ -64,12 +64,16 @@ export function openScriptTest({ template, catalogs, settings, startClock }) {
     const steps = rows.map((r) => r.value());
     lastSteps.set(template.id, steps);
     const frames = dryRun(template, { catalogs, settings, steps, startClock });
+    // Same steps with recovery penalties off, to show what they cost (column only when they made a difference).
+    const plain = dryRun(template, { catalogs, settings: { ...settings, recoveryPenalties: false }, steps, startClock });
+    const differs = frames.some((f, i) => f.vitals && plain[i]?.vitals && VIT(f.vitals) !== VIT(plain[i].vitals));
     clear(out).append(h('table', { class: 'data-table' },
-      h('thead', {}, h('tr', {}, ['Time', 'Step', 'State', 'Vitals', 'What fired', 'Alerts'].map((c) => h('th', {}, c)))),
-      h('tbody', {}, frames.map((f) => h('tr', { class: f.error ? 'tl-red' : f.transitions?.some((x) => x.cause.kind === 'timeout') ? 'tl-amber' : '' },
+      h('thead', {}, h('tr', {}, ['Time', 'Step', 'State', 'Vitals', ...(differs ? ['Without penalties'] : []), 'What fired', 'Alerts'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, frames.map((f, i) => h('tr', { class: f.error ? 'tl-red' : f.transitions?.some((x) => x.cause.kind === 'timeout') ? 'tl-amber' : '' },
         h('td', {}, at(f.atMin)), h('td', {}, f.label),
         h('td', {}, f.error ? h('span', { class: 'form-error' }, f.error) : f.stateLabel),
         h('td', {}, f.vitals ? VIT(f.vitals) : '', f.trend ? h('div', { class: 'muted small' }, `trending to ${Object.entries(f.trend.to).map(([k, v]) => `${k} ${v}`).join(', ')} by ${at(f.trend.toMin)}`) : null),
+        differs ? h('td', {}, plain[i]?.vitals ? VIT(plain[i].vitals) : '', plain[i]?.trend ? h('div', { class: 'muted small' }, `trending to ${Object.entries(plain[i].trend.to).map(([k, v]) => `${k} ${v}`).join(', ')}`) : null) : null,
         h('td', {}, (f.fired || []).map((x) => h('div', {}, `${x.label} `, h('span', { class: 'muted small' }, `(${causeText(x.cause, n)})`))), (f.events || []).length ? h('div', { class: 'muted small' }, `Events: ${f.events.join(', ')}`) : null),
         h('td', {}, (f.alerts || []).map((a) => h('div', { class: 'small' }, a))))))));
   }

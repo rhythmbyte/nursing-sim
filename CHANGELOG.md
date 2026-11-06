@@ -2,6 +2,16 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Recovery penalties (Part A)
+- **Late treatment helps less, but neglect stays reversible.** A reaction can now give a **recovery penalty** (`then: { type: 'penalty' }`, `engine/penalties.js`): reduce recovery by a **percent of the way back** (20%: 70 → 99 becomes ~93) and/or **cap** a vital (SpO₂ recovers no further than 94). Optional per-vital scope, **wear-off** over N min once treated (the patient keeps improving minute by minute), and **slower recovery** (trend × factor). Penalties stack up to `recoveryPenaltyMaxPercent` (60, data) and can be turned off per sim (`recoveryPenalties`). Worsening is never limited. "Recovery" means moving toward `vitals.json recovery.normal`.
+- New triggers: **a vital stays past a threshold for N min** (`duration`, e.g. SpO₂ < 80 for 5 min) and **the penalty reaches X%** (`penalty`, e.g. 40% → rapid response). Time in a bad state and delay before a required action use the existing countdowns.
+- **Live control:** each patient's penalty total, each penalty with why and whether it wears off, **Add** (10–40%), **−10%**, **Clear** and **Clear all**. All logged; the patient's vitals follow (a running trend is re-aimed).
+- **Builder:** "Recovery penalty" effect with a plain preview ("If spo2 <= 82 for 5+ min: recovery reduced 20% … Example: spo2 target 96 from 82 → ~93 instead of 96"); the new triggers in the When list.
+- **Dry run:** a "Without penalties" column when penalties changed the outcome.
+- **Debrief:** per patient, when each penalty was earned, why ("spo2 <= 82 for 5 min"), and each time it limited recovery ("spo2 84 instead of 90 … recovery takes 7.5 min"). CSV via the timeline rows.
+- **Starter data (proposed):** Linda: SpO₂ ≤ 82 for 5+ min → −20% (SpO₂, RR; wears off over 30 min); SpO₂ ≤ 78 for 3+ min → −20% more, SpO₂ capped at 92, 1.5× slower; reaching 40% → the charge nurse calls rapid response. Template **Neglect penalty** (SpO₂ < 80 for 5+ min −20%; SBP < 90 for 10+ min −20% and slower).
+- Tests: 169 passing (percent and cap math, stacking and max, wear-off, instructor override, full recovery without a penalty, switch-off, dry run, debrief).
+
 ## Reactive scripting: debrief and demo guide (stages 4–5)
 - **Debrief → Patient states:** for each of the student's scripted patients, the state timeline (time, from → to, why: student action, nothing done in time, vitals threshold, scheduled event, another reaction, instructor) with the state's teaching note. Changes caused by nothing being done in time are red and marked "⚠ Nothing done". A per-patient chip counts them. It's in Print summary, and the CSV gets one `patient-state` row per change.
 - README demo guide: Linda's script (watch her desaturate, try 2 L vs 6 L vs NRB, or do nothing), Live control's Patient scripts panel, the builder and Test this patient.
