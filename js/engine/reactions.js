@@ -12,7 +12,7 @@ import { append, SYSTEM } from './log.js';
 import { addAlert } from './alerts.js';
 import { activeLog } from './struck.js';
 import { fireEventGroup } from './session.js';
-import { ACTION_KINDS, entryMatches, crossed, conditionsHold } from './reactions/match.js';
+import { ACTION_KINDS, entryMatches, crossed, conditionsHold, thresholdHolds } from './reactions/match.js';
 import { EFFECTS } from './reactions/effects.js';
 
 const MAX_STEPS_PER_RUN = 200; // safety net; per-instant loop protection is below
@@ -24,6 +24,8 @@ export function initScript(template) {
     state: template.script.initialState, enteredAt: 0,
     paused: false, resumedAt: null,
     disabled: {}, fires: {}, lastFire: {}, lastEvent: {}, consumed: {},
+    // duration triggers: since when each threshold has held (baseline counts from minute 0)
+    holdSince: Object.fromEntries(template.script.reactions.filter((r) => r.when.kind === 'duration' && thresholdHolds(template.vitals.baseline, r.when)).map((r) => [r.id, 0])),
     logCursor: 0, histCursor: 1, at: 0, // what has been processed so far
     instant: { t: -1, count: 0 },
   };
@@ -39,6 +41,7 @@ export function anchorOf(sc, w) {
   else if (w.since === 'event') a = sc.lastEvent[w.eventId] ?? null;
   else if (w.since === 'reaction') a = sc.lastFire[w.reactionId] ?? null;
   else if (w.since === 'start') a = 0;
+  if (w.kind === 'duration') a = sc.holdSince?.[w.id] ?? null;
   if (a == null) return null;
   return sc.resumedAt != null ? Math.max(a, sc.resumedAt) : a; // resuming restarts countdowns
 }
@@ -49,10 +52,10 @@ const usable = (sc, r, settings) => !sc.disabled[r.id] && (sc.fires[r.id] || 0) 
 export function armedTimers(sc, template, settings) {
   if (!sc || sc.paused) return [];
   return template.script.reactions.flatMap((r) => {
-    if (r.when.kind !== 'elapsed' || !usable(sc, r, settings)) return [];
-    const anchor = anchorOf(sc, r.when);
+    if ((r.when.kind !== 'elapsed' && r.when.kind !== 'duration') || !usable(sc, r, settings)) return [];
+    const anchor = anchorOf(sc, r.when.kind === 'duration' ? { ...r.when, id: r.id } : r.when);
     if (anchor == null || sc.consumed[r.id] === anchor) return [];
-    return [{ reaction: r, anchor, deadline: anchor + r.when.afterMin }];
+    return [{ reaction: r, anchor, deadline: anchor + (r.when.kind === 'duration' ? r.when.forMin : r.when.afterMin) }];
   });
 }
 
@@ -113,13 +116,19 @@ function runPatient(draft, pid, upto, ctx) {
       const prev = ps.vitalsHistory[item.index - 1].values;
       const cur = ps.vitalsHistory[item.index].values;
       for (const r of template.script.reactions) {
+        if (r.when.kind === 'duration') {
+          sc.holdSince ??= {};
+          if (!thresholdHolds(cur, r.when)) delete sc.holdSince[r.id];
+          else sc.holdSince[r.id] ??= item.t;
+        }
         if (r.when.kind === 'vitals' && crossed(prev, cur, r.when)) tryFire(draft, pid, r, item.t, { kind: 'threshold', field: r.when.field, op: r.when.op, value: r.when.value }, ctx);
       }
     } else {
       sc.consumed[item.reaction.id] = item.anchor;
       const w = item.reaction.when;
       const done = (w.without || []).length && activeLog(draft).some((l) => relevant(l, pid) && l.simMin >= item.anchor - 1e-9 && l.simMin <= item.t + 1e-9 && w.without.some((m) => entryMatches(l, m, template)));
-      if (!done) tryFire(draft, pid, item.reaction, item.t, { kind: 'timeout', since: w.since, afterMin: w.afterMin, without: w.without || [] }, ctx);
+      if (w.kind === 'duration') tryFire(draft, pid, item.reaction, item.t, { kind: 'duration', field: w.field, op: w.op, value: w.value, forMin: w.forMin }, ctx);
+      else if (!done) tryFire(draft, pid, item.reaction, item.t, { kind: 'timeout', since: w.since, afterMin: w.afterMin, without: w.without || [] }, ctx);
     }
   }
   console.warn(`Reaction script for ${pid}: stopped after ${MAX_STEPS_PER_RUN} steps in one run`);
@@ -134,6 +143,8 @@ function onLogEntry(draft, pid, entry, t, ctx) {
     const w = r.when;
     if (ACTION_KINDS.includes(w.kind) && entryMatches(entry, w, template)) {
       tryFire(draft, pid, r, t, { kind: entry.role === 'student' ? 'student' : entry.role, logId: entry.id, userId: entry.userId }, ctx);
+    } else if (w.kind === 'penalty' && entry.action.startsWith('penalty-') && entry.details.beforePercent < w.atLeastPercent && entry.details.afterPercent >= w.atLeastPercent) {
+      tryFire(draft, pid, r, t, { kind: 'penalty', atLeastPercent: w.atLeastPercent, logId: entry.id }, ctx);
     } else if (w.kind === 'fired' && ((w.eventId && entry.action === 'event-fired' && entry.details.eventId === w.eventId)
       || (w.reactionId && entry.action === 'reaction-fired' && entry.details.reactionId === w.reactionId))) {
       tryFire(draft, pid, r, t, { kind: w.eventId ? 'event' : 'chain', logId: entry.id, ...(w.eventId ? { eventId: w.eventId } : { fromReaction: w.reactionId }) }, ctx);
@@ -144,7 +155,7 @@ function onLogEntry(draft, pid, entry, t, ctx) {
 /** Effect context shared by the processor and the instructor controls. */
 export function effectCtx(draft, pid, t, cause, ctx, user = SYSTEM) {
   return {
-    t, user, cause, now: ctx.now, template: ctx.templatesById[pid], settings: draft.settings,
+    t, user, cause, now: ctx.now, template: ctx.templatesById[pid], settings: draft.settings, catalogs: ctx.catalogs,
     fireEvent: (d, p, eventId, fx) => fireEventGroup(d, p, eventId, { simMin: fx.t, now: fx.now, refs: ctx.refs || [], templatesById: ctx.templatesById, user: fx.user, source: `reaction:${fx.cause.reactionId}` }),
   };
 }
@@ -175,7 +186,7 @@ export function tryFire(draft, pid, r, t, cause, ctx, { force = false, user = SY
   sc.lastFire[r.id] = t;
   const fullCause = { ...cause, reactionId: r.id };
   append(draft, { simMin: t, wallTime: ctx.now, ...user, patientId: pid, action: 'reaction-fired', details: { reactionId: r.id, label: r.label || r.id, cause: fullCause, forced: force || undefined } });
-  const fx = effectCtx(draft, pid, t, fullCause, ctx, user);
+  const fx = { ...effectCtx(draft, pid, t, fullCause, ctx, user), reactionLabel: r.label || r.id };
   for (const e of r.then) {
     if (EFFECTS[e.type]) EFFECTS[e.type](draft, pid, e, fx);
     else console.warn(`Reaction ${r.id}: unknown effect "${e.type}"`);

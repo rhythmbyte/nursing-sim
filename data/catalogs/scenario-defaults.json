@@ -16,6 +16,8 @@
     "scriptedVitalsAfterInstructor": "apply",
     "reactionMaxFires": 10,
     "reactionMaxPerInstant": 20,
+    "recoveryPenalties": true,
+    "recoveryPenaltyMaxPercent": 60,
     "roscTag": "red",
     "roscRhythm": "sinus-tach",
     "noRoscRhythm": "asystole",

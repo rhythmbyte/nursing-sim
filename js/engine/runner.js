@@ -136,7 +136,8 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     /**
      * Instructor overrides for a patient's reaction script (engine/reactions/control.js), then a tick so
      * any chained reactions run straight away. name ∈ forceState(stateId), fireReactionNow(reactionId),
-     * setReactionEnabled(reactionId, enabled), skipArmed(reactionId), setScriptPaused(paused).
+     * setReactionEnabled(reactionId, enabled), skipArmed(reactionId), setScriptPaused(paused),
+     * addPenalty({ percent, caps, label }), setPenalty(penaltyId | null, percent | null).
      */
     script(name, patientId, args, user) {
       if (typeof script[name] !== 'function') throw new Error(`Unknown script action ${name}`);

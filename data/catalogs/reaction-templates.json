@@ -14,6 +14,7 @@
         { "id": "r-o2-high", "label": "O₂ ≥ 4 L or NRB: good response", "when": { "kind": "intervention", "interventionId": "o2-apply", "where": [{ "lpm": { "min": 4 } }, { "device": { "matches": ["NRB", "non-rebreather"] } }] }, "if": { "notInState": ["o2-good"] }, "then": [{ "type": "state", "to": "o2-good" }], "repeat": true, "maxFires": 5 }
       ]
     },
+    {"id": "neglect-penalty", "label": "Neglect penalty", "review": "proposed", "description": "Late treatment helps less: SpO₂ < 80 for 5+ min reduces SpO₂ recovery by 20% for the rest of the sim; SBP < 90 for 10+ min reduces BP recovery by 20% and makes it 1.5× slower.", "states": [], "reactions": [{"id": "r-neglect-hypoxia", "label": "SpO₂ < 80% for 5+ min: recovery reduced 20%", "when": {"kind": "duration", "field": "spo2", "op": "<", "value": 80, "forMin": 5}, "then": [{"type": "penalty", "label": "Hypoxic 5+ min", "percent": 20, "vitals": ["spo2"]}]}, {"id": "r-neglect-hypotension", "label": "SBP < 90 for 10+ min: BP recovery reduced 20%, slower", "when": {"kind": "duration", "field": "sbp", "op": "<", "value": 90, "forMin": 10}, "then": [{"type": "penalty", "label": "Hypotensive 10+ min", "percent": 20, "vitals": ["sbp", "dbp"], "slowFactor": 1.5}]}]},
     {
       "id": "fluid-bolus", "label": "Fluid bolus response", "review": "proposed",
       "description": "A bolus of 500 mL or more brings BP up and HR down over 10 minutes.",

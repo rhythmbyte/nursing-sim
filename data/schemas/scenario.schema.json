@@ -30,6 +30,8 @@
         "scriptedVitalsAfterInstructor": { "enum": ["apply", "skip"] },
         "reactionMaxFires": { "type": "integer", "minimum": 1 },
         "reactionMaxPerInstant": { "type": "integer", "minimum": 1 },
+        "recoveryPenalties": { "type": "boolean" },
+        "recoveryPenaltyMaxPercent": { "type": "number", "minimum": 0, "maximum": 95 },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
         "roscRhythm": { "type": "string" },
         "noRoscRhythm": { "type": "string" },

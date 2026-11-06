@@ -19,13 +19,14 @@ import { delegationProcessor } from './delegation.js';
 import { trendProcessor } from './vitals-control.js';
 import { alarmProcessor } from './monitor-alarms.js';
 import { reactionsProcessor, initScript } from './reactions.js';
+import { penaltyProcessor } from './penalties.js';
 
 // Order matters within one instant: trends step first, then reactions (which may change vitals), then
 // monitor readings (which read vitalsAt). A processor may expose nextAt(state, upto, ctx): the session
 // stops there first, so work it does at that moment happens in time order with the others.
-const PROCESSORS = [trendProcessor, reactionsProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
+const PROCESSORS = [trendProcessor, reactionsProcessor, penaltyProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
 
-export const SESSION_VERSION = 14; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 15; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -64,6 +65,8 @@ function initialPatientState(t, groupId, admission, catalogs) {
     admission: null,             // { status: pending|held|assigned, arrivedAtMin, message, … } (engine/admissions.js)
     code: null,
     script: initScript(t),       // reactive script position (engine/reactions.js), null if the patient has none
+    penalties: [],               // recovery penalties earned (engine/penalties.js)
+    scriptTarget: null,          // last scripted vitals target before penalties { values, from, at }
   };
 }
 

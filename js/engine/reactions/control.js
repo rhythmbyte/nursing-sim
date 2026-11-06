@@ -6,6 +6,7 @@ import { simMinOf } from '../session.js';
 import { append } from '../log.js';
 import { enterState } from './effects.js';
 import { tryFire, effectCtx, anchorOf } from '../reactions.js';
+import { earnPenalty, changePenalty } from '../penalties.js';
 
 function begin(state, pid, ctx) {
   const ps = state.patients[pid];
@@ -52,7 +53,8 @@ export function setReactionEnabled(state, pid, rid, enabled, ctx) {
 /** "Skip": cancels a countdown that is running now; it re-arms only if its anchor happens again. */
 export function skipArmed(state, pid, rid, ctx) {
   const r = reactionOf(ctx, pid, rid);
-  const anchor = r.when.kind === 'elapsed' ? anchorOf(state.patients[pid].script, r.when) : null;
+  const w = r.when.kind === 'duration' ? { ...r.when, id: r.id } : r.when;
+  const anchor = r.when.kind === 'elapsed' || r.when.kind === 'duration' ? anchorOf(state.patients[pid].script, w) : null;
   if (anchor == null) return state;
   const { draft, t } = begin(state, pid, ctx);
   draft.patients[pid].script.consumed[rid] = anchor;
@@ -72,5 +74,19 @@ export function setScriptPaused(state, pid, paused, ctx) {
   if (!paused) { sc.resumedAt = t; sc.logCursor = draft.log.length; sc.histCursor = draft.patients[pid].vitalsHistory.length; sc.at = Math.max(sc.at, t); }
   log(draft, t, ctx, pid, paused ? 'script-paused' : 'script-resumed', {});
   if (!paused) sc.logCursor = draft.log.length; // the resume entry itself isn't a trigger
+  return draft;
+}
+
+/** Instructor adds a recovery penalty now ({ percent?, caps?, label? }); logged. */
+export function addPenalty(state, pid, penalty, ctx) {
+  const { draft, t } = begin(state, pid, ctx);
+  earnPenalty(draft, pid, { label: 'Added by instructor', ...penalty }, { t, now: ctx.now, user: ctx.user, cause: { kind: 'instructor', userId: ctx.user.userId } });
+  return draft;
+}
+
+/** Instructor reduces a penalty to `percent`, or clears it (percent null; penaltyId null clears all). The patient recovers to match. */
+export function setPenalty(state, pid, penaltyId, percent, ctx) {
+  const { draft, t } = begin(state, pid, ctx);
+  changePenalty(draft, pid, penaltyId, percent, { t, now: ctx.now, user: ctx.user, catalogs: ctx.catalogs });
   return draft;
 }

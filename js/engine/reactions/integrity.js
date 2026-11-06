@@ -3,6 +3,7 @@
 
 import { resolveRhythm } from '../monitor.js';
 import { EFFECT_TYPES } from './effects.js';
+import { RECOVERABLE } from '../penalties.js';
 
 const SINCE = ['state', 'event', 'reaction', 'start'];
 
@@ -48,7 +49,9 @@ export function scriptProblems(t, catalogs) {
     const at = `reaction "${r.id}"`;
     const w = r.when;
     if (['intervention', 'order', 'med'].includes(w.kind)) matcher(`${at} when`, w);
-    if (w.kind === 'vitals' && (w.field == null || w.op == null || typeof w.value !== 'number')) p.push(`${at} when: a vitals trigger needs field, op and value`);
+    if ((w.kind === 'vitals' || w.kind === 'duration') && (w.field == null || w.op == null || typeof w.value !== 'number')) p.push(`${at} when: a vitals trigger needs field, op and value`);
+    if (w.kind === 'duration' && typeof w.forMin !== 'number') p.push(`${at} when.forMin: how many minutes the threshold must hold`);
+    if (w.kind === 'penalty' && typeof w.atLeastPercent !== 'number') p.push(`${at} when.atLeastPercent: the total penalty % that fires it`);
     if (w.kind === 'elapsed') {
       if (!SINCE.includes(w.since)) p.push(`${at} when.since: must be one of ${SINCE.join(', ')}`);
       if (typeof w.afterMin !== 'number') p.push(`${at} when.afterMin: needs a number of minutes`);
@@ -72,6 +75,10 @@ export function scriptProblems(t, catalogs) {
       if (!EFFECT_TYPES.includes(e.type)) p.push(`${ea}: unknown effect "${e.type}"`);
       if (e.type === 'state') state(ea, e.to);
       if (e.type === 'findings' && !changes.has(e.change)) p.push(`${ea}: no finding change "${e.change}" (findings.changes[].eventId)`);
+      if (e.type === 'penalty') {
+        if (!(e.percent > 0) && !Object.keys(e.caps || {}).length) p.push(`${ea}: a penalty needs a percent or at least one cap`);
+        for (const [k, v] of Object.entries(e.caps || {})) if (!RECOVERABLE.includes(k) || typeof v !== 'number') p.push(`${ea}: cap "${k}" must be one of ${RECOVERABLE.join(', ')} with a number`);
+      }
       if (e.type === 'fire' && !eventIds.has(e.eventId)) p.push(`${ea}: no event "${e.eventId}" in this patient`);
       if (e.type === 'vitals' && e.values?.rhythm && !resolveRhythm(catalogs, e.values.rhythm)) p.push(`${ea}: rhythm "${e.values.rhythm}" is not in data/catalogs/rhythms.json`);
       if (e.type === 'event' && e.event?.type === 'new-orders' && !orderSets.has(e.event.payload?.orderSet)) p.push(`${ea}: no orders in order set "${e.event.payload?.orderSet}"`);
@@ -91,7 +98,8 @@ export function reactionTemplateProblems(catalog, catalogs) {
     const changes = [];
     const states = tpl.states.map(({ findingsText, ...s }) => (findingsText?.length ? (changes.push({ eventId: `state-${s.id}`, findings: findingsText }), { ...s, findings: `state-${s.id}` }) : s));
     const reactions = tpl.reactions.map((r) => ({ ...r, then: r.then.map((e, i) => (e.type === 'findings' && e.findingsText ? (changes.push({ eventId: `${r.id}-f${i}`, findings: e.findingsText }), { type: 'findings', change: `${r.id}-f${i}` }) : e)) }));
-    const bare = { events: [], orders: [], labs: [], findings: { changes }, script: { initialState: states[0]?.id, states, reactions } };
+    const all = states.length ? states : [{ id: 'template-start', label: 'Start' }]; // a template may add reactions only
+    const bare = { events: [], orders: [], labs: [], findings: { changes }, script: { initialState: all[0].id, states: all, reactions } };
     return scriptProblems(bare, catalogs).map((m) => `template "${tpl.id}": ${m.replace(' in this patient', ' (templates cannot use a patient\'s own orders or events)')}`);
   });
 }

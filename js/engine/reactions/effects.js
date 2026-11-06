@@ -1,12 +1,13 @@
 // Reaction effects (pure, mutate the draft; no DOM). Adding an effect = one entry in EFFECTS + schema enum.
 // Effects reuse the existing engine: event types (call light, staff message, new orders, lab result, code)
 // run through the registry, vitals go through setVitalsTarget (same as the instructor's Adjust vitals).
-// fx = { t, user, cause, now, template, templatesById, refs, settings, fireEvent }
+// fx = { t, user, cause, now, template, catalogs, settings, fireEvent, reactionLabel }
 
 import { getEventType } from '../registry.js';
 import { append } from '../log.js';
 import { addAlert } from '../alerts.js';
 import { cleanValues, setVitalsTarget, scriptedVitalsBlocked } from '../vitals-control.js';
+import { penalizeTarget, earnPenalty } from '../penalties.js';
 
 /** Patient vitals move toward a scripted target unless the instructor has control (scriptedVitalsAfterInstructor). */
 function scriptedVitals(draft, pid, { values, overMin = 0 }, fx, { force = false } = {}) {
@@ -18,7 +19,8 @@ function scriptedVitals(draft, pid, { values, overMin = 0 }, fx, { force = false
     append(draft, { simMin: fx.t, wallTime: fx.now, ...fx.user, patientId: pid, action: 'script-vitals-skipped', details: { values: target, cause: fx.cause } });
     return;
   }
-  setVitalsTarget(ps, target, overMin, fx.t);
+  const out = penalizeTarget(draft, pid, target, overMin, fx, fx.catalogs); // recovery penalties (engine/penalties.js)
+  setVitalsTarget(ps, out.values, out.overMin, fx.t);
   ps.vitalsOverride = false; // the script has taken back over, as a scripted keyframe does
 }
 
@@ -60,6 +62,8 @@ export const EFFECTS = {
   },
   /** Fires one of the patient's own events (and its linked group), as "Fire now" would. */
   fire: (draft, pid, e, fx) => fx.fireEvent(draft, pid, e.eventId, fx),
+  /** Recovery penalty: limits how far later treatment can bring the patient back (engine/penalties.js). */
+  penalty: (draft, pid, e, fx) => earnPenalty(draft, pid, e, { t: fx.t, now: fx.now, user: fx.user, cause: { ...fx.cause, label: fx.reactionLabel } }),
 };
 
 export const EFFECT_TYPES = Object.keys(EFFECTS);

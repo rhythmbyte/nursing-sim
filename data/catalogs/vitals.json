@@ -18,6 +18,7 @@
     "all": ["ecg", "spo2", "nibp"]
   },
   "alarmSilenceMin": 2,
+  "recovery": { "review": "proposed", "_comment": "Recovery penalties (engine/penalties.js): a scripted change counts as recovery when it moves a vital toward this normal range. Instructor to confirm (SPEC §14).", "normal": { "spo2": [94, 100], "hr": [60, 100], "rr": [12, 20], "sbp": [100, 140], "dbp": [60, 90], "tempF": [97.0, 99.5] } },
   "trend": {
     "_comment": "Command center trend arrow: compare now with windowMin ago. Worse if any change crosses these (instructor to confirm).",
     "windowMin": 15,

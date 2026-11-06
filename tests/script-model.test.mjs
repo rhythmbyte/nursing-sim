@@ -100,5 +100,5 @@ test('state diagram layout: columns by distance from the start; arrows from inSt
   assert.equal(L.pos.crashing.col, 3);
   assert.ok(L.edges.some((e) => e.from === 'desaturating' && e.to === 'hypoxic' && e.reactionId === 'r-p4-no-o2'));
   assert.ok(L.hasAny, 'O₂ reactions use notInState, so they come from "any state"');
-  assert.deepEqual(L.other, ['r-p4-spo2-82', 'r-p4-crash-light']);
+  assert.deepEqual(L.other, ['r-p4-spo2-82', 'r-p4-crash-light', 'r-p4-penalty-hypoxia', 'r-p4-penalty-severe', 'r-p4-penalty-rrt']);
 });

@@ -19,6 +19,12 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'reaction-disabled': return `Instructor disabled reaction ${d.reactionId ?? ''}`.trim();
     case 'reaction-enabled': return `Instructor re-enabled reaction ${d.reactionId ?? ''}`.trim();
     case 'reaction-skipped': return `Instructor skipped countdown ${d.reactionId ?? ''}`.trim();
+    case 'penalty-earned': return `Recovery penalty earned: ${d.label || 'penalty'}${d.percent ? ` (−${d.percent}% recovery)` : ''}${d.caps ? ` · caps ${Object.entries(d.caps).map(([k, v]) => `${k} ${v}`).join(', ')}` : ''}`;
+    case 'penalty-changed': return `Instructor set penalty ${d.penaltyId ?? ''} to ${d.percent ?? '?'}%`;
+    case 'penalty-cleared': return d.penaltyId ? `Instructor cleared penalty ${d.penaltyId}` : 'Instructor cleared recovery penalties';
+    case 'penalty-skipped': return 'Recovery penalty not applied (penalties are off in this sim)';
+    case 'penalty-worn-off': return `Recovery penalty wore off: ${d.label || d.penaltyId || ''}`;
+    case 'recovery-limited': return `Recovery limited by penalty: ${(d.limited || []).map((x) => `${x.k} ${x.target} → ${x.effective}`).join(', ')}${d.slowedTo ? ` (slower: ${d.slowedTo} min)` : ''}`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;
