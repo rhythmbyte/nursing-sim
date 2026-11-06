@@ -47,3 +47,16 @@ test('store: a failing subscriber does not stop other subscribers', () => {
   }
   assert.deepEqual(seen, [1]);
 });
+
+test('review items: lists proposed nodes with labels; approveAt marks one approved without touching the original', async () => {
+  const { reviewItems, approveAt } = await import('../js/review.js');
+  const { templatesById } = await import('./fixtures.mjs');
+  const t = templatesById['p1-robert-miller'];
+  const items = reviewItems(t);
+  assert.equal(items.length, countNeedsReview(t));
+  const ecg = items.find((i) => i.label.includes('12-lead ECG'));
+  assert.deepEqual(ecg.path.slice(0, 1), ['orders']);
+  const approved = approveAt(t, ecg.path);
+  assert.equal(countNeedsReview(approved), countNeedsReview(t) - 1);
+  assert.equal(t.orders[ecg.path[1]].review, 'proposed', 'original untouched');
+});

@@ -103,3 +103,8 @@ tr.needs-attention td { background: var(--review-bg); }
 .join-code { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
 .join-code .code { font-size: 1.6rem; letter-spacing: 0.15em; font-variant-numeric: tabular-nums; }
 .join-panel { max-width: 420px; }
+.editor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-2) var(--space-3); align-items: end; }
+.editor-grid > h3, .editor-grid > .panel-head { grid-column: 1 / -1; }
+.panel .field + .field { margin-top: var(--space-2); }
+.pick-list { display: flex; flex-direction: column; gap: 2px; margin-top: var(--space-2); }
+.pick-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }

@@ -249,8 +249,8 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
 ## 8. Instructor screens
 
 1. **Patient library** — list of patient templates with tag chips and review badges ("Needs review" for anything `proposed`).
-2. **Patient editor** — a form, sectioned like her case write-ups: demographics → H&P → vitals → findings → labs → orders (with tier + order set + delegable) → events/timeline → debrief "should recognize". Saves to the same JSON format. Import/export JSON.
-3. **Sim setup** — wizard:
+2. **Patient editor** — a form, sectioned like her case write-ups (prototype: labs, events, vitals changes, finding changes, outcome and code branch are edited as JSON; orders as a table of text/type/tier/set/delegable): demographics → H&P → vitals → findings → labs → orders (with tier + order set + delegable) → events/timeline → debrief "should recognize". Saves to the same JSON format. Import/export JSON.
+3. **Sim setup** — one sectioned page (prototype) rather than a step-by-step wizard:
    - name, start clock, speed, settings
    - add groups; per group: student count, then pick patients OR enter tag counts
    - assignment manual or random
@@ -273,7 +273,7 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
 - **Manual:** students pre-placed into groups by the instructor.
 - **Random:** each group has a `studentCount`; students are placed into open slots until full. A student is never placed in two groups; a full group is never over-filled. If more students join than slots, the instructor is warned.
 - **Tag-count patient fill:** for each group, pick that many patients of each tag from the library, without reusing a patient across groups in the same sim. Warn if the library doesn't have enough of a tag.
-- Prototype: student tabs simulate joining (a "Join sim" form on each student tab).
+- Prototype: student tabs simulate joining (a "Join sim" form on each student tab). The instructor's Live control shows the code and who has joined.
 
 ---
 
@@ -319,11 +319,12 @@ Things in the prototype that will need to change for the real website (logins, b
 | Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` |
 | Pause on close (`settings.pauseOnClose`): the browser pauses its own sim on `pagehide`, or on boot using a heartbeat | The server owns the clock, so closing one device never pauses the sim. Drop the pagehide/heartbeat code. Pausing becomes an explicit instructor action (maybe an auto-pause when the instructor disconnects) | `js/main.js`, `session.pauseForClose` |
 | Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |
-| Join codes and student "joins" are simulated per tab | Real join flow tied to student accounts | `js/engine/assignment.js` (phase 6) |
+| Join codes and student "joins" happen per tab (each tab = one device) | Real join flow tied to student accounts | `js/engine/roster.js`, `assignment.js` |
+| Instructor edits (patient editor, review approvals, new sims) save in this browser (`storage.js` via `data-loader.js` `saveLocal`); publishing = export JSON + commit | Edits are API writes to a content database, with history and who approved what | `js/data-loader.js` |
+| Ad-hoc orders live in session state (`adhoc`) and merge into effective templates | Same, server-side | `js/engine/templates.js`, `instructor.js` |
 | User identities are hard-coded (`instructor`, `student-N`) in `main.js` | `userId`/`role` come from the auth session; log format is unchanged | `js/main.js` |
 | The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
 | One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
-| Student tab N gets the Nth group slot | Students join with a code; placement is manual or random (SPEC §10) | `js/engine/assignment.js` |
 
 ---
 
@@ -350,3 +351,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 13. **Delegated assessments:** when an LPN does an assessment, should its findings show on the chart once they report back? Default: no (`delegatedAssessmentRevealsFindings: false`); the RN must assess.
 14. **Monitor vs. manual vitals:** BP, HR and SpO₂ (plus the O₂ device) come from the monitor; temp, RR and pain are measured by hand; NIBP cycle choices are off / q5 / q10 / q15 (`data/catalogs/vitals.json`). Right?
 15. **Lab result delay fallback:** 30 sim-minutes for any lab with no delay set in the patient file or the labs catalog (`labs.json` `fallbackDelayMin`). Right?
+16. **After ROSC** the patient's tag becomes red (`settings.roscTag`). Right, or should it depend on the patient?

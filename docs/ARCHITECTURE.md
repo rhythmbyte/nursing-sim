@@ -39,6 +39,10 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Error isolation:** the runner persists the new session *before* notifying the store, and the store catches errors per subscriber. A bug in one screen can't lose a charted action or stop other screens from updating.
 
+**Instructor edits (phase 6):** the patient editor, review-queue approvals and Sim setup validate with the same schemas and save through `data-loader.saveLocal()`. `loadAll()` overlays them on the files, and `main.js reloadData()` re-reads and remounts. They live in this browser only. To publish, export the JSON and commit it to `data/`.
+
+**Roster:** students join with `state.joinCode`. `state.roster[userId] = { name, groupId }` decides which patients a student sees, who a flag belongs to, and who appears in the debrief.
+
 **Screen lifecycle:** a tab's `mount(root)` may return a cleanup function, which unsubscribes from the store. The shell calls it before mounting the next tab. Any screen that subscribes **must** return a cleanup.
 
 ---
@@ -53,7 +57,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms), the pause-on-close hooks (`pagehide` + a 5 s heartbeat), and the prototype user identities | built |
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`; keys prefixed `nursing-sim:`) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
-| `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks (`EXTRA_CHECKS`, e.g. event groups) → `{ patients, scenarios, catalogs, problems }` | built |
+| `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks → overlay this browser's edits → `{ patients, scenarios, catalogs, schemas, local, fileIds, problems }`. Also `validateItem`, `saveLocal`, `removeLocal` (instructor edits via `storage.js`) | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
 | `js/engine/settings.js` | `effectiveSettings` / `withDefaults`: scenario settings over `scenario-defaults.json`. Applied once in `main.js`; the engine reads only `state.settings` | built |
@@ -72,16 +76,18 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule (8, SPEC §7) + `helpers.js` (config merge, tracked orders, responsibility) + `index.js` (`evaluateRules`) | built |
 | `js/engine/debrief.js` | `buildDebrief(state, userId, ctx)`: flags, response times, order sequences, charted vs scripted, handoffs, should-recognize, timeline | built |
-| `js/engine/instructor.js` | `markLeftUnattended` | built |
+| `js/engine/instructor.js` | `markLeftUnattended`, `pushOrder`, `startCode`, `setCodeOutcome`, `setCallLight` | built |
 | `js/engine/vitals.js` | Monitor cycle (processor), device vs manual vitals, `measureManual` (respects `revealManualVitals`), scripted snapshots for the debrief | built |
 | `js/engine/labs.js` | `initLabs`, `drawLabs`, result-delay processor, `releaseLab` (instructor) | built |
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
 | `js/engine/orders.js` | `progressOrder`, `findOrder` (shared by chart actions and delegation) | built |
-| `js/engine/assignment.js` | `studentSlots()`: interim rule where student tab N fills the Nth slot. Randomizer and join codes come in phase 6 | in progress |
+| `js/engine/assignment.js` | Join codes, `placeStudent` (manual roster / random open slot, never over-fills), `fillByTagCounts` (randomizer, no reuse), roster lookups | built |
+| `js/engine/roster.js` | `joinSim` (code check, placement, overflow alert) | built |
+| `js/engine/templates.js` | `effectiveTemplates`: file templates + instructor ad-hoc orders | built |
 | `js/screens/shell.js` | Tab bar + panel + header slot (scenario picker). Remembers the active tab; runs each tab's cleanup before mounting the next | built |
 | `js/screens/shared/` | `dom.js` (safe element builder `h()`), `badge.js`, `triage-chip.js`, `timer.js` (live sim clock), `modal.js` (`openModal`, `confirmWarnings`, `promptText`), `toast.js`, `placeholder.js` | built |
-| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js` + `live-labs.js` (pending labs, Release now) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
-| `js/screens/student/` | `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
+| `js/screens/instructor/` | `index.js` (sub-views), `live-control.js` + `live-events.js`, `live-labs.js`, `live-flags.js`, `live-roster.js` (join code, students), `live-patients.js` (push order, call light, code/ROSC); `sim-setup.js`; `review-queue.js`; `patient-editor.js` + `editor-model.js` (form ⇄ JSON) (clock controls, call lights, activity, event timeline with Fire now), `library.js` + `library-detail.js` (read-only library) | built |
+| `js/screens/student/` | `join.js` (Join sim form until on the roster), `home.js` (patient list ↔ chart, last seen, badges, call lights), `handoff-modal.js` (mode "once"), `patient-view.js` (banner + section tabs) | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `util.js` display helpers | built |
 | `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
 | `js/screens/charge/` | Charge nurse screens | planned, phase 7 |
@@ -104,7 +110,7 @@ These rules are what make the move to the real website a swap instead of a rewri
 |---|---|---|
 | B1 | **Clinical content is data.** Patients, scenarios, orders, events and catalogs live in `data/**/*.json`, never in JS. | The instructor edits content without touching code, and the full build moves it into a database unchanged. |
 | B2 | **`storage.js` is the only file that touches `localStorage`** (or any persistence). | The full build replaces this one file with a backend client. |
-| B3 | **`data-loader.js` is the only file that knows where data comes from** (the manifest, `fetch`, file paths). | The full build swaps static files for API calls in one place. |
+| B3 | **`data-loader.js` is the only file that knows where data comes from** (the manifest, `fetch`, file paths) **and where instructor edits go** (`saveLocal` via `storage.js`). | The full build swaps static files and browser saves for API calls in one place. |
 | B4 | **The engine (`js/engine/`) never touches the DOM**, and it gets wall time passed in (`now`) instead of reading the clock itself. | Engine code can be tested in Node and can later run on a server, which becomes the clock authority. |
 | B5 | **Screens (`js/screens/`) contain no sim rules.** They render state and call engine functions. | Rules have exactly one home, so they can't drift apart between screens. |
 | B6 | **Event types and flag rules are plugins.** One file each, registered through `registry.js`. | Adding a type or rule never edits existing logic. |

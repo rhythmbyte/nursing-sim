@@ -59,7 +59,7 @@ function scenarioPicker(scenarios, currentId, onChange) {
 }
 
 /** Mounts the whole app for one scenario. Returns a teardown function. */
-function startApp(root, data, scenarioId, restart) {
+function startApp(root, data, scenarioId, restart, reloadData) {
   // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
   const scenario = withDefaults(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.catalogs);
   const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
@@ -70,16 +70,20 @@ function startApp(root, data, scenarioId, restart) {
     persist: (s) => save(SESSION_KEY, s),
   });
 
-  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR };
+  // switchScenario: used by the scenario picker and by Sim setup after creating a sim.
+  const switchScenario = async (id) => {
+    save(SCENARIO_KEY, id);
+    remove(SESSION_KEY);
+    await reloadData(id);
+  };
+  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario };
   const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
     const started = runner.state.clock.status !== 'ready';
     if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {
       select.value = scenario.id;
       return;
     }
-    save(SCENARIO_KEY, id);
-    remove(SESSION_KEY);
-    restart(id);
+    switchScenario(id);
   });
 
   // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
@@ -104,13 +108,18 @@ function startApp(root, data, scenarioId, restart) {
 async function boot() {
   const root = document.getElementById('app');
   try {
-    const data = await loadAll();
+    let data = await loadAll();
     if (data.problems.length) console.warn('Data validation problems:', data.problems);
     if (!data.scenarios.length) throw new Error('No valid scenarios loaded.');
     let teardown = null;
+    // Re-read files + this browser's edits (after editor saves, approvals, new sims), then remount.
+    const reloadData = async (id) => {
+      data = await loadAll();
+      restart(id);
+    };
     const restart = (id) => {
       if (teardown) teardown();
-      teardown = startApp(root, data, id, restart);
+      teardown = startApp(root, data, id, restart, reloadData);
     };
     restart(load(SCENARIO_KEY));
   } catch (err) {

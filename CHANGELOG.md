@@ -2,6 +2,18 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Phase 6: instructor tools
+- **Join codes and roster:** each student tab shows **Join sim** (code + name). Manual (named roster) or random placement; full groups are never over-filled, and overflow alerts the instructor. The roster drives student screens, flags and the debrief.
+- **Live control:**
+  - the join code;
+  - a **Students** panel (group, chart open, last action);
+  - a **Patients** panel: **Push order** as the provider (shows as new on the student's Orders and MAR), **Call light on/off**, **Start code**, then **ROSC / No ROSC** (`settings.roscTag`).
+- **Sim setup:** name, start, speed, settings, groups (pick patients and admissions, or random by tag counts with no reuse and warnings when the library runs short), manual or random assignment. Create saves the sim, switches to it, and makes a new join code.
+- **Review queue:** every proposed/partial item per patient, with Approve, Edit patient and Export JSON.
+- **Patient editor:** sectioned form plus orders table plus JSON for nested parts. Schema-validated save, New, Import, Export, Revert to file.
+- Instructor edits save in this browser; publish by exporting JSON and committing it.
+- Tests: 80 passing.
+
 ## Remaining clinical defaults moved to data
 - **New catalog `scenario-defaults.json`** holds the default for every scenario setting; scenarios list only what they change. New settings:
   - `prnPreCheckWindowMin` (15): PRN pre-check window when the order doesn't set one.

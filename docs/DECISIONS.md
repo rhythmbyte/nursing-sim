@@ -4,6 +4,28 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Instructor edits save in the browser; publishing is export + commit
+- **Decision:** Patient edits, approvals and new sims are validated and saved through `data-loader.saveLocal()` (`storage.js`), and overlay the files at load. Each local item can be exported, reverted (to the file) or deleted (browser-only items).
+- **Why:** A static GitHub Pages site can't write files. Keeping reads and writes in `data-loader.js` leaves B3 intact (the B3 wording was extended to say so, without changing what it guards).
+- **Alternatives:** GitHub API writes from the browser (needs a token in the page; not safe on a public site); waiting for the backend (the full build does this properly).
+
+## 2026-11-05: Roster replaces the interim slot mapping
+- **Decision:** Students join with a 6-character code (no 0/O/1/I). Manual mode matches a named roster; random mode places them in a random group with open slots and never over-fills, and overflow alerts the instructor. The roster drives student screens, flag responsibility and the debrief.
+- **Why:** SPEC §10. Supersedes "Interim student-to-group mapping".
+
+## 2026-11-05: Ad-hoc orders live in session state and merge into effective templates
+- **Decision:** `pushOrder` stores orders under `state.adhoc[pid]`. The runner passes `effectiveTemplates()` (file + ad-hoc) to every engine call, and student screens rebuild their views when it changes.
+- **Why:** The patient file stays untouched (it's content), the order is part of this sim's record, and rules and the MAR treat it like any other order.
+
+## 2026-11-05: Patient editor: forms for simple sections, JSON for nested ones
+- **Decision:** Demographics, H&P, SBAR, baseline vitals, findings, debrief lists and an orders table (text/type/tier/set/delegable) are form fields. Labs, events, vitals changes, finding changes, outcome, code branch and review notes are JSON text areas. Everything is validated with the patient schema before saving.
+- **Why:** Covers the edits the instructor makes most often without building a large nested form builder for the prototype. Worth a proper UI in the full build.
+
+## 2026-11-05: Sim setup is one sectioned page, not a step-by-step wizard
+- **Why:** Same inputs as SPEC §8.3 with less code. Every value can be seen and changed at once. Tag-count groups are filled by the randomizer on Create, and the saved scenario stores the actual patients picked.
+
+---
+
 ## 2026-11-05: No setting or clinical defaults in code
 - **Decision:** All scenario-setting defaults live in `data/catalogs/scenario-defaults.json` and are merged under each scenario's settings at load (`engine/settings.js`). Monitor vs. manual vitals fields and NIBP cycle choices live in `data/catalogs/vitals.json`, and the lab delay fallback in `labs.json`. New settings: `prnPreCheckWindowMin` (15) and `delegatedAssessmentRevealsFindings` (false; when true, findings appear when the staff member reports back). Missing data throws a clear error rather than using a hidden constant.
 - **Why:** The CLAUDE.md clinical-defaults rule. The instructor (or the phase 6 setup wizard) can see and change every default in one place. SPEC §14 Q5, Q13–15.
@@ -145,7 +167,7 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 - **Why:** Otherwise every order flashes "new" at 07:00, which drowns out the ones that really are new.
 - **Alternatives:** Everything starts `new` (noisy). The admitted patient's orders come from their admission order set, so they're `new`.
 
-## 2026-11-05: Interim student-to-group mapping
+## 2026-11-05: Interim student-to-group mapping (SUPERSEDED by the roster)
 - **Decision:** Until phase 6, student tab N is placed into the Nth slot across groups (`studentSlots()` in `engine/assignment.js`).
 - **Why:** Phase 2 needs students to see their patients' call lights before join codes and the randomizer exist.
 - **Alternatives:** Every student sees every patient (would hide grouping bugs until phase 6).

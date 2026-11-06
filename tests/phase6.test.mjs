@@ -111,3 +111,20 @@ test('runner: join code generated, join + roster drives flag responsibility', ()
   assert.equal(r.join('student-1', 'Ana', 'aaaaaa'), null);
   assert.deepEqual(r.rulesCtx().studentIdsForGroup('g1'), ['student-1']);
 });
+
+test('patient editor round-trip keeps every starter patient valid and intact', async () => {
+  const { toForm, fromForm, blankPatient } = await import('../js/screens/instructor/editor-model.js');
+  const { validate } = await import('../js/validate.js');
+  const { load } = await import('./fixtures.mjs');
+  const schema = load('schemas/patient.schema.json');
+  for (const t of Object.values(templatesById)) {
+    const back = fromForm(toForm(t), t, t.orders);
+    assert.deepEqual(validate(back, schema), [], t.id);
+    for (const k of ['demographics', 'orders', 'events', 'labs', 'pmh', 'hpi', 'debrief', 'outcome', 'codeBranch', 'tag']) assert.deepEqual(back[k], t[k], `${t.id}.${k}`);
+    assert.deepEqual(back.vitals, t.vitals, `${t.id}.vitals`);
+    assert.deepEqual(back.allergies.map((a) => a.agent), t.allergies.map((a) => a.agent));
+  }
+  assert.throws(() => fromForm({ ...toForm(templatesById['p1-robert-miller']), advanced: '{oops' }, templatesById['p1-robert-miller'], []), /Advanced JSON/);
+  const blank = blankPatient('p-new');
+  assert.ok(validate({ ...blank, demographics: { ...blank.demographics, name: 'X', room: '210' }, admittingDx: 'Dx' }, schema).length === 0);
+});
