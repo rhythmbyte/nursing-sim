@@ -81,3 +81,19 @@ export function dryRun(template, { catalogs, settings, steps = [], startClock = 
   }
   return frames;
 }
+
+/**
+ * What the patient's vitals will be at a sim minute, computed the way the dry run does (baseline, earlier events,
+ * states, reactions, trends). `excludeGroup` leaves out the scenario change being edited. Used to auto-fill "From".
+ */
+export function projectedVitals(template, { catalogs, settings, atMin, excludeGroup = null, startClock = '07:00' }) {
+  const t = excludeGroup ? { ...template, events: template.events.filter((e) => (e.group || e.id) !== excludeGroup) } : template;
+  const frames = dryRun(t, { catalogs, settings, startClock, steps: atMin > 0 ? [{ kind: 'wait', min: atMin }] : [] });
+  return { ...(frames.at(-1).vitals || template.vitals.baseline) };
+}
+
+/** Vitals a reaction's effects start from: the state it reacts in (its targets over the baseline), else the baseline. */
+export function stateVitals(template, stateId) {
+  const s = template.script?.states.find((x) => x.id === stateId);
+  return { ...template.vitals.baseline, ...(s?.vitals?.values || {}), ...(s?.rhythm ? { rhythm: s.rhythm } : {}) };
+}

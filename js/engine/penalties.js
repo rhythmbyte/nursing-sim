@@ -31,6 +31,14 @@ function flat(values) {
 
 const distance = (v, [lo, hi]) => (v < lo ? lo - v : v > hi ? v - hi : 0);
 
+/**
+ * Normal ranges for one patient: vitals.json recovery.normal with the patient's own normalRanges on top
+ * (e.g. Linda's COPD SpO₂ 88–92). Used by penalties, the event builder's "To" hint and the debrief.
+ */
+export function normalFor(template, catalogs) {
+  return { ...(catalogs?.vitals?.recovery?.normal || {}), ...(template?.normalRanges || {}) };
+}
+
 /** Does moving `from` → `to` bring this vital closer to normal? */
 export function isRecovery(k, from, to, normal) {
   const range = normal?.[k];
@@ -70,14 +78,14 @@ export function limitOne(k, from, to, pen, normal) {
  * Applies the patient's penalties to a scripted target. Returns { values, overMin, limited: [{ k, target, effective }] }.
  * `current` = the patient's vitals now. Non-numeric values (rhythm, O₂ text) pass through.
  */
-export function limitTarget(current, target, overMin, { penalties, t, maxPercent, normal, enabled = true }) {
-  if (!enabled || !penalties?.length) return { values: target, overMin, limited: [] };
+export function limitTarget(current, target, overMin, { penalties, t, maxPercent, normal, enabled = true, overMinBy = null }) {
+  if (!enabled || !penalties?.length) return { values: target, overMin, overMinBy, limited: [] };
   const cur = flat(current);
   const tgt = flat(target);
   const eff = {};
   const limited = [];
   let slow = 1;
-  for (const [k, to] of Object.entries(tgt)) {
+  for (const [k, to] of Object.entries(tgt).filter(([x]) => RECOVERABLE.includes(x))) {
     const pen = penaltyFor(penalties, k, t, maxPercent);
     if (!pen.percent && !pen.caps.length) { eff[k] = to; continue; }
     const v = limitOne(k, cur[k], to, pen, normal);
@@ -88,7 +96,8 @@ export function limitTarget(current, target, overMin, { penalties, t, maxPercent
   const values = { ...target };
   for (const k of RECOVERABLE.filter((x) => x !== 'sbp' && x !== 'dbp')) if (k in eff && k in values) values[k] = eff[k];
   if ('bp' in target && eff.sbp != null && eff.dbp != null) values.bp = `${Math.round(eff.sbp)}/${Math.round(eff.dbp)}`;
-  return { values, overMin: overMin ? overMin * slow : overMin, limited };
+  const slowBy = overMinBy && slow !== 1 ? Object.fromEntries(Object.entries(overMinBy).map(([k, v]) => [k, v * slow])) : overMinBy;
+  return { values, overMin: overMin ? overMin * slow : overMin, overMinBy: slowBy, limited };
 }
 
 /** Total percent now (for Live control and the "penalty reaches X%" trigger), capped at the maximum. */
@@ -120,26 +129,26 @@ export function earnPenalty(draft, pid, e, { t, now, user = SYSTEM, cause = {} }
 }
 
 /** Instructor: set a penalty's percent (reduce) or remove it (percent null → clear; id null → clear all). Re-applies the target. */
-export function changePenalty(draft, pid, penaltyId, percent, { t, now, user, catalogs }) {
+export function changePenalty(draft, pid, penaltyId, percent, { t, now, user, catalogs, template = null }) {
   const ps = draft.patients[pid];
   const { maxPercent } = settingsOf(draft);
   const before = totalPercent(ps.penalties, t, maxPercent);
   if (percent == null) ps.penalties = penaltyId ? (ps.penalties || []).filter((p) => p.id !== penaltyId) : [];
   else { const p = ps.penalties.find((x) => x.id === penaltyId); if (!p) throw new Error(`No penalty ${penaltyId}`); p.percent = Math.max(0, Number(percent)); }
   logChange(draft, pid, t, user, percent == null ? 'penalty-cleared' : 'penalty-changed', { penaltyId, percent, now }, before);
-  reapplyTarget(draft, pid, t, catalogs?.vitals?.recovery?.normal);
+  reapplyTarget(draft, pid, t, normalFor(template, catalogs));
 }
 
 /**
  * The script sets a vitals target: store it un-penalized, then return what actually applies.
  * Marks penalties as treated at the first recovery after they were earned (starts their wear-off).
  */
-export function penalizeTarget(draft, pid, target, overMin, { t, now, user = SYSTEM, cause = {} }, catalogs) {
+export function penalizeTarget(draft, pid, target, overMin, { t, now, user = SYSTEM, cause = {}, template = null }, catalogs, overMinBy = null) {
   const ps = draft.patients[pid];
   ps.scriptTarget = { values: { ...target }, from: { ...ps.vitals }, at: t }; // from = where this recovery starts
   const { maxPercent, enabled } = settingsOf(draft);
-  const normal = catalogs?.vitals?.recovery?.normal;
-  const out = limitTarget(ps.vitals, target, overMin, { penalties: ps.penalties, t, maxPercent, normal, enabled });
+  const normal = normalFor(template, catalogs);
+  const out = limitTarget(ps.vitals, target, overMin, { penalties: ps.penalties, t, maxPercent, normal, enabled, overMinBy });
   const recovering = Object.entries(flat(target)).some(([k, v]) => isRecovery(k, flat(ps.vitals)[k], v, normal));
   if (recovering) for (const p of ps.penalties || []) if (p.treatedAt == null && p.earnedAt <= t) p.treatedAt = t;
   if (out.limited.length) append(draft, { simMin: t, wallTime: now, ...user, patientId: pid, action: 'recovery-limited', details: { limited: out.limited, percent: totalPercent(ps.penalties, t, maxPercent), slowedTo: out.overMin !== overMin ? out.overMin : undefined, cause } });
@@ -178,13 +187,13 @@ export const penaltyProcessor = {
     return Object.values(state.patients).some((ps) => wearing(ps, upto) && Math.floor(upto) > (ps.penaltyStepMin ?? -1));
   },
   apply(draft, upto, ctx) {
-    const normal = ctx.catalogs?.vitals?.recovery?.normal;
+    const normalOf = (pid) => normalFor(ctx.templatesById?.[pid], ctx.catalogs);
     for (const [pid, ps] of Object.entries(draft.patients)) {
       if (!wearing(ps, upto)) continue;
       for (let m = Math.max(Math.floor(ps.penaltyStepMin ?? -1) + 1, Math.ceil(Math.min(...ps.penalties.filter((p) => p.treatedAt != null).map((p) => p.treatedAt)))); m <= Math.floor(upto); m++) {
         ps.penaltyStepMin = m;
         if (!scriptVitalsFree(draft, ps)) continue;
-        reapplyTarget(draft, pid, m, normal);
+        reapplyTarget(draft, pid, m, normalOf(pid));
         for (const p of ps.penalties) {
           if (p.wearOffMin && p.treatedAt != null && !p.wornOffAt && strength(p, m) <= 0) {
             p.wornOffAt = m;

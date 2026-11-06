@@ -123,6 +123,9 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
       return r.error;
     },
 
+    /** Live control → Add event (guided builder): fire an inline event now. */
+    liveEvent(patientId, event, user) { commit(session.fireLiveEvent(state, patientId, event, { ...ctx(), user })); runner.tick(); },
+
     pushOrder(patientId, order, user) {
       commit(pushOrder(state, patientId, order, { now: now(), user }));
     },

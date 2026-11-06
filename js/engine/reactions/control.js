@@ -87,6 +87,6 @@ export function addPenalty(state, pid, penalty, ctx) {
 /** Instructor reduces a penalty to `percent`, or clears it (percent null; penaltyId null clears all). The patient recovers to match. */
 export function setPenalty(state, pid, penaltyId, percent, ctx) {
   const { draft, t } = begin(state, pid, ctx);
-  changePenalty(draft, pid, penaltyId, percent, { t, now: ctx.now, user: ctx.user, catalogs: ctx.catalogs });
+  changePenalty(draft, pid, penaltyId, percent, { t, now: ctx.now, user: ctx.user, catalogs: ctx.catalogs, template: ctx.templatesById[pid] });
   return draft;
 }

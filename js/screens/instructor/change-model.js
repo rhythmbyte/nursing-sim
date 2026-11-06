@@ -58,6 +58,7 @@ export function changeToForm(t, key, startClock) {
     message: start?.payload?.message || oe?.payload?.message || '',
     // Every key the keyframe has (gcs, hrNote, …) plus the standard ones, so nothing is lost on save.
     vitals: { ...Object.fromEntries(VITAL_KEYS.map((k) => [k, ''])), ...(kf?.values || {}) },
+    vitalsOverMin: kf?.overMin || 0, vitalsOverMinBy: kf?.overMinBy || null, // trend instead of an instant change (guided builder)
     findings: fc ? fc.findings.join('\n') : '',
     assessments: structuredClone(ae?.payload?.answers || {}), // what assessment tools find from this moment (assessment-change)
     orders: orders.map((o) => ({ id: o.id, text: o.text, type: o.type, tier: o.tier, interventionId: o.interventionIds?.[0] || '', med: o.med || '', delegable: Boolean(o.delegable) })),
@@ -95,8 +96,9 @@ export function formToChange(t, f, startClock) {
   let keyframes = (t.vitals.keyframes || []).filter((k) => k.eventId !== key && k.eventId !== oldKfId);
   if (Object.keys(vitals).length) {
     const kfId = oldKfId || key;
-    const { atMin: _a, values: _v, ...kfRest } = oldKf; // keep review, notes, etc.
-    keyframes = [...keyframes, { ...kfRest, ...(f.manual ? {} : { atMin: timing.atMin }), eventId: kfId, values: vitals }];
+    const { atMin: _a, values: _v, overMin: _o, overMinBy: _ob, ...kfRest } = oldKf; // keep review, notes, etc.
+    keyframes = [...keyframes, { ...kfRest, ...(f.manual ? {} : { atMin: timing.atMin }), eventId: kfId, values: vitals,
+      ...(f.vitalsOverMin ? { overMin: f.vitalsOverMin } : {}), ...(f.vitalsOverMinBy ? { overMinBy: f.vitalsOverMinBy } : {}) }];
     out.push(ev('vitals', 'vitals-change', { keyframe: kfId }));
   }
   const fl = lines(f.findings);
@@ -122,7 +124,8 @@ export function formToChange(t, f, startClock) {
     out.push(ev('orders', 'new-orders', { orderSet, message: msg }));
   }
   if (Object.keys(f.assessments || {}).length) out.push({ ...ev('assess', 'assessment-change', {}), payload: { answers: f.assessments } });
-  for (const k of f.keep || []) { const { atMin, trigger, ...rest } = k; out.push({ ...rest, group: key, ...timing }); }
+  // Kept events (lab result, code, admission, state change, …); new ones from the guided builder get a real id here.
+  (f.keep || []).forEach((k, i) => { const { atMin, trigger, ...rest } = k; out.push({ ...rest, id: String(k.id).startsWith('__new-') ? `${id(k.type)}${i ? `-${i + 1}` : ''}` : k.id, group: key, ...timing }); });
 
   const byChange = { ...(t.debrief?.byChange || {}) };
   const rec = lines(f.recognize);

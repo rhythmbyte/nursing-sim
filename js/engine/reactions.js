@@ -168,7 +168,7 @@ function assessmentTriggered(state, pid, entry, w) {
 export function effectCtx(draft, pid, t, cause, ctx, user = SYSTEM) {
   return {
     t, user, cause, now: ctx.now, template: ctx.templatesById[pid], settings: draft.settings, catalogs: ctx.catalogs,
-    fireEvent: (d, p, eventId, fx) => fireEventGroup(d, p, eventId, { simMin: fx.t, now: fx.now, refs: ctx.refs || [], templatesById: ctx.templatesById, user: fx.user, source: `reaction:${fx.cause.reactionId}` }),
+    fireEvent: (d, p, eventId, fx) => fireEventGroup(d, p, eventId, { simMin: fx.t, now: fx.now, refs: ctx.refs || [], templatesById: ctx.templatesById, user: fx.user, source: `reaction:${fx.cause.reactionId}`, catalogs: ctx.catalogs }),
   };
 }
 

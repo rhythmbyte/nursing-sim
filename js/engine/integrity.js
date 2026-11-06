@@ -36,6 +36,7 @@ export function patientReferenceProblems(t, catalogs) {
     const at = `events "${e.id}"`;
     if (e.type === 'vitals-change' && !has(keyframes, e.payload?.keyframe)) p.push(`${at}: no vitals keyframe "${e.payload?.keyframe}" (vitals.keyframes[].eventId)`);
     if (e.type === 'findings-change' && !has(changes, e.payload?.change)) p.push(`${at}: no finding change "${e.payload?.change}" (findings.changes[].eventId)`);
+    if (e.type === 'script-state' && !(t.script?.states || []).some((s) => s.id === e.payload?.to)) p.push(`${at}: no script state "${e.payload?.to}" (script.states)`);
     if (e.type === 'new-orders' && !has(orderSets, e.payload?.orderSet)) p.push(`${at}: no orders in order set "${e.payload?.orderSet}"`);
   }
   for (const [i, l] of t.labs.entries()) {

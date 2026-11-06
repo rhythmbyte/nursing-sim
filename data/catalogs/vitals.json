@@ -18,7 +18,8 @@
     "all": ["ecg", "spo2", "nibp"]
   },
   "alarmSilenceMin": 2,
-  "recovery": { "review": "proposed", "_comment": "Recovery penalties (engine/penalties.js): a scripted change counts as recovery when it moves a vital toward this normal range. Instructor to confirm (SPEC §14).", "normal": { "spo2": [94, 100], "hr": [60, 100], "rr": [12, 20], "sbp": [100, 140], "dbp": [60, 90], "tempF": [97.0, 99.5] } },
+  "recovery": { "review": "proposed", "_comment": "Recovery penalties (engine/penalties.js): a scripted change counts as recovery when it moves a vital toward this normal range. Instructor to confirm (SPEC §14).", "normal": { "spo2": [94, 100], "hr": [60, 100], "rr": [12, 20], "sbp": [100, 140], "dbp": [60, 90], "tempF": [97.0, 99.5], "gcs": [15, 15], "glucose": [70, 180], "pain": [0, 3] } },
+  "o2Devices": { "review": "proposed", "_comment": "O₂ device choices for the guided event builder (stored on vitals.o2 as e.g. \"4 L NC\"); devices without flow are stored as-is.", "devices": [{ "id": "RA", "label": "Room air", "flow": false }, { "id": "NC", "label": "Nasal cannula", "flow": true }, { "id": "simple mask", "label": "Simple face mask", "flow": true }, { "id": "Venturi", "label": "Venturi mask", "flow": true }, { "id": "NRB", "label": "Non-rebreather", "flow": true }, { "id": "HFNC", "label": "High-flow nasal cannula", "flow": true }, { "id": "BiPAP", "label": "BiPAP / CPAP", "flow": false }] },
   "trend": {
     "_comment": "Command center trend arrow: compare now with windowMin ago. Worse if any change crosses these (instructor to confirm).",
     "windowMin": 15,

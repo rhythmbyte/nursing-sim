@@ -47,6 +47,11 @@ function effectToForm(t, e) {
 }
 
 function formToEffect(t, f, rid) {
+  // From the guided event builder: already an effect (findings still need their findings-change entry).
+  if (f.effect) {
+    if (f.effect.type !== 'findings') return structuredClone(f.effect);
+    f = { type: 'findings', findingsText: f.effect.findingsText, change: f.effect.change };
+  }
   if (f.type === 'state') { if (!f.to) throw new Error('Pick the state to go to'); return { type: 'state', to: f.to }; }
   if (f.type === 'vitals') {
     const values = Object.fromEntries(Object.entries(f.values || {}).filter(([, v]) => String(v ?? '').trim() !== '').map(([k, v]) => [k, ['hr', 'rr', 'tempF', 'spo2'].includes(k) ? Number(v) : String(v).trim()]));

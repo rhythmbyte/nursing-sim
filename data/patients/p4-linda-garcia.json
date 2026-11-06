@@ -53,6 +53,8 @@
       { "eventId": "state-p4-crashing", "review": "proposed", "findings": ["Lethargic, difficult to rouse", "Lips and nail beds dusky", "Mottled knees"] }
     ]
   },
+  "normalRanges": { "spo2": [88, 92] },
+  "normalRangesReview": "proposed",
   "assessments": { "review": "proposed", "baseline": {"cam": {"acute": 0, "inattention": 0, "disorganized": 0, "loc": 0}, "pain-nrs": {"score": 2}} },
   "labs": [
     { "code": "wbc", "value": "17.8", "status": "resulted" },

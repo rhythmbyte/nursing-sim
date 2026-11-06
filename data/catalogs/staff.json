@@ -1,5 +1,6 @@
 {
   "review": "proposed",
+  "messageFrom": ["CNA", "LPN", "Charge nurse", "Provider", "Family", "Patient", "RT", "Pharmacy", "Lab"],
   "staff": [
     { "id": "lpn", "role": "LPN", "label": "LPN", "notes": "Can perform tasks marked delegableTo LPN; RN remains accountable for assessment, teaching, evaluation." },
     { "id": "cna", "role": "CNA", "label": "Nursing assistant (CNA)", "notes": "Routine, stable-patient tasks only: vitals, ambulation, I&O, comfort." },

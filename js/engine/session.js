@@ -120,13 +120,13 @@ function pendingTimedOrders(state, templatesById, simMin) {
 }
 
 /** Fires one of a patient's events by id, with its linked group (reaction effect "fire"). Mutates draft. */
-export function fireEventGroup(draft, patientId, eventId, { simMin, now, refs, templatesById, user, source }) {
+export function fireEventGroup(draft, patientId, eventId, { simMin, now, refs, templatesById, user, source, catalogs = null }) {
   const ref = refs.find((r) => r.patientId === patientId && r.event.id === eventId);
   if (!ref) { console.warn(`fireEventGroup: no event ${eventId} on ${patientId}`); return; }
-  for (const m of groupMembers(refs, ref)) fireInto(draft, m, { simMin, now, templatesById, user, source });
+  for (const m of groupMembers(refs, ref)) fireInto(draft, m, { simMin, now, templatesById, user, source, catalogs });
 }
 
-function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
+function fireInto(draft, ref, { simMin, now, templatesById, user, source, catalogs = null }) {
   const { patientId, event } = ref;
   const type = getEventType(event.type);
   const template = patientId ? templatesById[patientId] : null;
@@ -135,7 +135,7 @@ function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
     return;
   }
   if (type) {
-    type.apply(draft, event, { simMin, patientId, template });
+    type.apply(draft, event, { simMin, patientId, template, catalogs, now });
   } else {
     console.warn(`No handler registered for event type "${event.type}" (${event.id}); logged only`);
   }
@@ -193,7 +193,7 @@ function advance(state, { now, refs, templatesById, catalogs }) {
   const draft = structuredClone(state);
   for (const { ref, at } of due) {
     runProcessors(draft, at - 1e-9, ctx); // everything strictly before this event's instant
-    fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled' });
+    fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled', catalogs });
   }
   runProcessors(draft, simMin, ctx);
   // Re-check after firing: an admission may have just made a patient present.
@@ -207,13 +207,28 @@ function advance(state, { now, refs, templatesById, catalogs }) {
  * Instructor "Fire now": fires the event and every event in its group immediately
  * (each counts as its next occurrence, so the scheduled firing won't repeat it).
  */
-export function fireNow(state, ref, { now, refs = [ref], templatesById, user }) {
+export function fireNow(state, ref, { now, refs = [ref], templatesById, user, catalogs = null }) {
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
   const members = refs.includes(ref) ? groupMembers(refs, ref) : [ref];
   for (const m of members) {
-    fireInto(draft, m, { simMin, now, templatesById, user, source: members.length > 1 ? `manual-group:${ref.event.group}` : 'manual' });
+    fireInto(draft, m, { simMin, now, templatesById, user, source: members.length > 1 ? `manual-group:${ref.event.group}` : 'manual', catalogs });
   }
+  return draft;
+}
+
+/**
+ * Instructor creates an event on the fly (Live control → Add event): an inline { type, payload } of any registered
+ * type, fired now for one patient and logged like any event (source 'live').
+ */
+export function fireLiveEvent(state, patientId, event, { now, templatesById, catalogs, user }) {
+  const type = getEventType(event.type);
+  if (!type) throw new Error(`Unknown event type ${event.type}`);
+  const draft = structuredClone(state);
+  const simMin = simMinOf(state, now);
+  const id = `e-live-${draft.log.length + 1}`;
+  type.apply(draft, { id, ...event, payload: event.payload || {} }, { simMin, patientId, template: templatesById[patientId], catalogs, now });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'event-fired', details: { eventId: id, type: event.type, source: 'live', payload: event.payload || {} } });
   return draft;
 }
 

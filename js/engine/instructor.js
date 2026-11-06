@@ -65,7 +65,7 @@ export function setCodeOutcome(state, patientId, outcome, { now, user }) {
   // Monitor rhythm after the code: settings.roscRhythm / settings.noRoscRhythm (data, SPEC §14).
   if (outcome === 'rosc') {
     setInstructorTag(ps, state.settings.roscTag, simMin);
-    ps.vitals.rhythm = state.settings.roscRhythm;
+    ps.vitals.rhythm = code.roscRhythm || state.settings.roscRhythm; // the event's ROSC rhythm, else the setting
   } else {
     ps.alive = false;
     ps.vitals.rhythm = state.settings.noRoscRhythm;

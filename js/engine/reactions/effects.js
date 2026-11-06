@@ -11,7 +11,7 @@ import { penalizeTarget, earnPenalty } from '../penalties.js';
 import { applyExpected } from '../assessments.js';
 
 /** Patient vitals move toward a scripted target unless the instructor has control (scriptedVitalsAfterInstructor). */
-function scriptedVitals(draft, pid, { values, overMin = 0 }, fx, { force = false } = {}) {
+function scriptedVitals(draft, pid, { values, overMin = 0, overMinBy = null }, fx, { force = false } = {}) {
   const ps = draft.patients[pid];
   const target = cleanValues(values);
   if (!Object.keys(target).length) return;
@@ -20,8 +20,8 @@ function scriptedVitals(draft, pid, { values, overMin = 0 }, fx, { force = false
     append(draft, { simMin: fx.t, wallTime: fx.now, ...fx.user, patientId: pid, action: 'script-vitals-skipped', details: { values: target, cause: fx.cause } });
     return;
   }
-  const out = penalizeTarget(draft, pid, target, overMin, fx, fx.catalogs); // recovery penalties (engine/penalties.js)
-  setVitalsTarget(ps, out.values, out.overMin, fx.t);
+  const out = penalizeTarget(draft, pid, target, overMin, fx, fx.catalogs, overMinBy); // recovery penalties (engine/penalties.js)
+  setVitalsTarget(ps, out.values, out.overMin, fx.t, out.overMinBy);
   ps.vitalsOverride = false; // the script has taken back over, as a scripted keyframe does
 }
 
@@ -47,7 +47,7 @@ export function enterState(draft, pid, stateId, fx, { force = false } = {}) {
   append(draft, { simMin: fx.t, wallTime: fx.now, ...fx.user, patientId: pid, action: 'script-state', details: { from, to: stateId, label: def.label, cause: fx.cause } });
   addAlert(draft, { simMin: fx.t, patientId: pid, kind: 'script', message: `Script: ${def.label}${fx.cause.kind === 'timeout' ? ' (nothing done in time)' : fx.cause.kind === 'instructor' ? ' (forced)' : ''}`, audience: ['instructor'] });
   const values = { ...(def.vitals?.values || {}), ...(def.rhythm ? { rhythm: def.rhythm } : {}) };
-  if (Object.keys(values).length) scriptedVitals(draft, pid, { values, overMin: def.vitals?.overMin || 0 }, fx, { force });
+  if (Object.keys(values).length) scriptedVitals(draft, pid, { values, overMin: def.vitals?.overMin || 0, overMinBy: def.vitals?.overMinBy || null }, fx, { force });
   queueFindings(draft, pid, def.findings);
   if (def.assessments) applyExpected(ps, def.assessments); // what this state's assessment tools will find
 }

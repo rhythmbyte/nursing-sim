@@ -9,5 +9,6 @@ import labResult from './lab-result.js';
 import code from './code.js';
 import admission from './admission.js';
 import assessmentChange from './assessment-change.js';
+import scriptState from './script-state.js';
 
-[newOrders, callLight, vitalsChange, findingsChange, staffMessage, labResult, code, admission, assessmentChange].forEach(registerEventType);
+[newOrders, callLight, vitalsChange, findingsChange, staffMessage, labResult, code, admission, assessmentChange, scriptState].forEach(registerEventType);

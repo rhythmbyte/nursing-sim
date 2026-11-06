@@ -49,9 +49,11 @@ export function cleanValues(values) {
   return out;
 }
 
-function interpolate(from, to, f) {
+/** f = fraction of the way (0–1), or a function k → fraction (per-vital durations). */
+function interpolate(from, to, fr) {
   const out = {};
   for (const [k, target] of Object.entries(to)) {
+    const f = typeof fr === 'function' ? fr(k) : fr;
     if (k === 'bp') {
       const a = parseBp(from.bp); const b = parseBp(target);
       out.bp = a && b ? `${Math.round(a[0] + (b[0] - a[0]) * f)}/${Math.round(a[1] + (b[1] - a[1]) * f)}` : target;
@@ -71,13 +73,17 @@ const trendable = (k, v) => k === 'bp' || typeof v === 'number';
  * Replaces any trend in progress and records the change. Mutates ps; returns the previous values of the changed keys.
  * Shared by the instructor's Adjust vitals and the reaction script (engine/reactions.js).
  */
-export function setVitalsTarget(ps, target, overMin, simMin) {
+export function setVitalsTarget(ps, target, overMin, simMin, overMinBy = null) {
   const from = Object.fromEntries(Object.keys(target).map((k) => [k, ps.vitals[k] ?? null]));
-  const trendTo = overMin > 0 ? Object.fromEntries(Object.entries(target).filter(([k, v]) => trendable(k, v) && ps.vitals[k] != null)) : {};
+  const dur = (k) => Number(overMinBy?.[k] ?? overMin) || 0; // per-vital duration (guided event builder) or one for all
+  const trendTo = Object.fromEntries(Object.entries(target).filter(([k, v]) => dur(k) > 0 && trendable(k, v) && ps.vitals[k] != null));
   const nowValues = Object.fromEntries(Object.entries(target).filter(([k]) => !(k in trendTo)));
   Object.assign(ps.vitals, nowValues);
-  ps.vitalsTrend = Object.keys(trendTo).length
-    ? { fromMin: simMin, toMin: simMin + overMin, from: Object.fromEntries(Object.keys(trendTo).map((k) => [k, ps.vitals[k]])), to: trendTo, lastMin: Math.floor(simMin) }
+  const keys = Object.keys(trendTo);
+  const longest = Math.max(0, ...keys.map(dur));
+  ps.vitalsTrend = keys.length
+    ? { fromMin: simMin, toMin: simMin + longest, from: Object.fromEntries(keys.map((k) => [k, ps.vitals[k]])), to: trendTo, lastMin: Math.floor(simMin),
+      ...(keys.some((k) => dur(k) !== longest) ? { toMinBy: Object.fromEntries(keys.map((k) => [k, simMin + dur(k)])) } : {}) }
     : null;
   recordVitals(ps, simMin);
   return from;
@@ -93,16 +99,16 @@ export function scriptedVitalsBlocked(settings, ps) {
  * numeric values and BP trend linearly to the target (recalculated each sim minute); text values
  * (O₂ device, pain description) apply immediately.
  */
-export function adjustVitals(state, patientId, { values, overMin = 0, presetId = null }, { now, user }) {
+export function adjustVitals(state, patientId, { values, overMin = 0, overMinBy = null, presetId = null }, { now, user }) {
   const target = cleanValues(values);
   if (!Object.keys(target).length) return state;
   if (!(overMin >= 0)) throw new Error('Trend minutes must be 0 or more');
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
   const ps = draft.patients[patientId];
-  const from = setVitalsTarget(ps, target, overMin, simMin);
+  const from = setVitalsTarget(ps, target, overMin, simMin, overMinBy);
   ps.vitalsOverride = true;
-  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'vitals-adjusted', details: { from, to: target, overMin, presetId } });
+  append(draft, { simMin, wallTime: now, ...user, patientId, action: 'vitals-adjusted', details: { from, to: target, overMin, ...(overMinBy ? { overMinBy } : {}), presetId } });
   return draft;
 }
 
@@ -117,7 +123,7 @@ export const trendProcessor = {
       if (!tr) continue;
       const end = Math.min(upto, tr.toMin);
       for (let t = tr.lastMin + 1; t <= end; t++) {
-        Object.assign(ps.vitals, interpolate(tr.from, tr.to, (t - tr.fromMin) / (tr.toMin - tr.fromMin)));
+        Object.assign(ps.vitals, interpolate(tr.from, tr.to, (k) => Math.min(1, (t - tr.fromMin) / ((tr.toMinBy?.[k] ?? tr.toMin) - tr.fromMin))));
         recordVitals(ps, t);
         tr.lastMin = t;
       }
