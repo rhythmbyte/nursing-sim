@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## B11. Printable report sheet
+- **Print report sheet** on the student home: one page per assigned patient with name, room, age, diagnosis, allergies, code status, the student's handoff notes, active orders, a notes box and an hourly time grid (VS / Meds / Assess / Labs / Notes) to the end of shift. Print-only CSS; built from the student view only (no answer key).
+- Tests: 109 passing.
+
 ## B10. Entered in error
 - Students can mark their own chart entries (interventions, flowsheet rows, MAR actions, notes, escalations) as **Entered in error**, with a required reason. Nothing is deleted: the original stays visible, struck through, with the reason, and both actions are logged.
 - Rules, PRN checks and debrief comparisons ignore struck entries; the debrief timeline still shows them, marked.

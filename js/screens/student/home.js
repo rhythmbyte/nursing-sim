@@ -11,6 +11,7 @@ import { load, save } from '../../storage.js';
 import { newOrderCount } from '../../engine/orders.js';
 import { canSeeInstructorTags, activeScale, currentPriority } from '../../engine/priority.js';
 import { priorityPicker } from '../shared/priority-picker.js';
+import { printReportSheet } from './report-sheet.js';
 import { mountPatientView } from './patient-view.js';
 import { openHandoffModal } from './handoff-modal.js';
 
@@ -118,7 +119,13 @@ export function mountStudentHome(root, ctx) {
     }
 
     clear(root).append(
-      h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${groupName}`), clock.el),
+      h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${groupName}`),
+        h('button', { class: 'btn', onclick: () => {
+          const mine = Object.entries(runner.state.patients).filter(([, ps]) => ps.groupId === groupId && ps.present).map(([pid]) => pid);
+          refreshViews();
+          printReportSheet(runner.state, user.userId, mine, views, user.name);
+        } }, 'Print report sheet'),
+        clock.el),
       h('section', { class: 'panel' }, h('h3', {}, 'My patients'), list),
       h('section', { class: 'panel' }, h('h3', {}, 'Alerts'), alerts),
     );

@@ -122,3 +122,16 @@ test('B10: entered in error: own entries only, reason required, rules and PRN ig
   assert.equal(d.vitalsCompare.length, 0, 'struck vitals not compared');
   assert.ok(d.timeline.some((t) => t.struck?.reason === 'wrong patient'), 'debrief still shows it, marked');
 });
+
+test('B11: report sheet data uses the student view and live orders; hourly grid to end of shift', async () => {
+  const { sheetData } = await import('../js/screens/student/report-sheet.js');
+  let { s } = started();
+  s = chart.openHandoff(s, RM, {}, ctx(0));
+  s = chart.closeHandoff(s, RM, { notes: 'BP before nitro' }, ctx(1));
+  const d = sheetData(s, 'student-1', RM, studentView(templatesById[RM]));
+  assert.equal(d.handoffNotes, 'BP before nitro');
+  assert.equal(d.allergies, 'Penicillin (Rash)');
+  assert.ok(d.orders.includes('Admit to telemetry'));
+  assert.deepEqual([d.times[0], d.times.at(-1), d.times.length], ['07:00', '15:00', 9]);
+  assert.equal(JSON.stringify(d).includes('shouldRecognize'), false);
+});
