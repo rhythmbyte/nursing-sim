@@ -5,7 +5,7 @@
 import { h, clear } from '../shared/dom.js';
 import { confirmWarnings, promptText } from '../shared/modal.js';
 import { toast } from '../shared/toast.js';
-import { prnWarnings, dosesGiven } from '../../engine/prn.js';
+import { prnWarnings, dosesGiven, prnOptions } from '../../engine/prn.js';
 import { at } from './util.js';
 
 function schedule(o, state) {
@@ -23,14 +23,12 @@ export default {
   label: 'MAR',
   mount(root, { pid, view, act, runner, catalogs }) {
     const meds = view.orders.filter((o) => o.med);
-    const labels = Object.fromEntries(catalogs.interventions.interventions.map((i) => [i.id, i.label]));
-    const includes = Object.fromEntries(catalogs.interventions.interventions.map((i) => [i.id, i.includes || []]));
     const body = h('div', {});
     root.append(h('section', { class: 'panel' }, h('h3', {}, 'Medication administration record'), body));
 
     async function give(o) {
       const state = runner.state;
-      const warnings = prnWarnings(o, { log: state.log, patientId: pid, simMin: runner.simMin(), labelOf: (id) => labels[id] || id, includesOf: (id) => includes[id] || [] });
+      const warnings = prnWarnings(o, { log: state.log, patientId: pid, simMin: runner.simMin(), ...prnOptions(catalogs, state.patients[pid]) });
       if (warnings.length) {
         const ok = await confirmWarnings(`Give ${o.med}?`, 'Check before giving:', warnings.map((w) => w.message), 'Give anyway');
         if (!ok) return;

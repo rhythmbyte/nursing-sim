@@ -26,6 +26,7 @@
           "revealsFindings": { "type": "boolean" },
           "vitalsCapture": { "type": "boolean" },
           "drawsLabs": { "type": "boolean" },
+          "satisfiedByMonitor": { "type": "boolean" },
           "includes": { "type": "array", "items": { "type": "string" } }
         }
       }

@@ -207,7 +207,7 @@ Tabs, left to right:
 1. **Summary** — banner (name, age, room, allergies, code status), active problems, latest vitals, alerts.
 2. **Orders** — active orders, with a status per order (new / acknowledged / done). New orders highlight until acknowledged.
 3. **Flowsheet** — vitals table over time.
-   - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min). BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle. Monitor values (BP, HR, SpO2) **always** come from the device, whether by cycle or a charted vital-signs check; the student never types them.
+   - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min), or presses **Take BP now** to cycle the NIBP immediately (logged as a student action). A **Charted only** toggle hides monitor rows. BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle. Monitor values (BP, HR, SpO2) **always** come from the device, whether by cycle or a charted vital-signs check; the student never types them.
    - **Manual entries:** anything a monitor doesn't give (temp, RR, pain, GCS, glucose, I&O, weight, neuro checks) is typed in by the student, and their value is compared with the scripted value in the debrief.
      - `settings.revealManualVitals: true` (default, for demos): a **Measure** button fills temp/RR/pain with the current scripted values.
      - `false`: nothing is revealed; the student gets temp/RR/pain from the manikin or instructor. Delegated staff also report only monitor values.
@@ -329,4 +329,5 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 2. **Manual vitals in class:** for live sessions, should `revealManualVitals` be off (temp/RR/pain from the manikin or instructor), with the debrief comparing charted vs scripted values?
 3. **Delegation timing:** is 10 sim-minutes a sensible default for LPN/CNA tasks, and should it differ by task (vitals vs. lab draw)?
 4. **Robert's repeat troponin** has no scripted value. Rising or flat? (The instructor currently enters it live when it comes due.)
-5. **PRN pre-check window:** a BP must be charted within 15 sim-minutes before nitro (`prn.requiresWithinMin`, default 15). Is that right? Monitor-cycle readings do not count as the check.
+5. **PRN pre-check (BP before nitro):** any BP in the last 15 sim-minutes counts, whether a monitor-cycle reading, "Take BP now", a charted BP or full vitals, or a BP reported back by delegated staff. The student doesn't have to chart a separate BP. Is that right, and is 15 minutes the right window? (Data: `prn.requiresWithinMin` per order, default 15; catalog `satisfiedByMonitor: true` on the BP check.)
+6. **Linda's lactates:** the scripted repeat value (4.1) belongs to the STAT lactate in the sepsis order set (`forOrder`). If the "repeat in 2–4 hours" order is also drawn, its result is unscripted and the instructor enters it. Confirm the 4.1 value and which order it belongs to.

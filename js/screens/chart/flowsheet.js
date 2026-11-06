@@ -5,6 +5,7 @@ import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, fieldLabel } from './util.js';
 import { vitalsInputs } from './vitals-form.js';
+import { load, save } from '../../storage.js';
 
 const COLS = ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'];
 const SHORT = { tempF: 'Temp', spo2: 'SpO₂', o2: 'O₂', intakeMl: 'In (mL)', outputMl: 'Out (mL)', weightKg: 'Wt (kg)', glucose: 'Gluc' };
@@ -32,7 +33,8 @@ export function latestVitals(ps) {
 export default {
   id: 'flowsheet',
   label: 'Flowsheet',
-  mount(root, { pid, act, runner, scenario, catalogs }) {
+  mount(root, { pid, act, runner, scenario, catalogs, user }) {
+    const HIDE_KEY = `ui.${user.userId}.flowsheet.chartedOnly`;
     // The catalog's full vital-signs intervention (vitalsCapture + temp): counts for VS orders and PRN pre-checks.
     const fullVitals = catalogs.interventions.interventions.find((i) => i.vitalsCapture && i.chartFields.includes('tempF'));
     const reveal = scenario.settings.revealManualVitals !== false;
@@ -46,11 +48,20 @@ export default {
     const form = vitalsInputs(['tempF', 'rr', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'], { reveal, measure: () => runner.measure(pid) });
     const withDevice = h('input', { type: 'checkbox', checked: true });
     const table = h('div', { class: 'table-wrap' });
+    let chartedOnly = load(HIDE_KEY, false) === true;
+    let lastState = null;
+    const hideToggle = h('input', {
+      type: 'checkbox', checked: chartedOnly,
+      onchange: (e) => { chartedOnly = e.target.checked; save(HIDE_KEY, chartedOnly); if (lastState) renderTable(lastState); },
+    });
 
     root.append(h('div', { class: 'chart-grid two' },
       h('section', { class: 'panel' },
         h('h3', {}, 'Monitor'),
-        h('div', { class: 'controls' }, h('label', { class: 'inline' }, 'NIBP cycle ', cycle), monitorNote),
+        h('div', { class: 'controls' },
+          h('label', { class: 'inline' }, 'NIBP cycle ', cycle),
+          h('button', { class: 'btn btn-small', type: 'button', onclick: () => { act('takeBpNow', {}); toast('NIBP started'); } }, 'Take BP now'),
+          monitorNote),
         h('h3', {}, 'Chart vitals & measurements'),
         h('form', {
           class: 'iv-form',
@@ -74,15 +85,14 @@ export default {
           h('button', { class: 'btn btn-primary', type: 'submit' }, 'Save'),
         ),
       ),
-      h('section', { class: 'panel' }, h('h3', {}, 'Flowsheet'), table),
+      h('section', { class: 'panel' },
+        h('div', { class: 'panel-head' }, h('h3', {}, 'Flowsheet'), h('label', { class: 'inline' }, hideToggle, ' Charted only (hide monitor rows)')),
+        table),
     ));
 
-    return {
-      update(state) {
+    function renderTable(state) {
         const ps = state.patients[pid];
-        cycle.value = String(ps.monitor?.intervalMin ?? 0);
-        monitorNote.textContent = ps.monitor ? `Started ${at(state, ps.monitor.fromMin)}` : (defaultCycle ? `Unit default q${defaultCycle} min` : '');
-        const rows = rowsByTime(ps).reverse();
+        const rows = rowsByTime(ps).reverse().filter((r) => !chartedOnly || r.source !== 'monitor');
         const used = COLS.filter((c) => rows.some((r) => r.values[c] != null));
         clear(table).append(h('table', { class: 'data-table flowsheet' },
           h('thead', {}, h('tr', {}, h('th', {}, 'Time'), used.map((c) => h('th', {}, SHORT[c] || fieldLabel(c))), h('th', {}, 'Source'))),
@@ -92,6 +102,15 @@ export default {
             h('td', {}, r.source === 'charted' ? who(r.by) : r.source === 'delegated' ? `${r.by} report` : SOURCE[r.source]),
           ))),
         ));
+    }
+
+    return {
+      update(state) {
+        lastState = state;
+        const ps = state.patients[pid];
+        cycle.value = String(ps.monitor?.intervalMin ?? 0);
+        monitorNote.textContent = ps.monitor ? `Started ${at(state, ps.monitor.fromMin)}` : (defaultCycle ? `Unit default q${defaultCycle} min` : '');
+        renderTable(state);
       },
     };
   },

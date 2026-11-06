@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import * as session from '../js/engine/session.js';
 import * as chart from '../js/engine/chart.js';
 import { collectEvents, eventKey } from '../js/engine/scheduler.js';
-import { prnWarnings } from '../js/engine/prn.js';
+import { prnWarnings, prnOptions } from '../js/engine/prn.js';
 import { releaseLab } from '../js/engine/labs.js';
 import { measureManual } from '../js/engine/vitals.js';
 import { delegationDelay } from '../js/engine/delegation.js';
@@ -96,9 +96,9 @@ test('labs: a second draw of the same code creates an unscripted lab', () => {
   let { s } = started();
   s = chart.chartIntervention(s, LG, { interventionId: 'lab-draw', orderId: 'o-p4-lactate' }, ctx(5));
   s = chart.chartIntervention(s, LG, { interventionId: 'lab-draw', orderId: 'o-p4-lactate' }, ctx(6));
-  const lactates = s.patients[LG].labs.filter((l) => l.code === 'lactate' && l.status === 'pending');
-  assert.equal(lactates.length, 2);
-  assert.equal(lactates[1].unscripted, true);
+  const drawn = s.patients[LG].labs.filter((l) => l.code === 'lactate' && l.drawnAtMin != null);
+  assert.equal(drawn.length, 2);
+  assert.ok(drawn.every((l) => l.unscripted), 'the scripted repeat lactate is reserved for the STAT order');
 });
 
 test('delegation: CNA vitals report back after the delay, with a flowsheet row and a staff message', () => {
@@ -120,20 +120,48 @@ test('delegation: delay is configurable per role or as one number', () => {
   assert.equal(delegationDelay({}, 'CNA'), 10);
 });
 
-test('PRN pre-check: a delegated BP counts only once reported; full vitals include BP', () => {
+test('PRN pre-check: delegated BP counts once reported; full vitals include BP; monitor BP counts', () => {
   let { s, tick } = started({ delegationDelayMin: 5 });
   const ntg = templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg');
-  const includesOf = (id) => catalogs.interventions.interventions.find((i) => i.id === id)?.includes || [];
-  const warn = (st, min) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, includesOf }).map((w) => w.code);
+  const warn = (st, min) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, ...prnOptions(catalogs, st.patients[RM]) }).map((w) => w.code);
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-bp', delegatedTo: 'LPN' }, ctx(10));
   assert.deepEqual(warn(s, 11), ['requires'], 'request alone is not a BP');
   s = tick(s, 16);
   assert.deepEqual(warn(s, 16), [], 'LPN reported a BP at 15');
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-full', fields: {} }, ctx(40));
   assert.deepEqual(warn(s, 41), [], 'full vitals include a BP');
-  s = chart.setMonitor(s, RM, { intervalMin: 5 }, ctx(60));
-  s = tick(s, 70);
-  assert.deepEqual(warn(s, 70), ['requires'], 'monitor readings do not count as the pre-check');
+  assert.deepEqual(warn(s, 60), ['requires'], 'nothing in the last 15 min');
+  s = chart.setMonitor(s, RM, { intervalMin: 15 }, ctx(60));
+  s = tick(s, 60); // first cycle reading is taken on the next tick
+  assert.deepEqual(warn(s, 60), [], 'monitor BP at 60 counts (vs-bp is satisfiedByMonitor)');
+  assert.deepEqual(warn(s, 76), ['requires'], 'reading 16 min ago is outside the window');
+  s = chart.takeBpNow(s, RM, {}, ctx(76));
+  assert.deepEqual(warn(s, 77), [], 'Take BP now counts');
+  assert.equal(s.log.at(-1).action, 'nibp-now');
+  assert.equal(s.log.at(-1).role, 'student');
+});
+
+test('Take BP now does not change the auto cycle', () => {
+  let { s, tick } = started();
+  s = chart.setMonitor(s, RM, { intervalMin: 10 }, ctx(0));
+  s = chart.takeBpNow(s, RM, {}, ctx(3));
+  s = tick(s, 21);
+  const times = s.patients[RM].flowsheet.filter((r) => r.source === 'monitor').map((r) => r.atMin).sort((a, b) => a - b);
+  assert.deepEqual(times, [0, 3, 10, 20]);
+});
+
+test('Linda: the STAT lactate takes the scripted 4.1; the 2–4 h repeat is unscripted', () => {
+  let { s, refs } = started();
+  // Repeat order drawn first: must NOT take the scripted value reserved for the STAT order.
+  s = chart.chartIntervention(s, LG, { interventionId: 'lab-draw', orderId: 'o-p4-lactate' }, ctx(5));
+  let pending = s.patients[LG].labs.filter((l) => l.code === 'lactate' && l.status === 'pending');
+  assert.equal(pending.find((l) => l.drawnAtMin === 5).unscripted, true);
+  const sepsis = refs.find((r) => r.key === eventKey(LG, 'e-p4-sepsis-orders'));
+  s = session.fireNow(s, sepsis, { now: 30 * MIN, refs, templatesById, user: instructor });
+  s = chart.chartIntervention(s, LG, { interventionId: 'lab-draw', orderId: 'o-p4-stat-lactate' }, ctx(31));
+  pending = s.patients[LG].labs.filter((l) => l.code === 'lactate' && l.status === 'pending');
+  const stat = pending.find((l) => l.drawnAtMin === 31);
+  assert.deepEqual([stat.value, stat.forOrder], ['4.1', 'o-p4-stat-lactate']);
 });
 
 test('delegation with revealManualVitals=false reports device values only', () => {

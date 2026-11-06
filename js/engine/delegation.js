@@ -46,7 +46,7 @@ function complete(draft, patientId, task, ctx) {
     values = { ...deviceValues(ps, iv.chartFields), ...Object.fromEntries(manual.map((k) => [k, ps.vitals[k]])) };
     ps.flowsheet.push({ atMin: at, source: 'delegated', values, by: task.to });
   }
-  if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs);
+  if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs, order.id);
   progressOrder(draft, patientId, order, at);
 
   Object.assign(task, { status: 'done', completedAt: at });

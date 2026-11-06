@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Nitro pre-check, Take BP now, Charted-only toggle, lactate routing
+- **Nitro pre-check:** a monitor BP (cycle or the new **Take BP now**) within the window now counts, so no separate charted BP is needed. Set by catalog flag `satisfiedByMonitor`.
+- **Take BP now** button on the Flowsheet: starts the NIBP immediately, logged as a student action, and doesn't change the cycle.
+- **Charted only** toggle hides monitor rows on the Flowsheet. It's remembered per student.
+- **Linda:** the scripted 4.1 lactate is reserved for the STAT sepsis order (`forOrder`), and the 2–4 h repeat gets an unscripted result.
+- CLAUDE.md: clinical-practice choices become data or settings plus a SPEC §14 question.
+- Tests: 50 passing.
+
 ## Phase 4: vitals, labs, delegation
 - **Monitor cycle** (Off / q5 / q10 / q15) on the Flowsheet: BP, HR, SpO₂ and O₂ fill in automatically from the patient's current vitals.
 - **Charting vitals:** monitor values are read from the device. Temp, RR and pain are typed, with a **Measure** button when `settings.revealManualVitals` is on (new setting, default `true`). Other manual entries: GCS, glucose, I&O, weight, neuro. The debrief gets the scripted values at each charting.

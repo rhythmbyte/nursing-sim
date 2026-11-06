@@ -58,7 +58,7 @@
     { "code": "cr", "value": "1.4", "status": "resulted", "notes": "Baseline 0.9" },
     { "code": "glu", "value": "214", "status": "resulted" },
     { "code": "lactate", "value": "2.8", "unit": "mmol/L", "status": "resulted" },
-    { "code": "lactate", "label": "Repeat lactate", "value": "4.1", "status": "pending", "resultDelayMin": 20, "review": "proposed", "notes": "Value drafted; case only says repeat in 2–4 hours." }
+    { "code": "lactate", "label": "Repeat lactate", "forOrder": "o-p4-stat-lactate", "value": "4.1", "status": "pending", "resultDelayMin": 20, "review": "proposed", "notes": "Value drafted; case only says repeat in 2–4 hours." }
   ],
   "orders": [
     { "id": "o-p4-vs", "text": "Vital signs every 4 hours and as needed", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p4-admit", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },

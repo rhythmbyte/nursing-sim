@@ -69,3 +69,4 @@
 .flowsheet tr.src-monitor td { color: var(--muted); }
 .flowsheet tr.src-delegated td { font-style: italic; }
 tr.needs-attention td { background: var(--review-bg); }
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }

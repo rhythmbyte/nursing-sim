@@ -24,7 +24,7 @@
     { "id": "reassess", "category": "assessment", "label": "Reassess after intervention", "chartFields": ["intervention", "response"], "delegableTo": [] },
 
     { "id": "vs-full", "vitalsCapture": true, "includes": ["vs-bp"], "category": "monitoring", "label": "Full vital signs", "chartFields": ["bp", "hr", "rr", "tempF", "spo2", "pain"], "delegableTo": ["LPN", "CNA"] },
-    { "id": "vs-bp", "vitalsCapture": true, "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "vs-bp", "vitalsCapture": true, "satisfiedByMonitor": true, "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
     { "id": "monitor-cycle", "category": "monitoring", "label": "Set monitor cycle", "chartFields": ["intervalMin"], "delegableTo": [] },
     { "id": "tele", "category": "monitoring", "label": "Place on telemetry / cardiac monitor", "chartFields": [], "delegableTo": ["LPN"] },
     { "id": "pulse-ox-cont", "category": "monitoring", "label": "Continuous pulse oximetry", "chartFields": [], "delegableTo": ["LPN", "CNA"] },

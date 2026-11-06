@@ -51,6 +51,7 @@ Read `SPEC.md` before starting any work. It is the source of truth for the data 
 
 - Any field or object with `"review": "proposed"` was drafted by AI, not the instructor. Never remove that tag; only the instructor approves content. The instructor UI shows these with a "Needs review" badge.
 - Do not change clinical values in patient files without asking Brian.
+- The instructor decides clinical scope and correctness. For any clinical-practice choice (what counts as a pre-check, timing windows, which tasks are delegable, tiers, thresholds), pick a reasonable default, make it a data field or scenario setting rather than hard-coded logic, and add it to SPEC §14 as a question for the instructor. Don't treat clinical defaults as final.
 
 ## Working with Brian
 

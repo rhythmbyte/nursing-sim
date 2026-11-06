@@ -99,6 +99,7 @@
           "unit": { "type": "string" },
           "status": { "enum": ["resulted", "pending"] },
           "resultDelayMin": { "type": "integer", "minimum": 0 },
+          "forOrder": { "type": "string", "pattern": "^o-" },
           "review": { "$ref": "#/$defs/review" }
         }
       }

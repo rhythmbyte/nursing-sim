@@ -29,7 +29,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Processors (timed work besides events):** `session.advance()` runs the monitor cycle, lab results and delegated tasks as processors (`{ due(state, upto), apply(draft, upto, ctx) }`, listed in `PROCESSORS` in `session.js`). It interleaves them with events in time order, so a monitor reading at 08:15 sees the vitals change that fires at 08:15, and a skip or catch-up fills in every reading in between. To add timed work, write a processor in its own engine file and add it to `PROCESSORS`.
 
-**Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), or include another check (`includes`, e.g. full vitals include a BP) is set in `data/catalogs/interventions.json`, not in code.
+**Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), or can be satisfied by a monitor reading (`satisfiedByMonitor`) is set in `data/catalogs/interventions.json`, not in code. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
 
 **Event groups:** events that are one moment in the story share a `group` string within one patient, for example Robert's call light, vitals change and new findings at 08:15. "Fire now" on any member fires the whole group, so all of their fired counts move together and the scheduled time can't half-fire the group later. The loader rejects a file whose group members don't share `atMin`, `trigger` and repeat settings.
 

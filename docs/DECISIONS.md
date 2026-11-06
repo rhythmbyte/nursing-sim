@@ -4,14 +4,31 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Monitor BP readings satisfy the BP pre-check (supersedes the earlier decision)
+- **Decision:** The project owner changed this. A monitor BP (cycle or "Take BP now") within the window counts as the "BP before nitro" check. It's data-driven: the catalog marks the BP check `satisfiedByMonitor: true`, and `prnOptions()` in `engine/prn.js` builds the check options in one place for every caller. "Take BP now" adds a monitor reading immediately, is logged as `nibp-now` (student), and doesn't change the auto cycle.
+- **Why:** Charting a separate BP when the monitor just took one is busywork. Still an open instructor question (SPEC §14).
+- **Alternatives:** The previous rule (only a charted BP counts). Revert by setting `satisfiedByMonitor` to false in the catalog.
+
+## 2026-11-05: Scripted labs can be reserved for one order (`forOrder`)
+- **Decision:** A pending lab with `forOrder` is drawn only by that order. Linda's scripted 4.1 repeat lactate belongs to the STAT sepsis order, so drawing the "2–4 h repeat" order gives an unscripted result for the instructor to fill in.
+- **Why:** Otherwise whichever lactate order was drawn first took the scripted value, and the sepsis story depends on the STAT one.
+- **Alternatives:** Ordering rules in code (clinical logic in JS, breaks B1).
+
+## 2026-11-05: Clinical-practice choices are data or settings, and are questions for the instructor
+- **Decision:** (CLAUDE.md rule) Pre-checks, timing windows, delegability, tiers and thresholds get a reasonable default as a data field or scenario setting, plus a SPEC §14 question. They're never hard-coded and never treated as final.
+- **Why:** The instructor decides clinical scope and correctness.
+
+---
+
 ## 2026-11-05: Monitor values always come from the device; manual vitals reveal is a setting
 - **Decision:** BP/HR/SpO₂/O₂ are never typed. They come from the patient's current vitals via the monitor cycle or a charted vital-signs check. Temp/RR/pain are typed. With `settings.revealManualVitals` on (the default), a Measure button fills them with the scripted values. With it off, nothing is revealed (delegated staff report only monitor values too), and the student gets them from the manikin or instructor. The log keeps a scripted snapshot so the debrief can compare charted vs scripted values.
 - **Why:** On-screen demos need values to come from somewhere, while live classes with a manikin need the student to measure.
 - **Alternatives:** Always typed (unusable without a manikin); always revealed (no measurement skill in class).
 
-## 2026-11-05: Monitor-cycle readings don't satisfy PRN pre-checks
+## 2026-11-05: Monitor-cycle readings don't satisfy PRN pre-checks (SUPERSEDED)
 - **Decision:** A required check like "BP before nitro" is met only by the student charting it (a BP, or full vitals, which `include` a BP) or a completed delegated check, within `requiresWithinMin` (default 15). A q15 cycle reading from 14 minutes ago doesn't count.
 - **Why:** The teaching point is checking BP right before giving nitro. **Open question for the instructor** (SPEC §14).
+- **Status:** superseded the same day by "Monitor BP readings satisfy the BP pre-check".
 - **Alternatives:** Count any BP in the window, including monitor readings.
 
 ## 2026-11-05: Delegation effects happen when staff report back

@@ -123,7 +123,7 @@ export function chartIntervention(state, patientId, { interventionId, fields = {
       ps.flowsheet.push({ atMin: simMin, source: 'charted', values: logFields, by: ctx.user.userId });
       extra.scripted = scriptedSnapshot(ps);
     }
-    if (iv.drawsLabs && order?.labCodes) extra.drawn = drawLabs(draft, patientId, order.labCodes, simMin, ctx.catalogs).map((l) => l.uid);
+    if (iv.drawsLabs && order?.labCodes) extra.drawn = drawLabs(draft, patientId, order.labCodes, simMin, ctx.catalogs, order.id).map((l) => l.uid);
   }
   log(draft, simMin, ctx, patientId, 'intervention', { interventionId, category: iv.category, fields: logFields, orderId, delegatedTo, ...extra });
   return draft;
@@ -137,6 +137,16 @@ export function flowsheetEntry(state, patientId, { values = {} }, ctx) {
   const ps = draft.patients[patientId];
   ps.flowsheet.push({ atMin: simMin, source: 'charted', values: typed, by: ctx.user.userId });
   log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps) });
+  return draft;
+}
+
+/** "Take BP now": starts the NIBP immediately (monitor values now). Doesn't change the auto cycle. */
+export function takeBpNow(state, patientId, _args, ctx) {
+  const { draft, simMin } = begin(state, ctx);
+  const ps = draft.patients[patientId];
+  const values = deviceValues(ps, ['bp', 'hr', 'spo2']);
+  ps.flowsheet.push({ atMin: simMin, source: 'monitor', values, by: 'NIBP (started by nurse)' });
+  log(draft, simMin, ctx, patientId, 'nibp-now', { values });
   return draft;
 }
 

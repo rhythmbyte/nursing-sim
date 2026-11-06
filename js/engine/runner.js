@@ -70,7 +70,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     /**
      * Student chart actions: runner.chart(name, patientId, args, user).
      * name ∈ openPatient, openHandoff, closeHandoff, saveHandoffNotes, acknowledgeOrder, completeOrder,
-     *        chartIntervention, flowsheetEntry, setMonitor, medAction, addNote, escalate (see engine/chart.js).
+     *        chartIntervention, flowsheetEntry, setMonitor, takeBpNow, medAction, addNote, escalate (see engine/chart.js).
      */
     chart(name, patientId, args, user) {
       if (typeof chart[name] !== 'function') throw new Error(`Unknown chart action ${name}`);

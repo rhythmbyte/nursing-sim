@@ -7,7 +7,8 @@ export const DEFAULT_REQUIRES_WITHIN_MIN = 15;
 /**
  * Does this log entry count as the required check `req`? Own charting (not a delegation request) or a
  * completed delegation, of `req` itself or an intervention that includes it (catalog `includes`, e.g.
- * full vitals include a BP). Monitor-cycle readings do NOT count (see DECISIONS.md).
+ * full vitals include a BP). Monitor BP readings are checked separately in prnWarnings: they count when the
+ * catalog marks the check `satisfiedByMonitor` (see DECISIONS.md).
  */
 function satisfies(entry, req, includesOf) {
   const id = entry.details.interventionId;
@@ -27,7 +28,9 @@ export function dosesGiven(log, patientId, orderId) {
  * Each: { code: 'max' | 'interval' | 'requires', message }. labelOf maps intervention ids to display names;
  * includesOf(id) lists the checks an intervention also covers (catalog `includes`).
  */
-export function prnWarnings(order, { log, patientId, simMin, labelOf = (id) => id, includesOf = () => [] }) {
+export function prnWarnings(order, {
+  log, patientId, simMin, labelOf = (id) => id, includesOf = () => [], readings = [], monitorSatisfies = () => false,
+}) {
   const prn = order.prn;
   if (!prn) return [];
   const doses = dosesGiven(log, patientId, order.id);
@@ -43,9 +46,22 @@ export function prnWarnings(order, { log, patientId, simMin, labelOf = (id) => i
   }
   const within = prn.requiresWithinMin ?? DEFAULT_REQUIRES_WITHIN_MIN;
   for (const req of prn.requiresBefore || []) {
-    const done = log.some((l) => l.patientId === patientId && simMin - l.simMin <= within && simMin >= l.simMin
-      && satisfies(l, req, includesOf));
+    const inWindow = (t) => simMin - t <= within && simMin >= t;
+    const done = log.some((l) => l.patientId === patientId && inWindow(l.simMin) && satisfies(l, req, includesOf))
+      || (monitorSatisfies(req) && readings.some((r) => r.source === 'monitor' && r.values.bp != null && inWindow(r.atMin)));
     if (!done) warnings.push({ code: 'requires', message: `Required check "${labelOf(req)}" not charted in the last ${within} min.` });
   }
   return warnings;
+}
+
+/** Catalog- and patient-derived options for prnWarnings (one place, so every caller checks the same way). */
+export function prnOptions(catalogs, patientState) {
+  const ivs = catalogs?.interventions?.interventions || [];
+  const byId = Object.fromEntries(ivs.map((i) => [i.id, i]));
+  return {
+    labelOf: (id) => byId[id]?.label || id,
+    includesOf: (id) => byId[id]?.includes || [],
+    monitorSatisfies: (id) => byId[id]?.satisfiedByMonitor === true,
+    readings: patientState?.flowsheet || [],
+  };
 }
