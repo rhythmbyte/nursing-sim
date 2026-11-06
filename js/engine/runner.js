@@ -22,7 +22,7 @@ import { collectEvents, groupMembers } from './scheduler.js';
 import * as script from './reactions/control.js';
 import { scriptView } from './reactions/view.js';
 import { availableTools, expectedResult, revealItem } from './assessments.js';
-import { timelinessItems } from './timeliness.js';
+import { timelinessItems, upcomingReassessments } from './timeliness.js';
 
 // `scenario` must have merged settings (engine/settings.js withDefaults).
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null, rng = Math.random }) {
@@ -115,6 +115,12 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     resumeTask(user) { commit(resumeTask(state, { now: now(), user })); runner.tick(); },
     dropPausedTask(user) { commit(interruptTask(state, { now: now(), user, paused: true })); },
     paused: (userId) => pausedView(state, userId),
+    /** Reassessments due soon (or overdue) on the student's group's patients, for planning the next task. */
+    nextDue: (userId) => {
+      const g = state.roster?.[userId]?.groupId;
+      const pids = Object.entries(state.patients).filter(([, ps]) => ps.present && (!g || ps.groupId === g)).map(([pid]) => pid);
+      return upcomingReassessments(state, runner.rulesCtx(), pids);
+    },
     /** Delegation helpers of a group: { helpers, queued } (engine/staff.js). */
     staffView: (groupId) => staffOps.staffView(state, groupId, runner.simMin(), catalogs),
     /** Charge / instructor: name ∈ moveHelper(helperId, groupId), setOnBreak(helperId, on), setStaffCount(groupId, role, n). */

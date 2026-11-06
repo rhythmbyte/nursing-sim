@@ -303,3 +303,8 @@ body.standalone-monitor { background: #000; }
 .cc-staff { font-size: 0.85rem; }
 .cc-staff-full { color: var(--review-text); background: var(--review-bg); border-radius: 6px; padding: 2px 6px; }
 .paused-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); background: var(--surface-2); border: 1px dashed var(--border); }
+.next-due { padding: 2px var(--space-2); }
+.due-overdue { color: var(--error-text); font-weight: 700; }
+.due-overdue::before { content: '‼ '; }
+.due-soon { color: var(--review-text); font-weight: 600; }
+.due-soon::before { content: '◷ '; }

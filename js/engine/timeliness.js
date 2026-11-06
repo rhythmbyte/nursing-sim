@@ -179,6 +179,17 @@ export function timelinessItems(fullState, ctx) {
   return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...assessmentItems(state, ctx, cfg), ...queueItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
 }
 
+/**
+ * Required reassessments coming due for some patients (the student's busy banner): the same timeliness items, looked at
+ * `horizonMin` ahead, that aren't done yet. [{ label, tools, patientId, dueAt, inMin (negative = overdue) }], soonest first.
+ */
+export function upcomingReassessments(fullState, ctx, pids, { horizonMin = 60, limit = 3 } = {}) {
+  const ahead = timelinessItems(fullState, { ...ctx, simMin: ctx.simMin + horizonMin });
+  return ahead.filter((i) => i.kind === 'assessment' && i.doneAt == null && pids.includes(i.patientId))
+    .map((i) => ({ label: i.label.replace(/ \(.*$/, ''), tools: i.tools, patientId: i.patientId, dueAt: i.startAt, inMin: round2(i.startAt - ctx.simMin) }))
+    .sort((a, b) => a.dueAt - b.dueAt).slice(0, limit);
+}
+
 /** Counts used by the command center and debrief summaries. */
 export function timelinessCounts(items) {
   const c = { onTime: 0, late: 0, veryLate: 0, open: 0 };

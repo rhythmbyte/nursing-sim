@@ -1,6 +1,6 @@
 // "Busy" banner for a student doing a timed task (engine/tasks.js): what, which patient, a progress bar, time left,
 // "Pause task" (step away and come back) and "Interrupt task" (stops it; nothing is charted). A paused task shows its own
-// line with Resume and Drop. Alerts, call lights and the monitor keep working meanwhile.
+// line with Resume and Drop. "Next due" lists required reassessments coming due on the group's patients. Alerts, call lights and the monitor keep working meanwhile.
 // Updates itself on ticks; returns { el, destroy }.
 
 import { h, clear } from '../shared/dom.js';
@@ -15,7 +15,8 @@ export function busyBanner(store, runner, user, roomOf) {
   const render = () => {
     const b = runner.busy(user.userId);
     const p = runner.paused(user.userId);
-    const key = `${b ? `${b.label}|${b.leftSec}` : ''}#${p ? p.label : ''}`;
+    const due = b || p ? runner.nextDue(user.userId) : [];
+    const key = `${b ? `${b.label}|${b.leftSec}` : ''}#${p ? p.label : ''}#${due.map((d) => `${d.label}${Math.ceil(d.inMin)}`).join(',')}`;
     if (key === lastKey) return;
     lastKey = key;
     const act = (fn) => () => { try { fn(); } catch (e) { toast(e.message, 5000); } };
@@ -28,7 +29,9 @@ export function busyBanner(store, runner, user, roomOf) {
     p ? h('div', { class: 'banner paused-banner', role: 'status' },
       h('strong', {}, 'Paused: '), `${p.label} · ${roomOf(p.patientId)} · ${fmt(p.leftSec)} left when you come back `,
       h('button', { class: 'btn btn-small btn-primary', disabled: Boolean(b), title: b ? 'Finish or pause the current task first' : 'Carry on with it', onclick: act(() => runner.resumeTask(user)) }, 'Resume'),
-      h('button', { class: 'btn btn-small btn-ghost', onclick: act(() => runner.dropPausedTask(user)) }, 'Drop task')) : null].filter(Boolean));
+      h('button', { class: 'btn btn-small btn-ghost', onclick: act(() => runner.dropPausedTask(user)) }, 'Drop task')) : null,
+    due.length ? h('div', { class: 'next-due small' }, h('strong', {}, 'Next due: '), ...due.map((d, i) => [i ? ' · ' : '',
+      h('span', { class: d.inMin < 0 ? 'due-overdue' : d.inMin <= 15 ? 'due-soon' : '' }, `${d.label} · ${roomOf(d.patientId)} ${d.inMin < 0 ? `overdue ${Math.ceil(-d.inMin)} min` : d.inMin < 1 ? 'now' : `in ${Math.ceil(d.inMin)} min`}`)]), ' ', helpTip('chart.next-due')) : null].filter(Boolean));
   };
   render();
   const off = store.on('tick', render);

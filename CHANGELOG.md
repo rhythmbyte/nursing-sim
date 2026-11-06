@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Next due in the busy banner
+- While a student is busy (or has a paused task), the banner lists the required reassessments coming due on their group's patients, soonest first: "Next due: Glasgow Coma Scale / NIH Stroke Scale / Pupils · Rm 205 in 10 min". Overdue ones are marked ‼ and ones due within 15 min ◷ (symbol + color). It looks an hour ahead using the same timeliness items (`upcomingReassessments`), so it always agrees with the Command center and the debrief.
+- Tests: 206 passing.
+
 ## Pause a task
 - **Pause task** in the busy banner: step away from a task (e.g. an emergency) and come back to it. The student is free while it's paused; **Resume** carries on with the time it had left; **Drop task** gives it up (logged as interrupted, not charted). One paused task at a time; you can't resume while busy with another task.
 - Durations count active time only: the debrief's Task time excludes pauses (and marks paused tasks), and nothing counts as "went late while busy" during a pause. Live control → Students shows a student's paused task.

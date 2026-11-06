@@ -159,3 +159,15 @@ test('rules and debrief: mismatch (missed high risk), overdue reassessment, requ
   const off = live({ assessmentTools: 'all', gradeAssessments: false });
   assert.equal(evaluateRules(off.tick(off.s, 200), rctx(null, 200)).filter((f) => f.ruleId.startsWith('assessment') || f.ruleId === 'required-assessment-missing').length, 0);
 });
+
+test('next due: required reassessments coming due (and overdue) for planning, soonest first', async () => {
+  const { upcomingReassessments } = await import('../js/engine/timeliness.js');
+  const L = live();
+  let s = L.tick(L.s, 50);
+  const ctxAt = (simMin) => ({ templatesById, catalogs, simMin });
+  const next = upcomingReassessments(s, ctxAt(50), [DE]);
+  assert.deepEqual(next.map((x) => [x.label, x.dueAt, x.inMin]), [['Glasgow Coma Scale / NIH Stroke Scale / Pupils', 60, 10]]);
+  s = chart.chartAssessment(s, DE, { toolId: 'gcs', answers: { eye: 4, verbal: 5, motor: 6 } }, L.ctx(55));
+  assert.equal(upcomingReassessments(s, ctxAt(56), [DE]).length, 0, 'done (counts from 30 min early); the next one is 2 h later');
+  assert.deepEqual(upcomingReassessments(s, ctxAt(185), [DE]).map((x) => x.inMin), [-5], 'overdue by 5 min at 10:05');
+});
