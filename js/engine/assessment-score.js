@@ -3,6 +3,15 @@
 // scoring: 'sum' (default) | 'single' (the one item's value) | 'rule' (positiveIf → 1/0) | 'auto' (from vitals) | 'none'.
 
 export const toolById = (catalogs, id) => catalogs?.assessmentTools?.tools.find((t) => t.id === id) || null;
+/** Tools a sim offers (settings.assessmentTools: 'public' (default) | 'all' | [ids]). */
+export function availableTools(settings, catalogs) {
+  const all = catalogs?.assessmentTools?.tools || [];
+  const pick = settings?.assessmentTools ?? 'public';
+  if (pick === 'all') return all;
+  if (pick === 'public') return all.filter((t) => t.license?.status === 'public');
+  return all.filter((t) => pick.includes(t.id));
+}
+
 const scored = (item) => item.type !== 'text';
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 

@@ -8,6 +8,7 @@ import { append } from '../log.js';
 import { addAlert } from '../alerts.js';
 import { cleanValues, setVitalsTarget, scriptedVitalsBlocked } from '../vitals-control.js';
 import { penalizeTarget, earnPenalty } from '../penalties.js';
+import { applyExpected } from '../assessments.js';
 
 /** Patient vitals move toward a scripted target unless the instructor has control (scriptedVitalsAfterInstructor). */
 function scriptedVitals(draft, pid, { values, overMin = 0 }, fx, { force = false } = {}) {
@@ -48,6 +49,7 @@ export function enterState(draft, pid, stateId, fx, { force = false } = {}) {
   const values = { ...(def.vitals?.values || {}), ...(def.rhythm ? { rhythm: def.rhythm } : {}) };
   if (Object.keys(values).length) scriptedVitals(draft, pid, { values, overMin: def.vitals?.overMin || 0 }, fx, { force });
   queueFindings(draft, pid, def.findings);
+  if (def.assessments) applyExpected(ps, def.assessments); // what this state's assessment tools will find
 }
 
 export const EFFECTS = {
@@ -62,6 +64,8 @@ export const EFFECTS = {
   },
   /** Fires one of the patient's own events (and its linked group), as "Fire now" would. */
   fire: (draft, pid, e, fx) => fx.fireEvent(draft, pid, e.eventId, fx),
+  /** Changes what the patient's assessment tools will find: { answers: { toolId: { itemId: value } } }. */
+  assessment: (draft, pid, e) => applyExpected(draft.patients[pid], e.answers),
   /** Recovery penalty: limits how far later treatment can bring the patient back (engine/penalties.js). */
   penalty: (draft, pid, e, fx) => earnPenalty(draft, pid, e, { t: fx.t, now: fx.now, user: fx.user, cause: { ...fx.cause, label: fx.reactionLabel } }),
 };

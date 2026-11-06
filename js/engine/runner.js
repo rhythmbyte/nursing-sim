@@ -19,6 +19,8 @@ import { studentIdsForGroup, groupOfStudent, generateJoinCode } from './assignme
 import { collectEvents, groupMembers } from './scheduler.js';
 import * as script from './reactions/control.js';
 import { scriptView } from './reactions/view.js';
+import { availableTools, expectedResult, revealItem } from './assessments.js';
+import { timelinessItems } from './timeliness.js';
 
 // `scenario` must have merged settings (engine/settings.js withDefaults).
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null, rng = Math.random }) {
@@ -145,6 +147,21 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
       runner.tick();
     },
     scriptView: (patientId) => scriptView(state, patientId, eff()[patientId], catalogs, runner.simMin()),
+
+    /** Assessment tools offered in this sim (settings.assessmentTools). */
+    assessmentTools: () => availableTools(state.settings, catalogs),
+    /** Auto-calculated tools only (NEWS2 from current vitals): never returns another tool's answer key. */
+    assessmentNow(patientId, toolId) {
+      const tool = catalogs.assessmentTools?.tools.find((t) => t.id === toolId);
+      if (tool?.scoring !== 'auto') throw new Error('Only auto-calculated tools can be read directly');
+      return expectedResult(state, patientId, toolId, catalogs);
+    },
+    /** One item's scripted finding, only when settings.revealAssessmentFindings is on. */
+    revealAssessment: (patientId, toolId, itemId) => revealItem(state, patientId, toolId, itemId),
+    /** Reassessments the patient's orders require (timeliness items), for the chart's Due list. */
+    assessmentsDue: (patientId) => timelinessItems(state, runner.rulesCtx()).filter((i) => i.kind === 'assessment' && i.patientId === patientId),
+    /** Instructor only: what the patient would score now (answer key). */
+    expectedAssessment: (patientId, toolId) => expectedResult(state, patientId, toolId, catalogs),
 
     /** Context the rules and the debrief need (responsibility comes from the joined roster). */
     rulesCtx: () => ({

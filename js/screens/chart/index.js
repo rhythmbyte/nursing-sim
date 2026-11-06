@@ -13,9 +13,10 @@ import interventions from './interventions.js';
 import notes from './notes.js';
 import handoff from './handoff.js';
 import monitor from './monitor.js';
+import assessments from './assessments.js';
 
 export function chartSections(handoffMode) {
-  const list = [summary, monitor, orders, flowsheet, mar, labs, interventions, notes];
+  const list = [summary, monitor, orders, flowsheet, mar, labs, assessments, interventions, notes];
   if (handoffMode === 'always') list.push(handoff);
   return list;
 }

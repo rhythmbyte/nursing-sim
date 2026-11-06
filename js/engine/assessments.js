@@ -10,16 +10,9 @@ import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { progressOrder } from './orders.js';
 import { requestDelegation } from './delegation.js';
-import { toolById, scoreTool } from './assessment-score.js';
+import { toolById, scoreTool, availableTools } from './assessment-score.js';
 
-/** Tools this sim offers students. */
-export function availableTools(settings, catalogs) {
-  const all = catalogs?.assessmentTools?.tools || [];
-  const pick = settings?.assessmentTools ?? 'public';
-  if (pick === 'all') return all;
-  if (pick === 'public') return all.filter((t) => t.license?.status === 'public');
-  return all.filter((t) => pick.includes(t.id));
-}
+export { availableTools } from './assessment-score.js';
 
 /** Merges { toolId: { itemId: value } } into a patient's expected answers. Mutates ps. */
 export function applyExpected(ps, answers) {

@@ -4,6 +4,7 @@
 
 import { rhythmProblems } from './monitor.js';
 import { scriptProblems, reactionTemplateProblems } from './reactions/integrity.js';
+import { assessmentProblems } from './assessment-integrity.js';
 
 export { reactionTemplateProblems };
 
@@ -44,6 +45,7 @@ export function patientReferenceProblems(t, catalogs) {
   (t.codeBranch?.trigger?.ifNotCharted || []).forEach((id) => iv('codeBranch.trigger.ifNotCharted', id));
   p.push(...rhythmProblems(t, catalogs));
   p.push(...scriptProblems(t, catalogs));
+  p.push(...assessmentProblems(t, catalogs));
   return p;
 }
 

@@ -130,10 +130,10 @@ test('groups: Fire now fires the whole group, and the scheduled time does not re
   assert.ok(robert.callLight);
   assert.equal(robert.vitals.hr, 108, 'linked vitals change fired too');
   assert.deepEqual(robert.findingChanges, ['e-p1-pain-returns'], 'linked findings fired too');
-  assert.equal(s.log.filter((l) => l.action === 'event-fired').length, 3);
+  assert.equal(s.log.filter((l) => l.action === 'event-fired').length, 4, 'call light, vitals, findings, assessment change');
   ({ state: s } = session.tick(s, { now: 76 * MIN, refs, templatesById }));
   const robertFired = s.log.filter((l) => l.action === 'event-fired' && l.patientId === 'p1-robert-miller');
-  assert.equal(robertFired.length, 3, 'nothing for Robert re-fires at 08:15');
+  assert.equal(robertFired.length, 4, 'nothing for Robert re-fires at 08:15');
 });
 
 test('groups: members must share timing', () => {
@@ -150,7 +150,7 @@ test('skip to next event: jumps to 08:00 and fires Linda\'s linked events; pause
   assert.equal(session.simMinOf(s, 50 * MIN), 60);
   assert.equal(s.clock.status, 'paused');
   const fired = s.log.filter((l) => l.action === 'event-fired').map((l) => l.details.eventId);
-  assert.deepEqual(fired, ['e-p4-worsens', 'e-p4-worsens-findings']);
+  assert.deepEqual(fired, ['e-p4-worsens', 'e-p4-worsens-findings', 'e-p4-worsens-assess']);
   assert.equal(s.log.find((l) => l.action === 'clock-skip').details.toMin, 60);
   assert.equal(session.nextEventMin(s, refs, 50 * MIN), 75);
 });

@@ -21,12 +21,16 @@ export function mountPatientView(root, ctx) {
   const sections = chartSections(scenario.settings.handoffMode);
   let activeId = sections.some((s) => s.id === load(SECTION_KEY)) ? load(SECTION_KEY) : sections[0].id;
   let mounted = null;
+  const pendingFor = {};
 
   const sectionCtx = {
     ...ctx,
     // Live view: includes orders the instructor pushes after the chart opened.
     get view() { return ctx.getView ? ctx.getView() : view; },
     act: (name, args) => runner.chart(name, pid, args, user),
+    /** Jump to another chart section, e.g. Interventions → Assessments with a tool picked (read once with takePending). */
+    openSection: (id, pending = null) => { pendingFor[id] = pending; activeId = id; save(SECTION_KEY, id); renderTabs(); mountSection(); },
+    takePending: (id) => { const p = pendingFor[id]; delete pendingFor[id]; return p; },
     patientState: () => runner.state.patients[pid],
   };
 

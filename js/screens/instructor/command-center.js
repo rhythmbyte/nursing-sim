@@ -12,7 +12,7 @@ import { commandCenter, statusWorsened } from '../../engine/command-center.js';
 import { timelinessConfig } from '../../engine/timeliness.js';
 
 const TREND = { worse: ['↘', 'Vitals worsening'], better: ['↗', 'Vitals improving'], steady: ['→', 'Vitals steady'] };
-const KIND = { order: '', med: 'Med: ', callLight: '', alarm: '' };
+const KIND = { order: '', med: 'Med: ', assessment: 'Reassess: ', callLight: '', alarm: '' };
 const FLASH_MS = 4000; // how long a card flashes after its status gets worse (CSS .cc-flash matches)
 
 export function mountCommandCenter(root, { store, runner, scenario, openLive }) {
@@ -44,7 +44,7 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
           ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`))
           : h('span', { class: 'muted' }, 'Nobody joined yet')),
         h('div', { class: 'cc-counts' },
-          count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'),
+          count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'), count(c.assessmentsOverdue, 'reassessments overdue', 'yellow'),
           count(c.callLights, c.callLights ? `call lights (longest ${Math.round(c.longestCallLightMin)} min)` : 'call lights', c.longestCallLightMin > (cfg.callLights?.lateMin ?? 5) ? 'red' : 'yellow'),
           count(c.alarms, 'monitor alarms', 'red'), count(c.redFlags, 'red flags', 'red'), count(c.amberFlags, 'amber flags', 'yellow')),
         h('ul', { class: 'cc-patients' }, g.patients.map((p) => {

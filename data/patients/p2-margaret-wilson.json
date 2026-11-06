@@ -51,6 +51,8 @@
       { "eventId": "e-p2-pain", "findings": ["Reports pain 8/10", "States she does not want to get out of bed because it hurts too much"] }
     ]
   },
+  "script": {"review": "proposed", "initialState": "baseline", "states": [{"id": "baseline", "label": "Post-op day 1", "review": "proposed"}], "reactions": [{"id": "r-p2-oxy-poss", "label": "Oxycodone given: drowsier (POSS 2) and pain eases", "review": "proposed", "when": {"kind": "med", "orderId": "o-p2-oxy"}, "then": [{"type": "assessment", "answers": {"poss": {"level": 2}, "pain-nrs": {"score": 4}}}], "repeat": true, "maxFires": 4}, {"id": "r-p2-poss-high", "label": "POSS 3 or more charted: CNA mentions she's hard to keep awake", "review": "proposed", "when": {"kind": "assessment", "toolId": "poss", "op": ">=", "value": 3}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "Margaret keeps nodding off in the middle of talking to me."}}}]}]},
+  "assessments": { "review": "proposed", "baseline": {"poss": {"level": 1}, "pain-nrs": {"score": 3, "location": "Right knee", "quality": "Aching, 6/10 with movement"}, "braden": {"sensory": 4, "moisture": 3, "activity": 3, "mobility": 3, "nutrition": 3, "friction": 2}} },
   "labs": [
     { "code": "wbc", "value": "11.8", "status": "resulted" },
     { "code": "hgb", "value": "10.8", "status": "resulted" },
@@ -69,7 +71,7 @@
     { "id": "o-p2-ambulate", "text": "Ambulate with walker and one-person assistance", "type": "scheduled", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["ambulate"], "delegable": true },
     { "id": "o-p2-wbat", "text": "Weight bearing as tolerated to right lower extremity", "type": "continuous", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": [], "delegable": true },
     { "id": "o-p2-apap", "text": "Acetaminophen 650 mg PO every 6 hours as needed for mild pain", "type": "prn", "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Acetaminophen 650 mg PO", "prn": { "intervalMin": 360 }, "delegable": true },
-    { "id": "o-p2-oxy", "text": "Oxycodone 5 mg PO every 4 hours as needed for moderate to severe pain", "type": "prn", "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Oxycodone 5 mg PO", "prn": { "intervalMin": 240, "requiresBefore": ["assess-pain"] }, "delegable": true },
+    { "id": "o-p2-oxy", "assessment": {"tools": ["poss", "pain-nrs"], "afterDoseMin": 30}, "text": "Oxycodone 5 mg PO every 4 hours as needed for moderate to severe pain", "type": "prn", "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["med-give"], "med": "Oxycodone 5 mg PO", "prn": { "intervalMin": 240, "requiresBefore": ["assess-pain"] }, "delegable": true },
     { "id": "o-p2-enox", "text": "Enoxaparin 40 mg subcutaneous daily for DVT prophylaxis, subject to bleeding risk and renal function assessment", "type": "scheduled", "frequencyMin": 1440, "tier": 2, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["sq-injection", "med-give"], "med": "Enoxaparin 40 mg SQ", "delegable": true },
     { "id": "o-p2-ice", "text": "Apply ice to operative knee as needed", "type": "prn", "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["ice"], "delegable": true },
     { "id": "o-p2-is", "text": "Incentive spirometry every hour while awake", "type": "scheduled", "frequencyMin": 60, "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["incentive-spiro"], "delegable": true },
@@ -78,7 +80,8 @@
   "events": [
     { "id": "e-p2-pain", "group": "p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "Margaret is requesting pain medication. Reports pain 8/10 and says she doesn't want to get out of bed because it hurts too much." } },
     { "id": "e-p2-pain-vitals", "group": "p2-pain", "type": "vitals-change", "atMin": 120, "payload": { "keyframe": "e-p2-pain" } },
-    { "id": "e-p2-pain-findings", "group": "p2-pain", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } }
+    { "id": "e-p2-pain-findings", "group": "p2-pain", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } },
+    {"id": "e-p2-pain-assess", "group": "p2-pain", "review": "proposed", "type": "assessment-change", "atMin": 120, "payload": {"answers": {"pain-nrs": {"score": 8}}}}
   ],
   "outcome": { "mode": "survive", "notes": "" },
   "codeBranch": null,

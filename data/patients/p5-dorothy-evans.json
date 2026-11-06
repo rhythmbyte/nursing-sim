@@ -57,6 +57,7 @@
       ] }
     ]
   },
+  "assessments": { "review": "proposed", "baseline": {"gcs": {"eye": 4, "verbal": 5, "motor": 6}, "nihss": {"1a": 0, "1b": 0, "1c": 0, "2": 0, "3": 0, "4": 0, "5a": 0, "5b": 0, "6a": 0, "6b": 0, "7": 0, "8": 0, "9": 0, "10": 0, "11": 0}, "pupils": {"left-size": 3, "left-react": 0, "right-size": 3, "right-react": 0}, "morse": {"history": 25, "secondary": 15, "aid": 15, "iv": 20, "gait": 10, "mental": 15}, "cam": {"acute": 0, "inattention": 0, "disorganized": 0, "loc": 0}} },
   "labs": [
     { "code": "wbc", "value": "7.4", "status": "resulted", "review": "proposed" },
     { "code": "hgb", "value": "12.6", "status": "resulted", "review": "proposed" },
@@ -69,8 +70,8 @@
   ],
   "orders": [
     { "id": "o-p5-vs", "review": "proposed", "text": "Vital signs every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 3, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
-    { "id": "o-p5-neuro", "review": "proposed", "text": "Neuro checks every 2 hours", "type": "scheduled", "frequencyMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["assess-neuro"], "delegable": false },
-    { "id": "o-p5-falls", "review": "proposed", "text": "Fall precautions with bed alarm", "type": "continuous", "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["fall-precautions"], "delegable": true },
+    { "id": "o-p5-neuro", "assessment": {"tools": ["gcs", "nihss", "pupils"], "everyMin": 120}, "review": "proposed", "text": "Neuro checks every 2 hours", "type": "scheduled", "frequencyMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["assess-neuro"], "delegable": false },
+    { "id": "o-p5-falls", "assessment": {"tools": ["morse"], "once": true}, "review": "proposed", "text": "Fall precautions with bed alarm", "type": "continuous", "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["fall-precautions"], "delegable": true },
     { "id": "o-p5-apixaban", "review": "proposed", "text": "Apixaban 5 mg PO twice daily (due 0900)", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Apixaban 5 mg PO", "delegable": true, "teachingNote": "Giving this after the neuro change should flag in debrief — it should be held and the provider notified." },
     { "id": "o-p5-metoprolol", "review": "proposed", "text": "Metoprolol 25 mg PO twice daily; hold for HR < 55 or SBP < 100", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Metoprolol 25 mg PO", "delegable": true },
     { "id": "o-p5-ptot", "review": "proposed", "text": "PT/OT evaluation for fall risk", "type": "once", "tier": 3, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": [], "delegable": true },
@@ -79,12 +80,13 @@
     { "id": "o-p5-ct", "review": "proposed", "text": "STAT non-contrast CT head", "type": "once", "tier": 1, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["imaging-request"], "delegable": false },
     { "id": "o-p5-hold-apix", "review": "proposed", "text": "Hold apixaban", "type": "once", "tier": 1, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["med-hold"], "delegable": false },
     { "id": "o-p5-npo", "review": "proposed", "text": "NPO", "type": "continuous", "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": [], "delegable": true },
-    { "id": "o-p5-neuro-q1", "review": "proposed", "text": "Neuro checks every 1 hour", "type": "scheduled", "frequencyMin": 60, "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["assess-neuro"], "delegable": false }
+    { "id": "o-p5-neuro-q1", "assessment": {"tools": ["gcs", "nihss", "pupils"], "everyMin": 60}, "review": "proposed", "text": "Neuro checks every 1 hour", "type": "scheduled", "frequencyMin": 60, "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["assess-neuro"], "delegable": false }
   ],
   "events": [
     { "id": "e-p5-confused", "group": "p5-confused", "review": "proposed", "type": "staff-message", "atMin": 105, "payload": { "from": "CNA", "message": "Dorothy is more confused than earlier. She keeps trying to climb out of bed, says her head hurts worse, and she just threw up." } },
     { "id": "e-p5-confused-vitals", "group": "p5-confused", "review": "proposed", "type": "vitals-change", "atMin": 105, "payload": { "keyframe": "e-p5-confused" } },
     { "id": "e-p5-confused-findings", "group": "p5-confused", "review": "proposed", "type": "findings-change", "atMin": 105, "payload": { "change": "e-p5-confused" } },
+    {"id": "e-p5-confused-assess", "group": "p5-confused", "review": "proposed", "type": "assessment-change", "atMin": 105, "payload": {"answers": {"gcs": {"verbal": 4}, "nihss": {"1b": 1, "4": 1, "5a": 1, "6a": 1}, "pupils": {"right-size": 4, "right-react": 1}, "cam": {"acute": 1, "inattention": 1, "disorganized": 1}}}},
     { "id": "e-p5-neuro-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p5-neuro", "message": "New orders from provider for Dorothy Evans.", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "survive", "notes": "" },

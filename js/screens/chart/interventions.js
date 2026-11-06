@@ -76,6 +76,10 @@ export default {
         },
       },
         h('h4', {}, iv.label),
+        // Interventions linked to scored tools (interventions.json assessmentTools) offer them in the Assessments tab.
+        (iv.assessmentTools || []).filter((id) => runner.assessmentTools().some((t) => t.id === id)).length ? h('p', { class: 'small' }, 'Use a scored tool: ',
+          ...(iv.assessmentTools || []).filter((id) => runner.assessmentTools().some((t) => t.id === id)).map((id) => h('button', { class: 'btn btn-small', type: 'button', onclick: () => ctx.openSection?.('assessments', { toolId: id }) },
+            runner.assessmentTools().find((t) => t.id === id).name))) : null,
         vf ? vf.el : iv.chartFields.map((f) => h('label', { class: 'field' }, h('span', {}, fieldLabel(f)), inputs[f])),
         h('label', { class: 'field' }, h('span', {}, 'For order'), orderSel),
         h('label', { class: 'field' }, h('span', {}, 'Performed by'), by),

@@ -42,6 +42,7 @@
       },
       "tracking": { "trackedOrderTypes": ["once"], "trackEventTriggeredPrn": true, "includeShiftStartOrders": false },
       "scheduledMeds": { "lateMin": 30, "veryLateMin": 60, "earlyWindowMin": 60, "shiftStartDueMin": 120 },
+      "assessments": { "lateMin": 30, "veryLateMin": 60, "earlyWindowMin": 30, "shiftStartDueMin": 60 },
       "callLights": { "lateMin": 5, "veryLateMin": 10 },
       "alarms": { "lateMin": 2, "veryLateMin": 5 },
       "tags": {

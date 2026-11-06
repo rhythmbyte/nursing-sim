@@ -12,7 +12,7 @@ import { append, SYSTEM } from './log.js';
 import { addAlert } from './alerts.js';
 import { activeLog } from './struck.js';
 import { fireEventGroup } from './session.js';
-import { ACTION_KINDS, entryMatches, crossed, conditionsHold, thresholdHolds } from './reactions/match.js';
+import { ACTION_KINDS, entryMatches, crossed, conditionsHold, thresholdHolds, OPS } from './reactions/match.js';
 import { EFFECTS } from './reactions/effects.js';
 
 const MAX_STEPS_PER_RUN = 200; // safety net; per-instant loop protection is below
@@ -143,6 +143,8 @@ function onLogEntry(draft, pid, entry, t, ctx) {
     const w = r.when;
     if (ACTION_KINDS.includes(w.kind) && entryMatches(entry, w, template)) {
       tryFire(draft, pid, r, t, { kind: entry.role === 'student' ? 'student' : entry.role, logId: entry.id, userId: entry.userId }, ctx);
+    } else if (w.kind === 'assessment' && entry.action === 'assessment' && entry.details.toolId === w.toolId && entry.details.score != null && assessmentTriggered(draft, pid, entry, w)) {
+      tryFire(draft, pid, r, t, { kind: 'assessment', toolId: w.toolId, score: entry.details.score, logId: entry.id, userId: entry.userId }, ctx);
     } else if (w.kind === 'penalty' && entry.action.startsWith('penalty-') && entry.details.beforePercent < w.atLeastPercent && entry.details.afterPercent >= w.atLeastPercent) {
       tryFire(draft, pid, r, t, { kind: 'penalty', atLeastPercent: w.atLeastPercent, logId: entry.id }, ctx);
     } else if (w.kind === 'fired' && ((w.eventId && entry.action === 'event-fired' && entry.details.eventId === w.eventId)
@@ -150,6 +152,16 @@ function onLogEntry(draft, pid, entry, t, ctx) {
       tryFire(draft, pid, r, t, { kind: w.eventId ? 'event' : 'chain', logId: entry.id, ...(w.eventId ? { eventId: w.eventId } : { fromReaction: w.reactionId }) }, ctx);
     }
   }
+}
+
+/** Score rule: { op, value } on this score, or { rise } versus the previous charted score of the same tool. */
+function assessmentTriggered(state, pid, entry, w) {
+  const score = entry.details.score;
+  if (w.rise != null) {
+    const prev = state.log.filter((l) => l.patientId === pid && l.action === 'assessment' && l.details.toolId === w.toolId && l.details.score != null && l.id !== entry.id && l.simMin <= entry.simMin && !state.struck?.[l.id]).at(-1);
+    return prev != null && score - prev.details.score >= w.rise;
+  }
+  return Boolean(OPS[w.op]?.(score, w.value));
 }
 
 /** Effect context shared by the processor and the instructor controls. */

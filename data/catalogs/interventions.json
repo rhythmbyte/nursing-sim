@@ -16,9 +16,9 @@
   ],
   "interventions": [
     { "id": "assess-focused", "revealsFindings": true, "category": "assessment", "label": "Focused assessment", "chartFields": ["system", "findings"], "delegableTo": [] },
-    { "id": "assess-full", "revealsFindings": true, "category": "assessment", "label": "Head-to-toe assessment", "chartFields": ["findings"], "delegableTo": [] },
-    { "id": "assess-pain", "synonyms": ["pain score"], "category": "assessment", "label": "Pain assessment", "chartFields": ["score", "location", "quality"], "delegableTo": [] },
-    { "id": "assess-neuro", "synonyms": ["GCS", "neuro check", "pupils"], "category": "assessment", "label": "Neuro check (GCS / pupils)", "chartFields": ["gcs", "pupils", "orientation"], "delegableTo": [] },
+    { "id": "assess-full", "assessmentTools": ["head-to-toe"], "revealsFindings": true, "category": "assessment", "label": "Head-to-toe assessment", "chartFields": ["findings"], "delegableTo": [] },
+    { "id": "assess-pain", "assessmentTools": ["pain-nrs", "wong-baker", "flacc", "cpot"], "synonyms": ["pain score"], "category": "assessment", "label": "Pain assessment", "chartFields": ["score", "location", "quality"], "delegableTo": [] },
+    { "id": "assess-neuro", "assessmentTools": ["gcs", "pupils", "nihss", "befast"], "synonyms": ["GCS", "neuro check", "pupils"], "category": "assessment", "label": "Neuro check (GCS / pupils)", "chartFields": ["gcs", "pupils", "orientation"], "delegableTo": [] },
     { "id": "assess-nv", "category": "assessment", "label": "Neurovascular check", "chartFields": ["extremity", "pulses", "capRefill", "sensation", "movement"], "delegableTo": ["LPN"] },
     { "id": "assess-wound", "category": "assessment", "label": "Dressing / wound check", "chartFields": ["site", "appearance", "drainage"], "delegableTo": ["LPN"] },
     { "id": "reassess", "category": "assessment", "label": "Reassess after intervention", "chartFields": ["intervention", "response"], "delegableTo": [] },
@@ -56,7 +56,7 @@
     { "id": "foley", "synonyms": ["indwelling urinary catheter", "urinary catheter", "IUC", "cath"], "category": "procedures", "label": "Insert Foley catheter", "chartFields": ["size", "returnMl"], "delegableTo": ["LPN"] },
     { "id": "sq-injection", "category": "procedures", "label": "Subcutaneous injection", "chartFields": ["med", "site"], "delegableTo": ["LPN"] },
 
-    { "id": "fall-precautions", "synonyms": ["bed alarm", "falls"], "category": "safety", "label": "Fall precautions / bed alarm", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
+    { "id": "fall-precautions", "assessmentTools": ["morse"], "synonyms": ["bed alarm", "falls"], "category": "safety", "label": "Fall precautions / bed alarm", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
     { "id": "ambulate", "category": "safety", "label": "Ambulate patient", "chartFields": ["assist", "device", "distance"], "delegableTo": ["LPN", "CNA"] },
     { "id": "stay-with-pt", "category": "safety", "label": "Remain with patient", "chartFields": [], "delegableTo": [] },
 

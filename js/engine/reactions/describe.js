@@ -34,6 +34,7 @@ export function triggerText(w, n) {
   if (w.kind === 'vitals') return `${w.field} ${w.op} ${w.value}`;
   if (w.kind === 'duration') return `${w.field} ${w.op} ${w.value} for ${w.forMin}+ min`;
   if (w.kind === 'penalty') return `recovery penalty reaches ${w.atLeastPercent}%`;
+  if (w.kind === 'assessment') return w.rise != null ? `${w.toolId} score rises by ${w.rise}+` : `${w.toolId} score ${w.op} ${w.value}`;
   if (w.kind === 'elapsed') {
     const since = w.since === 'state' ? `in "${n.state(w.state)}"` : w.since === 'event' ? `after event ${w.eventId}` : w.since === 'reaction' ? `after "${n.reaction(w.reactionId)}"` : 'from the start';
     return `${w.afterMin} min ${since}${w.without?.length ? ` without ${w.without.map((m) => matcherText(m, n)).join(' or ')}` : ''}`;
@@ -63,6 +64,7 @@ export function effectText(e, n) {
   if (e.type === 'event') return `${e.event?.type}${e.event?.payload?.message ? `: "${e.event.payload.message}"` : e.event?.payload?.orderSet ? ` ${e.event.payload.orderSet}` : ''}`;
   if (e.type === 'fire') return `fire event ${e.eventId}`;
   if (e.type === 'penalty') return penaltyText(e);
+  if (e.type === 'assessment') return `assessments will find: ${Object.keys(e.answers || {}).join(', ')}`;
   return e.type;
 }
 
@@ -72,7 +74,7 @@ export function reactionText(r, n) {
   return `When ${triggerText(r.when, n)}${c ? ` · if ${c}` : ''} · then ${r.then.map((e) => effectText(e, n)).join('; ')}`;
 }
 
-const CAUSE = { duration: 'vitals held too long', penalty: 'penalty threshold', student: 'student action', timeout: 'nothing done in time', threshold: 'vitals threshold', instructor: 'instructor', event: 'scheduled event', chain: 'another reaction', staff: 'staff report', system: 'system' };
+const CAUSE = { assessment: 'assessment score', duration: 'vitals held too long', penalty: 'penalty threshold', student: 'student action', timeout: 'nothing done in time', threshold: 'vitals threshold', instructor: 'instructor', event: 'scheduled event', chain: 'another reaction', staff: 'staff report', system: 'system' };
 
 /** Cause of a transition, in words. */
 export function causeText(cause, n) {
@@ -83,6 +85,7 @@ export function causeText(cause, n) {
   if (cause.kind === 'event') return `${base}: ${cause.eventId}`;
   if (cause.kind === 'duration') return `${cause.field} ${cause.op} ${cause.value} for ${cause.forMin} min`;
   if (cause.kind === 'penalty') return `recovery penalty reached ${cause.atLeastPercent}%`;
+  if (cause.kind === 'assessment') return `${cause.toolId} scored ${cause.score}`;
   if (cause.kind === 'chain') return `${base}: "${n.reaction(cause.fromReaction)}"`;
   return base;
 }

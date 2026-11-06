@@ -42,7 +42,7 @@ export function stateToForm(t, id) {
   const s = t.script?.states.find((x) => x.id === id) || { id: '', label: '' };
   const v = s.vitals?.values || {};
   return { id: s.id, label: s.label, review: s.review || 'proposed', overMin: s.vitals?.overMin ?? 0, rhythm: s.rhythm || v.rhythm || '', note: s.note || '',
-    values: Object.fromEntries(VITAL_KEYS.map((k) => [k, v[k] ?? ''])), findingsText: s.findings ? changeText(t, s.findings) : '' };
+    values: Object.fromEntries(VITAL_KEYS.map((k) => [k, v[k] ?? ''])), findingsText: s.findings ? changeText(t, s.findings) : '', assessments: structuredClone(s.assessments || {}) };
 }
 
 /** Saves a state form (new when `originalId` is null). Renaming updates every reference. */
@@ -64,6 +64,7 @@ export function formToState(t0, form, originalId = null) {
   if (form.note?.trim()) def.note = form.note.trim();
   const changeId = setChange(t, old?.findings || newChangeId(t, `state-${id}`), form.findingsText);
   if (changeId) def.findings = changeId;
+  if (Object.keys(form.assessments || {}).length) def.assessments = structuredClone(form.assessments);
   if (old) t.script.states[t.script.states.indexOf(old)] = def; else t.script.states.push(def);
   return originalId && originalId !== id ? renameState(t, originalId, id) : t;
 }

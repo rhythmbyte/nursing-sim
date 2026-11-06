@@ -53,6 +53,7 @@
       { "eventId": "state-p4-crashing", "review": "proposed", "findings": ["Lethargic, difficult to rouse", "Lips and nail beds dusky", "Mottled knees"] }
     ]
   },
+  "assessments": { "review": "proposed", "baseline": {"cam": {"acute": 0, "inattention": 0, "disorganized": 0, "loc": 0}, "pain-nrs": {"score": 2}} },
   "labs": [
     { "code": "wbc", "value": "17.8", "status": "resulted" },
     { "code": "hgb", "value": "12.0", "status": "resulted" },
@@ -84,6 +85,7 @@
   "events": [
     { "id": "e-p4-worsens", "group": "p4-worsens", "type": "vitals-change", "atMin": 60, "payload": { "keyframe": "e-p4-worsens" } },
     { "id": "e-p4-worsens-findings", "group": "p4-worsens", "type": "findings-change", "atMin": 60, "payload": { "change": "e-p4-worsens" } },
+    {"id": "e-p4-worsens-assess", "group": "p4-worsens", "review": "proposed", "type": "assessment-change", "atMin": 60, "payload": {"answers": {"cam": {"acute": 1, "inattention": 1, "disorganized": 1}}}},
     { "id": "e-p4-sepsis-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p4-sepsis", "message": "New orders from provider for Linda Garcia (sepsis bundle).", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "instructor", "notes": "Instructor decides whether the sepsis branch progresses." },
@@ -103,7 +105,7 @@
       {"id": "low-flow", "label": "Low-flow O₂: still below target (SpO₂ about 86%)", "vitals": {"values": {"spo2": 86, "rr": 28}, "overMin": 3}, "note": "Titrated, but not into her 88–92% COPD target: still hypoxemic.", "review": "proposed"},
       {"id": "in-target", "label": "In COPD target (SpO₂ 88–92%)", "vitals": {"values": {"spo2": 90, "rr": 26}, "overMin": 5}, "review": "proposed"},
       {"id": "over-oxygenated", "label": "Over-oxygenated (above COPD target)", "vitals": {"values": {"spo2": 96, "rr": 24}, "overMin": 5}, "note": "Teaching point: SpO₂ 94–98% is above her 88–92% COPD target (risk of CO₂ retention).", "review": "proposed"},
-      {"id": "hypoxic", "label": "Hypoxic (SpO₂ 82%, RR 32)", "vitals": {"values": {"spo2": 82, "rr": 32, "hr": 128}}, "findings": "state-p4-hypoxic", "review": "proposed"},
+      {"id": "hypoxic", "label": "Hypoxic (SpO₂ 82%, RR 32)", "vitals": {"values": {"spo2": 82, "rr": 32, "hr": 128}}, "findings": "state-p4-hypoxic", "assessments": {"cam": {"acute": 1, "inattention": 1, "disorganized": 1, "loc": 0}}, "review": "proposed"},
       {"id": "crashing", "label": "Crashing", "vitals": {"values": {"spo2": 76, "rr": 36, "hr": 138, "bp": "78/44"}, "overMin": 5}, "findings": "state-p4-crashing", "note": "Reached because no oxygen or escalation followed the hypoxia.", "review": "proposed"}
     ],
     "reactions": [

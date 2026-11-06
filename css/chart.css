@@ -225,7 +225,7 @@ body.standalone-monitor { background: #000; }
 .cc-head:focus-visible, .cc-patient:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cc-head h3 { margin: 0; font-size: 1.05rem; color: var(--text); text-transform: none; letter-spacing: 0; }
 .cc-students { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--muted); }
-.cc-counts { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); }
+.cc-counts { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: var(--space-1); }
 .cc-count { display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--surface-2); border-radius: 6px; padding: 4px 2px; font-size: 0.72rem; color: var(--muted); }
 .cc-count strong { font-size: 1.4rem; color: var(--text); line-height: 1.1; }
 .cc-warn-yellow { box-shadow: inset 0 -3px 0 var(--triage-yellow); } .cc-warn-red { box-shadow: inset 0 -3px 0 var(--triage-red); }

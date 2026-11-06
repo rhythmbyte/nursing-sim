@@ -50,6 +50,7 @@ export function commandCenter(state, ctx, scenario) {
       late: open.filter((i) => isLate(i.tag)).length + mine.filter((i) => i.doneAt != null && isLate(i.tag)).length,
       veryLate: mine.filter((i) => isVeryLate(i.tag)).length,
       medsOverdue: open.filter((i) => i.kind === 'med' && i.tag !== 'open').length,
+      assessmentsOverdue: open.filter((i) => i.kind === 'assessment' && i.tag !== 'open').length,
       callLights: lights.length,
       longestCallLightMin: lights.length ? Math.max(...lights.map((i) => i.minutes)) : 0,
       alarms: pids.filter((pid) => state.patients[pid].alarm?.active?.length).length,

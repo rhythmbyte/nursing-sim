@@ -51,6 +51,7 @@ export function scriptProblems(t, catalogs) {
     if (['intervention', 'order', 'med'].includes(w.kind)) matcher(`${at} when`, w);
     if ((w.kind === 'vitals' || w.kind === 'duration') && (w.field == null || w.op == null || typeof w.value !== 'number')) p.push(`${at} when: a vitals trigger needs field, op and value`);
     if (w.kind === 'duration' && typeof w.forMin !== 'number') p.push(`${at} when.forMin: how many minutes the threshold must hold`);
+    // assessment triggers and effects are checked in engine/assessment-integrity.js (they need the tools catalog)
     if (w.kind === 'penalty' && typeof w.atLeastPercent !== 'number') p.push(`${at} when.atLeastPercent: the total penalty % that fires it`);
     if (w.kind === 'elapsed') {
       if (!SINCE.includes(w.since)) p.push(`${at} when.since: must be one of ${SINCE.join(', ')}`);

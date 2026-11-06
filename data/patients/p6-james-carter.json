@@ -48,6 +48,7 @@
     ],
     "changes": []
   },
+  "assessments": { "review": "proposed", "baseline": {"braden": {"sensory": 4, "moisture": 3, "activity": 2, "mobility": 3, "nutrition": 3, "friction": 2}, "morse": {"history": 0, "secondary": 15, "aid": 0, "iv": 20, "gait": 10, "mental": 0}, "head-to-toe": {"neuro": "Alert, oriented ×4", "cardiac": "Tachycardic, S3, 2+ pitting edema to the knees", "resp": "Crackles to mid-lung bilaterally, orthopnea", "skin": "Cool, intact"}} },
   "labs": [
     { "code": "bnp", "value": "1840", "status": "pending", "resultDelayMin": 30 },
     { "code": "na", "value": "134", "status": "pending", "resultDelayMin": 30 },
@@ -60,7 +61,7 @@
   "orders": [
     { "id": "o-p6-hob", "text": "Elevate head of bed / high Fowler's", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["position-hob"], "delegable": true },
     { "id": "o-p6-o2", "text": "Oxygen to maintain SpO2 ≥ 92%", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["o2-apply"], "delegable": false },
-    { "id": "o-p6-assess", "text": "Admission assessment", "type": "once", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["assess-full", "assess-focused"], "delegable": false },
+    { "id": "o-p6-assess", "assessment": {"tools": ["head-to-toe", "braden", "morse"], "once": true}, "text": "Admission assessment", "type": "once", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["assess-full", "assess-focused"], "delegable": false },
     { "id": "o-p6-iv", "text": "Maintain IV access", "type": "continuous", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["iv-check", "iv-start"], "delegable": true },
     { "id": "o-p6-lasix", "text": "Furosemide 40 mg IV twice daily, first dose now", "type": "scheduled", "frequencyMin": 720, "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["med-give"], "med": "Furosemide 40 mg IV", "delegable": false },
     { "id": "o-p6-tele", "text": "Continuous telemetry", "type": "continuous", "tier": 2, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "interventionIds": ["tele"], "delegable": true },

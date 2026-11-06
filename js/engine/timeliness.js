@@ -2,7 +2,7 @@
 // ONE source for the command center, the debrief and the tier-timeout / call-light-response /
 // alarm-response rules (thresholds: rules.json rules.timeliness; scenario overrides: settings.rules.timeliness).
 //
-// Item: { kind: 'order'|'med'|'callLight'|'alarm', patientId, label, tier?, startAt, doneAt|null, doneBy,
+// Item: { kind: 'order'|'med'|'assessment'|'callLight'|'alarm', patientId, label, tier?, startAt, doneAt|null, doneBy,
 //         minutes, tag, logId? }
 // Tags: on-time | late | very-late (done) · open | open-late | open-very-late (not done yet).
 
@@ -10,6 +10,7 @@ import { firstWork } from './orders.js';
 import { withoutStruck } from './struck.js';
 import { alarmEpisodes } from './monitor-alarms.js';
 import { round2 } from './time.js';
+import { availableTools } from './assessment-score.js';
 
 const merge = (a = {}, b = {}) => {
   const out = { ...a };
@@ -98,6 +99,46 @@ function medItems(state, ctx, cfg) {
   return out;
 }
 
+/**
+ * Assessments an order requires (order.assessment = { tools, everyMin?, once? }): first due at activation (orders
+ * active at shift start: at assessments.shiftStartDueMin), then every everyMin. Each due time is answered by the first
+ * charted assessment with one of the tools from earlyWindowMin before it. afterDoseMin: due that long after each dose given. Item label: "GCS / NIHSS (Neuro checks…)".
+ */
+export function assessmentDueTimes(order, os, simMin, th, doses = []) {
+  const a = order.assessment;
+  if (a.afterDoseMin != null) return doses.map((d) => d + a.afterDoseMin).filter((t) => t <= simMin); // e.g. POSS 30 min after each opioid dose
+  const start = os.activeAtMin === 0 ? th.shiftStartDueMin ?? 0 : os.activeAtMin;
+  if (a.once || !a.everyMin) return start <= simMin ? [start] : [];
+  const times = [];
+  for (let t = start; t <= simMin; t += a.everyMin) times.push(t);
+  return times;
+}
+
+function assessmentItems(state, ctx, cfg) {
+  const out = [];
+  const th = cfg.assessments;
+  if (!th) return out;
+  const offered = new Set(availableTools(state.settings, ctx.catalogs).map((t) => t.id)); // tools the sim doesn't offer aren't timed
+  const name = (id) => ctx.catalogs?.assessmentTools?.tools.find((t) => t.id === id)?.name.replace(/ \(.*\)$/, '') || id;
+  for (const [pid, ps] of Object.entries(state.patients)) {
+    for (const o of ctx.templatesById[pid]?.orders || []) {
+      const os = ps.orders[o.id];
+      const tools = (o.assessment?.tools || []).filter((id) => offered.has(id));
+      if (!tools.length || !os) continue;
+      const done = state.log.filter((l) => l.patientId === pid && l.action === 'assessment' && tools.includes(l.details.toolId));
+      let next = 0;
+      const doses = state.log.filter((l) => l.patientId === pid && l.action === 'med' && l.details.orderId === o.id && l.details.result === 'given').map((l) => l.simMin);
+      for (const due of assessmentDueTimes(o, os, ctx.simMin, th, doses)) {
+        while (next < done.length && done[next].simMin < due - (th.earlyWindowMin ?? 30)) next++;
+        const a = done[next];
+        if (a) next++;
+        out.push(item({ kind: 'assessment', patientId: pid, label: `${tools.map(name).join(' / ')} (${o.text})`, tier: o.tier, orderId: o.id, tools, doneBy: a?.userId ?? null, logId: a?.id }, due, a?.simMin ?? null, ctx.simMin, th));
+      }
+    }
+  }
+  return out;
+}
+
 function callLightItems(state, ctx, cfg) {
   const out = [];
   for (const l of state.log) {
@@ -126,7 +167,7 @@ function alarmItems(state, ctx, cfg) {
 export function timelinessItems(fullState, ctx) {
   const state = withoutStruck(fullState); // "entered in error" work doesn't count as done
   const cfg = timelinessConfig(state, ctx.catalogs);
-  return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
+  return [...orderItems(state, ctx, cfg), ...medItems(state, ctx, cfg), ...assessmentItems(state, ctx, cfg), ...callLightItems(state, ctx, cfg), ...alarmItems(state, ctx, cfg)];
 }
 
 /** Counts used by the command center and debrief summaries. */
@@ -142,13 +183,13 @@ export function timelinessCounts(items) {
 }
 
 /**
- * Debrief view for a set of patients: orders and scheduled meds, worst first. After the sim ends, anything
+ * Debrief view for a set of patients: orders, scheduled meds and required reassessments, worst first. After the sim ends, anything
  * still open is "never". summary: { onTime, late, veryLate, never, open, medianTier1Min }.
  */
 export function debriefTimeliness(state, pids, ctx) {
   const ended = state.clock.status === 'ended';
   const rows = timelinessItems(state, ctx)
-    .filter((i) => (i.kind === 'order' || i.kind === 'med') && pids.includes(i.patientId))
+    .filter((i) => (i.kind === 'order' || i.kind === 'med' || i.kind === 'assessment') && pids.includes(i.patientId))
     .map((i) => (ended && i.doneAt == null ? { ...i, tag: 'never' } : i))
     .sort((a, b) => tagRank(b.tag) - tagRank(a.tag) || b.minutes - a.minutes);
   const count = (pred) => rows.filter(pred).length;
