@@ -12,6 +12,6 @@ export function priorityPicker(scale, currentLevelId, onPick, { label = 'My prio
     onchange: (e) => { if (e.target.value) onPick(e.target.value); },
   },
     h('option', { value: '', selected: !level, disabled: true }, 'Not set'),
-    scale.levels.map((l) => h('option', { value: l.id, selected: l.id === currentLevelId, title: l.description || '' }, l.label)));
+    scale.levels.map((l) => h('option', { value: l.id, selected: l.id === currentLevelId, title: l.description || '' }, `${l.symbol ? `${l.symbol} ` : ''}${l.label}`)));
   return h('label', { class: 'inline prio-picker', onclick: (e) => e.stopPropagation() }, `${label} `, select);
 }

@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## C17. Color-blind-safe tags
+- Every tag shows a shape as well as color and name: ▲ red, ◆ yellow, ● green, ✕ black. This covers the instructor's triage chips everywhere (library, Live control, charge, debrief) and the students' priority options. The symbols are data in `priority-scales.json` (`instructorTags` and each scale level's `symbol`). The scale check requires a symbol on every level.
+- Tests: 115 passing.
+
 ## C16. Instructor keyboard shortcuts
 - On Live control: **Space** pause/resume, **N** skip to next event, **?** list shortcuts (hint shown in the header). Ignored while typing in a field, while a dialog is open, or with Ctrl/Alt/Meta.
 - Tests: 114 passing; checked in the browser (a key typed in a field doesn't skip).

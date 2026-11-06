@@ -222,3 +222,13 @@ test('student views never include the instructor tag unless the role is allowed'
   const open = scenarioWith({ showTagsTo: ['instructor', 'charge'] });
   assert.equal(canSeeInstructorTags(open.settings, 'charge'), true);
 });
+
+test('C17: every tag and scale level has a symbol (not color alone)', async () => {
+  const { scaleProblems } = await import('../js/engine/priority.js');
+  const ps = catalogs.priorityScales;
+  for (const t of ['red', 'yellow', 'green', 'black']) assert.ok(ps.instructorTags[t].symbol, t);
+  assert.equal(new Set(Object.values(ps.instructorTags).filter((x) => x.symbol).map((x) => x.symbol)).size, 4, 'distinct shapes');
+  assert.deepEqual(scaleProblems(ps), []);
+  const noSym = structuredClone(ps); delete noSym.scales['triage-colors'].levels[0].symbol;
+  assert.ok(scaleProblems(noSym).some((p) => /symbol/.test(p)));
+});

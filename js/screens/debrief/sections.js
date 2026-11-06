@@ -1,6 +1,7 @@
 // Debrief sections (render only; data comes from engine/debrief.js).
 
 import { h } from '../shared/dom.js';
+import { triageChip } from '../shared/triage-chip.js';
 
 const sevChip = (s) => h('span', { class: `flag-chip flag-${s}` }, s === 'red' ? 'Red' : 'Amber');
 const empty = (text) => h('p', { class: 'muted' }, text);
@@ -93,7 +94,7 @@ export function prioritySection(d, { at, room, scale }) {
         h('td', {}, i === 0 ? room(p.patientId) : ''),
         h('td', {}, at(s.fromMin)), h('td', {}, at(s.toMin)),
         h('td', {}, s.levelId ? label[s.levelId] : h('span', { class: 'muted' }, 'not set')),
-        h('td', {}, h('span', { class: `triage-chip triage-${s.tag}` }, s.tag)),
+        h('td', {}, triageChip(s.tag)),
         h('td', {}, s.match === false ? 'Mismatch' : s.match ? 'Match' : ''),
       ))))) : empty('No patients.'),
   );

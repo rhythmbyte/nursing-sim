@@ -4,6 +4,7 @@
   "required": ["scales"],
   "properties": {
     "review": { "enum": ["approved", "proposed", "partial"] },
+    "instructorTags": { "type": "object" },
     "scales": { "type": "object", "additionalPropertiesNote": "each value is a scale", "properties": {} }
   },
   "$defs": {
@@ -23,6 +24,7 @@
               "label": { "type": "string" },
               "description": { "type": "string" },
               "tone": { "enum": ["red", "yellow", "green", "black", "neutral"] },
+              "symbol": { "type": "string", "minLength": 1 },
               "matchesTags": { "type": "array", "items": {"enum": ["red", "yellow", "green", "black"]} }
             }
           }

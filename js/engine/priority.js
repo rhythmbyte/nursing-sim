@@ -33,6 +33,7 @@ export function scaleProblems(catalog) {
     sc.levels.forEach((l, i) => {
       if (!l.id || !l.label) problems.push(`scales.${id}.levels[${i}]: needs id and label`);
       if (!Array.isArray(l.matchesTags) || l.matchesTags.some((t) => !['red', 'yellow', 'green', 'black'].includes(t))) problems.push(`scales.${id}.levels[${i}]: matchesTags must list instructor tags`);
+      if (!l.symbol) problems.push(`scales.${id}.levels[${i}]: needs a symbol (color-blind safe)`);
     });
   }
   return problems;
