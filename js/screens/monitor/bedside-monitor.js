@@ -48,7 +48,7 @@ function tile(cls, label) {
   return { el, value, sub };
 }
 
-export function createMonitor(container, { isRunning, title = '' }) {
+export function createMonitor(container, { isRunning, title = '', onSilence = null }) {
   let view = null;
   let muted = true; // sound off until the user turns it on (browsers need a gesture anyway)
   const ecgCanvas = h('canvas', { class: 'mon-wave', width: 640, height: 120, 'aria-label': 'ECG waveform' });
@@ -57,8 +57,9 @@ export function createMonitor(container, { isRunning, title = '' }) {
   const plethLabel = h('div', { class: 'mon-wave-label mon-cyan' }, 'Pleth');
   const t = { hr: tile('mon-green', 'HR'), spo2: tile('mon-cyan', 'SpO₂ %'), nibp: tile('mon-white', 'NIBP mmHg'), rr: tile('mon-yellow', 'RR'), temp: tile('mon-orange', 'Temp °F'), o2: tile('mon-white', 'O₂') };
   const muteBtn = h('button', { class: 'mon-btn', type: 'button', onclick: () => { muted = !muted; muteBtn.textContent = muted ? '🔇 Alarms muted' : '🔊 Alarm sound on'; } }, '🔇 Alarms muted');
+  const silenceBtn = h('button', { class: 'mon-btn mon-silence', type: 'button', hidden: true, onclick: () => onSilence?.() }, 'Silence alarm');
   const el = h('div', { class: 'bedside-monitor', role: 'group', 'aria-label': `Bedside monitor ${title}` },
-    h('div', { class: 'mon-head' }, h('span', {}, title), muteBtn),
+    h('div', { class: 'mon-head' }, h('span', {}, title), h('span', {}, silenceBtn, ' ', muteBtn)),
     h('div', { class: 'mon-body' },
       h('div', { class: 'mon-waves' }, ecgLabel, ecgCanvas, plethLabel, plethCanvas),
       h('div', { class: 'mon-tiles' }, t.hr.el, t.spo2.el, t.nibp.el, t.rr.el, t.temp.el, t.o2.el)),
@@ -85,7 +86,7 @@ export function createMonitor(container, { isRunning, title = '' }) {
       ecg.plot(ecgVals, -0.6, 1.2);
       pleth.plot(plVals, -0.1, 1.1);
       alarmT += dt;
-      if (view.alarms.length && !muted && alarmT > 1) { alarmT = 0; beep({ freq: 960, ms: 120 }); }
+      if (view.alarms.length && !view.silenced && !muted && alarmT > 1) { alarmT = 0; beep({ freq: 960, ms: 120 }); }
     },
     setView(v) {
       view = v;
@@ -105,6 +106,8 @@ export function createMonitor(container, { isRunning, title = '' }) {
       t.nibp.el.classList.toggle('mon-alarm', alarm.has('nibp'));
       t.rr.el.classList.toggle('mon-alarm', alarm.has('rr'));
       el.classList.toggle('mon-has-alarm', alarm.size > 0);
+      silenceBtn.hidden = !onSilence || !alarm.size || v.silenced;
+      silenceBtn.textContent = v.silenced ? 'Alarm silenced' : 'Silence alarm';
     },
     destroy() { monitors.delete(self); el.remove(); },
   };

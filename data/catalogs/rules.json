@@ -27,6 +27,7 @@
     },
     "prn-limit": { "severity": "red" },
     "left-unattended": { "severity": "red" },
+    "alarm-response": { "enabled": true, "amberAfterMin": 2, "redAfterMin": 5, "_comment": "Monitor alarm not acknowledged (silenced) within these sim minutes. Alarms that clear on their own before amberAfterMin are not flagged." },
     "priority-mismatch": {
       "enabled": true,
       "severity": "amber",

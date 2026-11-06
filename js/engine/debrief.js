@@ -8,6 +8,7 @@ import { firstWork } from './orders.js';
 import { vitalNumber } from './vitals.js';
 import { activeScale, priorityTimeline } from './priority.js';
 import { withoutStruck } from './struck.js';
+import { alarmEpisodes } from './monitor-alarms.js';
 
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -39,7 +40,8 @@ function responseTimes(state, pids, ctx) {
       codes.push({ patientId: pid, startedAtMin: code.startedMin, firstResponseAtMin: first?.simMin ?? null, responseMin: first ? round(first.simMin - code.startedMin) : null });
     }
   }
-  return { callLights: lights.sort((a, b) => a.litAtMin - b.litAtMin), parameters: params, codes };
+  const alarms = pids.flatMap((pid) => alarmEpisodes(state.log, pid).map((e) => ({ patientId: pid, startedAtMin: e.start, ackAtMin: e.ack, clearedAtMin: e.end, alarms: e.alarms, responseMin: e.ack != null ? round(e.ack - e.start) : null })));
+  return { callLights: lights.sort((a, b) => a.litAtMin - b.litAtMin), parameters: params, codes, alarms };
 }
 
 function orderSequences(state, pids, ctx) {

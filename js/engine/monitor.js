@@ -35,8 +35,8 @@ export function connections(state, pid, template, catalogs) {
 
 const out = (v, [lo, hi] = []) => v != null && ((lo != null && v < lo) || (hi != null && v > hi));
 
-/** Everything the monitor displays, already filtered to what's connected. */
-export function monitorView(state, pid, template, catalogs) {
+/** Everything the monitor displays, already filtered to what's connected. simMin (optional) = for alarm silence. */
+export function monitorView(state, pid, template, catalogs, simMin = null) {
   const ps = state.patients[pid];
   const c = connections(state, pid, template, catalogs);
   const rhythm = resolveRhythm(catalogs, ps.vitals.rhythm) || resolveRhythm(catalogs, 'sinus');
@@ -63,6 +63,7 @@ export function monitorView(state, pid, template, catalogs) {
     view.bp && (out(sbp, lim.sbp) || out(dbp, lim.dbp)) && 'nibp',
     c.ecg && rhythm?.alarm && 'rhythm',
   ].filter(Boolean);
+  view.silenced = simMin != null && (ps.alarm?.silencedUntil ?? -1) > simMin;
   return view;
 }
 
@@ -81,3 +82,4 @@ export function rhythmProblems(t, catalogs) {
   const names = [t.vitals.baseline.rhythm, ...(t.vitals.keyframes || []).map((k) => k.values?.rhythm)].filter(Boolean);
   return names.filter((n) => !resolveRhythm(catalogs, n)).map((n) => `vitals rhythm "${n}" is not in data/catalogs/rhythms.json`);
 }
+

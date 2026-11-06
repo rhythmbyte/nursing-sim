@@ -19,10 +19,11 @@ export default {
       Promise.resolve(p).catch(() => toast('Full screen isn\'t allowed here. Use the browser\'s full-screen key instead.'));
     } }, 'Full screen');
     root.append(h('div', { class: 'controls' }, connectBtn, full), wrap);
-    const mon = createMonitor(wrap, { isRunning: () => runner.state.clock.status === 'running', title: `Rm ${view.demographics.room} ${view.demographics.name}` });
+    const mon = createMonitor(wrap, { isRunning: () => runner.state.clock.status === 'running', title: `Rm ${view.demographics.room} ${view.demographics.name}`,
+      onSilence: () => { act('acknowledgeAlarm', {}); toast('Alarm silenced'); } });
     return {
       update(state) {
-        const v = monitorView(state, pid, runner.templates()[pid], catalogs);
+        const v = monitorView(state, pid, runner.templates()[pid], catalogs, runner.simMin());
         v.bpTime = v.bpAtMin != null ? formatShiftTime(state.startClock, v.bpAtMin) : null;
         connectBtn.hidden = Boolean(state.patients[pid].monitorLink);
         mon.setView(v);

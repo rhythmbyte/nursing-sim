@@ -15,6 +15,7 @@
         "allergy-conflict": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" }, "classes": { "type": "object" } } },
         "prn-limit": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
         "left-unattended": { "type": "object", "properties": { "severity": { "$ref": "#/$defs/severity" } } },
+        "alarm-response": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "amberAfterMin": { "type": "number", "minimum": 0 }, "redAfterMin": { "type": "number", "minimum": 0 } } },
         "priority-mismatch": { "type": "object", "properties": { "enabled": { "type": "boolean" }, "severity": { "$ref": "#/$defs/severity" }, "graceMin": { "type": "number", "minimum": 0 }, "flagUnassigned": { "type": "boolean" } } }
       }
     },

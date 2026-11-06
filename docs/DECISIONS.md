@@ -4,6 +4,12 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Monitor alarm episodes are tracked by the engine
+- **Decision:** A tick processor (`engine/monitor-alarms.js`) compares each patient's `monitorView` alarms with the last recorded set and logs `monitor-alarm` on changes. An episode runs from first alarm to all-clear. **Silence alarm** (`acknowledgeAlarm`) logs the response time once per episode and silences the sound for `alarmSilenceMin`; the visual alarm stays. The `alarm-response` rule and the debrief read episodes from the log. It lives in its own module so `session.js` can list the processor without an import cycle at load time. Session shape v13.
+- **Why:** Alarm response is gradable only if the engine, not the display, knows when alarms started. Thresholds and silence length are clinical, so they're data plus SPEC §14 questions.
+
+---
+
 ## 2026-11-05: "Entered in error" strikes, never deletes
 - **Decision:** `strikeEntry` (own entries only, reason required) records `state.struck[logId]` plus an `entered-in-error` log entry. One helper, `engine/struck.js activeLog/withoutStruck`, gives rules, PRN checks and debrief comparisons the log without struck entries. The timeline keeps them, marked. Flowsheet rows link to their log entry so they strike too. Order progress or findings revealed by a struck entry are not undone.
 - **Why:** It matches real charting practice (corrections are visible and auditable), and the debrief can discuss the mistake.

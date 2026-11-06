@@ -17,11 +17,12 @@ import { initLabs, labsProcessor } from './labs.js';
 import { initFlowsheet, monitorProcessor } from './vitals.js';
 import { delegationProcessor } from './delegation.js';
 import { trendProcessor } from './vitals-control.js';
+import { alarmProcessor } from './monitor-alarms.js';
 
 // Order matters within one instant: trends step first, then monitor readings (which read vitalsAt).
-const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor];
+const PROCESSORS = [trendProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
 
-export const SESSION_VERSION = 12; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 13; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -47,6 +48,7 @@ function initialPatientState(t, groupId, admission, catalogs) {
     vitalsHistory: [{ atMin: 0, values: { ...t.vitals.baseline } }], // every change (engine/vitals-control.js)
     vitalsTrend: null,                         // instructor trend in progress
     vitalsOverride: false,                     // instructor has taken over vitals (until the next scripted change)
+    alarm: null,                               // monitor alarm episode { active, since, ackAt, silencedUntil } (engine/monitor.js)
     monitorLink: null,                         // { atMin, by } once a student connects the bedside monitor
     callLight: null,
     findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
@@ -149,14 +151,14 @@ function endShift(state, now) {
 }
 
 function runProcessors(draft, upto, ctx) {
-  for (const p of PROCESSORS) if (p.due(draft, upto)) p.apply(draft, upto, ctx);
+  for (const p of PROCESSORS) if (p.due(draft, upto, ctx)) p.apply(draft, upto, ctx);
 }
 
 /** Fire everything due at the clock's current sim minute (any clock status). Returns { state, fired }. */
 function advance(state, { now, refs, templatesById, catalogs }) {
   const simMin = Math.min(simMinOf(state, now), state.endMin ?? Infinity); // nothing past the end of shift
   const due = dueEvents(refs, state.fired, simMin);
-  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin))) {
+  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin, { now, templatesById, catalogs }))) {
     return { state, fired: 0 };
   }
 

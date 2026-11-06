@@ -11,10 +11,11 @@ import allergyConflict from './allergy-conflict.js';
 import prnLimit from './prn-limit.js';
 import leftUnattended from './left-unattended.js';
 import priorityMismatch from './priority-mismatch.js';
+import alarmResponse from './alarm-response.js';
 import { ruleConfig } from './helpers.js';
 import { withoutStruck } from '../struck.js';
 
-[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended, priorityMismatch]
+[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended, priorityMismatch, alarmResponse]
   .forEach(registerRule);
 
 /** All flags for the session at ctx.simMin, sorted by time. ctx: { templatesById, catalogs, simMin, studentIdsForGroup } */

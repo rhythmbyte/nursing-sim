@@ -16,5 +16,6 @@
   "monitorLeads": {
     "_comment": "Which monitor parts a connection gives. Interventions/orders connect via the catalog flag monitorConnects; 'Connect to monitor' connects all.",
     "all": ["ecg", "spo2", "nibp"]
-  }
+  },
+  "alarmSilenceMin": 2
 }

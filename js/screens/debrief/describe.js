@@ -30,6 +30,8 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     }
     case 'entered-in-error': return `Marked an entry as entered in error (${d.reason})`;
     case 'reflection-submitted': return 'Submitted reflection';
+    case 'alarm-acknowledged': return `Silenced monitor alarm (${(d.alarms || []).join(', ')}) after ${d.responseMin} min`;
+    case 'monitor-alarm': return d.active.length ? `Monitor alarm: ${d.active.join(', ')}` : 'Monitor alarm cleared';
     case 'left-unattended': return `Instructor: left unattended${d.note ? ` (${d.note})` : ''}`;
     case 'clock-skip': return `Clock skipped ${d.fromMin} → ${d.toMin} min`;
     default: return l.action.replace(/-/g, ' ') + (d.reason ? ` (${d.reason})` : '');

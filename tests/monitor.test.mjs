@@ -82,3 +82,29 @@ test('waveforms: finite samples; asystole flat; pulseless has no pleth', () => {
   assert.equal(plethSample(0.3, false), 0);
   assert.ok(plethSample(0.35, true) > 0.3);
 });
+
+test('Suggestion 2: alarm episodes, silence logs response time, alarm-response rule thresholds from data', async () => {
+  const { acknowledgeAlarm, alarmEpisodes } = await import('../js/engine/monitor-alarms.js');
+  const { evaluateRules } = await import('../js/engine/rules/index.js');
+  let { s, tick } = started();
+  s = chart.connectMonitor(s, DE, {}, ctx(0));
+  s = tick(s, 1);
+  assert.deepEqual(s.patients[DE].alarm?.active || [], [], 'no alarm at baseline');
+  s = adjustVitals(s, DE, { values: { spo2: 84 } }, { now: 2 * MIN, user: INS });
+  s = tick(s, 2.1);
+  assert.deepEqual(s.patients[DE].alarm.active, ['spo2']);
+  const rctx = (m) => ({ templatesById, catalogs, simMin: m, studentIdsForGroup: () => ['student-1'], groupOfStudent: () => 'g1' });
+  assert.equal(evaluateRules(s, rctx(3)).filter((f) => f.ruleId === 'alarm-response').length, 0, 'inside amber window');
+  assert.equal(evaluateRules(s, rctx(5)).find((f) => f.ruleId === 'alarm-response').severity, 'amber');
+  s = acknowledgeAlarm(s, DE, {}, { ...ctx(5), catalogs });
+  assert.equal(s.log.at(-1).details.responseMin, 2.9);
+  assert.equal(view(s, DE).silenced, false, 'monitorView needs simMin for silence');
+  assert.equal(monitorView(s, DE, templatesById[DE], catalogs, 6).silenced, true);
+  assert.equal(monitorView(s, DE, templatesById[DE], catalogs, 7.5).silenced, false, `silence lasts ${catalogs.vitals.alarmSilenceMin} min`);
+  const f = evaluateRules(s, rctx(20)).filter((x) => x.ruleId === 'alarm-response');
+  assert.equal(f.length, 1); assert.match(f[0].message, /acknowledged after 2\.9 min/); assert.deepEqual(f[0].userIds, ['student-1']);
+  s = adjustVitals(s, DE, { values: { spo2: 95 } }, { now: 21 * MIN, user: INS });
+  s = tick(s, 21.1);
+  const eps = alarmEpisodes(s.log, DE);
+  assert.deepEqual(eps.map((e) => [e.start, e.ack, e.end]), [[2.1, 5, 21.1]]);
+});

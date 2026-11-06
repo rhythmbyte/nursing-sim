@@ -2,6 +2,13 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Alarm acknowledgement (suggestion 2)
+- When the bedside monitor alarms, students see **Silence alarm**. It logs the response time and silences the sound for `vitals.json alarmSilenceMin` (2 min); the flashing stays.
+- The engine tracks alarm episodes (start, changes, cleared), logged as `monitor-alarm`.
+- New rule **alarm-response**: amber after 2 min, red after 5 min without acknowledgement (`rules.json`). Alarms that clear on their own before the amber threshold aren't flagged.
+- Debrief response times gain a **Monitor alarms** table.
+- Tests: 119 passing.
+
 ## Monitor-only events (suggestion 3)
 - The scenario-change builder's vitals have a **Rhythm (monitor)** picker from `rhythms.json`. A **Silent** change with just a rhythm (and/or vitals) generates only a vitals-change: nothing alerts students except the bedside monitor, so you can see who notices.
 - Tests: 118 passing.
