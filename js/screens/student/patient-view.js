@@ -84,6 +84,7 @@ export function mountPatientView(root, ctx) {
   clear(root).append(
     h('div', { class: 'chart-top' },
       h('button', { class: 'btn btn-ghost', onclick: onBack }, '← My patients'),
+      ctx.sound ? ctx.sound.toggle() : null,
       clock.el,
     ),
     h('header', { class: 'chart-banner patient-banner' },

@@ -5,5 +5,11 @@
     "title": "Welcome to RN sims!",
     "subtitle": "Built by paramedics.",
     "button": "Get started"
+  },
+  "callLightSound": {
+    "_comment": "Student call-light sound: a beep when a light comes on, then a gentle repeat while it stays unanswered.",
+    "repeatSec": 30,
+    "freq": 660,
+    "repeatFreq": 520
   }
 }

@@ -120,6 +120,7 @@ export function mountStudentHome(root, ctx) {
 
     clear(root).append(
       h('header', { class: 'screen-header' }, h('h2', {}, `${user.name} · ${groupName}`),
+        ctx.sound ? ctx.sound.toggle() : null,
         h('button', { class: 'btn', onclick: () => {
           const mine = Object.entries(runner.state.patients).filter(([, ps]) => ps.groupId === groupId && ps.present).map(([pid]) => pid);
           refreshViews();

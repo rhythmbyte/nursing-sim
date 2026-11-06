@@ -3,6 +3,7 @@
 
 import { h, clear } from '../shared/dom.js';
 import { mountStudentHome } from './home.js';
+import { createCallLightSound } from './call-light-sound.js';
 
 export function mountStudentTab(root, ctx) {
   const { store, runner, user } = ctx;
@@ -16,7 +17,9 @@ export function mountStudentTab(root, ctx) {
     cleanup = null;
     if (entry) {
       joined = entry;
-      cleanup = mountStudentHome(clear(root), { ...ctx, user: { ...user, name: entry.name }, groupId: entry.groupId });
+      const sound = createCallLightSound({ store, runner, user, groupId: entry.groupId, config: ctx.catalogs.ui?.callLightSound });
+      const stopHome = mountStudentHome(clear(root), { ...ctx, user: { ...user, name: entry.name }, groupId: entry.groupId, sound });
+      cleanup = () => { stopHome(); sound.destroy(); };
       return;
     }
     joined = null;

@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## B12. Call-light sound
+- A beep when a call light comes on for one of the student's patients, then a gentle repeat (every 30 s of real time, while the sim runs) until it's answered. A toggle on the student home and chart (one setting, remembered per student) turns it on or off. Timing and tones are data (`ui.json callLightSound`).
+- Tests: 110 passing.
+
 ## Pulseless rhythms show RR --
 - `rhythms.json`: VF, pulseless VT (new `pvt`), PEA and asystole carry `"pulseless": true` (replaces `pulse: false`). On the monitor a pulseless rhythm shows HR per rhythm, and SpO₂, pleth and **RR as --**. SPEC §14 question on 0 vs. agonal breathing stays open.
 - Tests: 109 passing.

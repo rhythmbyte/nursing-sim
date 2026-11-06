@@ -135,3 +135,15 @@ test('B11: report sheet data uses the student view and live orders; hourly grid 
   assert.deepEqual([d.times[0], d.times.at(-1), d.times.length], ['07:00', '15:00', 9]);
   assert.equal(JSON.stringify(d).includes('shouldRecognize'), false);
 });
+
+test('B12: call-light sound detects newly lit lights for the student group only', async () => {
+  const { litLights } = await import('../js/screens/student/call-light-sound.js');
+  let { s } = started();
+  const first = litLights(s, 'g1');
+  assert.equal(first.lit.size, 0);
+  s = { ...s, patients: { ...s.patients, [RM]: { ...s.patients[RM], callLight: { since: 75 } } } };
+  const second = litLights(s, 'g1', first.lit);
+  assert.deepEqual(second.fresh, [`${RM}@75`]);
+  assert.deepEqual(litLights(s, 'g1', second.lit).fresh, [], 'still lit: not new');
+  assert.equal(litLights(s, 'g2').lit.size, 0, 'other groups ignored');
+});
