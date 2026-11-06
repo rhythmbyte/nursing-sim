@@ -9,6 +9,7 @@
     "otherManualFields": { "type": "array", "items": { "type": "string" } },
     "monitorCycles": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
     "alarmLimits": { "type": "object" },
+    "trend": { "type": "object", "required": ["windowMin"], "properties": { "windowMin": { "type": "number", "minimum": 1 } } },
     "alarmSilenceMin": { "type": "number", "minimum": 0 },
     "monitorLeads": { "type": "object" }
   }

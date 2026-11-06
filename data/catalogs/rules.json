@@ -2,19 +2,13 @@
   "review": "proposed",
   "_comment": "Defaults for flag rules (SPEC §7). Every threshold and severity here is a clinical/grading choice for the instructor to confirm (SPEC §14). A scenario can override any rule's fields under settings.rules.<ruleId>.",
   "rules": {
-    "priority-order": {
-      "severity": "amber",
-      "trackedOrderTypes": ["once"],
-      "trackEventTriggeredPrn": true
-    },
+    "priority-order": { "severity": "amber", "trackedOrderTypes": ["once"], "trackEventTriggeredPrn": true },
     "tier-timeout": {
-      "windowsMin": { "1": 5, "2": 15 },
-      "severity": { "1": "red", "2": "amber" },
-      "trackedOrderTypes": ["once"],
-      "trackEventTriggeredPrn": true,
-      "includeShiftStartOrders": false
+      "severity": { "1": "red", "2": "amber", "3": "amber" },
+      "veryLateSeverity": "red",
+      "_comment": "Flags timeliness 'late'/'very late' orders. Thresholds and which orders count: rules.timeliness."
     },
-    "call-light-response": { "amberAfterMin": 5, "redAfterMin": 10 },
+    "call-light-response": { "_comment": "Late → amber, very late → red. Thresholds: rules.timeliness.callLights." },
     "parameter-breach": { "severity": "red" },
     "inappropriate-delegation": { "severity": "red" },
     "allergy-conflict": {
@@ -27,13 +21,48 @@
     },
     "prn-limit": { "severity": "red" },
     "left-unattended": { "severity": "red" },
-    "alarm-response": { "enabled": true, "amberAfterMin": 2, "redAfterMin": 5, "_comment": "Monitor alarm not acknowledged (silenced) within these sim minutes. Alarms that clear on their own before amberAfterMin are not flagged." },
+    "alarm-response": {
+      "enabled": true,
+      "_comment": "Late → amber, very late → red; alarms that clear on their own before 'late' are not flagged. Thresholds: rules.timeliness.alarms."
+    },
     "priority-mismatch": {
       "enabled": true,
       "severity": "amber",
       "graceMin": 10,
       "flagUnassigned": false,
       "_comment": "A student's priority for a patient doesn't match the instructor's tag for longer than graceMin (after either changes). flagUnassigned: also flag patients a student never prioritized."
+    },
+    "timeliness": {
+      "review": "proposed",
+      "_comment": "One source for 'how late is late' (engine/timeliness.js): the command center, debrief and the tier-timeout / call-light-response / alarm-response rules all read it. Minutes from active/due to done. Instructor to confirm (SPEC §14). Scenarios can override parts under settings.rules.timeliness.",
+      "orders": {
+        "1": { "lateMin": 5, "veryLateMin": 15 },
+        "2": { "lateMin": 15, "veryLateMin": 30 },
+        "3": { "lateMin": 60, "veryLateMin": 120 }
+      },
+      "tracking": { "trackedOrderTypes": ["once"], "trackEventTriggeredPrn": true, "includeShiftStartOrders": false },
+      "scheduledMeds": { "lateMin": 30, "veryLateMin": 60, "earlyWindowMin": 60 },
+      "callLights": { "lateMin": 5, "veryLateMin": 10 },
+      "alarms": { "lateMin": 2, "veryLateMin": 5 },
+      "tags": {
+        "on-time": { "label": "On time", "symbol": "✓", "tone": "green" },
+        "late": { "label": "Late", "symbol": "◷", "tone": "yellow" },
+        "very-late": { "label": "Very late", "symbol": "‼", "tone": "red" },
+        "open": { "label": "Open", "symbol": "○", "tone": "neutral" },
+        "open-late": { "label": "Open – late", "symbol": "◔", "tone": "yellow" },
+        "open-very-late": { "label": "Open – very late", "symbol": "◉", "tone": "red" },
+        "never": { "label": "Never done", "symbol": "✕", "tone": "red" }
+      },
+      "groupStatus": {
+        "_comment": "Command center: a group 'Needs attention' if any needsAttention count is reached, 'Falling behind' if any fallingBehind count is reached, else 'On track'. Counts include open items.",
+        "needsAttention": { "veryLate": 1, "redFlags": 1 },
+        "fallingBehind": { "late": 1, "amberFlags": 1 },
+        "labels": {
+          "needs-attention": { "label": "Needs attention", "symbol": "‼", "tone": "red" },
+          "falling-behind": { "label": "Falling behind", "symbol": "◷", "tone": "yellow" },
+          "on-track": { "label": "On track", "symbol": "✓", "tone": "green" }
+        }
+      }
     }
   },
   "codeResponse": {

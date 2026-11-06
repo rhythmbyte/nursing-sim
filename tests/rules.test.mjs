@@ -65,7 +65,7 @@ test('tier-timeout: tier 1 ECG after the call light: flagged while open, then as
 test('tier-timeout: shift-start orders are not timed by default, configurable per scenario', () => {
   const quiet = started();
   assert.equal(quiet.flags(quiet.s, 120, 'tier-timeout').length, 0);
-  const strict = started({ rules: { 'tier-timeout': { includeShiftStartOrders: true } } });
+  const strict = started({ rules: { timeliness: { tracking: { includeShiftStartOrders: true } } } });
   assert.ok(strict.flags(strict.s, 120, 'tier-timeout').some((f) => f.patientId === RM && /troponin/i.test(f.message)));
 });
 

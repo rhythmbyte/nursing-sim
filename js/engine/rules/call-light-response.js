@@ -1,25 +1,16 @@
-// call-light-response: a call light answered late, or still unanswered past the threshold.
-import { flag, ruleConfig, responsible, mins } from './helpers.js';
+// call-light-response: a call light answered late, or still unanswered past "late".
+// Thresholds: engine/timeliness.js (rules.timeliness.callLights). Late → amber, very late → red.
+import { flag, responsible, mins } from './helpers.js';
+import { timelinessItems, isLate, isVeryLate } from '../timeliness.js';
 
 export default {
   id: 'call-light-response',
   label: 'Call light response time',
   evaluate(state, ctx) {
-    const cfg = ruleConfig(state, ctx, 'call-light-response');
-    const sev = (m) => (m > cfg.redAfterMin ? 'red' : m > cfg.amberAfterMin ? 'amber' : null);
-    const flags = [];
-    for (const l of state.log) {
-      if (l.action !== 'call-light-answered') continue;
-      const s = sev(l.details.responseMin);
-      if (s) flags.push(flag('call-light-response', s, { patientId: l.patientId, userIds: responsible(state, ctx, l.patientId), atMin: l.simMin, logIds: [l.id],
-        message: `Call light answered after ${mins(l.details.responseMin)}.` }));
-    }
-    for (const [pid, ps] of Object.entries(state.patients)) {
-      if (!ps.callLight) continue;
-      const s = sev(ctx.simMin - ps.callLight.since);
-      if (s) flags.push(flag('call-light-response', s, { patientId: pid, userIds: responsible(state, ctx, pid), atMin: ps.callLight.since,
-        message: `Call light unanswered for ${mins(ctx.simMin - ps.callLight.since)}.` }));
-    }
-    return flags;
+    return timelinessItems(state, ctx).filter((i) => i.kind === 'callLight' && (isLate(i.tag) || isVeryLate(i.tag))).map((i) => flag('call-light-response', isVeryLate(i.tag) ? 'red' : 'amber', {
+      patientId: i.patientId, userIds: responsible(state, ctx, i.patientId),
+      atMin: i.doneAt ?? i.startAt, logIds: i.logId ? [i.logId] : [],
+      message: i.doneAt != null ? `Call light answered after ${mins(i.minutes)}.` : `Call light unanswered for ${mins(i.minutes)}.`,
+    }));
   },
 };

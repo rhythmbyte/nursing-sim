@@ -17,5 +17,12 @@
     "_comment": "Which monitor parts a connection gives. Interventions/orders connect via the catalog flag monitorConnects; 'Connect to monitor' connects all.",
     "all": ["ecg", "spo2", "nibp"]
   },
-  "alarmSilenceMin": 2
+  "alarmSilenceMin": 2,
+  "trend": {
+    "_comment": "Command center trend arrow: compare now with windowMin ago. Worse if any change crosses these (instructor to confirm).",
+    "windowMin": 15,
+    "spo2Drop": 3,
+    "sbpDrop": 15,
+    "hrRise": 15
+  }
 }

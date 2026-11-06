@@ -1,27 +1,15 @@
-// alarm-response: a monitor alarm wasn't acknowledged (silenced) within amberAfterMin / redAfterMin
-// (rules.json; SPEC §14). Alarms that clear on their own before the amber threshold aren't flagged.
-import { flag, ruleConfig, responsible, mins } from './helpers.js';
-import { alarmEpisodes } from '../monitor-alarms.js';
+// alarm-response: a monitor alarm not acknowledged (silenced) by "late". Alarms that clear on their own
+// before "late" aren't flagged. Thresholds: engine/timeliness.js (rules.timeliness.alarms).
+import { flag, responsible, mins } from './helpers.js';
+import { timelinessItems, isLate, isVeryLate } from '../timeliness.js';
 
 export default {
   id: 'alarm-response',
   label: 'Monitor alarm response time',
   evaluate(state, ctx) {
-    const cfg = ruleConfig(state, ctx, 'alarm-response');
-    const flags = [];
-    for (const pid of Object.keys(state.patients)) {
-      for (const ep of alarmEpisodes(state.log, pid)) {
-        const until = ep.ack ?? ep.end ?? ctx.simMin;
-        const waited = until - ep.start;
-        if (ep.ack == null && ep.end != null && waited <= cfg.amberAfterMin) continue; // cleared on its own quickly
-        const severity = waited > cfg.redAfterMin ? 'red' : waited > cfg.amberAfterMin ? 'amber' : null;
-        if (!severity) continue;
-        flags.push(flag('alarm-response', severity, {
-          patientId: pid, userIds: ep.ackBy ? [ep.ackBy] : responsible(state, ctx, pid), atMin: ep.start,
-          message: ep.ack != null ? `Monitor alarm (${ep.alarms.join(', ')}) acknowledged after ${mins(waited)}.` : `Monitor alarm (${ep.alarms.join(', ')}) not acknowledged for ${mins(waited)}.`,
-        }));
-      }
-    }
-    return flags;
+    return timelinessItems(state, ctx).filter((i) => i.kind === 'alarm' && (isLate(i.tag) || isVeryLate(i.tag))).map((i) => flag('alarm-response', isVeryLate(i.tag) ? 'red' : 'amber', {
+      patientId: i.patientId, userIds: i.acknowledged && i.doneBy ? [i.doneBy] : responsible(state, ctx, i.patientId), atMin: i.startAt,
+      message: i.acknowledged ? `${i.label} acknowledged after ${mins(i.minutes)}.` : `${i.label} not acknowledged for ${mins(i.minutes)}.`,
+    }));
   },
 };
