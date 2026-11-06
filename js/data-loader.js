@@ -5,6 +5,7 @@ import { validate } from './validate.js';
 import { eventGroupProblems } from './engine/scheduler.js';
 import { load, save } from './storage.js';
 import { scaleProblems } from './engine/priority.js';
+import { assessmentCatalogProblems } from './engine/assessment-score.js';
 import { patientReferenceProblems, scenarioReferenceProblems, rhythmCatalogProblems, helpCatalogProblems, reactionTemplateProblems } from './engine/integrity.js';
 
 // Checks JSON Schema can't express (cross-field rules), per kind of file.
@@ -14,6 +15,7 @@ const EXTRA_CHECKS = {
   priorityScales: (d) => scaleProblems(d),
   rhythms: (d) => rhythmCatalogProblems(d),
   help: (d) => helpCatalogProblems(d),
+  assessmentTools: (d) => assessmentCatalogProblems(d),
 };
 
 const SCHEMAS = {
@@ -32,6 +34,7 @@ const SCHEMAS = {
   help: 'schemas/help.schema.json',
   reflection: 'schemas/reflection.schema.json',
   reactionTemplates: 'schemas/reaction-templates.schema.json',
+  assessmentTools: 'schemas/assessment-tools.schema.json',
 };
 
 async function fetchJson(base, rel) {

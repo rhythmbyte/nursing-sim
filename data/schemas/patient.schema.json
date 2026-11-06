@@ -201,7 +201,7 @@
       "anyOfMessage": "event needs atMin or trigger",
       "properties": {
         "id": { "type": "string", "pattern": "^e-" },
-        "type": { "enum": ["new-orders", "call-light", "vitals-change", "findings-change", "staff-message", "lab-result", "code", "admission", "ems-arrival"] },
+        "type": { "enum": ["new-orders", "call-light", "vitals-change", "findings-change", "staff-message", "lab-result", "code", "admission", "ems-arrival", "assessment-change"] },
         "atMin": { "type": "integer", "minimum": 0 },
         "group": { "type": "string", "minLength": 1 },
         "repeatEveryMin": { "type": "integer", "minimum": 1 },

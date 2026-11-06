@@ -8,5 +8,6 @@ import staffMessage from './staff-message.js';
 import labResult from './lab-result.js';
 import code from './code.js';
 import admission from './admission.js';
+import assessmentChange from './assessment-change.js';
 
-[newOrders, callLight, vitalsChange, findingsChange, staffMessage, labResult, code, admission].forEach(registerEventType);
+[newOrders, callLight, vitalsChange, findingsChange, staffMessage, labResult, code, admission, assessmentChange].forEach(registerEventType);

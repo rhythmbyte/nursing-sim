@@ -10,6 +10,8 @@ import { drawLabs } from './labs.js';
 import { deviceValues, scriptedSnapshot } from './vitals.js';
 import { revealFindings } from './findings.js';
 import { vitalsAt } from './vitals-control.js';
+import { completeDelegatedAssessment } from './assessments.js';
+import { toolById } from './assessment-score.js';
 
 /** Delay for a role from merged settings (engine/settings.js turns a single number into per-role values). */
 export function delegationDelay(settings, to) {
@@ -49,13 +51,14 @@ function complete(draft, patientId, task, ctx) {
     values = { ...deviceValues({ vitals: v }, iv.chartFields, vcat), ...Object.fromEntries(manual.map((k) => [k, v[k]])) };
     ps.flowsheet.push({ atMin: at, source: 'delegated', values, by: task.to });
   }
+  if (task.assessmentToolId) completeDelegatedAssessment(draft, patientId, task, ctx); // assessment tools (engine/assessments.js)
   if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs, order.id);
   // Whether a delegated assessment reveals findings is a scenario setting (default false; SPEC §14).
   if (iv?.revealsFindings && draft.settings.delegatedAssessmentRevealsFindings) revealFindings(draft, patientId, templatesById[patientId], at);
   progressOrder(draft, patientId, order, at);
 
   Object.assign(task, { status: 'done', completedAt: at });
-  const label = iv?.label || task.interventionId;
+  const label = iv?.label || toolById(catalogs, task.assessmentToolId)?.name || task.interventionId;
   const name = templatesById[patientId].demographics.name;
   addAlert(draft, { simMin: at, patientId, kind: 'staff-message', message: `${task.to}: ${label} done for ${name}${values ? `: ${summarize(values)}` : '.'}` });
   append(draft, {

@@ -12,6 +12,7 @@ import { deviceValues, scriptedSnapshot } from './vitals.js';
 import { revealFindings } from './findings.js';
 export { connectMonitor } from './monitor.js';
 export { acknowledgeAlarm } from './monitor-alarms.js';
+export { chartAssessment } from './assessments.js';
 
 function begin(state, ctx) {
   return { draft: structuredClone(state), simMin: simMinOf(state, ctx.now) };

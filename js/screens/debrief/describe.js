@@ -25,6 +25,8 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'penalty-skipped': return 'Recovery penalty not applied (penalties are off in this sim)';
     case 'penalty-worn-off': return `Recovery penalty wore off: ${d.label || d.penaltyId || ''}`;
     case 'recovery-limited': return `Recovery limited by penalty: ${(d.limited || []).map((x) => `${x.k} ${x.target} → ${x.effective}`).join(', ')}${d.slowedTo ? ` (slower: ${d.slowedTo} min)` : ''}`;
+    case 'assessment': return `Assessment ${d.toolId ?? ''}${d.score != null ? `: ${d.score}` : ''}${d.band ? ` (${d.band})` : ''}${d.delegatedTo ? ` · by ${d.delegatedTo}` : ''}${d.complete === false ? ' · incomplete' : ''}`;
+    case 'assessment-delegated': return `Delegated ${d.toolId ?? 'an assessment'} to ${d.to ?? 'staff'}`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

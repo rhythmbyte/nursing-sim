@@ -16,7 +16,7 @@
         "revealManualVitals",
         "delegationDelayMin",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
+        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -40,6 +40,9 @@
         "reactionMaxPerInstant": { "type": "integer", "minimum": 1 },
         "recoveryPenalties": { "type": "boolean" },
         "recoveryPenaltyMaxPercent": { "type": "number", "minimum": 0, "maximum": 95 },
+        "assessmentTools": { "type": ["string", "array"] },
+        "revealAssessmentFindings": { "type": "boolean" },
+        "gradeAssessments": { "type": "boolean" },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
         "roscRhythm": { "type": "string" },
         "noRoscRhythm": { "type": "string" },

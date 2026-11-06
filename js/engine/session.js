@@ -26,7 +26,7 @@ import { penaltyProcessor } from './penalties.js';
 // stops there first, so work it does at that moment happens in time order with the others.
 const PROCESSORS = [trendProcessor, reactionsProcessor, penaltyProcessor, monitorProcessor, labsProcessor, delegationProcessor, alarmProcessor];
 
-export const SESSION_VERSION = 15; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 16; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -66,6 +66,8 @@ function initialPatientState(t, groupId, admission, catalogs) {
     code: null,
     script: initScript(t),       // reactive script position (engine/reactions.js), null if the patient has none
     penalties: [],               // recovery penalties earned (engine/penalties.js)
+    assessmentsExpected: structuredClone(t.assessments?.baseline || {}), // scripted answers per tool (engine/assessments.js)
+    assessments: [],             // tools the student (or staff) charted
     scriptTarget: null,          // last scripted vitals target before penalties { values, from, at }
   };
 }

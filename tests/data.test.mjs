@@ -26,6 +26,7 @@ const schemaFor = {
   help: load('schemas/help.schema.json'),
   reflection: load('schemas/reflection.schema.json'),
   reactionTemplates: load('schemas/reaction-templates.schema.json'),
+  assessmentTools: load('schemas/assessment-tools.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

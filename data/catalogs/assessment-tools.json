@@ -1,0 +1,2271 @@
+{
+ "review": "proposed",
+ "_comment": "Nursing assessment tools (engine/assessments.js). Scoring: sum (default), single (the one item's points), rule (positiveIf), auto (computed from vitals, view-only) or none. Bands are inclusive. license.status public / permission-needed / unknown: anything not public shows a 'license check needed' badge and stays out of default scenarios (SPEC §13/§14). Item wording for licensed tools is paraphrased.",
+ "categories": [
+  "neuro",
+  "falls",
+  "skin",
+  "pain",
+  "sedation",
+  "withdrawal",
+  "systems",
+  "early-warning"
+ ],
+ "tools": [
+  {
+   "id": "nihss",
+   "name": "NIH Stroke Scale (NIHSS)",
+   "category": "neuro",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "public",
+    "note": "Published by the National Institute of Neurological Disorders and Stroke (NIH); free to use. Certification training is separate."
+   },
+   "items": [
+    {
+     "id": "1a",
+     "label": "1a Level of consciousness",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Alert",
+       "points": 0
+      },
+      {
+       "label": "Not alert, arousable to minor stimulation",
+       "points": 1
+      },
+      {
+       "label": "Not alert, needs repeated or strong stimulation",
+       "points": 2
+      },
+      {
+       "label": "Unresponsive or reflex responses only",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "id": "1b",
+     "label": "1b LOC questions (month, age)",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Both correct",
+       "points": 0
+      },
+      {
+       "label": "One correct",
+       "points": 1
+      },
+      {
+       "label": "Neither correct",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "1c",
+     "label": "1c LOC commands (eyes, grip)",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Both correct",
+       "points": 0
+      },
+      {
+       "label": "One correct",
+       "points": 1
+      },
+      {
+       "label": "Neither correct",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "2",
+     "label": "2 Best gaze",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal",
+       "points": 0
+      },
+      {
+       "label": "Partial gaze palsy",
+       "points": 1
+      },
+      {
+       "label": "Forced deviation",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "3",
+     "label": "3 Visual fields",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No visual loss",
+       "points": 0
+      },
+      {
+       "label": "Partial hemianopia",
+       "points": 1
+      },
+      {
+       "label": "Complete hemianopia",
+       "points": 2
+      },
+      {
+       "label": "Bilateral hemianopia",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "id": "4",
+     "label": "4 Facial palsy",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal",
+       "points": 0
+      },
+      {
+       "label": "Minor paralysis",
+       "points": 1
+      },
+      {
+       "label": "Partial paralysis",
+       "points": 2
+      },
+      {
+       "label": "Complete paralysis",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "id": "5a",
+     "label": "5a Motor arm, left",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No drift",
+       "points": 0
+      },
+      {
+       "label": "Drift",
+       "points": 1
+      },
+      {
+       "label": "Some effort against gravity",
+       "points": 2
+      },
+      {
+       "label": "No effort against gravity",
+       "points": 3
+      },
+      {
+       "label": "No movement",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "5b",
+     "label": "5b Motor arm, right",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No drift",
+       "points": 0
+      },
+      {
+       "label": "Drift",
+       "points": 1
+      },
+      {
+       "label": "Some effort against gravity",
+       "points": 2
+      },
+      {
+       "label": "No effort against gravity",
+       "points": 3
+      },
+      {
+       "label": "No movement",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "6a",
+     "label": "6a Motor leg, left",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No drift",
+       "points": 0
+      },
+      {
+       "label": "Drift",
+       "points": 1
+      },
+      {
+       "label": "Some effort against gravity",
+       "points": 2
+      },
+      {
+       "label": "No effort against gravity",
+       "points": 3
+      },
+      {
+       "label": "No movement",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "6b",
+     "label": "6b Motor leg, right",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No drift",
+       "points": 0
+      },
+      {
+       "label": "Drift",
+       "points": 1
+      },
+      {
+       "label": "Some effort against gravity",
+       "points": 2
+      },
+      {
+       "label": "No effort against gravity",
+       "points": 3
+      },
+      {
+       "label": "No movement",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "7",
+     "label": "7 Limb ataxia",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Absent",
+       "points": 0
+      },
+      {
+       "label": "One limb",
+       "points": 1
+      },
+      {
+       "label": "Two limbs",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "8",
+     "label": "8 Sensory",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal",
+       "points": 0
+      },
+      {
+       "label": "Mild to moderate loss",
+       "points": 1
+      },
+      {
+       "label": "Severe or total loss",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "9",
+     "label": "9 Best language",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No aphasia",
+       "points": 0
+      },
+      {
+       "label": "Mild to moderate aphasia",
+       "points": 1
+      },
+      {
+       "label": "Severe aphasia",
+       "points": 2
+      },
+      {
+       "label": "Mute, global aphasia",
+       "points": 3
+      }
+     ]
+    },
+    {
+     "id": "10",
+     "label": "10 Dysarthria",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal",
+       "points": 0
+      },
+      {
+       "label": "Mild to moderate",
+       "points": 1
+      },
+      {
+       "label": "Severe",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "11",
+     "label": "11 Extinction and inattention",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "In one modality",
+       "points": 1
+      },
+      {
+       "label": "Profound or in more than one modality",
+       "points": 2
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "No stroke symptoms",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 4,
+     "label": "Minor stroke",
+     "tone": "yellow"
+    },
+    {
+     "min": 5,
+     "max": 15,
+     "label": "Moderate stroke",
+     "tone": "red"
+    },
+    {
+     "min": 16,
+     "max": 20,
+     "label": "Moderate to severe stroke",
+     "tone": "red"
+    },
+    {
+     "min": 21,
+     "max": 42,
+     "label": "Severe stroke",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "befast",
+   "name": "BE-FAST stroke screen",
+   "category": "neuro",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "public",
+    "note": "Public mnemonic (Balance, Eyes, Face, Arm, Speech, Time)."
+   },
+   "items": [
+    {
+     "id": "b",
+     "label": "Balance: sudden loss of balance or coordination",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "e",
+     "label": "Eyes: sudden vision change",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "f",
+     "label": "Face: facial droop",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "a",
+     "label": "Arm: arm or leg weakness",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "s",
+     "label": "Speech: slurred or confused speech",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "t",
+     "label": "Time: last known well (clock time)",
+     "type": "text"
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "Negative screen",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 5,
+     "label": "Positive screen: activate stroke alert per policy",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "gcs",
+   "name": "Glasgow Coma Scale (GCS)",
+   "category": "neuro",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "vitalsField": "gcs",
+   "license": {
+    "status": "public",
+    "note": "Teasdale & Jennett 1974. Free for clinical and teaching use with attribution (glasgowcomascale.org); confirm terms before the full build."
+   },
+   "items": [
+    {
+     "id": "eye",
+     "label": "Eye opening",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Spontaneous",
+       "points": 4
+      },
+      {
+       "label": "To sound",
+       "points": 3
+      },
+      {
+       "label": "To pressure",
+       "points": 2
+      },
+      {
+       "label": "None",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "verbal",
+     "label": "Verbal response",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Oriented",
+       "points": 5
+      },
+      {
+       "label": "Confused",
+       "points": 4
+      },
+      {
+       "label": "Words",
+       "points": 3
+      },
+      {
+       "label": "Sounds",
+       "points": 2
+      },
+      {
+       "label": "None",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "motor",
+     "label": "Motor response",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Obeys commands",
+       "points": 6
+      },
+      {
+       "label": "Localizing",
+       "points": 5
+      },
+      {
+       "label": "Normal flexion",
+       "points": 4
+      },
+      {
+       "label": "Abnormal flexion",
+       "points": 3
+      },
+      {
+       "label": "Extension",
+       "points": 2
+      },
+      {
+       "label": "None",
+       "points": 1
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 15,
+     "max": 15,
+     "label": "Normal",
+     "tone": "green"
+    },
+    {
+     "min": 13,
+     "max": 14,
+     "label": "Mild impairment",
+     "tone": "yellow"
+    },
+    {
+     "min": 9,
+     "max": 12,
+     "label": "Moderate impairment",
+     "tone": "red"
+    },
+    {
+     "min": 3,
+     "max": 8,
+     "label": "Severe impairment: protect the airway",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "pupils",
+   "name": "Pupils",
+   "category": "neuro",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "scoring": "none",
+   "license": {
+    "status": "public",
+    "note": "Standard exam, no scoring."
+   },
+   "items": [
+    {
+     "id": "left-size",
+     "label": "Left pupil size (mm)",
+     "type": "scale",
+     "min": 1,
+     "max": 9
+    },
+    {
+     "id": "left-react",
+     "label": "Left reaction",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Brisk",
+       "points": 0
+      },
+      {
+       "label": "Sluggish",
+       "points": 1
+      },
+      {
+       "label": "Nonreactive",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "right-size",
+     "label": "Right pupil size (mm)",
+     "type": "scale",
+     "min": 1,
+     "max": 9
+    },
+    {
+     "id": "right-react",
+     "label": "Right reaction",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Brisk",
+       "points": 0
+      },
+      {
+       "label": "Sluggish",
+       "points": 1
+      },
+      {
+       "label": "Nonreactive",
+       "points": 2
+      }
+     ]
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "morse",
+   "name": "Morse Fall Scale",
+   "category": "falls",
+   "reassessMin": 720,
+   "delegableTo": [
+    "LPN"
+   ],
+   "license": {
+    "status": "unknown",
+    "note": "Morse 1989. Widely reproduced; terms for software use not confirmed."
+   },
+   "items": [
+    {
+     "id": "history",
+     "label": "History of falling (recent)",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 25
+      }
+     ]
+    },
+    {
+     "id": "secondary",
+     "label": "Secondary diagnosis",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 15
+      }
+     ]
+    },
+    {
+     "id": "aid",
+     "label": "Ambulatory aid",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None, bed rest or nurse assist",
+       "points": 0
+      },
+      {
+       "label": "Crutches, cane or walker",
+       "points": 15
+      },
+      {
+       "label": "Holds on to furniture",
+       "points": 30
+      }
+     ]
+    },
+    {
+     "id": "iv",
+     "label": "IV or saline lock",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 20
+      }
+     ]
+    },
+    {
+     "id": "gait",
+     "label": "Gait",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal, bed rest or wheelchair",
+       "points": 0
+      },
+      {
+       "label": "Weak",
+       "points": 10
+      },
+      {
+       "label": "Impaired",
+       "points": 20
+      }
+     ]
+    },
+    {
+     "id": "mental",
+     "label": "Mental status",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Knows own limits",
+       "points": 0
+      },
+      {
+       "label": "Overestimates or forgets limits",
+       "points": 15
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 24,
+     "label": "Low fall risk",
+     "tone": "green"
+    },
+    {
+     "min": 25,
+     "max": 44,
+     "label": "Moderate fall risk",
+     "tone": "yellow"
+    },
+    {
+     "min": 45,
+     "max": 125,
+     "label": "High fall risk",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "braden",
+   "name": "Braden Scale (pressure injury risk)",
+   "category": "skin",
+   "reassessMin": 720,
+   "delegableTo": [
+    "LPN"
+   ],
+   "lowerIsWorse": true,
+   "license": {
+    "status": "permission-needed",
+    "note": "© Barbara Braden and Nancy Bergstrom. Permission needed for reproduction in software. Item wording here is paraphrased."
+   },
+   "items": [
+    {
+     "id": "sensory",
+     "label": "Sensory perception",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Completely limited",
+       "points": 1
+      },
+      {
+       "label": "Very limited",
+       "points": 2
+      },
+      {
+       "label": "Slightly limited",
+       "points": 3
+      },
+      {
+       "label": "No impairment",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "moisture",
+     "label": "Moisture",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Constantly moist",
+       "points": 1
+      },
+      {
+       "label": "Often moist",
+       "points": 2
+      },
+      {
+       "label": "Occasionally moist",
+       "points": 3
+      },
+      {
+       "label": "Rarely moist",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "activity",
+     "label": "Activity",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Bedfast",
+       "points": 1
+      },
+      {
+       "label": "Chairfast",
+       "points": 2
+      },
+      {
+       "label": "Walks occasionally",
+       "points": 3
+      },
+      {
+       "label": "Walks frequently",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "mobility",
+     "label": "Mobility",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Completely immobile",
+       "points": 1
+      },
+      {
+       "label": "Very limited",
+       "points": 2
+      },
+      {
+       "label": "Slightly limited",
+       "points": 3
+      },
+      {
+       "label": "No limitation",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "nutrition",
+     "label": "Nutrition",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Very poor",
+       "points": 1
+      },
+      {
+       "label": "Probably inadequate",
+       "points": 2
+      },
+      {
+       "label": "Adequate",
+       "points": 3
+      },
+      {
+       "label": "Excellent",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "friction",
+     "label": "Friction and shear",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Problem",
+       "points": 1
+      },
+      {
+       "label": "Potential problem",
+       "points": 2
+      },
+      {
+       "label": "No apparent problem",
+       "points": 3
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 6,
+     "max": 9,
+     "label": "Very high risk",
+     "tone": "red"
+    },
+    {
+     "min": 10,
+     "max": 12,
+     "label": "High risk",
+     "tone": "red"
+    },
+    {
+     "min": 13,
+     "max": 14,
+     "label": "Moderate risk",
+     "tone": "yellow"
+    },
+    {
+     "min": 15,
+     "max": 18,
+     "label": "Mild risk",
+     "tone": "yellow"
+    },
+    {
+     "min": 19,
+     "max": 23,
+     "label": "No known risk",
+     "tone": "green"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "pain-nrs",
+   "name": "Numeric pain scale (0–10)",
+   "category": "pain",
+   "reassessMin": 60,
+   "delegableTo": [
+    "LPN",
+    "CNA"
+   ],
+   "vitalsField": "pain",
+   "license": {
+    "status": "public",
+    "note": "Standard 0–10 numeric rating."
+   },
+   "items": [
+    {
+     "id": "score",
+     "label": "Pain now (0 = none, 10 = worst)",
+     "type": "scale",
+     "min": 0,
+     "max": 10
+    },
+    {
+     "id": "location",
+     "label": "Location",
+     "type": "text"
+    },
+    {
+     "id": "quality",
+     "label": "Quality",
+     "type": "text"
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "No pain",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 3,
+     "label": "Mild pain",
+     "tone": "green"
+    },
+    {
+     "min": 4,
+     "max": 6,
+     "label": "Moderate pain",
+     "tone": "yellow"
+    },
+    {
+     "min": 7,
+     "max": 10,
+     "label": "Severe pain",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "wong-baker",
+   "name": "Wong-Baker FACES pain scale",
+   "category": "pain",
+   "reassessMin": 60,
+   "delegableTo": [
+    "LPN"
+   ],
+   "license": {
+    "status": "permission-needed",
+    "note": "© Wong-Baker FACES Foundation. A license is needed for electronic use; the faces are not reproduced here, only the 0–10 values."
+   },
+   "items": [
+    {
+     "id": "face",
+     "label": "Face the patient points to",
+     "type": "choice",
+     "options": [
+      {
+       "label": "0: no hurt",
+       "points": 0
+      },
+      {
+       "label": "2: a little",
+       "points": 2
+      },
+      {
+       "label": "4: a little more",
+       "points": 4
+      },
+      {
+       "label": "6: even more",
+       "points": 6
+      },
+      {
+       "label": "8: a whole lot",
+       "points": 8
+      },
+      {
+       "label": "10: worst",
+       "points": 10
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "No pain",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 3,
+     "label": "Mild pain",
+     "tone": "green"
+    },
+    {
+     "min": 4,
+     "max": 6,
+     "label": "Moderate pain",
+     "tone": "yellow"
+    },
+    {
+     "min": 7,
+     "max": 10,
+     "label": "Severe pain",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "flacc",
+   "name": "FLACC (behavioral pain)",
+   "category": "pain",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "unknown",
+    "note": "Merkel et al. 1997 (University of Michigan). Terms for software use not confirmed."
+   },
+   "items": [
+    {
+     "id": "face",
+     "label": "Face",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No particular expression",
+       "points": 0
+      },
+      {
+       "label": "Occasional grimace",
+       "points": 1
+      },
+      {
+       "label": "Frequent or constant frown, clenched jaw",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "legs",
+     "label": "Legs",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Relaxed",
+       "points": 0
+      },
+      {
+       "label": "Restless, tense",
+       "points": 1
+      },
+      {
+       "label": "Kicking or drawn up",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "activity",
+     "label": "Activity",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Lying quietly, moves easily",
+       "points": 0
+      },
+      {
+       "label": "Squirming, tense",
+       "points": 1
+      },
+      {
+       "label": "Arched, rigid or jerking",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "cry",
+     "label": "Cry",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No cry",
+       "points": 0
+      },
+      {
+       "label": "Moans or whimpers",
+       "points": 1
+      },
+      {
+       "label": "Crying steadily, screams",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "consolability",
+     "label": "Consolability",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Content, relaxed",
+       "points": 0
+      },
+      {
+       "label": "Reassured by touch or talking",
+       "points": 1
+      },
+      {
+       "label": "Hard to console",
+       "points": 2
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "Relaxed and comfortable",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 3,
+     "label": "Mild discomfort",
+     "tone": "green"
+    },
+    {
+     "min": 4,
+     "max": 6,
+     "label": "Moderate pain",
+     "tone": "yellow"
+    },
+    {
+     "min": 7,
+     "max": 10,
+     "label": "Severe pain",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "cpot",
+   "name": "Critical-Care Pain Observation Tool (CPOT)",
+   "category": "pain",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "unknown",
+    "note": "Gélinas et al. 2006. Terms for software use not confirmed."
+   },
+   "items": [
+    {
+     "id": "face",
+     "label": "Facial expression",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Relaxed",
+       "points": 0
+      },
+      {
+       "label": "Tense",
+       "points": 1
+      },
+      {
+       "label": "Grimacing",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "body",
+     "label": "Body movements",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Absent or normal",
+       "points": 0
+      },
+      {
+       "label": "Protective",
+       "points": 1
+      },
+      {
+       "label": "Restless or agitated",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "muscle",
+     "label": "Muscle tension",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Relaxed",
+       "points": 0
+      },
+      {
+       "label": "Tense, rigid",
+       "points": 1
+      },
+      {
+       "label": "Very tense or rigid",
+       "points": 2
+      }
+     ]
+    },
+    {
+     "id": "vent",
+     "label": "Ventilator compliance or vocalization",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Tolerating or talking normally",
+       "points": 0
+      },
+      {
+       "label": "Coughing or sighing, moaning",
+       "points": 1
+      },
+      {
+       "label": "Fighting the ventilator or crying out",
+       "points": 2
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 2,
+     "label": "Pain unlikely",
+     "tone": "green"
+    },
+    {
+     "min": 3,
+     "max": 8,
+     "label": "Pain likely: treat and reassess",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "poss",
+   "name": "Pasero Opioid-induced Sedation Scale (POSS)",
+   "category": "sedation",
+   "reassessMin": 30,
+   "delegableTo": [],
+   "license": {
+    "status": "permission-needed",
+    "note": "© Chris Pasero. Usually reproduced with permission. Wording here is paraphrased."
+   },
+   "items": [
+    {
+     "id": "level",
+     "label": "Sedation level",
+     "type": "choice",
+     "options": [
+      {
+       "label": "S: sleeping, easy to wake",
+       "points": 0
+      },
+      {
+       "label": "1: awake and alert",
+       "points": 1
+      },
+      {
+       "label": "2: slightly drowsy, easily roused",
+       "points": 2
+      },
+      {
+       "label": "3: often drowsy, drifts off mid-conversation",
+       "points": 3
+      },
+      {
+       "label": "4: somnolent, minimal or no response",
+       "points": 4
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 2,
+     "label": "Acceptable: may give opioid",
+     "tone": "green"
+    },
+    {
+     "min": 3,
+     "max": 3,
+     "label": "Unacceptable: hold opioid, monitor closely",
+     "tone": "red"
+    },
+    {
+     "min": 4,
+     "max": 4,
+     "label": "Unacceptable: stop opioid, consider naloxone, call",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "rass",
+   "name": "Richmond Agitation-Sedation Scale (RASS)",
+   "category": "sedation",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "scoring": "single",
+   "license": {
+    "status": "unknown",
+    "note": "Sessler et al. 2002. Widely used; software terms not confirmed."
+   },
+   "items": [
+    {
+     "id": "level",
+     "label": "RASS",
+     "type": "choice",
+     "options": [
+      {
+       "label": "+4 Combative",
+       "points": 4
+      },
+      {
+       "label": "+3 Very agitated",
+       "points": 3
+      },
+      {
+       "label": "+2 Agitated",
+       "points": 2
+      },
+      {
+       "label": "+1 Restless",
+       "points": 1
+      },
+      {
+       "label": "0 Alert and calm",
+       "points": 0
+      },
+      {
+       "label": "−1 Drowsy",
+       "points": -1
+      },
+      {
+       "label": "−2 Light sedation",
+       "points": -2
+      },
+      {
+       "label": "−3 Moderate sedation",
+       "points": -3
+      },
+      {
+       "label": "−4 Deep sedation",
+       "points": -4
+      },
+      {
+       "label": "−5 Unarousable",
+       "points": -5
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 1,
+     "max": 4,
+     "label": "Agitated",
+     "tone": "red"
+    },
+    {
+     "min": 0,
+     "max": 0,
+     "label": "Alert and calm",
+     "tone": "green"
+    },
+    {
+     "min": -2,
+     "max": -1,
+     "label": "Light sedation",
+     "tone": "yellow"
+    },
+    {
+     "min": -5,
+     "max": -3,
+     "label": "Deep sedation or unarousable",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "cam",
+   "name": "Confusion Assessment Method (CAM)",
+   "category": "neuro",
+   "reassessMin": 480,
+   "delegableTo": [],
+   "scoring": "rule",
+   "positiveIf": {
+    "all": [
+     "acute",
+     "inattention"
+    ],
+    "any": [
+     "disorganized",
+     "loc"
+    ]
+   },
+   "license": {
+    "status": "permission-needed",
+    "note": "© Sharon K. Inouye. Permission needed for reproduction. Feature names only here."
+   },
+   "items": [
+    {
+     "id": "acute",
+     "label": "Feature 1: acute onset or fluctuating course",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "inattention",
+     "label": "Feature 2: inattention",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "disorganized",
+     "label": "Feature 3: disorganized thinking",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    },
+    {
+     "id": "loc",
+     "label": "Feature 4: altered level of consciousness",
+     "type": "choice",
+     "options": [
+      {
+       "label": "No",
+       "points": 0
+      },
+      {
+       "label": "Yes",
+       "points": 1
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 0,
+     "label": "CAM negative",
+     "tone": "green"
+    },
+    {
+     "min": 1,
+     "max": 1,
+     "label": "CAM positive: delirium likely",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "ciwa",
+   "name": "CIWA-Ar (alcohol withdrawal)",
+   "category": "withdrawal",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "public",
+    "note": "Sullivan et al. 1989; not copyrighted, may be used freely."
+   },
+   "items": [
+    {
+     "id": "nausea",
+     "label": "Nausea and vomiting",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "tremor",
+     "label": "Tremor",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "sweats",
+     "label": "Paroxysmal sweats",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "anxiety",
+     "label": "Anxiety",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "agitation",
+     "label": "Agitation",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "tactile",
+     "label": "Tactile disturbances",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "auditory",
+     "label": "Auditory disturbances",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "visual",
+     "label": "Visual disturbances",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "headache",
+     "label": "Headache, fullness in head",
+     "type": "scale",
+     "min": 0,
+     "max": 7
+    },
+    {
+     "id": "orientation",
+     "label": "Orientation and clouding of sensorium",
+     "type": "scale",
+     "min": 0,
+     "max": 4
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 8,
+     "label": "Absent or minimal withdrawal",
+     "tone": "green"
+    },
+    {
+     "min": 9,
+     "max": 15,
+     "label": "Moderate withdrawal",
+     "tone": "yellow"
+    },
+    {
+     "min": 16,
+     "max": 67,
+     "label": "Severe withdrawal",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "cows",
+   "name": "Clinical Opiate Withdrawal Scale (COWS)",
+   "category": "withdrawal",
+   "reassessMin": 60,
+   "delegableTo": [],
+   "license": {
+    "status": "unknown",
+    "note": "Wesson & Ling 2003. Often distributed freely (e.g. by NIDA); terms not confirmed."
+   },
+   "items": [
+    {
+     "id": "pulse",
+     "label": "Resting pulse",
+     "type": "choice",
+     "options": [
+      {
+       "label": "80 or below",
+       "points": 0
+      },
+      {
+       "label": "81–100",
+       "points": 1
+      },
+      {
+       "label": "101–120",
+       "points": 2
+      },
+      {
+       "label": "Above 120",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "sweat",
+     "label": "Sweating",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Barely, palms moist",
+       "points": 1
+      },
+      {
+       "label": "Beads on face",
+       "points": 2
+      },
+      {
+       "label": "Beads on brow or face",
+       "points": 3
+      },
+      {
+       "label": "Sweat streaming",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "restless",
+     "label": "Restlessness",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Sits still",
+       "points": 0
+      },
+      {
+       "label": "Some difficulty sitting still",
+       "points": 1
+      },
+      {
+       "label": "Frequent shifting",
+       "points": 3
+      },
+      {
+       "label": "Can't sit still",
+       "points": 5
+      }
+     ]
+    },
+    {
+     "id": "pupil",
+     "label": "Pupil size",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Normal",
+       "points": 0
+      },
+      {
+       "label": "Possibly larger",
+       "points": 1
+      },
+      {
+       "label": "Moderately dilated",
+       "points": 2
+      },
+      {
+       "label": "Only rim of iris visible",
+       "points": 5
+      }
+     ]
+    },
+    {
+     "id": "aches",
+     "label": "Bone or joint aches",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Mild",
+       "points": 1
+      },
+      {
+       "label": "Patient rubs joints",
+       "points": 2
+      },
+      {
+       "label": "Can't sit still from aches",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "nose",
+     "label": "Runny nose or tearing",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Stuffy, moist eyes",
+       "points": 1
+      },
+      {
+       "label": "Runny nose or tearing",
+       "points": 2
+      },
+      {
+       "label": "Constant",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "gi",
+     "label": "GI upset",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Stomach cramps",
+       "points": 1
+      },
+      {
+       "label": "Nausea or loose stool",
+       "points": 2
+      },
+      {
+       "label": "Vomiting or diarrhea",
+       "points": 3
+      },
+      {
+       "label": "Several episodes",
+       "points": 5
+      }
+     ]
+    },
+    {
+     "id": "tremor",
+     "label": "Tremor",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Felt, not seen",
+       "points": 1
+      },
+      {
+       "label": "Slight, seen",
+       "points": 2
+      },
+      {
+       "label": "Gross tremor",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "yawn",
+     "label": "Yawning",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "1–2 times",
+       "points": 1
+      },
+      {
+       "label": "3 or more times",
+       "points": 2
+      },
+      {
+       "label": "Several per minute",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "anxiety",
+     "label": "Anxiety or irritability",
+     "type": "choice",
+     "options": [
+      {
+       "label": "None",
+       "points": 0
+      },
+      {
+       "label": "Reports some",
+       "points": 1
+      },
+      {
+       "label": "Obviously irritable",
+       "points": 2
+      },
+      {
+       "label": "Can't take part",
+       "points": 4
+      }
+     ]
+    },
+    {
+     "id": "gooseflesh",
+     "label": "Gooseflesh skin",
+     "type": "choice",
+     "options": [
+      {
+       "label": "Smooth",
+       "points": 0
+      },
+      {
+       "label": "Felt or hairs standing",
+       "points": 3
+      },
+      {
+       "label": "Prominent piloerection",
+       "points": 5
+      }
+     ]
+    }
+   ],
+   "bands": [
+    {
+     "min": 0,
+     "max": 4,
+     "label": "No active withdrawal",
+     "tone": "green"
+    },
+    {
+     "min": 5,
+     "max": 12,
+     "label": "Mild withdrawal",
+     "tone": "yellow"
+    },
+    {
+     "min": 13,
+     "max": 24,
+     "label": "Moderate withdrawal",
+     "tone": "yellow"
+    },
+    {
+     "min": 25,
+     "max": 36,
+     "label": "Moderately severe withdrawal",
+     "tone": "red"
+    },
+    {
+     "min": 37,
+     "max": 48,
+     "label": "Severe withdrawal",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "news2",
+   "name": "NEWS2 (early warning score)",
+   "category": "early-warning",
+   "reassessMin": 240,
+   "delegableTo": [],
+   "scoring": "auto",
+   "auto": "news2",
+   "license": {
+    "status": "unknown",
+    "note": "© Royal College of Physicians 2017. Free to use clinically; reproduction terms for software not confirmed."
+   },
+   "autoRules": {
+    "rr": [
+     [
+      null,
+      8,
+      3
+     ],
+     [
+      9,
+      11,
+      1
+     ],
+     [
+      12,
+      20,
+      0
+     ],
+     [
+      21,
+      24,
+      2
+     ],
+     [
+      25,
+      null,
+      3
+     ]
+    ],
+    "spo2": [
+     [
+      null,
+      91,
+      3
+     ],
+     [
+      92,
+      93,
+      2
+     ],
+     [
+      94,
+      95,
+      1
+     ],
+     [
+      96,
+      null,
+      0
+     ]
+    ],
+    "sbp": [
+     [
+      null,
+      90,
+      3
+     ],
+     [
+      91,
+      100,
+      2
+     ],
+     [
+      101,
+      110,
+      1
+     ],
+     [
+      111,
+      219,
+      0
+     ],
+     [
+      220,
+      null,
+      3
+     ]
+    ],
+    "hr": [
+     [
+      null,
+      40,
+      3
+     ],
+     [
+      41,
+      50,
+      1
+     ],
+     [
+      51,
+      90,
+      0
+     ],
+     [
+      91,
+      110,
+      1
+     ],
+     [
+      111,
+      130,
+      2
+     ],
+     [
+      131,
+      null,
+      3
+     ]
+    ],
+    "tempC": [
+     [
+      null,
+      35.0,
+      3
+     ],
+     [
+      35.1,
+      36.0,
+      1
+     ],
+     [
+      36.1,
+      38.0,
+      0
+     ],
+     [
+      38.1,
+      39.0,
+      1
+     ],
+     [
+      39.1,
+      null,
+      2
+     ]
+    ],
+    "onOxygen": 2,
+    "notAlert": 3,
+    "roomAir": [
+     "ra",
+     "room air",
+     "air"
+    ]
+   },
+   "items": [],
+   "bands": [
+    {
+     "min": 0,
+     "max": 4,
+     "label": "Low risk",
+     "tone": "green"
+    },
+    {
+     "min": 5,
+     "max": 6,
+     "label": "Medium risk: urgent review",
+     "tone": "yellow"
+    },
+    {
+     "min": 7,
+     "max": 20,
+     "label": "High risk: emergency response",
+     "tone": "red"
+    }
+   ],
+   "review": "proposed"
+  },
+  {
+   "id": "head-to-toe",
+   "name": "Head-to-toe by system",
+   "category": "systems",
+   "reassessMin": 240,
+   "delegableTo": [],
+   "scoring": "none",
+   "license": {
+    "status": "public",
+    "note": "Written for this sim."
+   },
+   "items": [
+    {
+     "id": "neuro",
+     "label": "Neuro",
+     "type": "text"
+    },
+    {
+     "id": "cardiac",
+     "label": "Cardiovascular",
+     "type": "text"
+    },
+    {
+     "id": "resp",
+     "label": "Respiratory",
+     "type": "text"
+    },
+    {
+     "id": "gi",
+     "label": "GI",
+     "type": "text"
+    },
+    {
+     "id": "gu",
+     "label": "GU",
+     "type": "text"
+    },
+    {
+     "id": "skin",
+     "label": "Skin",
+     "type": "text"
+    },
+    {
+     "id": "msk",
+     "label": "Musculoskeletal",
+     "type": "text"
+    },
+    {
+     "id": "psych",
+     "label": "Psychosocial",
+     "type": "text"
+    }
+   ],
+   "review": "proposed"
+  }
+ ]
+}
