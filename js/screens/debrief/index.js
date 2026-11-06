@@ -10,6 +10,7 @@ import { toCsv, downloadCsv } from './csv.js';
 import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection, reflectionSection, timelinessSection } from './sections.js';
 import { timelinessConfig } from '../../engine/timeliness.js';
 import { scriptStatesSection } from './script-section.js';
+import { assessmentSection } from './assessment-section.js';
 import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
@@ -77,6 +78,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
       flagsSection(d, helpers),
       timelinessSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       scriptStatesSection(d, helpers),
+      assessmentSection(d, { ...helpers, tags: timelinessConfig(runner.state, catalogs).tags || {} }),
       reflectionSection(d, { ...helpers, questions: catalogs.reflection?.questions || [] }),
       prioritySection(d, helpers),
       responseSection(d, helpers),

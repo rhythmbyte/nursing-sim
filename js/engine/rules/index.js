@@ -12,10 +12,13 @@ import prnLimit from './prn-limit.js';
 import leftUnattended from './left-unattended.js';
 import priorityMismatch from './priority-mismatch.js';
 import alarmResponse from './alarm-response.js';
+import assessmentMismatch from './assessment-mismatch.js';
+import assessmentOverdue from './assessment-overdue.js';
+import requiredAssessmentMissing from './required-assessment-missing.js';
 import { ruleConfig } from './helpers.js';
 import { withoutStruck } from '../struck.js';
 
-[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended, priorityMismatch, alarmResponse]
+[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended, priorityMismatch, alarmResponse, assessmentMismatch, assessmentOverdue, requiredAssessmentMissing]
   .forEach(registerRule);
 
 /** All flags for the session at ctx.simMin, sorted by time. ctx: { templatesById, catalogs, simMin, studentIdsForGroup } */

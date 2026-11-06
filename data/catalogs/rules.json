@@ -32,6 +32,9 @@
       "flagUnassigned": false,
       "_comment": "A student's priority for a patient doesn't match the instructor's tag for longer than graceMin (after either changes). flagUnassigned: also flag patients a student never prioritized."
     },
+    "assessment-mismatch": { "review": "proposed", "_comment": "A charted tool vs the patient script: flag when the interpretation band differs or the score is off by scoreDiffMin or more. Red when a high-risk result was charted as lower risk.", "scoreDiffMin": 3, "severity": "amber", "missedHighRiskSeverity": "red" },
+    "assessment-overdue": { "review": "proposed", "_comment": "Required reassessments (order.assessment) late / very late per rules.timeliness.assessments.", "lateSeverity": "amber", "veryLateSeverity": "red" },
+    "required-assessment-missing": { "review": "proposed", "_comment": "One-time required assessments (e.g. Morse on admission) not done within withinMin of the order.", "withinMin": 60, "severity": "red" },
     "timeliness": {
       "review": "proposed",
       "_comment": "One source for 'how late is late' (engine/timeliness.js): the command center, debrief and the tier-timeout / call-light-response / alarm-response rules all read it. Minutes from active/due to done. Instructor to confirm (SPEC §14). Scenarios can override parts under settings.rules.timeliness.",

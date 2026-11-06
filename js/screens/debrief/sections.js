@@ -133,7 +133,7 @@ export function timelinessSection(d, { at, room, tags }) {
       h('thead', {}, h('tr', {}, ['Patient', 'Order / med', 'Ordered / due', 'Done', 'Minutes', ''].map((c) => h('th', {}, c)))),
       h('tbody', {}, t.rows.map((r) => h('tr', {},
         h('td', {}, room(r.patientId)),
-        h('td', {}, `${r.kind === 'med' ? 'Med: ' : `T${r.tier} · `}${r.label}${r.result && r.result !== 'given' ? ` (${r.result.replace('-', ' ')})` : ''}`),
+        h('td', {}, `${r.kind === 'med' ? 'Med: ' : r.kind === 'assessment' ? 'Reassess: ' : `T${r.tier} · `}${r.label}${r.result && r.result !== 'given' ? ` (${r.result.replace('-', ' ')})` : ''}`),
         h('td', {}, at(r.startAt)), h('td', {}, r.doneAt != null ? at(r.doneAt) : '—'), h('td', {}, String(Math.round(r.minutes))),
         h('td', {}, toneChip(tags[r.tag])))))) : empty('No timed orders or scheduled meds for this student\'s patients.'),
   );

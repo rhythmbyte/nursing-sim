@@ -135,3 +135,27 @@ test('builder round-trips: assessment reactions and scenario-change assessment a
   const cleared = formToChange(de, { ...form, assessments: {} }, '07:00').template;
   assert.ok(!cleared.events.some((e) => e.type === 'assessment-change'), 'cleared answers remove the event');
 });
+
+test('rules and debrief: mismatch (missed high risk), overdue reassessment, required assessment missing; grading off', async () => {
+  const { evaluateRules } = await import('../js/engine/rules/index.js');
+  const { assessmentRows } = await import('../js/engine/assessment-review.js');
+  const rctx = (st, simMin) => ({ templatesById, catalogs, simMin, studentIdsForGroup: () => ['student-1'], groupOfStudent: () => 'g1' });
+  const L = live({ assessmentTools: 'all' });
+  let s = L.tick(L.s, 50);
+  s = chart.chartAssessment(s, DE, { toolId: 'morse', answers: { history: 0, secondary: 15, aid: 0, iv: 0, gait: 0, mental: 0 } }, L.ctx(55));
+  const row = assessmentRows(s, { catalogs }).at(-1);
+  assert.deepEqual([row.band, row.expectedBand, row.missedHighRisk], ['Low fall risk', 'High fall risk', true]);
+  assert.deepEqual(row.differing.map((x) => x.itemId), ['history', 'aid', 'iv', 'gait', 'mental']);
+  s = L.tick(s, 200);
+  const flags = evaluateRules(s, rctx(s, 200)).filter((f) => f.patientId === DE);
+  const by = (id) => flags.filter((f) => f.ruleId === id);
+  assert.equal(by('assessment-mismatch')[0].severity, 'red');
+  assert.match(by('assessment-mismatch')[0].message, /Morse Fall Scale: charted 15 \(Low fall risk\), patient was 100 \(High fall risk\)/);
+  assert.ok(by('assessment-overdue').some((f) => f.severity === 'red' && /Neuro checks every 2 hours/.test(f.message)), 'no neuro check since shift start');
+  assert.equal(by('required-assessment-missing').length, 0, 'Morse was done (wrongly, but done)');
+  const fresh = live({ assessmentTools: 'all' });
+  const f2 = evaluateRules(fresh.tick(fresh.s, 200), rctx(null, 200)).filter((f) => f.ruleId === 'required-assessment-missing' && f.patientId === DE);
+  assert.match(f2[0].message, /Morse Fall Scale \(Fall precautions/);
+  const off = live({ assessmentTools: 'all', gradeAssessments: false });
+  assert.equal(evaluateRules(off.tick(off.s, 200), rctx(null, 200)).filter((f) => f.ruleId.startsWith('assessment') || f.ruleId === 'required-assessment-missing').length, 0);
+});
