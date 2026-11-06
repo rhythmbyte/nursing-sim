@@ -181,6 +181,14 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
 
 `{ joinCode, status, clock, groups, students: { id → { name, groupId, role } }, patientState: { id → { vitals, ordersStatus, callLight, tag, alive } }, log: [ … ] }`
 
+### 4.7 Assessment tools (`data/catalogs/assessment-tools.json` + `assessments` in a patient file)
+
+- **Catalog:** each tool has `id`, `name`, `category` (neuro, falls, skin, pain, sedation, withdrawal, systems, early-warning), `items` (choice options with points, a 0–N scale, a number, or free text), `scoring` (sum, single, rule with `positiveIf`, auto from vitals, none), inclusive interpretation `bands` (with a tone), `reassessMin`, `delegableTo`, optional `vitalsField` (GCS and pain also go on the flowsheet) and `license` { `status`: public / permission-needed / unknown, `note` }. Starter tools: NIHSS, BE-FAST, GCS, pupils, Morse, Braden, numeric pain, Wong-Baker, FLACC, CPOT, POSS, RASS, CAM, CIWA-Ar, COWS, NEWS2 (auto, view-only) and head-to-toe. Licensed tools use paraphrased wording.
+- **Expected answers** (the answer key, `{ toolId: { itemId: value } }`): `assessments.baseline`, then `script.states[].assessments`, `assessment-change` events in scenario changes, and reaction effects `{ type: 'assessment', answers }`. Blank items aren't scripted, so the student assesses the manikin.
+- **Reactions:** trigger `{ kind: 'assessment', toolId, op, value }` or `{ …, rise }` (rise versus the student's previous score on that tool).
+- **Orders:** `assessment: { tools, everyMin? | once? | afterDoseMin? }`. These become timeliness items (`rules.timeliness.assessments`) that feed the Command center, the debrief and the rules. Tools the sim doesn't offer aren't timed.
+- **Settings:** `assessmentTools` (`public` default, `all`, or ids), `revealAssessmentFindings`, `gradeAssessments`.
+
 ### 4.6 Reactive script (`script` in a patient file, optional)
 
 Lets a patient mostly run itself: the patient reacts to what the student does (or doesn't do), and the instructor can override any of it live (§8).
@@ -251,6 +259,7 @@ Tabs, left to right:
 1. **Summary** — banner (name, age, room, allergies, code status), active problems, latest vitals, alerts.
 2. **Orders** — active orders, with a status per order (new / acknowledged / done). New orders highlight until acknowledged.
 3. **Flowsheet** — vitals table over time.
+3a. **Assessments** — scored tools (§4.7): pick a tool, answer each item (Check patient reveals the scripted finding when the sim allows), live score and interpretation, NEWS2 from vitals, delegate where allowed, reassessments due.
    - **Bedside monitor** (chart tab + Full screen): HR/ECG, SpO₂/pleth, NIBP (last cycle time), RR, O₂ device, temp only with a probe. Shows only what the patient is connected for (tele / continuous pulse ox orders, NIBP cycle, or the student's Connect to monitor). Rhythm from vitals (`rhythms.json`). Alarm limits in `vitals.json`.
    - **Monitor cycle:** student sets an auto cycle (off / q5 / q10 / q15 min), or presses **Take BP now** to cycle the NIBP immediately (logged as a student action). A **Charted only** toggle hides monitor rows. BP, HR, SpO2 auto-populate each cycle from the patient's current vitals — like a real NIBP cycle. Monitor values (BP, HR, SpO2) **always** come from the device, whether by cycle or a charted vital-signs check; the student never types them.
    - **Manual entries:** anything a monitor doesn't give (temp, RR, pain, GCS, glucose, I&O, weight, neuro checks) is typed in by the student, and their value is compared with the scripted value in the debrief.
@@ -271,6 +280,8 @@ Every action → `log.append({ simMin, wallTime, userId, role, patientId, action
 ## 7. Flag rules (one file each in `js/engine/rules/`)
 
 Rules are pure functions of the session, re-evaluated whenever flags are shown (live control refreshes them each sim minute, the debrief on open). That's equivalent to running on every log append and clock tick, with nothing stored. Each returns flags: `{ ruleId, severity: "red" | "amber", patientId, userIds, message, atMin, logIds }`.
+
+**Assessments:** `assessment-mismatch` (charted band or score differs from the script; red for a missed high-risk result), `assessment-overdue` (required reassessments late, from timeliness), `required-assessment-missing` (one-time requirement not done within `withinMin`). All are off when `settings.gradeAssessments` is false.
 
 **Timeliness:** tier-timeout, call-light-response and alarm-response read one helper (`engine/timeliness.js`) with thresholds in `rules.json rules.timeliness`, shared with the command center and debrief.
 
@@ -385,6 +396,8 @@ Things in the prototype that will need to change for the real website (logins, b
 | The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
 | One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
 | Reactions run in the browser that owns the session (the one writer window), as a processor in `session.advance()` | They run on the server, which is the clock authority; student actions reach it as API calls, and the same pure `engine/reactions.js` runs there | `js/engine/reactions.js`, `session.js` |
+| Assessment tools whose license isn't clearly public (Braden, Wong-Baker FACES, CAM, POSS: permission needed; Morse, FLACC, CPOT, RASS, COWS, NEWS2: terms unknown) are in the catalog with paraphrased wording, flagged and left out of default sims | Confirm each license (or buy it) before the real course; replace paraphrases with licensed wording or drop the tool | `data/catalogs/assessment-tools.json` `license` |
+| The answer key for assessments (`assessmentsExpected`) is in the browser; students get one item at a time via Check patient | The server holds expected answers and returns one item only when the sim allows | `engine/assessments.js` `revealItem` |
 
 ---
 
@@ -437,3 +450,8 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 39. **Recovery penalties for Linda** (proposed): SpO₂ ≤ 82% for 5+ min → recovery −20% (SpO₂, RR), wearing off over 30 min after treatment; SpO₂ ≤ 78% for 3+ min → −20% more, SpO₂ recovers no further than 92%, 1.5× slower; at 40% total the charge nurse calls rapid response. Right size and timing for a teaching sim?
 40. **Penalty limits and "normal":** total penalty max 60% (`recoveryPenaltyMaxPercent`); recovery means moving toward SpO₂ 94–100, HR 60–100, RR 12–20, SBP 100–140, DBP 60–90, temp 97.0–99.5 °F (`vitals.json recovery.normal`). Should COPD patients use their own SpO₂ range (88–92) here? Is a cap better read as "recovers no further than" (today) or as a hard floor/ceiling?
 41. **Neglect penalty template** (`reaction-templates.json`): SpO₂ < 80 for 5+ min → SpO₂ recovery −20% for the rest of the sim; SBP < 90 for 10+ min → BP recovery −20% and 1.5× slower. Reasonable defaults?
+42. **Assessment tool content** (`assessment-tools.json`, proposed): are the items, points and interpretation bands right for your course? For example Morse ≥ 45 high, Braden ≤ 12 high, CIWA-Ar ≥ 16 severe, POSS 3 = hold opioid, NEWS2 ≥ 7 high, CPOT ≥ 3 pain likely. Which tools do you have licenses for (Braden, Wong-Baker, CAM, POSS…)?
+43. **Reassessment timing** (`rules.timeliness.assessments`): late after 30 min, very late after 60. Orders already active at shift start are first due 60 min in; a check up to 30 min early counts. Margaret's POSS and pain are due 30 min after each oxycodone dose. Right?
+44. **Assessment grading** (`rules.json`): flag when the band differs or the score is off by 3+ (amber; red for a high-risk result charted as lower risk); one-time required assessments must be done within 60 min. Too strict? Should delegated assessments be graded?
+45. **Starter assessment answers** (proposed): Dorothy Morse 100 (history, secondary dx, walker, saline lock, weak gait, forgets limits), GCS 15 → 14 (V4), NIHSS 0 → 4, right pupil 4 mm sluggish, CAM positive at her decline. Margaret POSS 1 → 2 after oxycodone, Braden 18. Linda CAM positive from 08:00. Robert pain 3 → 7. James Braden 17, Morse 45. Accurate?
+46. **Which tools are delegable** (`delegableTo`): numeric pain to LPN/CNA; Morse, Braden and Wong-Baker to LPN; the rest RN only. Right for your scope of practice?

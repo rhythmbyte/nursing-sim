@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-06: Assessment tools are catalog data; expected answers live in session state
+- **Decision:** Tools, items, points, bands and licenses are one catalog. Scoring is pure (`assessment-score.js`). The patient's current answer key is session state (`assessmentsExpected`), changed by the same paths as vitals and findings: baseline, script states, scenario-change events and reaction effects. A charted assessment logs the student's answers together with a snapshot of what was expected, so the debrief and `assessment-mismatch` compare against the truth at that moment. Required reassessments are timeliness items, so the Command center, debrief and rules share one definition.
+- **Why:** Adding a tool is data only. The comparison can't drift if the script changes later. B11 still holds: student screens get the answer key only through `revealItem` (one item, and only when the sim reveals findings) and auto-calculated NEWS2.
+- **License caution:** tools that aren't clearly public are flagged and left out of default sims; their wording is paraphrased. Confirming licenses is listed for the full build (SPEC §13).
+- **Alternatives:** Tools as interventions with chartFields (no scoring, bands or reveal), or a separate per-tool timing rule (would disagree with the Command center).
+
+---
+
 ## 2026-11-06: Recovery penalties limit scripted targets, never worsening
 - **Decision:** Penalties are effects earned by reactions, stored on the patient (`patients[id].penalties`). Every scripted vitals target passes through `penalizeTarget` (the same path for state entry and vitals effects). The unpenalized target and the starting point are kept (`scriptTarget`), so wear-off and instructor changes recompute from where the recovery began. A once-a-minute processor moves the patient as penalties fade.
 - **Why:** One place does the math, so Live control, the dry run and the debrief agree. Keeping the starting point means a penalty fading from 40% to 0 ends at the full target instead of creeping. Limiting only recovery keeps "deterioration from neglect is reversible by the right treatment" true; only a scripted code or death is final.

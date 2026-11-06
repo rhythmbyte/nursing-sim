@@ -74,6 +74,13 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/reactions.js` | Reactive script processor (`reactionsProcessor`), `initScript`, `tryFire` (loop protection, conditions, effects), `armedTimers`, `anchorOf`, `maxFires` | built |
 | `js/engine/reactions/` | `match.js` (field tests, action matchers, thresholds, conditions), `effects.js` (`EFFECTS`, `enterState`), `control.js` (force state, fire now, enable/disable, skip countdown, pause/resume), `describe.js` (When/If/Then text), `view.js` (`scriptView` for Live control), `integrity.js` (`scriptProblems`), `dry-run.js` ("Test this patient") | built |
 | `js/engine/penalties.js` | Recovery penalties: `limitOne` / `limitTarget` (percent, caps, slower), `penaltyFor` (stacking, max), `strength` (wear-off), `earnPenalty`, `changePenalty`, `penalizeTarget`, `reapplyTarget`, `penaltyProcessor` (per-minute wear-off) | built |
+| `js/engine/assessment-score.js` | Assessment scoring (sum, single, rule, auto NEWS2, none), `bandFor`, `differingItems`, `availableTools`, `assessmentCatalogProblems` | built |
+| `js/engine/assessments.js` | Expected answers (`applyExpected`, `expectedResult`, `isAlert`), `revealItem`, `chartAssessment` (+ delegation), `recordAssessment` | built |
+| `js/engine/assessment-review.js` | `assessmentRows`: charted vs expected (shared by the debrief and `assessment-mismatch`) | built |
+| `js/engine/assessment-integrity.js` | `assessmentProblems`: tools, items and values in baselines, states, events, reactions and orders | built |
+| `js/screens/chart/assessments.js` | Assessments chart tab (tool picker, item form with Check patient, live score, NEWS2, Due list) | built |
+| `js/screens/instructor/assessment-answers.js` | Expected-answers editor (baseline, state, scenario change, reaction effect) | built |
+| `js/screens/debrief/assessment-section.js` | Debrief → Assessments | built |
 | `js/engine/command-center.js` | `commandCenter` (per-group summary, worst first), `groupStatus` (data rule), `vitalsTrend` | built |
 | `js/engine/monitor.js` | `monitorView` (what the bedside monitor may show), `connections`, `resolveRhythm` (aliases), `connectMonitor` (chart action), `rhythmProblems` | built |
 | `js/screens/monitor/standalone.js` | `?monitor=<pid>` page: `standaloneView` (pure) + display-only mount that follows storage changes | built |
@@ -132,7 +139,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `rhythms.json` (monitor rhythms and how they're drawn) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `assessment-tools.json` (scored nursing tools with licenses), `rhythms.json` (monitor rhythms and how they're drawn) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |
