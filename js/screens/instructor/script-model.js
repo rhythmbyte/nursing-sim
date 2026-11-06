@@ -59,7 +59,8 @@ export function formToState(t0, form, originalId = null) {
   }
   const old = t.script.states.find((s) => s.id === originalId);
   const def = { id, label: form.label.trim(), review: form.review || 'proposed' };
-  if (Object.keys(values).length) def.vitals = { values, ...(Number(form.overMin) > 0 ? { overMin: Number(form.overMin) } : {}) };
+  if (form.vitalsDirect) { if (Object.keys(form.vitalsDirect.values || {}).length) def.vitals = structuredClone(form.vitalsDirect); } // guided builder: per-vital durations
+  else if (Object.keys(values).length) def.vitals = { values, ...(Number(form.overMin) > 0 ? { overMin: Number(form.overMin) } : {}) };
   if (form.rhythm) def.rhythm = form.rhythm;
   if (form.note?.trim()) def.note = form.note.trim();
   const changeId = setChange(t, old?.findings || newChangeId(t, `state-${id}`), form.findingsText);

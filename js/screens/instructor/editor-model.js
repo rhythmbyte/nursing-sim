@@ -52,7 +52,10 @@ function codeBranchFrom(f, base) {
 
 /** Builds a template from form values over `base` (keeps everything the form doesn't show). */
 export function fromForm(f, base, { orders = base.orders, labs = base.labs } = {}) {
-  const baseline = Object.fromEntries(Object.entries(f).filter(([k, v]) => k.startsWith('v_') && v !== '').map(([k, v]) => [k.slice(2), ['hr', 'rr', 'tempF', 'spo2'].includes(k.slice(2)) ? num(v) : v]));
+  // Baseline vitals the form shows replace the old ones; keys it doesn't show (hrNote, gcs, …) are kept (bug fix: they were dropped).
+  const shown = Object.keys(f).filter((k) => k.startsWith('v_')).map((k) => k.slice(2));
+  const kept = Object.fromEntries(Object.entries(base.vitals?.baseline || {}).filter(([k]) => !shown.includes(k)));
+  const baseline = { ...kept, ...Object.fromEntries(Object.entries(f).filter(([k, v]) => k.startsWith('v_') && v !== '').map(([k, v]) => [k.slice(2), ['hr', 'rr', 'tempF', 'spo2'].includes(k.slice(2)) ? num(v) : v])) };
   const t = {
     ...base,
     review: f.review, source: f.source,

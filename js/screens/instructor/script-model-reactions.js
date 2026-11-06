@@ -94,7 +94,7 @@ export function reactionToForm(t, rid) {
   const w = r.when;
   const c = r.if || {};
   return {
-    id: r.id, label: r.label || '', review: r.review || 'proposed', repeat: Boolean(r.repeat), maxFires: r.maxFires ?? '',
+    id: r.id, label: r.label || '', short: r.short || '', review: r.review || 'proposed', repeat: Boolean(r.repeat), maxFires: r.maxFires ?? '',
     when: {
       kind: w.kind, interventionId: w.interventionId || '', where: whereToForm(w.where), orderId: w.orderId || '', medResult: w.result || 'given',
       doseMin: w.dose?.min ?? '', doseMax: w.dose?.max ?? '', field: w.field || 'spo2', op: w.op || '<=', value: w.value ?? '',
@@ -157,6 +157,7 @@ export function formToReaction(t0, form, originalId = null) {
   if (taken.has(id)) throw new Error(`There is already a reaction "${id}"`);
   if (!form.then?.length) throw new Error('Add at least one "Then" effect');
   const r = { id, label: form.label?.trim() || id, review: form.review || 'proposed', when: formToWhen(form.when) };
+  if (form.short?.trim()) r.short = form.short.trim().slice(0, 28); // diagram arrow label
   const cond = formToCond(form.cond || {});
   if (cond) r.if = cond;
   r.then = form.then.map((f) => formToEffect(t, f, id));

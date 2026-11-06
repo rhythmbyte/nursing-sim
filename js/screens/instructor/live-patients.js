@@ -7,6 +7,28 @@ import { triageChip } from '../shared/triage-chip.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { activeScale, currentPriority } from '../../engine/priority.js';
 import { vitalsSummary, openAdjustVitals } from './live-vitals.js';
+import { eventForm } from './guided-form.js';
+import { geToLiveCalls } from './guided-model.js';
+import { normalFor } from '../../engine/penalties.js';
+
+/** Live control → Add event: the guided event builder, applied now (From = the patient's vitals right now). */
+export function openLiveEvent(runner, pid, name, template, catalogs, user, preset = {}) {
+  const fromVitals = () => ({ ...runner.state.patients[pid].vitals });
+  const form = eventForm(preset, { context: 'live', template, catalogs, fromVitals, normal: normalFor(template, catalogs) });
+  const err = h('p', { class: 'form-error', role: 'alert' });
+  openModal({
+    title: `Add event now · ${name}`, wide: true, body: h('div', { class: 'iv-form' }, form.el, err),
+    actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Apply now', kind: 'primary', onClick: () => {
+      try {
+        for (const c of geToLiveCalls(form.value(), fromVitals())) {
+          if (c.method === 'script') runner.script(c.args[0], pid, c.args[1], user);
+          else runner[c.method](pid, ...c.args, user);
+        }
+        return true;
+      } catch (e) { err.textContent = e.message; return false; }
+    } }],
+  });
+}
 
 function pushOrderModal(runner, pid, name, catalogs, user) {
   const text = h('input', { class: 'input', 'aria-label': 'Order text' });
@@ -72,10 +94,9 @@ export function patientsPanel(runner, templatesById, catalogs, user, filter = nu
               const msg = await promptText(`Call light · ${name}`, 'What the patient says', { required: false, okLabel: 'Turn on' });
               if (msg != null) runner.setCallLight(pid, true, msg, user);
             } }, 'Call light on'),
-          !ps.code ? h('button', { class: 'btn btn-small btn-danger', onclick: async () => {
-            const rhythm = await promptText(`Start code · ${name}`, 'Rhythm (optional)', { required: false, okLabel: 'Start code' });
-            if (rhythm != null) runner.startCode(pid, { rhythm }, user);
-          } }, 'Start code') : null,
+          h('button', { class: 'btn btn-small', disabled: !ps.alive, onclick: () => openLiveEvent(runner, pid, name, templatesById[pid], catalogs, user) }, 'Add event'),
+          !ps.code ? h('button', { class: 'btn btn-small btn-danger', disabled: !ps.alive, onclick: () => openLiveEvent(runner, pid, name, templatesById[pid], catalogs, user, { type: 'code', outcome: 'instructor' }) }, 'Start code') : null,
+          ps.code && !ps.code.outcome && ps.code.planned && ps.code.planned !== 'instructor' ? h('span', { class: 'muted small' }, `planned: ${ps.code.planned === 'survive' ? 'ROSC' : 'no ROSC'}`) : null,
           ps.code && !ps.code.outcome ? [
             h('button', { class: 'btn btn-small btn-primary', onclick: () => runner.setCodeOutcome(pid, 'rosc', user) }, 'ROSC'),
             h('button', { class: 'btn btn-small btn-danger', onclick: () => runner.setCodeOutcome(pid, 'no-rosc', user) }, 'No ROSC'),

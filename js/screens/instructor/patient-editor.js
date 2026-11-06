@@ -15,6 +15,8 @@ import { openChangeBuilder } from './change-builder.js';
 import { patientTimeline } from './patient-timeline.js';
 import { setLeaveGuard, clearLeaveGuard } from '../shared/leave-guard.js';
 import { scriptSection } from './script-editor.js';
+import { parseO2, o2Text } from './guided-model.js';
+import { checkList } from './script-parts.js';
 import { answersEditor } from './assessment-answers.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
@@ -45,6 +47,22 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const area = (k, rows = 3) => { const el = h('textarea', { class: 'input', rows }); el.value = f[k] ?? ''; inputs[k] = el; return el; };
     const sel = (k, opts) => (inputs[k] = h('select', {}, opts.map((o) => h('option', { value: o, selected: String(f[k]) === String(o) }, o))));
     const chk = (k) => (inputs[k] = h('input', { type: 'checkbox', checked: Boolean(f[k]) }));
+    // Catalog-backed fields are dropdowns (audit): rhythms, O₂ device + flow, interventions for the code branch.
+    const rhythmSel = (k, blank) => (inputs[k] = h('select', { 'aria-label': k }, h('option', { value: '' }, blank),
+      Object.entries(catalogs.rhythms?.rhythms || {}).map(([id, r]) => h('option', { value: id, selected: id === f[k] }, r.label))));
+    const o2Field = (k) => {
+      const devs = catalogs.vitals?.o2Devices?.devices || [];
+      const cur = parseO2(f[k] || 'RA');
+      const dev = h('select', { 'aria-label': 'Baseline O₂ device' }, devs.map((d) => h('option', { value: d.id, selected: d.id === cur.device }, d.label)), devs.some((d) => d.id === cur.device) ? null : h('option', { value: cur.device, selected: true }, cur.device));
+      const lpm = h('input', { class: 'input', type: 'number', min: 0, max: 60, value: cur.lpm ?? '', 'aria-label': 'Baseline O₂ L/min', placeholder: 'L/min' });
+      inputs[k] = { get value() { return o2Text(dev.value, lpm.value); } };
+      return h('span', { class: 'pick-row' }, dev, lpm);
+    };
+    const ivPicker = (k) => {
+      const list = checkList('Interventions', catalogs.interventions.interventions.map((i) => ({ key: i.id, label: i.label })), String(f[k] || '').split(',').map((x) => x.trim()).filter(Boolean));
+      inputs[k] = { get value() { return list.value().join(', '); } };
+      return list.el;
+    };
     const orders = ordersTable(work.orders, catalogs);
     const labs = labsTable(work.labs, catalogs, work.orders);
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
@@ -60,7 +78,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
 
-    const openChange = (key) => { sync(); openChangeBuilder({ template: work, key, startClock, catalogs, onSave: update }); };
+    const openChange = (key) => { sync(); openChangeBuilder({ template: work, key, startClock, catalogs, settings: scenario.settings, onSave: update }); };
     const changes = listChanges(work);
     const fileInput = h('input', { type: 'file', accept: 'application/json,.json', hidden: true, onchange: (e) => importFile(e.target.files[0]) });
 
@@ -124,7 +142,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         field('Allergies', area('allergies', 2), 'One per line: agent | reaction'), field('Allergy note', inp('allergyText'), 'e.g. "No known drug allergies"'),
         field('HPI', area('hpi', 5)), field('PMH', area('pmh', 3), 'One per line'), field('Home meds', area('homeMeds', 3), 'One per line: name | dose | frequency')),
       h('section', { class: 'panel' }, h('h3', {}, 'Handoff (SBAR)'), ['situation', 'background', 'assessment', 'recommendation'].map((k) => field(k[0].toUpperCase() + k.slice(1), area(k, 2)))),
-      h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'].map((k) => field(k, inp(`v_${k}`)))),
+      h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), field('Rhythm', rhythmSel('v_rhythm', '(none)')), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'pain'].map((k) => field(k, inp(`v_${k}`))), field('o2', o2Field('v_o2'))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline findings'), field('Shown when the student assesses (one per line)', area('findings', 5))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline assessment findings ', helpTip('editor.assessments')), h('p', { class: 'muted small' }, 'What each tool finds at the start (NEWS2 is calculated from vitals). Scenario changes, states and reactions can change them later.'), baselineAssess.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Orders at shift start'), orders.el),
@@ -143,8 +161,8 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Outcome and code branch'),
         field('Outcome', sel('outcomeMode', ['survive', 'die', 'instructor'])), field('Outcome notes', inp('outcomeNotes')),
         h('label', { class: 'inline' }, chk('cbOn'), ' Has a code branch'), h('label', { class: 'inline' }, chk('cbEnabled'), ' Code branch enabled'),
-        field('Code branch description', inp('cbDescription')), field('Codes if NOT charted (intervention ids, comma separated)', inp('cbIfNotCharted')),
-        field('…by sim minute', inp('cbByMin', 'number')), field('Rhythm', inp('cbRhythm')), field('Code message', inp('cbMessage'))),
+        field('Code branch description', inp('cbDescription')), field('Codes if NOT charted', ivPicker('cbIfNotCharted')),
+        field('…by sim minute', inp('cbByMin', 'number')), field('Code rhythm', rhythmSel('cbRhythm', '(arrest rhythm)')), field('Code message', inp('cbMessage'))),
       h('section', { class: 'panel' }, h('h3', {}, 'Debrief (instructor only)'),
         field('Should recognize', area('shouldRecognize', 4), 'One per line (per-change notes live in each scenario change)'), field('Instructor notes', area('instructorNotes', 3)),
         field('Notes for review', area('reviewNotes', 3), 'Things to confirm, one per line')),

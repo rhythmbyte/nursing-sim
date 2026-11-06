@@ -8,6 +8,9 @@ const ORDER_TYPES = ['once', 'scheduled', 'prn', 'continuous', 'parameter'];
 export function ordersTable(orders, catalogs) {
   let rows = orders.map((o) => ({ o }));
   const body = h('tbody', {});
+  // Order sets: pick one this patient already has, or type a new name (datalist).
+  const listId = `order-sets-${Math.random().toString(36).slice(2, 8)}`;
+  const sets = h('datalist', { id: listId }, [...new Set(orders.map((o) => o.orderSet).filter(Boolean))].map((x) => h('option', { value: x })));
   const ivOptions = (sel) => [h('option', { value: '' }, '(none)'), ...catalogs.interventions.interventions.map((i) => h('option', { value: i.id, selected: i.id === sel }, i.label))];
   function render() {
     clear(body).append(...rows.map((r, i) => {
@@ -15,7 +18,7 @@ export function ordersTable(orders, catalogs) {
       r.text ??= h('textarea', { class: 'input', rows: 2, 'aria-label': `Order ${n} text` }, r.o.text || '');
       r.type ??= h('select', { 'aria-label': `Order ${n} type` }, ORDER_TYPES.map((x) => h('option', { value: x, selected: (r.o.type || 'once') === x }, x)));
       r.tier ??= h('select', { 'aria-label': `Order ${n} tier` }, [1, 2, 3].map((x) => h('option', { value: x, selected: (r.o.tier || 2) === x }, `T${x}`)));
-      r.set ??= h('input', { class: 'input', value: r.o.orderSet || '', 'aria-label': `Order ${n} order set` });
+      r.set ??= h('input', { class: 'input', value: r.o.orderSet || '', list: listId, 'aria-label': `Order ${n} order set` });
       r.iv ??= h('select', { 'aria-label': `Order ${n} satisfied by` }, ivOptions(r.o.interventionIds?.[0]));
       r.med ??= h('input', { class: 'input', value: r.o.med || '', placeholder: 'med (MAR)', 'aria-label': `Order ${n} medication` });
       r.delegable ??= h('input', { type: 'checkbox', checked: Boolean(r.o.delegable), 'aria-label': `Order ${n} delegable` });
@@ -24,7 +27,7 @@ export function ordersTable(orders, catalogs) {
     }));
   }
   render();
-  const el = h('div', {},
+  const el = h('div', {}, sets,
     h('table', { class: 'data-table' }, h('thead', {}, h('tr', {}, ['Order', 'Type', 'Tier', 'Order set', 'Satisfied by', 'Medication', 'Delegable', ''].map((c) => h('th', {}, c)))), body),
     h('button', { class: 'btn btn-small', type: 'button', onclick: () => { rows.push({ o: { tier: 2, type: 'once', activeFromMin: 0 } }); render(); } }, 'Add order'));
   return {

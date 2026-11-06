@@ -76,7 +76,8 @@ export function stateDiagram(template, catalogs, { onState, onReaction, current 
     const bend = backward ? 70 + i * 26 : (i % 2 ? 1 : -1) * (i ? 18 + i * 14 : 0);
     const cx = (a.x + b.x) / 2; const cy = (a.y + b.y) / 2 + bend;
     const g = clickable(svg('g', { class: 'sd-edge' }), `Edit reaction ${n.reaction(e.reactionId)}`, () => onReaction(e.reactionId));
-    const label = short(triggerText(sc.reactions.find((r) => r.id === e.reactionId).when, n), 34);
+    const rx = sc.reactions.find((r) => r.id === e.reactionId);
+    const label = short(rx.short || triggerText(rx.when, n), 34); // reaction.short (builder "Short label") wins
     g.append(svg('path', { d: `M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`, class: 'sd-line', 'marker-end': 'url(#sd-arrow)' }),
       svg('title', {}, n.reaction(e.reactionId)),
       svg('rect', { x: cx - label.length * 3.1 - 4, y: (a.y + b.y) / 2 + bend / 2 - 9, width: label.length * 6.2 + 8, height: 16, rx: 4, class: 'sd-label-bg' }),
