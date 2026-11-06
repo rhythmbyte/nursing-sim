@@ -4,11 +4,13 @@
 import { validate } from './validate.js';
 import { eventGroupProblems } from './engine/scheduler.js';
 import { load, save } from './storage.js';
+import { scaleProblems } from './engine/priority.js';
 
 // Checks JSON Schema can't express (cross-field rules), per kind of file.
 const EXTRA_CHECKS = {
   patient: (d) => eventGroupProblems(d.events, '$.events'),
   scenario: (d) => eventGroupProblems(d.events, '$.events'),
+  priorityScales: (d) => scaleProblems(d),
 };
 
 const SCHEMAS = {
@@ -20,6 +22,8 @@ const SCHEMAS = {
   rules: 'schemas/rules.schema.json',
   vitals: 'schemas/vitals.schema.json',
   scenarioDefaults: 'schemas/scenario-defaults.schema.json',
+  priorityScales: 'schemas/priority-scales.schema.json',
+  ui: 'schemas/ui.schema.json',
 };
 
 async function fetchJson(base, rel) {
@@ -115,7 +119,7 @@ export async function loadAll(base = 'data/') {
     Promise.all(manifest.patients.map((rel) => loadChecked(rel, schemas.patient, 'patient'))),
     Promise.all(manifest.scenarios.map((rel) => loadChecked(rel, schemas.scenario, 'scenario'))),
     Promise.all(
-      Object.entries(manifest.catalogs).map(async ([k, rel]) => [k, await loadChecked(rel, schemas[k])]),
+      Object.entries(manifest.catalogs).map(async ([k, rel]) => [k, await loadChecked(rel, schemas[k], k)]),
     ),
   ]);
 

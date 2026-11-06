@@ -81,3 +81,20 @@ export function recognizeSection(d, { room }) {
     d.shouldRecognize.filter((x) => x.items.length).map((x) => h('div', {}, h('h4', {}, room(x.patientId)), h('ul', {}, x.items.map((i) => h('li', {}, i))))),
   );
 }
+
+/** Student's priorities over time next to the instructor's tag; mismatches highlighted. */
+export function prioritySection(d, { at, room, scale }) {
+  const label = Object.fromEntries(scale.levels.map((l) => [l.id, l.label]));
+  return h('section', { class: 'panel' },
+    h('h3', {}, `Priorities (${scale.label}) vs instructor tag`),
+    d.priorities.length ? h('table', { class: 'data-table' },
+      h('thead', {}, h('tr', {}, ['Patient', 'From', 'To', 'Student', 'Instructor tag', ''].map((c) => h('th', {}, c)))),
+      h('tbody', {}, d.priorities.flatMap((p) => p.segments.map((s, i) => h('tr', { class: s.match === false ? 'needs-attention' : '' },
+        h('td', {}, i === 0 ? room(p.patientId) : ''),
+        h('td', {}, at(s.fromMin)), h('td', {}, at(s.toMin)),
+        h('td', {}, s.levelId ? label[s.levelId] : h('span', { class: 'muted' }, 'not set')),
+        h('td', {}, h('span', { class: `triage-chip triage-${s.tag}` }, s.tag)),
+        h('td', {}, s.match === false ? 'Mismatch' : s.match ? 'Match' : ''),
+      ))))) : empty('No patients.'),
+  );
+}

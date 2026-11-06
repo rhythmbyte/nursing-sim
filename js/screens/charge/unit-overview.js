@@ -9,11 +9,12 @@ import { formatShiftTime } from '../../engine/time.js';
 import { waitingAdmissions } from '../../engine/admissions.js';
 import { newOrderCount } from '../../engine/orders.js';
 
-export function unitOverview(runner, templatesById, scenario) {
+// seesTags gates the instructor's tag column AND priority-mismatch flags (whose text reveals the tag).
+export function unitOverview(runner, templatesById, scenario, { seesTags }) {
   const state = runner.state;
   const simMin = runner.simMin();
   const at = (m) => formatShiftTime(state.startClock, m);
-  const flags = runner.flags();
+  const flags = runner.flags().filter((f) => seesTags || f.ruleId !== 'priority-mismatch');
   const groupName = (gid) => scenario.groups.find((g) => g.id === gid)?.name || gid;
   const studentsIn = (gid) => Object.values(state.roster).filter((r) => r.groupId === gid).map((r) => r.name);
   const waiting = waitingAdmissions(state);
@@ -25,7 +26,7 @@ export function unitOverview(runner, templatesById, scenario) {
       h('strong', {}, `${waiting.length} admission${waiting.length > 1 ? 's' : ''} waiting: `),
       waiting.map((a) => `${templatesById[a.patientId].demographics.name} (${a.status}, ${elapsed(simMin, a.arrivedAtMin)})`).join('; ')) : null,
     h('table', { class: 'data-table' },
-      h('thead', {}, h('tr', {}, ['Room', 'Patient', 'Tag', 'Group · students', 'Now', 'Open flags'].map((c) => h('th', {}, c)))),
+      h('thead', {}, h('tr', {}, ['Room', 'Patient', seesTags ? 'Tag' : null, 'Group · students', 'Now', 'Open flags'].filter(Boolean).map((c) => h('th', {}, c)))),
       h('tbody', {}, rows.map(([pid, ps]) => {
         const d = templatesById[pid].demographics;
         const f = flags.filter((x) => x.patientId === pid);
@@ -39,7 +40,7 @@ export function unitOverview(runner, templatesById, scenario) {
         ].filter(Boolean).join(' · ') || '—';
         const students = studentsIn(ps.groupId);
         return h('tr', { class: ps.code && !ps.code.outcome ? 'needs-attention' : '' },
-          h('td', {}, d.room), h('td', {}, `${d.name}, ${d.age}${d.sex}`), h('td', {}, triageChip(ps.tag)),
+          h('td', {}, d.room), h('td', {}, `${d.name}, ${d.age}${d.sex}`), seesTags ? h('td', {}, triageChip(ps.tag)) : null,
           h('td', {}, `${groupName(ps.groupId)} · ${students.length ? students.join(', ') : 'nobody joined'}`),
           h('td', {}, now),
           h('td', {}, f.length ? [red ? badge(`${red} red`, 'review') : null, ' ', f.length - red ? badge(`${f.length - red} amber`, 'neutral') : null] : '—'),

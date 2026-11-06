@@ -26,7 +26,14 @@
       }
     },
     "prn-limit": { "severity": "red" },
-    "left-unattended": { "severity": "red" }
+    "left-unattended": { "severity": "red" },
+    "priority-mismatch": {
+      "enabled": true,
+      "severity": "amber",
+      "graceMin": 10,
+      "flagUnassigned": false,
+      "_comment": "A student's priority for a patient doesn't match the instructor's tag for longer than graceMin (after either changes). flagUnassigned: also flag patients a student never prioritized."
+    }
   },
   "codeResponse": {
     "_comment": "Debrief response time for a code: first of these interventions charted after the code starts.",

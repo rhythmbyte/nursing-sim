@@ -1,0 +1,9 @@
+{
+  "_comment": "Prototype-only UI text. The welcome popup is removed in the full build (SPEC §13).",
+  "welcome": {
+    "prototypeOnly": true,
+    "title": "Welcome to RN sims!",
+    "subtitle": "Built by paramedics.",
+    "button": "Get started"
+  }
+}

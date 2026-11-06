@@ -173,3 +173,49 @@ test('review fixes: newOrderCount, code text from settings, quick actions in cat
     assert.notEqual(r.state.joinCode, 'SAVED1', 'stale session replaced');
   } finally { console.warn = origWarn; }
 });
+
+test('priority: students assign levels; timeline compares with instructor tag history; data scale', async () => {
+  const P = await import('../js/engine/priority.js');
+  const sc = scenarioWith();
+  assert.equal(P.canSeeInstructorTags(sc.settings, 'instructor'), true);
+  assert.equal(P.canSeeInstructorTags(sc.settings, 'student'), false);
+  assert.equal(P.canSeeInstructorTags(sc.settings, 'charge'), false);
+  assert.deepEqual(P.scaleProblems(catalogs.priorityScales), []);
+  assert.ok(P.scaleProblems({ scales: { x: { label: 'X', type: 'levels', levels: [{ id: 'a', label: 'A', matchesTags: ['purple'] }] } } }).length);
+  const S1 = { userId: 'student-1', role: 'student' };
+  let s = session.createSession(sc, templatesById, catalogs, { joinCode: 'X' });
+  s = joinSim(s, { userId: 'student-1', name: 'Ana', code: 'X' }, { scenario: sc, now: 0 }).state;
+  s = session.controlClock(s, 'start', { now: 0, user: INS });
+  const LG = 'p4-linda-garcia';
+  s = P.assignPriority(s, LG, { levelId: 'yellow' }, { now: 5 * MIN, user: S1, catalogs });  // instructor: red
+  s = P.assignPriority(s, LG, { levelId: 'red' }, { now: 30 * MIN, user: S1, catalogs });
+  assert.equal(s.log.at(-1).action, 'priority-assigned');
+  assert.equal(P.currentPriority(s, 'student-1', LG), 'red');
+  assert.throws(() => P.assignPriority(s, LG, { levelId: 'purple' }, { now: 31 * MIN, user: S1, catalogs }));
+  s = startCode(s, LG, {}, { now: 40 * MIN, user: INS });                                      // instructor tag → black
+  const tl = P.priorityTimeline(s, 'student-1', LG, P.activeScale(s.settings, catalogs), 60);
+  assert.deepEqual(tl.map((x) => [x.fromMin, x.levelId, x.tag, x.match]), [[0, null, 'red', null], [5, 'yellow', 'red', false], [30, 'red', 'red', true], [40, 'red', 'black', false]]);
+  const ctx = (simMin, st = s) => ({ templatesById, catalogs, simMin, studentIdsForGroup: (g) => studentIdsForGroup(st.roster, g), groupOfStudent: (u) => st.roster[u]?.groupId });
+  const mm = evaluateRules(s, ctx(60)).filter((f) => f.ruleId === 'priority-mismatch' && f.patientId === LG);
+  assert.equal(mm.length, 2, 'yellow for 25 min, and red 20 min after the code (grace 10)');
+  assert.match(mm[0].message, /Prioritized Yellow; instructor tag was red/);
+  const off = { ...s, settings: { ...s.settings, rules: { 'priority-mismatch': { enabled: false } } } };
+  assert.equal(evaluateRules(off, ctx(60, off)).filter((f) => f.ruleId === 'priority-mismatch').length, 0, 'enabled:false switches it off');
+  const strict = { ...s, settings: { ...s.settings, rules: { 'priority-mismatch': { flagUnassigned: true } } } };
+  assert.ok(evaluateRules(strict, ctx(60, strict)).some((f) => f.message === 'Never prioritized this patient.'));
+  const { buildDebrief } = await import('../js/engine/debrief.js');
+  const d = buildDebrief(s, 'student-1', ctx(60));
+  assert.equal(d.priorities.find((p) => p.patientId === LG).segments.length, 4);
+});
+
+test('student views never include the instructor tag unless the role is allowed', async () => {
+  const { studentView } = await import('../js/engine/student-view.js');
+  const { canSeeInstructorTags } = await import('../js/engine/priority.js');
+  const sc = scenarioWith();
+  for (const t of Object.values(templatesById)) {
+    assert.equal('tag' in studentView(t, { showTags: canSeeInstructorTags(sc.settings, 'student') }), false);
+    assert.equal('tag' in studentView(t, { showTags: canSeeInstructorTags(sc.settings, 'charge') }), false);
+  }
+  const open = scenarioWith({ showTagsTo: ['instructor', 'charge'] });
+  assert.equal(canSeeInstructorTags(open.settings, 'charge'), true);
+});

@@ -49,3 +49,29 @@ export function clearAll() {
     console.warn('storage.clearAll failed:', err);
   }
 }
+
+// Per-browser-session values (cleared when the browser session ends; survive reloads), e.g. "welcome shown".
+function sessionArea() {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function loadSession(key, fallback = null) {
+  try {
+    const raw = sessionArea()?.getItem(PREFIX + key);
+    return raw == null ? fallback : JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+export function saveSession(key, value) {
+  try {
+    sessionArea()?.setItem(PREFIX + key, JSON.stringify(value));
+  } catch (err) {
+    console.warn(`storage.saveSession(${key}) failed:`, err);
+  }
+}

@@ -6,6 +6,7 @@ import { isTracked, ruleConfig } from './rules/helpers.js';
 import { conditionMetAt, requiredActionAt } from './rules/parameter-breach.js';
 import { firstWork } from './orders.js';
 import { vitalNumber } from './vitals.js';
+import { activeScale, priorityTimeline } from './priority.js';
 
 const round = (n) => Math.round(n * 100) / 100;
 
@@ -105,6 +106,9 @@ export function buildDebrief(state, userId, ctx) {
     vitalsCompare: vitalsCompare(state, userId, ctx),
     handoffs: pids.filter((pid) => handoff[pid]).map((pid) => ({ patientId: pid, ...handoff[pid],
       durationMin: handoff[pid].closedAt != null ? round(handoff[pid].closedAt - handoff[pid].openedAt) : null })),
+    priorities: pids.filter((pid) => state.patients[pid].present).map((pid) => ({
+      patientId: pid, segments: priorityTimeline(state, userId, pid, activeScale(state.settings, ctx.catalogs), ctx.simMin),
+    })),
     shouldRecognize: pids.map((pid) => ({ patientId: pid, items: ctx.templatesById[pid].debrief?.shouldRecognize || [] })),
     timeline: timeline(state, userId, pids, flags),
   };

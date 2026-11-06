@@ -3,6 +3,7 @@ import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { getEventType } from './registry.js';
 import { addAlert } from './alerts.js';
+import { setInstructorTag } from './priority.js';
 
 /** Mark that student(s) left an unstable patient unattended (flagged red by the left-unattended rule). */
 export function markLeftUnattended(state, patientId, { studentIds, note = '' }, { now, user }) {
@@ -59,7 +60,7 @@ export function setCodeOutcome(state, patientId, outcome, { now, user }) {
   const ps = draft.patients[patientId];
   ps.code.outcome = outcome;
   ps.code.endedMin = simMin;
-  if (outcome === 'rosc') ps.tag = state.settings.roscTag;
+  if (outcome === 'rosc') setInstructorTag(ps, state.settings.roscTag, simMin);
   else ps.alive = false;
   addAlert(draft, { simMin, patientId, kind: 'code', message: outcome === 'rosc' ? state.settings.messages.rosc : state.settings.messages.noRosc, audience: ['student', 'instructor', 'charge'] });
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-outcome', details: { outcome, durationMin: Math.round((simMin - code.startedMin) * 100) / 100 } });

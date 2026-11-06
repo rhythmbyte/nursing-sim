@@ -18,7 +18,7 @@ import { delegationProcessor } from './delegation.js';
 // Order matters within one instant: monitor readings see vitals after that instant's events.
 const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 6; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 7; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -37,7 +37,8 @@ function initialPatientState(t, groupId, admission, catalogs) {
   return {
     present: !admission,
     groupId,
-    tag: t.tag,
+    tag: t.tag,                  // instructor's tag (answer key); see engine/priority.js for who may see it
+    tagHistory: [{ atMin: 0, tag: t.tag }],
     alive: true,
     vitals: { ...t.vitals.baseline },
     callLight: null,
@@ -73,6 +74,7 @@ export function createSession(scenario, templatesById, catalogs, { joinCode = nu
     patients,
     joinCode,      // students join with this code (engine/roster.js)
     roster: {},    // userId → { name, groupId, joinedAtMin }
+    priorities: {}, // userId → patientId → [{ atMin, levelId }] (student-assigned, engine/priority.js)
     adhoc: {},     // patientId → { orders } pushed live by the instructor (engine/templates.js)
     students: {},
     fired: {},

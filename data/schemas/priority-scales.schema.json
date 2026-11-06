@@ -1,0 +1,33 @@
+{
+  "title": "Priority scales",
+  "type": "object",
+  "required": ["scales"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "scales": { "type": "object", "additionalPropertiesNote": "each value is a scale", "properties": {} }
+  },
+  "$defs": {
+    "scale": {
+      "type": "object",
+      "required": ["label", "type", "levels"],
+      "properties": {
+        "label": { "type": "string" },
+        "type": { "enum": ["levels", "rank"] },
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "matchesTags"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "label": { "type": "string" },
+              "description": { "type": "string" },
+              "tone": { "enum": ["red", "yellow", "green", "black", "neutral"] },
+              "matchesTags": { "type": "array", "items": {"enum": ["red", "yellow", "green", "black"]} }
+            }
+          }
+        }
+      }
+    }
+  }
+}

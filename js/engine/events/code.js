@@ -1,12 +1,14 @@
-// code: patient arrests. Tag → black, code timer starts; instructor outcome controls come in phase 6.
+// code: patient arrests. Instructor tag → settings.codeTag, code timer starts; the instructor records
+// ROSC / no ROSC in Live control (engine/instructor.js).
 import { addAlert } from '../alerts.js';
+import { setInstructorTag } from '../priority.js';
 
 export default {
   type: 'code',
   apply(draft, event, { simMin, patientId }) {
     const ps = draft.patients[patientId];
     if (ps.code) return; // already coding
-    ps.tag = 'black';
+    setInstructorTag(ps, draft.settings.codeTag, simMin);
     ps.code = { startedMin: simMin, rhythm: event.payload.rhythm || null, outcome: null };
     addAlert(draft, { simMin, patientId, kind: 'code', message: event.payload.message || 'Patient is coding', audience: ['student', 'instructor', 'charge'] });
   },

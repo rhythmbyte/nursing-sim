@@ -8,10 +8,15 @@ import { elapsed } from '../shared/timer.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { waitingAdmissions } from '../../engine/admissions.js';
 import { studentView } from '../../engine/student-view.js';
+import { activeScale, currentPriority } from '../../engine/priority.js';
+import { priorityPicker } from '../shared/priority-picker.js';
 
 const SBAR = [['situation', 'S'], ['background', 'B'], ['assessment', 'A'], ['recommendation', 'R']];
 
-export function admissionsBoard(runner, templatesById, scenario, user) {
+// seesTags: may this viewer see the instructor's tags (settings.showTagsTo)? The charge nurse always sets
+// their own priority for each incoming patient.
+export function admissionsBoard(runner, templatesById, scenario, user, { seesTags, catalogs }) {
+  const scale = activeScale(scenario.settings, catalogs);
   const state = runner.state;
   const simMin = runner.simMin();
   const at = (m) => formatShiftTime(state.startClock, m);
@@ -21,17 +26,18 @@ export function admissionsBoard(runner, templatesById, scenario, user) {
 
   return h('div', {},
     waiting.length ? waiting.map((a) => {
-      const v = studentView(templatesById[a.patientId], { showTags: true }); // report only, no answer key
+      const v = studentView(templatesById[a.patientId], { showTags: seesTags }); // report only, no answer key
       const group = h('select', { 'aria-label': 'Assign to group' }, scenario.groups.map((g) => h('option', { value: g.id, selected: g.id === a.suggestedGroupId },
         `${g.name} (${load(g.id)} patients)`)));
       return h('section', { class: 'panel admission-card' },
         h('div', { class: 'panel-head' },
-          h('h3', {}, `${v.demographics.name}, ${v.demographics.age}${v.demographics.sex} · Rm ${v.demographics.room} `, triageChip(v.tag)),
+          h('h3', {}, `${v.demographics.name}, ${v.demographics.age}${v.demographics.sex} · Rm ${v.demographics.room} `, v.tag ? triageChip(v.tag) : null),
           h('span', { class: 'muted' }, `${a.status === 'held' ? `Held${a.reason ? ` (${a.reason})` : ''}` : 'Waiting'} · arrived ${at(a.arrivedAtMin)} · ${elapsed(simMin, a.arrivedAtMin)}`)),
         h('p', {}, a.message),
         h('p', {}, h('strong', {}, 'Dx: '), v.admittingDx, ' · ', h('strong', {}, 'Code status: '), v.codeStatus),
         v.handoff ? h('dl', { class: 'sbar' }, SBAR.map(([k, l]) => [h('dt', {}, l), h('dd', {}, v.handoff[k] || '—')])) : null,
         h('div', { class: 'controls' },
+          priorityPicker(scale, currentPriority(state, user.userId, a.patientId), (levelId) => runner.assignPriority(a.patientId, levelId, user)),
           h('label', { class: 'inline' }, 'Assign to ', group),
           h('button', { class: 'btn btn-primary', onclick: () => runner.assignAdmission(a.patientId, group.value, user) }, 'Assign now'),
           a.status === 'pending' ? h('button', { class: 'btn', onclick: async () => {

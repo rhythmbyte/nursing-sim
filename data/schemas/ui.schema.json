@@ -1,0 +1,16 @@
+{
+  "title": "Prototype UI text",
+  "type": "object",
+  "properties": {
+    "welcome": {
+      "type": "object",
+      "required": ["title", "button"],
+      "properties": {
+        "prototypeOnly": { "type": "boolean" },
+        "title": { "type": "string", "minLength": 1 },
+        "subtitle": { "type": "string" },
+        "button": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

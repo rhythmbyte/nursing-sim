@@ -13,7 +13,8 @@
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
         "chargeNurse": { "enum": ["student", "instructor", "off"] },
-        "showTagsToStudents": { "type": "boolean" },
+        "showTagsTo": { "type": "array", "items": { "enum": ["instructor", "student", "charge"] } },
+        "priorityScale": { "type": "string", "minLength": 1 },
         "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 },
         "pauseOnClose": { "type": "boolean" },
         "revealManualVitals": { "type": "boolean" },
@@ -25,6 +26,7 @@
         },
         "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
         "delegatedAssessmentRevealsFindings": { "type": "boolean" },
+        "codeTag": { "enum": ["red", "yellow", "green", "black"] },
         "roscTag": { "enum": ["red", "yellow", "green", "black"] },
         "messages": { "type": "object", "properties": { "codeStarted": { "type": "string" }, "rosc": { "type": "string" }, "noRosc": { "type": "string" } } }
       }

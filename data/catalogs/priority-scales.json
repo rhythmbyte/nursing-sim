@@ -1,0 +1,16 @@
+{
+  "review": "proposed",
+  "_comment": "Scales students use to prioritize their patients. settings.priorityScale picks one. The instructor hasn't chosen a triage system yet (SPEC §14); add another scale here as data only. type 'levels': each patient gets one level; each level lists the instructor tags it matches (used by the debrief and the priority-mismatch rule). 'tone' picks a display color (red, yellow, green, black, neutral).",
+  "scales": {
+    "triage-colors": {
+      "label": "Triage colors",
+      "type": "levels",
+      "levels": [
+        { "id": "red", "label": "Red", "description": "Immediate: unstable or at risk of rapid decline", "tone": "red", "matchesTags": ["red"] },
+        { "id": "yellow", "label": "Yellow", "description": "Urgent: needs care soon, currently stable", "tone": "yellow", "matchesTags": ["yellow"] },
+        { "id": "green", "label": "Green", "description": "Routine: stable", "tone": "green", "matchesTags": ["green"] },
+        { "id": "black", "label": "Black", "description": "Expectant / deceased / in arrest", "tone": "black", "matchesTags": ["black"] }
+      ]
+    }
+  }
+}

@@ -4,13 +4,15 @@
   "settings": {
     "handoffMode": "once",
     "chargeNurse": "instructor",
-    "showTagsToStudents": false,
+    "showTagsTo": ["instructor"],
+    "priorityScale": "triage-colors",
     "vitalsCycleDefaultMin": 5,
     "pauseOnClose": true,
     "revealManualVitals": true,
     "delegationDelayMin": { "LPN": 10, "CNA": 10 },
     "prnPreCheckWindowMin": 15,
     "delegatedAssessmentRevealsFindings": false,
+    "codeTag": "black",
     "roscTag": "red",
     "messages": {
       "codeStarted": "Patient is unresponsive. No pulse.",

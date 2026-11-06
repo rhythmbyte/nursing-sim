@@ -9,10 +9,12 @@ import { formatShiftTime } from '../../engine/time.js';
 import { studentView } from '../../engine/student-view.js';
 import { load, save } from '../../storage.js';
 import { newOrderCount } from '../../engine/orders.js';
+import { canSeeInstructorTags, activeScale, currentPriority } from '../../engine/priority.js';
+import { priorityPicker } from '../shared/priority-picker.js';
 import { mountPatientView } from './patient-view.js';
 import { openHandoffModal } from './handoff-modal.js';
 
-function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen }) {
+function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen, scale }) {
   const d = view.demographics;
   const newOrders = newOrderCount(ps);
   const pendingLabs = ps.labs.filter((l) => l.status === 'pending').length;
@@ -22,12 +24,13 @@ function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen }) {
         h('span', { class: 'room' }, `Rm ${d.room}`),
         h('strong', {}, d.name),
         h('span', { class: 'muted' }, `${d.age}${d.sex} · ${view.admittingDx}`),
-        view.tag ? triageChip(ps.tag) : null,
+        view.tag ? triageChip(ps.tag) : null, // instructor tag, only if settings.showTagsTo includes 'student'
         newOrders ? badge(`${newOrders} new order${newOrders > 1 ? 's' : ''}`, 'pending') : null,
         pendingLabs ? badge(`${pendingLabs} lab${pendingLabs > 1 ? 's' : ''} pending`, 'neutral') : null,
       ),
       h('div', { class: 'sp-seen muted' }, seenAt != null ? `Last seen ${formatShiftTime(runner.state.startClock, seenAt)}` : 'Not seen yet'),
     ),
+    h('div', { class: 'sp-prio' }, priorityPicker(scale, currentPriority(runner.state, user.userId, pid), (levelId) => runner.assignPriority(pid, levelId, user))),
     ps.callLight ? h('div', { class: 'sp-light' },
       h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
       h('span', {}, `Call light · ${elapsed(simMin, ps.callLight.since)}`),
@@ -48,7 +51,7 @@ export function mountStudentHome(root, ctx) {
     const t = runner.templates();
     if (t === viewsFor) return;
     viewsFor = t;
-    views = Object.fromEntries(Object.keys(runner.state.patients).map((pid) => [pid, studentView(t[pid], { showTags: scenario.settings.showTagsToStudents })]));
+    views = Object.fromEntries(Object.keys(runner.state.patients).map((pid) => [pid, studentView(t[pid], { showTags: canSeeInstructorTags(scenario.settings, 'student') })]));
   }
   refreshViews();
   let cleanupChild = null;
@@ -101,7 +104,7 @@ export function mountStudentHome(root, ctx) {
       refreshViews();
       const mine = Object.entries(state.patients).filter(([, ps]) => ps.groupId === groupId && ps.present);
       clear(list).append(...(mine.length
-        ? mine.map(([pid, ps]) => patientRow(pid, ps, views[pid], { runner, user, simMin, seenAt: seen[pid], onOpen: openPatient }))
+        ? mine.map(([pid, ps]) => patientRow(pid, ps, views[pid], { runner, user, simMin, seenAt: seen[pid], onOpen: openPatient, scale: activeScale(scenario.settings, ctx.catalogs) }))
         : [h('li', { class: 'muted' }, 'No patients assigned.')]));
 
       const ids = new Set(mine.map(([pid]) => pid));

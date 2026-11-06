@@ -5,19 +5,22 @@ import { h, clear } from '../shared/dom.js';
 import { simClock } from '../shared/timer.js';
 import { unitOverview } from './unit-overview.js';
 import { admissionsBoard } from './admissions-board.js';
+import { canSeeInstructorTags } from '../../engine/priority.js';
 
-export function mountCharge(root, { store, runner, scenario, instructorUser }) {
+export function mountCharge(root, { store, runner, scenario, instructorUser, catalogs: ctxCatalogs }) {
   const user = scenario.settings.chargeNurse === 'instructor'
     ? { userId: instructorUser.userId, role: 'charge', name: 'Instructor (charge)' }
     : { userId: 'charge', role: 'charge', name: 'Charge nurse' };
+  // Viewer role for tag visibility: the instructor playing charge is still the instructor.
+  const seesTags = canSeeInstructorTags(scenario.settings, scenario.settings.chargeNurse === 'instructor' ? 'instructor' : 'charge');
   const clock = simClock(store, runner);
   const board = h('div', {});
   const unit = h('div', {});
 
   function render() {
     const t = runner.templates();
-    clear(board).append(admissionsBoard(runner, t, scenario, user));
-    clear(unit).append(unitOverview(runner, t, scenario));
+    clear(board).append(admissionsBoard(runner, t, scenario, user, { seesTags, catalogs: ctxCatalogs }));
+    clear(unit).append(unitOverview(runner, t, scenario, { seesTags }));
   }
 
   root.append(

@@ -6,6 +6,8 @@ import { simClock, elapsed } from '../shared/timer.js';
 import { load, save } from '../../storage.js';
 import { chartSections } from '../chart/index.js';
 import { newOrderCount } from '../../engine/orders.js';
+import { activeScale, currentPriority } from '../../engine/priority.js';
+import { priorityPicker } from '../shared/priority-picker.js';
 
 function allergyText(view) {
   if (view.allergies.length) return view.allergies.map((a) => `${a.agent}${a.reaction ? ` (${a.reaction})` : ''}`).join(', ');
@@ -30,6 +32,11 @@ export function mountPatientView(root, ctx) {
 
   const clock = simClock(store, runner);
   const lightBanner = h('div', {});
+  const prio = h('div', { class: 'banner-prio' });
+  const scale = activeScale(scenario.settings, ctx.catalogs);
+  function renderPrio() {
+    prio.replaceChildren(priorityPicker(scale, currentPriority(runner.state, user.userId, pid), (levelId) => runner.assignPriority(pid, levelId, user)));
+  }
   const tabBar = h('nav', { class: 'chart-tabs', role: 'tablist', 'aria-label': 'Chart sections' });
   const body = h('div', { class: 'chart-body', role: 'tabpanel' });
 
@@ -85,7 +92,7 @@ export function mountPatientView(root, ctx) {
         h('div', {}, `${d.age}${d.sex} · Room ${d.room} · ${view.codeStatus}`),
         h('div', {}, h('strong', {}, 'Dx: '), view.admittingDx),
       ),
-      h('div', { class: 'allergy-box' }, h('strong', {}, 'Allergies'), h('div', {}, allergyText(view))),
+      h('div', { class: 'banner-side' }, prio, h('div', { class: 'allergy-box' }, h('strong', {}, 'Allergies'), h('div', {}, allergyText(view)))),
     ),
     lightBanner,
     tabBar,
@@ -93,11 +100,13 @@ export function mountPatientView(root, ctx) {
   );
   renderTabs();
   renderLight();
+  renderPrio();
   mountSection();
 
   const off = store.subscribe(() => {
     renderTabs();
     renderLight();
+    renderPrio();
     mounted.update(runner.state);
   });
   // Elapsed times in the call-light banners change every sim minute.

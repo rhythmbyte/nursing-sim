@@ -4,6 +4,20 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Instructor tags are hidden by role; students assign their own priorities
+- **Decision:** `settings.showTagsTo` (default `["instructor"]`) replaces `showTagsToStudents`. One helper, `canSeeInstructorTags(settings, role)`, gates every tag display: student home, chart, admissions board, unit overview (column and priority-mismatch flags). The instructor playing charge counts as the instructor. Students, and a student charge nurse for admissions, set their own priority on `settings.priorityScale` from `data/catalogs/priority-scales.json`. Every change is logged and kept as history. Instructor tag changes (code → `codeTag`, ROSC → `roscTag`) are kept in `tagHistory`, so the debrief and the `priority-mismatch` rule compare at each moment.
+- **Why:** Prioritization is the skill being taught, so the answer key can't be on screen. The instructor hasn't chosen a triage system (SPEC §14 Q18), so scales are data, and each level says which instructor tags it matches (works for ESI or acuity too).
+- **Alternatives:** Students pick the instructor's tag colors directly (ties the UI to one system); compare only the latest priority (misses "re-triaged too late after the code").
+- **Also:** any rule can now be switched off with `enabled: false` in rules.json. UI convenience only: tags are still in the downloaded JSON (SPEC §13). Session shape v7.
+
+## 2026-11-05: Welcome popup is prototype-only and data-driven
+- **Decision:** "Welcome to RN sims!" / "Built by paramedics." from `data/catalogs/ui.json`, shown once per browser session (`storage.saveSession`, i.e. sessionStorage via storage.js). Esc or the button closes it. Marked for removal in SPEC §13.
+
+## 2026-11-05: Stop the app before reloading data
+- **Decision:** `reloadData()` tears down the running app (tick, heartbeat) before fetching. Found in testing: the old tick saved the previous sim's session after Create sim cleared it.
+
+---
+
 ## 2026-11-05: Review pass fixes (after phase 7)
 - **Boundary fixes:**
   - Notes quick actions come from the catalog (`quickAction`), not ids in `notes.js` (B1).

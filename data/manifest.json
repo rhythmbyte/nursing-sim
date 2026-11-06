@@ -6,7 +6,9 @@
     "staff": "catalogs/staff.json",
     "rules": "catalogs/rules.json",
     "vitals": "catalogs/vitals.json",
-    "scenarioDefaults": "catalogs/scenario-defaults.json"
+    "scenarioDefaults": "catalogs/scenario-defaults.json",
+    "priorityScales": "catalogs/priority-scales.json",
+    "ui": "catalogs/ui.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

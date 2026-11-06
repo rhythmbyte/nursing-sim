@@ -48,6 +48,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - **Orders:** acknowledge the new 12-lead ECG.
    - **Interventions → Cardiac → 12-lead ECG → Save.**
    - **Interventions → Assessment → Focused assessment → Save.** The Summary now shows his new findings.
+   - Set **My priority** in the chart banner. Students never see your tags; the debrief compares their priorities with yours.
    - **MAR → Give** nitroglycerin twice quickly. The second dose warns "too soon". Click **Give anyway** to show an override.
 5. **Student 1 → Linda.**
    - Skip to her 08:00 deterioration first if you haven't.
@@ -56,6 +57,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 6. **Charge tab.** Skip to 09:30. James waits on the **Admissions board**. **Assign now** to the group. He appears on Student 1's list.
 7. **Debrief tab.** Walk through:
    - the red/amber flags (nitro override, Foley before bolus, missed notifications);
+   - priorities vs. your tags over time;
    - response times;
    - the order sequence (done vs. correct);
    - the timeline.

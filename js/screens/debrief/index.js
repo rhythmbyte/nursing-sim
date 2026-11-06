@@ -6,7 +6,8 @@ import { formatShiftTime } from '../../engine/time.js';
 import { load, save } from '../../storage.js';
 import { describeEntry } from './describe.js';
 import { toCsv, downloadCsv } from './csv.js';
-import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection } from './sections.js';
+import { flagsSection, responseSection, orderSequenceSection, vitalsSection, handoffSection, recognizeSection, prioritySection } from './sections.js';
+import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
 
@@ -40,7 +41,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
     const groupName = (gid) => scenario.groups.find((g) => g.id === gid)?.name || gid;
     const d = runner.debrief(userId);
     const at = (m) => formatShiftTime(runner.state.startClock, m);
-    const helpers = { at, room };
+    const helpers = { at, room, scale: activeScale(scenario.settings, catalogs) };
     const select = h('select', {
       'aria-label': 'Student',
       onchange: (e) => { userId = e.target.value; save(STUDENT_KEY, userId); render(); },
@@ -59,6 +60,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         ),
       ),
       flagsSection(d, helpers),
+      prioritySection(d, helpers),
       responseSection(d, helpers),
       orderSequenceSection(d, helpers),
       vitalsSection(d, helpers),

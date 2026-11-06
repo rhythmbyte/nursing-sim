@@ -9,7 +9,6 @@
   "settings": {
     "handoffMode": "once",
     "chargeNurse": "instructor",
-    "showTagsToStudents": false,
     "vitalsCycleDefaultMin": 5,
     "pauseOnClose": true,
     "revealManualVitals": true,

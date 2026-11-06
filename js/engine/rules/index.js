@@ -10,14 +10,17 @@ import inappropriateDelegation from './inappropriate-delegation.js';
 import allergyConflict from './allergy-conflict.js';
 import prnLimit from './prn-limit.js';
 import leftUnattended from './left-unattended.js';
+import priorityMismatch from './priority-mismatch.js';
+import { ruleConfig } from './helpers.js';
 
-[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended]
+[priorityOrder, tierTimeout, callLightResponse, parameterBreach, inappropriateDelegation, allergyConflict, prnLimit, leftUnattended, priorityMismatch]
   .forEach(registerRule);
 
 /** All flags for the session at ctx.simMin, sorted by time. ctx: { templatesById, catalogs, simMin, studentIdsForGroup } */
 export function evaluateRules(state, ctx) {
   const flags = [];
   for (const rule of allRules()) {
+    if (ruleConfig(state, ctx, rule.id).enabled === false) continue; // any rule can be switched off in rules.json
     try {
       flags.push(...rule.evaluate(state, ctx));
     } catch (err) {

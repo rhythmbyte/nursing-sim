@@ -147,7 +147,8 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
   "settings": {
     "handoffMode": "once" | "always" | "never",
     "chargeNurse": "student" | "instructor" | "off",
-    "showTagsToStudents": false,
+    "showTagsTo": ["instructor"],         // roles that may see the instructor's triage tags (instructor | student | charge)
+    "priorityScale": "triage-colors",     // scale students prioritize with (data/catalogs/priority-scales.json)
     "vitalsCycleDefaultMin": 5,
     "pauseOnClose": true,                 // pause a running sim when the page closes/reloads (default true)
     "revealManualVitals": true,           // "Measure" reveals scripted temp/RR/pain (default true). false = from manikin/instructor
@@ -199,7 +200,8 @@ Adding a type = new file exporting `{ type, apply(state, event), describe(event)
 ## 6. Student experience
 
 ### Home
-- List of assigned patients: room, name, age, dx, call-light indicator, new-orders badge, pending-lab badge, last-seen time. Tag color hidden unless `showTagsToStudents`.
+- List of assigned patients: room, name, age, dx, call-light indicator, new-orders badge, pending-lab badge, last-seen time. The instructor's tag is hidden unless `showTagsTo` includes `student`.
+- **Student priorities:** students set their own priority for each patient (home list or chart banner) on the scenario's scale; they can change it any time and every change is logged with sim time. The debrief compares it with the instructor's tag over time.
 - Sim clock always visible.
 
 ### Handoff popup
@@ -241,6 +243,7 @@ Rules are pure functions of the session, re-evaluated whenever flags are shown (
 | `allergy-conflict` | A med given that matches a patient allergy |
 | `prn-limit` | PRN given beyond max or before interval / without its required pre-check. **Red.** The MAR warns and lets the student "Give anyway"; every override is logged with its warning codes and shows as a red flag in the debrief (pending instructor confirmation, §14) |
 | `left-unattended` | (instructor-marked) student left an unstable patient — instructor toggles |
+| `priority-mismatch` | A student's priority doesn't match the instructor's tag (at the time) for longer than `graceMin`. `enabled`, `severity`, `graceMin`, `flagUnassigned` in rules.json. Any rule can be switched off with `enabled: false`. |
 
 Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templates, catalogs, current sim minute, group → students).
 
@@ -262,7 +265,8 @@ Rule file shape: `{ id, label, evaluate(state, ctx) → flags[] }` (ctx: templat
 
 ## 9. Charge nurse screens (optional per sim)
 
-- **Unit overview** — every patient on the unit, current tag (live), which student has them, open flags, pending admissions.
+- **Unit overview** — every patient on the unit, current tag (live; only if `showTagsTo` allows the viewer, and a student charge nurse doesn't see priority-mismatch flags either), which student has them, open flags, pending admissions.
+- The charge nurse sets their own priority for each incoming admission on the board, like students do.
 - **Admissions/EMS board** — incoming patients with report; decide: assign to a group now, or hold (EMS "holds the wall"). Decision + time logged.
 
 ---
@@ -322,6 +326,8 @@ Things in the prototype that will need to change for the real website (logins, b
 | Join codes and student "joins" happen per tab (each tab = one device) | Real join flow tied to student accounts | `js/engine/roster.js`, `assignment.js` |
 | Instructor edits (patient editor, review approvals, new sims) save in this browser (`storage.js` via `data-loader.js` `saveLocal`); publishing = export JSON + commit | Edits are API writes to a content database, with history and who approved what | `js/data-loader.js` |
 | Ad-hoc orders live in session state (`adhoc`) and merge into effective templates | Same, server-side | `js/engine/templates.js`, `instructor.js` |
+| **Welcome popup** ("Welcome to RN sims!", text in `data/catalogs/ui.json`, once per browser session) | **Prototype only: remove it** (and `ui.json` `welcome`) in the full build | `js/main.js` `showWelcome` |
+| Instructor tags are hidden from students/charge in the UI (`showTagsTo`) but are in the downloaded JSON and session state | Server never sends the tag (or tag history) to roles not in `showTagsTo` | `engine/priority.js` `canSeeInstructorTags` → API |
 | User identities are hard-coded (`instructor`, `student-N`) in `main.js` | `userId`/`role` come from the auth session; log format is unchanged | `js/main.js` |
 | The tick timer (`setInterval` in `main.js`) runs the scheduler in each browser | Server runs `session.tick()` and broadcasts state; clients only render and send actions | `js/main.js`, `js/engine/runner.js` |
 | One saved session per browser (`storage` key `session`); a reload resumes it | Sessions are server records with ids, so many sims can run at once and the debrief reads past sessions | `js/engine/runner.js`, `js/storage.js` |
@@ -353,3 +359,7 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 15. **Lab result delay fallback:** 30 sim-minutes for any lab with no delay set in the patient file or the labs catalog (`labs.json` `fallbackDelayMin`). Right?
 16. **After ROSC** the patient's tag becomes red (`settings.roscTag`). Right, or should it depend on the patient?
 17. **Admissions board:** should the charge nurse's decision time (admission waiting on the board) be flagged past some threshold, and who plays charge in class (a student or you)?
+18. **Which triage/priority system should students use?** The prototype uses red / yellow / green / black (matching your tags). Options: ESI 1–5, an acuity scale, or rank-ordering the assignment. Any of these can be added as data (`priority-scales.json`). Rank order needs a small engine addition.
+19. **Priority mismatch:** amber after 10 min of mismatch (`graceMin`); patients never prioritized aren't flagged (`flagUnassigned: false`). Should it fire at all, and how strictly?
+20. **During a code** the instructor tag becomes black (`settings.codeTag`). Right?
+21. **Who sees your tags:** only you by default (`showTagsTo: ["instructor"]`). Should a student charge nurse see them?

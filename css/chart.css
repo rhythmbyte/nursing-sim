@@ -108,3 +108,14 @@ tr.needs-attention td { background: var(--review-bg); }
 .panel .field + .field { margin-top: var(--space-2); }
 .pick-list { display: flex; flex-direction: column; gap: 2px; margin-top: var(--space-2); }
 .pick-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+
+/* Student priorities (the student's own; never the instructor's tag) */
+.prio-picker { color: var(--text); font-size: 0.85rem; }
+.prio-select { font-weight: 600; }
+.prio-red { border-color: var(--triage-red); box-shadow: inset 4px 0 0 var(--triage-red); }
+.prio-yellow { border-color: var(--triage-yellow); box-shadow: inset 4px 0 0 var(--triage-yellow); }
+.prio-green { border-color: var(--triage-green); box-shadow: inset 4px 0 0 var(--triage-green); }
+.prio-black { border-color: var(--text); box-shadow: inset 4px 0 0 var(--text); }
+.sp-prio { padding: 0 var(--space-3) var(--space-2); }
+.banner-side { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-end; }
+.welcome-sub { margin: 0; color: var(--muted); font-size: 0.9rem; }

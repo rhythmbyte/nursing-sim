@@ -3,7 +3,8 @@
 
 import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
-import { load, save, remove, clearAll } from './storage.js';
+import { load, save, remove, clearAll, loadSession, saveSession } from './storage.js';
+import { openModal } from './screens/shared/modal.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
 import { withDefaults } from './engine/settings.js';
@@ -119,6 +120,18 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   };
 }
 
+// PROTOTYPE ONLY (remove in the full build, SPEC §13): welcome popup, once per browser session.
+// Text comes from data/catalogs/ui.json. Esc or the button closes it.
+function showWelcome(welcome) {
+  if (!welcome || loadSession('welcomeShown', false)) return;
+  saveSession('welcomeShown', true);
+  openModal({
+    title: welcome.title,
+    body: welcome.subtitle ? h('p', { class: 'welcome-sub' }, welcome.subtitle) : h('span', {}),
+    actions: [{ label: welcome.button, kind: 'primary' }],
+  });
+}
+
 async function boot() {
   const root = document.getElementById('app');
   try {
@@ -128,6 +141,8 @@ async function boot() {
     let teardown = null;
     // Re-read files + this browser's edits (after editor saves, approvals, new sims), then remount.
     const reloadData = async (id) => {
+      // Stop the current app (tick timer, heartbeat) first, so it can't re-save the old session while loading.
+      if (teardown) { teardown(); teardown = null; }
       data = await loadAll();
       restart(id);
     };
@@ -136,6 +151,7 @@ async function boot() {
       teardown = startApp(root, data, id, restart, reloadData, opts);
     };
     restart(load(SCENARIO_KEY), { pageLoad: true });
+    showWelcome(data.catalogs.ui?.welcome);
   } catch (err) {
     console.error(err);
     root.replaceChildren(h('div', { class: 'banner banner-error', role: 'alert' },

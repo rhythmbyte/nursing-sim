@@ -5,6 +5,7 @@ import { h } from '../shared/dom.js';
 import { openModal, promptText } from '../shared/modal.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { formatShiftTime } from '../../engine/time.js';
+import { activeScale, currentPriority } from '../../engine/priority.js';
 
 function pushOrderModal(runner, pid, name, catalogs, user) {
   const text = h('input', { class: 'input', 'aria-label': 'Order text' });
@@ -43,8 +44,9 @@ export function patientsPanel(runner, templatesById, catalogs, user) {
   const state = runner.state;
   const at = (m) => formatShiftTime(state.startClock, m);
   const rows = Object.entries(state.patients).filter(([, ps]) => ps.present);
+  const scale = activeScale(state.settings, catalogs);
   return h('table', { class: 'data-table' },
-    h('thead', {}, h('tr', {}, ['Patient', 'Tag', 'Status', 'Actions'].map((c) => h('th', {}, c)))),
+    h('thead', {}, h('tr', {}, ['Patient', 'Tag', 'Student priorities', 'Status', 'Actions'].map((c) => h('th', {}, c)))),
     h('tbody', {}, rows.map(([pid, ps]) => {
       const d = templatesById[pid].demographics;
       const name = `Rm ${d.room} ${d.name}`;
@@ -56,6 +58,8 @@ export function patientsPanel(runner, templatesById, catalogs, user) {
       return h('tr', { class: ps.code && !ps.code.outcome ? 'needs-attention' : '' },
         h('td', {}, name),
         h('td', {}, triageChip(ps.tag)),
+        h('td', {}, Object.entries(state.roster).filter(([, r]) => r.groupId === ps.groupId)
+          .map(([uid, r]) => `${r.name}: ${scale.levels.find((l) => l.id === currentPriority(state, uid, pid))?.label || '—'}`).join(', ') || '—'),
         h('td', {}, status),
         h('td', { class: 'row-actions' },
           h('button', { class: 'btn btn-small', disabled: !ps.alive, onclick: () => pushOrderModal(runner, pid, name, catalogs, user) }, 'Push order'),

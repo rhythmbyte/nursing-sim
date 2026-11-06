@@ -2,6 +2,19 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Student priorities, hidden instructor tags, welcome popup
+- **Instructor tags hidden:** hidden from every student-facing role by default (`settings.showTagsTo: ["instructor"]`, replacing `showTagsToStudents`). Checked in the browser: no tag chips, classes or tooltips on student or student-charge screens.
+- **Student priorities:** students set their own priority per patient from the home list or chart banner; the charge nurse does the same for admissions. Logged with sim time.
+- **Scales are data:** `data/catalogs/priority-scales.json` (one scale for now: red/yellow/green/black), picked by `settings.priorityScale`. ESI, acuity and similar scales can be added as data.
+- **Debrief:** each student's priorities over time next to the instructor's tag, with mismatches highlighted.
+- **New rule `priority-mismatch`** (amber, 10 min grace, can be switched off). Any rule can now be disabled with `enabled: false`.
+- **Tag history:** code → `settings.codeTag`, ROSC → `roscTag`.
+- **Sim setup:** who sees tags, and the priority scale.
+- **Welcome popup** (prototype only): text from `data/catalogs/ui.json`, once per browser session, Esc closes.
+- **Fix:** stop the app before reloading data (stale session re-save).
+- SPEC §14 Q18–21.
+- Tests: 86 passing.
+
 ## Review pass
 - **Modularity audit:** 3 violations fixed:
   - quick-action ids hard-coded in `notes.js` (now `quickAction` in the catalog);

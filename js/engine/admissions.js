@@ -15,6 +15,7 @@ export function assignAdmission(state, patientId, { groupId }, { now, user, scen
   const ps = draft.patients[patientId];
   Object.assign(ps.admission, { status: 'assigned', decidedAtMin: simMin, groupId });
   Object.assign(ps, { present: true, groupId, arrivedAtMin: simMin });
+  ps.tagHistory.push({ atMin: simMin, tag: ps.tag }); // comparison starts when students get the patient
   // Orders that arrived while the patient waited start counting when a student actually gets them
   // (so tier timeouts don't run against students who couldn't see the patient). Original time kept.
   for (const os of Object.values(ps.orders)) {

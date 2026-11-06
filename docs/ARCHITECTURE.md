@@ -82,6 +82,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
 | `js/engine/orders.js` | `progressOrder`, `findOrder`, `firstWork`, `newOrderCount` (one helper for every "new orders" badge) | built |
 | `js/engine/assignment.js` | Join codes, `placeStudent` (manual roster / random open slot, never over-fills), `fillByTagCounts` (randomizer, no reuse), roster lookups | built |
+| `js/engine/priority.js` | `canSeeInstructorTags` (who may see instructor tags), `assignPriority`, `priorityTimeline` (student level vs instructor tag history), `scaleProblems` | built |
 | `js/engine/admissions.js` | `assignAdmission` (re-bases orders that arrived while waiting), `holdAdmission`, `waitingAdmissions` | built |
 | `js/engine/roster.js` | `joinSim` (code check, placement, overflow alert) | built |
 | `js/engine/templates.js` | `effectiveTemplates`: file templates + instructor ad-hoc orders | built |
@@ -96,7 +97,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `ui.json` (prototype-only UI text: welcome popup) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |
@@ -119,7 +120,7 @@ These rules are what make the move to the real website a swap instead of a rewri
 | B8 | **Every log entry has `userId` and `role`.** | Logins in the full build fill in real IDs without changing the log format. |
 | B9 | **Data is validated against `data/schemas/`** on load (and by the tests). | Bad data fails loudly instead of breaking a screen mid-sim. The full build reuses the same schemas on the server. |
 | B10 | **Text from data is never inserted as HTML.** Build elements with `h()` from `screens/shared/dom.js`. | Data can't inject markup. This matters more once instructors edit content and other users see it. |
-| B11 | **Student screens only read `studentView()` templates** plus live session state, never the full patient template. Findings reach students only by the engine copying them into session state when they assess. | Keeps answer-key content off student screens by accident. **UI convenience only, not security:** the JSON is still downloaded. The full build moves this filter to the server. |
+| B11 | **Student-facing screens (students, a student charge nurse) only read `studentView()` templates and never render the instructor's tag unless `canSeeInstructorTags(settings, role)`**. Student screens read plus live session state, never the full patient template. Findings reach students only by the engine copying them into session state when they assess. | Keeps answer-key content off student screens by accident. **UI convenience only, not security:** the JSON is still downloaded. The full build moves this filter to the server. |
 
 Things that are UI conveniences only, **not** security: B11's student filter. The full JSON is still downloaded. See SPEC §13.
 
@@ -160,6 +161,9 @@ Things that are UI conveniences only, **not** security: B11's student filter. Th
    - Use `h()` and spread arrays into `append(...)`. `Element.append` does not flatten arrays.
 2. Add one import and one list entry in `js/screens/chart/index.js` (that list is the tab order).
 3. If the section needs a new action, add a pure function to `engine/chart.js` (logged with `userId`/`role`) and a test in `tests/chart.test.mjs`.
+
+### Add a priority scale (e.g. ESI 1–5)
+Data only: add an entry under `scales` in `data/catalogs/priority-scales.json` with `type: "levels"` and its `levels` (`id`, `label`, `description`, `tone`, and `matchesTags`, the instructor tags each level counts as matching). Select it with `settings.priorityScale`. A rank-order scale (`type: "rank"`) needs an engine addition in `engine/priority.js` (the comparison) before it can be used. Today it's refused with a clear error.
 
 ### Add a screen or tab
 Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passed to `mountShell`. Put the screen in the right `js/screens/<role>/` folder.
