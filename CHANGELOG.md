@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Full check after cleanup
+- Full browser run through every tab (instructor views, two students, student charge nurse, monitor + silence + full screen, print preview, reflection, debrief) with no console errors.
+- Accessibility probe: every visible control in every view now has an accessible name (the last one, the editor's Advanced JSON box, is labelled).
+- Tests: 128 passing.
+
 ## Tests for untested behavior (+ fixes they found)
 - New `tests/loader.test.mjs` runs the real data loader in Node (fetch reads `data/`, in-memory localStorage): starter data loads clean, browser edits overlay files, a broken edit falls back to the file version, a scenario with no patients left is dropped, `clearAll` removes only this app's keys.
 - New test: every action the engine logs has a readable debrief description (scans the engine source).

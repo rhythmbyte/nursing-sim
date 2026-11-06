@@ -44,7 +44,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const chk = (k) => (inputs[k] = h('input', { type: 'checkbox', checked: Boolean(f[k]) }));
     const orders = ordersTable(work.orders, catalogs);
     const labs = labsTable(work.labs, catalogs, work.orders);
-    const jsonBox = h('textarea', { class: 'input', rows: 16 });
+    const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
     const errBox = h('div', {});
     collect = () => {
