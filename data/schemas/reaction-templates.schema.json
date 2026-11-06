@@ -1,0 +1,23 @@
+{
+  "title": "Reaction templates catalog",
+  "type": "object",
+  "required": ["templates"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "states", "reactions"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "label": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "review": { "enum": ["approved", "proposed", "partial"] },
+          "states": { "type": "array", "items": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string", "pattern": "^[a-z0-9-]+$" }, "label": { "type": "string", "minLength": 1 }, "findingsText": { "type": "array", "items": { "type": "string" } } } } },
+          "reactions": { "type": "array", "items": { "type": "object", "required": ["id", "when", "then"], "properties": { "id": { "type": "string", "pattern": "^r-" }, "when": { "type": "object", "required": ["kind"] }, "then": { "type": "array", "items": { "type": "object", "required": ["type"] } } } } }
+        }
+      }
+    }
+  }
+}

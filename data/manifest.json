@@ -12,7 +12,8 @@
     "vitalsPresets": "catalogs/vitals-presets.json",
     "rhythms": "catalogs/rhythms.json",
     "help": "catalogs/help.json",
-    "reflection": "catalogs/reflection.json"
+    "reflection": "catalogs/reflection.json",
+    "reactionTemplates": "catalogs/reaction-templates.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

@@ -5,7 +5,7 @@ import { validate } from './validate.js';
 import { eventGroupProblems } from './engine/scheduler.js';
 import { load, save } from './storage.js';
 import { scaleProblems } from './engine/priority.js';
-import { patientReferenceProblems, scenarioReferenceProblems, rhythmCatalogProblems, helpCatalogProblems } from './engine/integrity.js';
+import { patientReferenceProblems, scenarioReferenceProblems, rhythmCatalogProblems, helpCatalogProblems, reactionTemplateProblems } from './engine/integrity.js';
 
 // Checks JSON Schema can't express (cross-field rules), per kind of file.
 const EXTRA_CHECKS = {
@@ -31,6 +31,7 @@ const SCHEMAS = {
   rhythms: 'schemas/rhythms.schema.json',
   help: 'schemas/help.schema.json',
   reflection: 'schemas/reflection.schema.json',
+  reactionTemplates: 'schemas/reaction-templates.schema.json',
 };
 
 async function fetchJson(base, rel) {
@@ -145,6 +146,9 @@ export async function loadAll(base = 'data/') {
     catalogsOut[name] = cat;
     localCatalogNames.add(name);
   }
+  // Reaction templates may only point at their own states/reactions and catalog interventions.
+  const tplProblems = reactionTemplateProblems(catalogsOut.reactionTemplates, catalogsOut);
+  if (tplProblems.length) { problems.push({ file: 'catalogs/reaction-templates.json', errors: tplProblems }); catalogsOut.reactionTemplates = { templates: [] }; }
   // Broken references (ids pointing at nothing) would fail mid-sim. A broken browser edit is skipped (the
   // file version stays); a broken file patient is left out. Either way the reason is shown to the instructor.
   const refCheck = (t) => patientReferenceProblems(t, catalogsOut);

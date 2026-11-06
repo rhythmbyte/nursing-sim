@@ -3,7 +3,9 @@
 // field, the missing id, and where it should be defined.
 
 import { rhythmProblems } from './monitor.js';
-import { scriptProblems } from './reactions/integrity.js';
+import { scriptProblems, reactionTemplateProblems } from './reactions/integrity.js';
+
+export { reactionTemplateProblems };
 
 const has = (set, id) => set.has(id);
 

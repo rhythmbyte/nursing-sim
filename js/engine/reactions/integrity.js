@@ -80,3 +80,18 @@ export function scriptProblems(t, catalogs) {
   }
   return p;
 }
+
+/**
+ * Checks for data/catalogs/reaction-templates.json: each template must be a self-contained script piece
+ * (its reactions only point at its own states and reactions, and at catalog interventions). Uses scriptProblems
+ * on a bare patient, so a template can't depend on one patient's orders or events.
+ */
+export function reactionTemplateProblems(catalog, catalogs) {
+  return (catalog?.templates || []).flatMap((tpl) => {
+    const changes = [];
+    const states = tpl.states.map(({ findingsText, ...s }) => (findingsText?.length ? (changes.push({ eventId: `state-${s.id}`, findings: findingsText }), { ...s, findings: `state-${s.id}` }) : s));
+    const reactions = tpl.reactions.map((r) => ({ ...r, then: r.then.map((e, i) => (e.type === 'findings' && e.findingsText ? (changes.push({ eventId: `${r.id}-f${i}`, findings: e.findingsText }), { type: 'findings', change: `${r.id}-f${i}` }) : e)) }));
+    const bare = { events: [], orders: [], labs: [], findings: { changes }, script: { initialState: states[0]?.id, states, reactions } };
+    return scriptProblems(bare, catalogs).map((m) => `template "${tpl.id}": ${m.replace(' in this patient', ' (templates cannot use a patient\'s own orders or events)')}`);
+  });
+}

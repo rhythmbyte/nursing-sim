@@ -25,6 +25,7 @@ const schemaFor = {
   rhythms: load('schemas/rhythms.schema.json'),
   help: load('schemas/help.schema.json'),
   reflection: load('schemas/reflection.schema.json'),
+  reactionTemplates: load('schemas/reaction-templates.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {
@@ -100,6 +101,10 @@ test('Suggestion 6: rhythms and help catalogs pass per-entry checks; mistakes ar
   const help = load(manifest.catalogs.help);
   assert.deepEqual(rhythmCatalogProblems(rhythms), []);
   assert.deepEqual(helpCatalogProblems(help), []);
+  const { reactionTemplateProblems } = await import('../js/engine/integrity.js');
+  const all = Object.fromEntries(Object.entries(manifest.catalogs).map(([k, rel]) => [k, load(rel)]));
+  assert.deepEqual(reactionTemplateProblems(all.reactionTemplates, all), []);
+  assert.match(reactionTemplateProblems({ templates: [{ id: 'x', label: 'X', states: [{ id: 'a', label: 'A' }], reactions: [{ id: 'r-x', when: { kind: 'fired', eventId: 'e-p1' }, then: [{ type: 'state', to: 'zz' }] }] }] }, all).join('\n'), /templates cannot use a patient's own orders or events[\s\S]*no state "zz"/);
   const bad = structuredClone(rhythms);
   bad.rhythms.sinus.draw.shape = 'zigzag';
   bad.rhythms.afib.draw.irregular = 2;
