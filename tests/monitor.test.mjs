@@ -61,7 +61,9 @@ test('code: arrest rhythm on the monitor, no pulse = no SpO2; ROSC / no ROSC rhy
   s = chart.connectMonitor(s, LG, {}, ctx(0));
   s = startCode(s, LG, { rhythm: 'VF' }, { now: 10 * MIN, user: INS });
   let v = view(s, LG);
-  assert.deepEqual([v.rhythm.id, v.hr, v.spo2, v.pulse], ['vf', null, null, false]);
+  assert.deepEqual([v.rhythm.id, v.hr, v.spo2, v.rr, v.pulse], ['vf', null, null, null, false]);
+  for (const id of ['vf', 'pvt', 'pea', 'asystole']) assert.equal(resolveRhythm(catalogs, id).pulseless, true, id);
+  assert.equal(resolveRhythm(catalogs, 'pulseless VT').id, 'pvt');
   assert.ok(v.alarms.includes('rhythm'));
   const rosc = setCodeOutcome(s, LG, 'rosc', { now: 15 * MIN, user: INS });
   assert.equal(view(rosc, LG).rhythm.id, 'sinus-tach');

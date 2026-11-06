@@ -40,7 +40,7 @@ export function monitorView(state, pid, template, catalogs) {
   const ps = state.patients[pid];
   const c = connections(state, pid, template, catalogs);
   const rhythm = resolveRhythm(catalogs, ps.vitals.rhythm) || resolveRhythm(catalogs, 'sinus');
-  const pulse = rhythm?.pulse !== false;
+  const pulse = !rhythm?.pulseless; // rhythms.json pulseless: true (VF, pVT, PEA, asystole)
   const lastNibp = [...ps.flowsheet].filter((r) => r.source === 'monitor' && r.values.bp).sort((a, b) => a.atMin - b.atMin).at(-1);
   const hr = c.ecg && rhythm?.showsRate !== false ? ps.vitals.hr ?? null : null;
   const spo2 = c.spo2 && pulse ? ps.vitals.spo2 ?? null : null;
@@ -50,7 +50,7 @@ export function monitorView(state, pid, template, catalogs) {
     pulse,
     hr, spo2,
     pulseRate: c.spo2 && pulse ? ps.vitals.hr ?? null : null,
-    rr: c.ecg ? ps.vitals.rr ?? null : null, // impedance RR from the ECG leads
+    rr: c.ecg && pulse ? ps.vitals.rr ?? null : null, // impedance RR from the ECG leads; '--' when pulseless
     bp: c.nibp && lastNibp ? lastNibp.values.bp : null,
     bpAtMin: c.nibp && lastNibp ? lastNibp.atMin : null,
     o2: ps.vitals.o2 ?? null,

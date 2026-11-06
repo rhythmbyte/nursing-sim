@@ -376,4 +376,4 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 25. **Monitor alarm limits** (`vitals.json alarmLimits`): HR 50–120, SpO₂ < 90, RR 8–28, SBP 90–180, DBP > 110. Right for this unit?
 26. **Rhythm after a code:** ROSC → sinus tach (`roscRhythm`), no ROSC → asystole (`noRoscRhythm`). Right?
 27. **Monitor connections:** telemetry orders connect ECG, continuous pulse ox connects SpO₂, NIBP only when the cycle is on or after Take BP now. Should any patient start fully connected? Which patients have a temp probe (`monitor.tempProbe`)?
-28. **Breathing rate during an arrest:** the monitor's RR keeps the patient's RR during VF/asystole. Should arrest rhythms show RR 0 (or agonal)?
+28. **Breathing rate during an arrest:** pulseless rhythms (VF, pVT, PEA, asystole; `pulseless: true` in rhythms.json) now show RR "--" along with no SpO₂/pleth. Should RR instead show 0, or agonal breaths for a while? (Still open.)

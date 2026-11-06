@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Pulseless rhythms show RR --
+- `rhythms.json`: VF, pulseless VT (new `pvt`), PEA and asystole carry `"pulseless": true` (replaces `pulse: false`). On the monitor a pulseless rhythm shows HR per rhythm, and SpO₂, pleth and **RR as --**. SPEC §14 question on 0 vs. agonal breathing stays open.
+- Tests: 109 passing.
+
 ## B11. Printable report sheet
 - **Print report sheet** on the student home: one page per assigned patient with name, room, age, diagnosis, allergies, code status, the student's handoff notes, active orders, a notes box and an hourly time grid (VS / Meds / Assess / Labs / Notes) to the end of shift. Print-only CSS; built from the student view only (no answer key).
 - Tests: 109 passing.
