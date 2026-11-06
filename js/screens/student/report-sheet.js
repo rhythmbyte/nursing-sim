@@ -19,9 +19,23 @@ export function sheetData(state, userId, pid, view) {
   };
 }
 
+/** Pure: every joined student with the patients currently assigned to their group. */
+export function studentSheets(state) {
+  return Object.entries(state.roster || {}).map(([userId, r]) => ({
+    userId, name: r.name,
+    pids: Object.entries(state.patients).filter(([, ps]) => ps.present && ps.groupId === r.groupId).map(([pid]) => pid),
+  })).filter((s) => s.pids.length);
+}
+
+/** One student's sheets (student home). */
 export function printReportSheet(state, userId, pids, views, studentName) {
+  printReportSheets(state, [{ userId, name: studentName, pids }], views);
+}
+
+/** Many students' sheets in one print job (instructor, before a lab). */
+export function printReportSheets(state, students, views) {
   document.getElementById('print-sheet')?.remove();
-  const sheets = pids.map((pid) => {
+  const sheets = students.flatMap(({ userId, name: studentName, pids }) => pids.map((pid) => {
     const d = sheetData(state, userId, pid, views[pid]);
     return h('section', { class: 'sheet' },
       h('header', { class: 'sheet-head' }, h('h2', {}, `Rm ${d.room} · ${d.name}`), h('div', {}, `${d.ageSex} · ${d.codeStatus}`), h('div', { class: 'muted' }, studentName)),
@@ -33,7 +47,7 @@ export function printReportSheet(state, userId, pids, views, studentName) {
       h('table', { class: 'sheet-grid' }, h('thead', {}, h('tr', {}, h('th', {}, 'Time'), ['VS', 'Meds', 'Assess', 'Labs', 'Notes'].map((c) => h('th', {}, c)))),
         h('tbody', {}, d.times.map((t) => h('tr', {}, h('td', {}, t), [1, 2, 3, 4, 5].map(() => h('td', {})))))),
     );
-  });
+  }));
   const box = h('div', { id: 'print-sheet' }, sheets);
   document.body.append(box);
   document.body.classList.add('printing-sheet');

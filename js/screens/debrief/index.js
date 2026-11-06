@@ -10,6 +10,7 @@ import { flagsSection, responseSection, orderSequenceSection, vitalsSection, han
 import { activeScale } from '../../engine/priority.js';
 
 const STUDENT_KEY = 'ui.debrief.student';
+const detail = (el) => { el.classList.add('debrief-detail'); return el; }; // left out of "Print summary"
 
 export function mountDebrief(root, { store, runner, templatesById, scenario, catalogs }) {
   let userId = load(STUDENT_KEY);
@@ -56,18 +57,25 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
         h('span', { class: 'muted' }, `as of ${at(runner.simMin())}`),
         h('div', { class: 'debrief-actions' },
           h('button', { class: 'btn', onclick: () => downloadCsv(`debrief-${runner.state.roster[userId].name.replace(/\W+/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`, csvFor(d, at)) }, 'Export CSV'),
-          h('button', { class: 'btn', onclick: () => window.print() }, 'Print'),
+          h('button', { class: 'btn', onclick: () => window.print() }, 'Print full'),
+          h('button', { class: 'btn', onclick: () => {
+            // Print-friendly summary: hides the long sections (marked .debrief-detail) for this print only.
+            document.body.classList.add('print-debrief-summary');
+            const done = () => { document.body.classList.remove('print-debrief-summary'); window.removeEventListener('afterprint', done); };
+            window.addEventListener('afterprint', done);
+            window.print();
+          } }, 'Print summary'),
         ),
       ),
       flagsSection(d, helpers),
       reflectionSection(d, { ...helpers, questions: catalogs.reflection?.questions || [] }),
       prioritySection(d, helpers),
       responseSection(d, helpers),
-      orderSequenceSection(d, helpers),
-      vitalsSection(d, helpers),
-      handoffSection(d, helpers),
-      recognizeSection(d, helpers),
-      h('section', { class: 'panel' },
+      detail(orderSequenceSection(d, helpers)),
+      detail(vitalsSection(d, helpers)),
+      detail(handoffSection(d, helpers)),
+      detail(recognizeSection(d, helpers)),
+      h('section', { class: 'panel debrief-detail' },
         h('h3', {}, 'Timeline'),
         h('table', { class: 'data-table timeline' },
           h('thead', {}, h('tr', {}, ['Time', 'Patient', 'Who', 'What', 'Flags'].map((c) => h('th', {}, c)))),

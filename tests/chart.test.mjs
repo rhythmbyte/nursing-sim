@@ -147,3 +147,13 @@ test('B12: call-light sound detects newly lit lights for the student group only'
   assert.deepEqual(litLights(s, 'g1', second.lit).fresh, [], 'still lit: not new');
   assert.equal(litLights(s, 'g2').lit.size, 0, 'other groups ignored');
 });
+
+test('Suggestion 6: every joined student gets sheets for their own group only', async () => {
+  const { studentSheets } = await import('../js/screens/student/report-sheet.js');
+  let { s } = started();
+  s = { ...s, roster: { 'student-1': { name: 'Ana', groupId: 'g1' }, 'student-2': { name: 'Ben', groupId: 'g2' } } };
+  const sheets = studentSheets(s);
+  assert.deepEqual(sheets.map((x) => x.name), ['Ana'], 'Ben has no patients in g2');
+  assert.ok(sheets[0].pids.includes(RM));
+  assert.ok(!sheets[0].pids.includes('p6-james-carter'), 'admission not here yet');
+});

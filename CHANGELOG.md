@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Printing at scale (suggestion 6)
+- **Print all report sheets** on Live control (Students panel): every joined student's patient pages in one print job, each labelled with the student.
+- Debrief: **Print summary** (one student: counts, flags, reflection, priorities, response times; the timeline, order sequence, charted-vs-scripted, handoff and should-recognize are left out) next to **Print full**.
+- Tests: 121 passing.
+
 ## Standalone monitor page (suggestion 1)
 - **Open in new tab** on the chart's Monitor tab opens `index.html?monitor=<patient>`: just the bedside monitor (with Full screen) for a tablet or TV, no app around it. It follows the sim running in **the same browser** live (reads the saved session via `storage.onExternalChange`) and is display-only (never writes; silencing happens in the chart).
 - Checked in two browser tabs: an instructor vitals change showed up on the monitor page with alarms.

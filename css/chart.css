@@ -207,3 +207,7 @@ body.standalone-monitor { background: #000; }
 .standalone-status { margin: 0; font-size: 0.85rem; }
 .monitor-wrap.standalone { min-height: calc(100vh - 60px); display: flex; align-items: flex-start; padding: var(--space-2); }
 .monitor-wrap.standalone .mon-value { font-size: 4rem; }
+@media print {
+  body.print-debrief-summary .debrief-detail { display: none !important; }
+  body.print-debrief-summary .panel { margin-bottom: 6px; padding: 6px 10px; }
+}

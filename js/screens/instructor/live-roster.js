@@ -2,6 +2,8 @@
 
 import { h } from '../shared/dom.js';
 import { formatShiftTime } from '../../engine/time.js';
+import { printReportSheets, studentSheets } from '../student/report-sheet.js';
+import { studentView } from '../../engine/student-view.js';
 
 export function rosterPanel(runner, templatesById, scenario) {
   const state = runner.state;
@@ -13,7 +15,11 @@ export function rosterPanel(runner, templatesById, scenario) {
 
   return h('div', {},
     h('div', { class: 'join-code' }, h('span', { class: 'muted' }, 'Join code'), h('strong', { class: 'code' }, state.joinCode || '—'),
-      h('span', { class: 'muted' }, `${joined.length} of ${slots} joined · ${scenario.assignment} placement`)),
+      h('span', { class: 'muted' }, `${joined.length} of ${slots} joined · ${scenario.assignment} placement`),
+      joined.length ? h('button', { class: 'btn btn-small', onclick: () => {
+        const views = Object.fromEntries(Object.keys(state.patients).map((pid) => [pid, studentView(templatesById[pid])]));
+        printReportSheets(runner.state, studentSheets(runner.state), views);
+      } }, 'Print all report sheets') : null),
     joined.length ? h('table', { class: 'data-table' },
       h('thead', {}, h('tr', {}, ['Student', 'Group', 'In chart', 'Last action'].map((c) => h('th', {}, c)))),
       h('tbody', {}, joined.map(([uid, r]) => {
