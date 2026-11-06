@@ -39,6 +39,8 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'staff-break': return `${d.label || 'A helper'} went on break`;
     case 'staff-back': return `${d.label || 'A helper'} is back from break`;
     case 'staff-count': return `${d.role || 'Helper'} count changed ${d.from ?? '?'} → ${d.to ?? '?'}`;
+    case 'break-started': return `Break (${d.minutes} min planned)`;
+    case 'break-ended': return `Back from break after ${d.actualMin} min`;
     case 'call-light-answered': return `Answered call light after ${d.responseMin} min`;
     case 'order-acknowledged': return `Acknowledged "${orderText(l.patientId, d.orderId)}"`;
     case 'order-done': return `Marked done: "${orderText(l.patientId, d.orderId)}"`;

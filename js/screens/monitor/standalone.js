@@ -2,6 +2,8 @@
 // at the bedside. DISPLAY ONLY: it reads the session the main tab saves (same browser, via storage.js) and
 // never writes. Full build: it would subscribe to the server's realtime channel instead (SPEC §13).
 
+import { createWakeLock } from '../shared/wake-lock.js';
+import { breakText } from '../shared/break-banner.js';
 import { patientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { createMonitor } from './bedside-monitor.js';
@@ -28,11 +30,17 @@ export function mountStandaloneMonitor(root, { pid, templatesById, catalogs, loa
   clear(root).append(h('div', { class: 'standalone-bar' }, status, full), wrap);
   let session = loadSession();
   let mon = null;
+  const wake = createWakeLock(() => session?.clock.status === 'running'); // bedside screen stays on while the sim runs
+  const breakNote = h('p', { class: 'banner break-banner', hidden: true, role: 'status' });
+  wrap.before?.(breakNote);
 
   function render() {
     const sv = standaloneView(session, pid, templatesById, catalogs, Date.now());
     if (!sv) { status.textContent = 'Waiting for the sim… (open the sim in another tab of this browser)'; return; }
     status.textContent = `${sv.title} · follows the sim running in this browser`;
+    wake.update();
+    breakNote.hidden = !session?.break;
+    if (session?.break) breakNote.textContent = breakText(session.break);
     mon ??= createMonitor(wrap, { isRunning: () => session?.clock.status === 'running', title: sv.title });
     mon.setView(sv.view);
   }

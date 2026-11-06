@@ -308,3 +308,4 @@ body.standalone-monitor { background: #000; }
 .due-overdue::before { content: '‼ '; }
 .due-soon { color: var(--review-text); font-weight: 600; }
 .due-soon::before { content: '◷ '; }
+.break-banner { background: var(--surface-2); border: 2px solid var(--accent); font-weight: 600; text-align: center; }

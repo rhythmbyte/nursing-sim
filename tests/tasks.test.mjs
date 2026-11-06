@@ -130,3 +130,18 @@ test('debrief: paused time is not busy time, and nothing "went late while busy" 
   assert.deepEqual(d.tasks.rows.map((r) => [r.minutes, r.outcome, r.paused]), [[8, 'finished', true]]);
   assert.ok(!d.tasks.waiting.some((w) => w.kind === 'callLight'), 'the call light went late during the pause, not while busy');
 });
+
+test('break: pauses the sim with a "back at" time; Resume ends it; logged', () => {
+  let t = 0;
+  const runner = createRunner({ store: createStore(), scenario: scenarioWith(), templatesById, catalogs, now: () => t });
+  runner.clock('start', INS);
+  t = 10 * MIN; runner.tick();
+  runner.startBreak(15, INS);
+  assert.equal(runner.state.clock.status, 'paused');
+  assert.equal(runner.state.break.until, 10 * MIN + 15 * MIN);
+  t = 22 * MIN; runner.tick();
+  assert.equal(Math.round(runner.simMin()), 10, 'sim time stands still during the break');
+  runner.clock('resume', INS);
+  assert.deepEqual([runner.state.break, runner.state.clock.status], [null, 'running']);
+  assert.deepEqual(runner.state.log.filter((l) => l.action.startsWith('break')).map((l) => [l.action, l.details.actualMin ?? l.details.minutes]), [['break-started', 15], ['break-ended', 12]]);
+});

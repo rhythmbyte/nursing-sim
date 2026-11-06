@@ -142,6 +142,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/shared/tone-chip.js` | Symbol + word + color chips for timeliness tags and group status (data) | built |
 | `js/screens/instructor/shortcuts.js` | `shortcutAction` (pure) + `installShortcuts` (Live control only, cleaned up on leave) | built |
 | `js/screens/shared/leave-guard.js` | `setLeaveGuard` / `canLeave` / `onBeforeUnload`: "unsaved changes" protection checked by the shell tabs and instructor sub-views | built |
+| `js/screens/shared/wake-lock.js` | `createWakeLock(isRunning)`: Screen Wake Lock while the sim runs (re-taken when the tab returns; silent where unsupported) | built |
+| `js/screens/shared/break-banner.js` | Break banner on every screen and the standalone monitor (`breakText`) | built |
 | `js/screens/shared/labels.js`, `text.js` | `patientLabel` ("Rm 204 Linda Garcia"); `lines` (textarea → non-empty lines) | built |
 | `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |

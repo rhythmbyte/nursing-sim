@@ -62,9 +62,14 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     },
 
     clock(action, user, speed) {
+      if (action === 'resume' && state.break) { runner.endBreak(user); return; } // Resume ends a break
+      if (action === 'end' && state.break) commit(session.endBreak(state, { now: now(), user }));
       commit(session.controlClock(state, action, { now: now(), user, speed }));
       runner.tick();
     },
+
+    startBreak(minutes, user) { commit(session.startBreak(state, { now: now(), user, minutes })); store.emit('tick', runner.simMin()); },
+    endBreak(user) { commit(session.endBreak(state, { now: now(), user })); runner.tick(); },
 
     fireNow(key, user) {
       const ref = refs.find((r) => r.key === key);

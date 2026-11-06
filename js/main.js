@@ -6,6 +6,7 @@ import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
 import { createWindowLock } from './window-lock.js';
+import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
 import { setHelp } from './screens/shared/help.js';
 import { onBeforeUnload } from './screens/shared/leave-guard.js';
@@ -129,7 +130,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
       window.location.reload();
     },
   }, 'Reset demo');
-  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo) });
+  const brk = breakBanner(store, () => runner.state);
+  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo), banner: brk.el });
   const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
   runner.tick();
   return () => {
@@ -137,6 +139,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     clearInterval(heartbeat);
     window.removeEventListener('pagehide', onPageHide);
     teardownShell();
+    brk.destroy();
   };
 }
 

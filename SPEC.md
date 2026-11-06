@@ -414,6 +414,20 @@ Things in the prototype that will need to change for the real website (logins, b
 
 ---
 
+### Long sessions (1–4 hr sims)
+
+What the full build needs so a 1–4 hour sim never loses a student, a minute or an action:
+
+- **Auth that never expires mid-sim.** Session tokens refresh silently in the background; nobody is logged out while a sim they're in is running. Auto-logout happens at sim end (or a set time after it, e.g. 30 min) instead.
+- **No idle logout during an active sim.** A student who steps away shows as "away" to the instructor. If school policy requires a lock, use a quick PIN lock that keeps the session (not a full logout).
+- **Screen Wake Lock** on student devices and the bedside monitor while the sim runs (the prototype already does this; see below). Released on pause, break and end.
+- **Offline-safe charting.** Every action is queued on the device with its original timestamp and synced on reconnect; a "Reconnecting…" banner shows meanwhile. The server orders actions by their timestamps.
+- **The server owns the clock, state and log.** A refresh, crash or switch to another device resumes exactly where the student was (same identity, chart, drafts, task timer, delegations).
+- **Instructor pause for breaks** with a "back at HH:MM" banner on every screen (the prototype has this).
+- **Shared lab computers** are logged out cleanly at the end: the session token is revoked, drafts on that device are cleared, and the next user starts fresh.
+- **Log size and data retention per sim.** A 4-hour sim logs a few thousand entries (see the soak test in DECISIONS.md). Keep the full log for the debrief and export, then archive or delete per the school's retention policy.
+
+
 ## 14. Questions for the instructor
 
 Open questions to confirm with the instructor. Answers update the relevant section and DECISIONS.md. A printable plain-language version for the instructor is `docs/INSTRUCTOR-QUESTIONS.md`; update both when a question is added or answered.
@@ -476,3 +490,5 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 52. **Staff pool per group** (`scenario-defaults staffPool`, proposed): 2 CNAs and 1 LPN per group of students. Realistic for your clinical sites? Should a student charge nurse be able to move helpers?
 53. **Helper speed and walking time** (`staff.json`, proposed): a CNA takes 1.2× the task's time, an LPN 1×, plus 60 s to get to the patient. Right?
 54. **Queued delegation and overload** (proposed): students may queue a task when no helper is free (on by default); waiting more than 10 min is late, 20 min very late; delegating more than 4 tasks in 15 min is flagged amber. Right?
+55. **Sim length and breaks** (for you and school IT): how long are your sims usually (1, 2, 4 hours)? Do you take breaks mid-sim, and how long? (The prototype has a Break button with a "back at" banner.)
+56. **Lab computers** (school IT): do lab or shared computers enforce an idle logout or screen lock? If so, after how long, and can it be paused during a sim (the full build would show students as "away" instead)?

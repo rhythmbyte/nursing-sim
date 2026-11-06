@@ -4,6 +4,7 @@
 import { h, clear } from '../shared/dom.js';
 import { mountStudentHome } from './home.js';
 import { createCallLightSound } from './call-light-sound.js';
+import { createWakeLock } from '../shared/wake-lock.js';
 
 export function mountStudentTab(root, ctx) {
   const { store, runner, user } = ctx;
@@ -45,7 +46,9 @@ export function mountStudentTab(root, ctx) {
     ));
   }
 
+  // Screen stays awake while the sim runs (released on pause, break or end).
+  const wake = createWakeLock(() => runner.state.clock.status === 'running');
   render();
-  const off = store.subscribe(render);
-  return () => { off(); if (cleanup) cleanup(); };
+  const off = store.subscribe(() => { render(); wake.update(); });
+  return () => { off(); wake.destroy(); if (cleanup) cleanup(); };
 }

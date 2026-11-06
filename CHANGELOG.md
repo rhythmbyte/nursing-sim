@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Long sims: Wake Lock and breaks (Part B)
+- **Screen Wake Lock** while the sim is running: student tabs (home, chart, monitor) and the standalone bedside monitor page keep the screen on, release it when the sim is paused, on a break or ended, and take it back when the tab returns. Unsupported browsers carry on without it.
+- **Break** (Live control): pick a length and the sim pauses; every screen, including the bedside monitor, shows "☕ Break — back at 10:45 (12 min)". Resume (or End) ends it; both are logged.
+- SPEC §13: new **Long sessions (1–4 hr sims)** section for the full build (silent token refresh, no idle logout, away status or PIN lock, Wake Lock, offline-safe charting with original timestamps, server-owned clock and state, breaks, clean logout on shared computers, log retention).
+- Tests: 207 passing.
+
 ## Next due in the busy banner
 - While a student is busy (or has a paused task), the banner lists the required reassessments coming due on their group's patients, soonest first: "Next due: Glasgow Coma Scale / NIH Stroke Scale / Pupils · Rm 205 in 10 min". Overdue ones are marked ‼ and ones due within 15 min ◷ (symbol + color). It looks an hour ahead using the same timeliness items (`upcomingReassessments`), so it always agrees with the Command center and the debrief.
 - Tests: 206 passing.

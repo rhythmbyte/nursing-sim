@@ -9,7 +9,7 @@ import { canLeave } from './shared/leave-guard.js';
 
 const TAB_KEY = 'ui.tab';
 
-export function mountShell(root, tabs, { headerExtra = null } = {}) {
+export function mountShell(root, tabs, { headerExtra = null, banner = null } = {}) {
   let active = load(TAB_KEY);
   if (!tabs.some((t) => t.id === active)) active = tabs[0].id;
   let cleanup = null;
@@ -47,6 +47,7 @@ export function mountShell(root, tabs, { headerExtra = null } = {}) {
       h('span', { class: 'muted' }, 'Prototype · every role in one page'),
       headerExtra ? h('div', { class: 'header-extra' }, headerExtra) : null,
     ),
+    banner, // e.g. the break banner, on every tab
     bar,
     panel,
   );

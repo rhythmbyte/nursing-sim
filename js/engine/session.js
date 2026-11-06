@@ -282,6 +282,25 @@ export function controlClock(state, action, { now, user, speed, reason }) {
   return draft;
 }
 
+/** Instructor "Break": pauses the sim and records when everyone is due back (wall time, shown on every screen). */
+export function startBreak(state, { now, user, minutes }) {
+  if (state.clock.status !== 'running' && state.clock.status !== 'paused') return state;
+  const paused = state.clock.status === 'running' ? controlClock(state, 'pause', { now, user, reason: 'break' }) : state;
+  const draft = { ...paused, break: { startedWall: now, until: now + minutes * 60000, minutes, by: user.userId }, log: [...paused.log] };
+  append(draft, { simMin: simMinOf(draft, now), wallTime: now, ...user, action: 'break-started', details: { minutes } });
+  return draft;
+}
+
+/** End of the break: resumes the sim (also when the instructor simply presses Resume). */
+export function endBreak(state, { now, user }) {
+  if (!state.break) return state;
+  const awayMin = Math.round((now - state.break.startedWall) / 6000) / 10;
+  const resumed = state.clock.status === 'paused' ? controlClock(state, 'resume', { now, user }) : state;
+  const draft = { ...resumed, break: null, log: [...resumed.log] };
+  append(draft, { simMin: simMinOf(draft, now), wallTime: now, ...user, action: 'break-ended', details: { plannedMin: state.break.minutes, actualMin: awayMin } });
+  return draft;
+}
+
 /**
  * Pause-on-close (scenario setting `pauseOnClose`). Pauses a running clock as of
  * `atWall` — the moment the page closed, or the last heartbeat if it crashed/froze.

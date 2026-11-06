@@ -248,6 +248,16 @@ Right now: shows "--".
 Should it show 0, or agonal breaths for a while?
 Your answer: ______________________________________________
 
+**6.9a Sim length and breaks** [55]
+Right now: the sim runs as long as the scenario says; Live control has a Break button that pauses it and shows "back at HH:MM" on every screen.
+How long are your sims usually (1, 2, 4 hours)? Do you take breaks, and how long?
+Your answer: ______________________________________________
+
+**6.9b Lab computers (for school IT)** [56]
+Right now: the prototype never logs anyone out and keeps student screens awake while the sim runs.
+Do lab or shared computers enforce an idle logout or screen lock? After how long? Can it be relaxed during a sim?
+Your answer: ______________________________________________
+
 **6.10 Message senders and oxygen devices** [47]
 Right now: messages can come from the CNA, LPN, charge nurse, provider, family, patient, RT, pharmacy or lab. Oxygen devices: room air, nasal cannula, simple mask, Venturi, non-rebreather, high-flow, BiPAP/CPAP.
 Anything to add or remove?
