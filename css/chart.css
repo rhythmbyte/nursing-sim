@@ -291,3 +291,6 @@ body.standalone-monitor { background: #000; }
 .guided-event { border: 1px solid var(--border); border-radius: 6px; padding: var(--space-2); margin-bottom: var(--space-2); background: var(--surface); }
 .guided-row { border-left: 3px solid var(--accent); padding-left: var(--space-2); margin-bottom: 4px; }
 .guided-summary { margin: 4px 0 0; font-style: italic; }
+
+.cc-script { font-size: 0.78rem; border: 1px solid var(--border); border-radius: 999px; padding: 0 8px; background: var(--surface-2); }
+.cc-penalty { font-size: 0.78rem; font-weight: 700; color: var(--review-text); background: var(--review-bg); border: 1px solid var(--triage-yellow); border-radius: 999px; padding: 0 8px; }

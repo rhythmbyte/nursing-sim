@@ -12,6 +12,7 @@ export function scriptStatesSection(d, { at, room }) {
     ...d.scripts.map((p) => {
       const neglect = p.rows.filter((r) => r.nothingDone).length;
       return h('div', { class: 'debrief-states' },
+        p.ownRanges ? h('p', { class: 'muted small' }, `Recovery measured against this patient's own normal: ${Object.entries(p.ownRanges).map(([k, [lo, hi]]) => `${k} ${lo}–${hi}`).join(', ')}.`) : null,
         h('h4', {}, room(p.patientId), neglect ? h('span', { class: 'tone-chip tone-red' }, `⚠ ${neglect} change${neglect > 1 ? 's' : ''} because nothing was done`) : null),
         h('table', { class: 'data-table' },
           h('thead', {}, h('tr', {}, ['Time', 'State', 'Why', 'Teaching note'].map((c) => h('th', {}, c)))),

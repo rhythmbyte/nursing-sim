@@ -1,6 +1,7 @@
 // Instructor command center data: one summary per group, built on engine/timeliness.js and the flag rules.
 // Pure, no DOM. Sorted so the group (and patient) needing attention most comes first.
 
+import { totalPercent } from './penalties.js';
 import { timelinessItems, timelinessConfig, tagRank, isLate, isVeryLate } from './timeliness.js';
 import { evaluateRules } from './rules/index.js';
 import { vitalNumber } from './vitals.js';
@@ -59,7 +60,12 @@ export function commandCenter(state, ctx, scenario) {
     };
     const patients = pids.map((pid) => {
       const worst = open.filter((i) => i.patientId === pid).sort((a, b) => tagRank(b.tag) - tagRank(a.tag) || b.minutes - a.minutes)[0] || null;
-      return { patientId: pid, tag: state.patients[pid].tag, trend: vitalsTrend(state.patients[pid], ctx.simMin, trendCfg), alarm: Boolean(state.patients[pid].alarm?.active?.length), worst };
+      const ps = state.patients[pid];
+      const t = ctx.templatesById?.[pid];
+      // Reactive script: current state label and recovery penalty (null when the patient has no script).
+      const script = ps.script && t?.script ? { state: ps.script.state, label: t.script.states.find((s) => s.id === ps.script.state)?.label || ps.script.state, paused: ps.script.paused,
+        penalty: Math.round(totalPercent(ps.penalties, ctx.simMin, state.settings.recoveryPenaltyMaxPercent ?? 60)) } : null;
+      return { patientId: pid, tag: ps.tag, trend: vitalsTrend(ps, ctx.simMin, trendCfg), alarm: Boolean(ps.alarm?.active?.length), worst, script };
     }).sort((a, b) => tagRank(b.worst?.tag) - tagRank(a.worst?.tag) || (b.worst?.minutes ?? 0) - (a.worst?.minutes ?? 0));
     const students = Object.entries(state.roster || {}).filter(([, r]) => r.groupId === g.id).map(([uid, r]) => ({ userId: uid, name: r.name, inPatient: lastOpened(uid) }));
     return { groupId: g.id, name: g.name, students, counts, status: groupStatus(counts, cfg.groupStatus), patients };

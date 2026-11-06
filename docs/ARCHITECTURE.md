@@ -146,7 +146,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `assessment-tools.json` (scored nursing tools with licenses), `patient-tags.json` (patient tag groups for finding and randomizing), `rhythms.json` (monitor rhythms and how they're drawn) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
-| `docs/` | This file, `DECISIONS.md` | built |
+| `docs/` | This file, `DECISIONS.md`, `INSTRUCTOR-QUESTIONS.md` (printable plain-language version of SPEC §14 + review and license lists; keep it in step with §14) | built |
 
 ---
 

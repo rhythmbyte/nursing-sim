@@ -87,3 +87,19 @@ test('From auto-fill: projected vitals at a minute; Live calls', () => {
   assert.equal(G.geToLiveCalls({ type: 'vitals', rows: [{ vital: 'spo2', to: 85, overN: 2, overUnit: 'minutes' }] })[0].args[0].overMin, 2);
   assert.throws(() => G.geToLiveCalls({ type: 'rhythm' }), /Pick a rhythm/);
 });
+
+test('Command center shows script state and penalty; diagram uses short labels', async () => {
+  const { commandCenter } = await import('../js/engine/command-center.js');
+  const session = await import('../js/engine/session.js');
+  const { collectEvents } = await import('../js/engine/scheduler.js');
+  const { diagramLayout } = await import('../js/screens/instructor/script-diagram.js');
+  const scenario = scenarioWith();
+  const refs = collectEvents(session.scenarioPatients(scenario).map((p) => p.id), templatesById, scenario);
+  let s = session.controlClock(session.createSession(scenario, templatesById, catalogs), 'start', { now: 0, user: { userId: 'i', role: 'instructor' } });
+  s = session.tick(s, { now: 84 * MIN, refs, templatesById, catalogs }).state;
+  const ctx = { templatesById, catalogs, simMin: 84, studentIdsForGroup: () => [], groupOfStudent: () => null };
+  const p = commandCenter(s, ctx, scenario).flatMap((g) => g.patients).find((x) => x.patientId === 'p4-linda-garcia');
+  assert.deepEqual([p.script.state, p.script.penalty], ['crashing', 40]);
+  assert.equal(commandCenter(s, ctx, scenario).flatMap((g) => g.patients).find((x) => x.patientId === 'p1-robert-miller').script, null);
+  assert.ok(diagramLayout(linda.script).edges.length, 'layout unaffected by short labels');
+});

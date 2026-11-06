@@ -67,6 +67,9 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const orders = ordersTable(work.orders, catalogs);
     const labs = labsTable(work.labs, catalogs, work.orders);
     const ptags = catalogs.patientTags ? tagChips(catalogs.patientTags, work.patientTags || {}, { data, onChange: () => { dirty = true; } }) : null;
+    // This patient's own normal ranges (e.g. COPD SpO₂ 88–92): blank = the catalog default shown as placeholder.
+    const defaults = catalogs.vitals?.recovery?.normal || {};
+    const nr = Object.fromEntries(Object.keys(defaults).map((k) => [k, ['lo', 'hi'].map((side, i) => h('input', { class: 'input input-small', type: 'number', 'aria-label': `${k} normal ${side === 'lo' ? 'low' : 'high'}`, value: work.normalRanges?.[k]?.[i] ?? '', placeholder: String(defaults[k][i]) }))]));
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
@@ -77,7 +80,10 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       const baseline = baselineAssess.value();
       const { assessments, patientTags: _pt, ...rest0 } = next;
       const tags = ptags ? ptags.value() : next.patientTags;
-      const rest = tags && Object.keys(tags).length ? { ...rest0, patientTags: tags } : rest0;
+      const rest1 = tags && Object.keys(tags).length ? { ...rest0, patientTags: tags } : rest0;
+      const ranges = Object.fromEntries(Object.entries(nr).filter(([, [lo, hi]]) => lo.value !== '' && hi.value !== '').map(([k, [lo, hi]]) => [k, [Number(lo.value), Number(hi.value)]]));
+      const { normalRanges: _nr, ...rest2 } = rest1;
+      const rest = Object.keys(ranges).length ? { ...rest2, normalRanges: ranges } : rest2;
       return Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest;
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
@@ -148,6 +154,8 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         field('HPI', area('hpi', 5)), field('PMH', area('pmh', 3), 'One per line'), field('Home meds', area('homeMeds', 3), 'One per line: name | dose | frequency')),
       h('section', { class: 'panel' }, h('h3', {}, 'Handoff (SBAR)'), ['situation', 'background', 'assessment', 'recommendation'].map((k) => field(k[0].toUpperCase() + k.slice(1), area(k, 2)))),
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), field('Rhythm', rhythmSel('v_rhythm', '(none)')), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'pain'].map((k) => field(k, inp(`v_${k}`))), field('o2', o2Field('v_o2'))),
+      h('section', { class: 'panel' }, h('h3', {}, 'Normal ranges for this patient ', helpTip('editor.normal-ranges')), h('p', { class: 'muted small' }, 'Blank = the usual range (shown faded). Used for recovery penalties, the event builder\'s "To" hint and the debrief.'),
+        h('div', { class: 'editor-grid' }, Object.entries(nr).map(([k, [lo, hi]]) => h('div', { class: 'pick-row' }, h('span', { class: 'tag-group' }, k), lo, '–', hi)))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline findings'), field('Shown when the student assesses (one per line)', area('findings', 5))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline assessment findings ', helpTip('editor.assessments')), h('p', { class: 'muted small' }, 'What each tool finds at the start (NEWS2 is calculated from vitals). Scenario changes, states and reactions can change them later.'), baselineAssess.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Orders at shift start'), orders.el),

@@ -54,6 +54,8 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
             triageChip(p.tag),
             h('span', { class: `cc-trend cc-trend-${p.trend}`, title: trendText, 'aria-label': trendText }, arrow),
             p.alarm ? h('span', { class: 'cc-alarm', title: 'Monitor alarm' }, '⚠ alarm') : null,
+            p.script ? h('span', { class: 'cc-script', title: 'Reactive script state' }, `${p.script.paused ? '⏸' : '◆'} ${p.script.label.length > 30 ? `${p.script.label.slice(0, 29)}…` : p.script.label}`) : null,
+            p.script?.penalty ? h('span', { class: 'cc-penalty', title: 'Recovery penalty' }, `▼ penalty ${p.script.penalty}%`) : null,
             p.worst ? h('span', { class: 'cc-worst' }, toneChip(tags[p.worst.tag]), ` ${KIND[p.worst.kind]}${p.worst.label.length > 60 ? `${p.worst.label.slice(0, 58)}…` : p.worst.label}, ${Math.round(p.worst.minutes)} min`) : h('span', { class: 'muted' }, 'Nothing open')));
         })),
       );

@@ -408,7 +408,7 @@ Things in the prototype that will need to change for the real website (logins, b
 
 ## 14. Questions for the instructor
 
-Open questions to confirm with the instructor. Answers update the relevant section and DECISIONS.md.
+Open questions to confirm with the instructor. Answers update the relevant section and DECISIONS.md. A printable plain-language version for the instructor is `docs/INSTRUCTOR-QUESTIONS.md`; update both when a question is added or answered.
 
 1. **PRN limits: warn or block?** The prototype warns and lets the student "Give anyway" (e.g. a 4th nitro, or nitro without a BP first), logs the override, and flags it red in the debrief. Should the MAR hard-block instead?
 2. **Manual vitals in class:** for live sessions, should `revealManualVitals` be off (temp/RR/pain from the manikin or instructor), with the debrief comparing charted vs scripted values?

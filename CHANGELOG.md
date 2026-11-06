@@ -2,6 +2,13 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Smaller items (Part C)
+- **Per-patient normal ranges** (`normalRanges` in a patient file; patient editor → "Normal ranges for this patient", blank = the usual range): used for recovery penalties, the event builder's "To" hint and improve/worsen, and noted in the debrief. Linda: SpO₂ 88–92% (COPD, proposed), so pushing her to 96% now counts as moving away from normal.
+- **Command center:** each scripted patient shows its current state (◆, ⏸ when scripting is paused) and its recovery penalty (▼ penalty 40%).
+- **Short labels for reactions** ("Short label" in the reaction form, up to 28 characters) show on diagram arrows instead of the cut-off trigger text. Linda's starter reactions have them.
+- **`docs/INSTRUCTOR-QUESTIONS.md`:** every SPEC §14 question in plain language, grouped (patients and content, scoring and flags, timing, assessments and licenses, patient tags, settings), each with the current default and a blank for the answer. It also lists the AI-drafted content to review and the assessment tools to check with the school. Prints cleanly.
+- Tests: 192 passing.
+
 ## Patient tags and filtered randomizer (Part B)
 - **Patient tags** (`data/catalogs/patient-tags.json`, proposed; always called "patient tags", never confused with the triage tag): groups License level (LPN, RN), Unit / location (Med-surg, Surgical, Cardiology, ED, ICU, OB, Peds, Psych, Neuro, Rehab), Topic (respiratory, cardiac, sepsis, neuro, post-op, pain, falls, heart failure, admission, discharge) and Age group (peds, adult, geriatric). A patient can have several tags in any group (`patientTags`).
 - **Patient editor:** tag chips per group (click to add or remove); **Add tag** and **Add group** right there, saved in this browser's copy of the catalog without losing unsaved edits.
