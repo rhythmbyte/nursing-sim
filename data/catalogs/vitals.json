@@ -1,0 +1,8 @@
+{
+  "review": "proposed",
+  "_comment": "Which vitals come from the monitor vs. are measured by hand (SPEC §6, §14). Monitor fields are never typed by students.",
+  "monitorFields": ["bp", "hr", "spo2", "o2"],
+  "manualScriptedFields": ["tempF", "rr", "pain"],
+  "otherManualFields": ["gcs", "glucose", "intakeMl", "outputMl", "weightKg", "neuro"],
+  "monitorCycles": [0, 5, 10, 15]
+}

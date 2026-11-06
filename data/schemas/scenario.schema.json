@@ -10,7 +10,6 @@
     "speed": { "enum": [0.5, 1, 2, 4, 8] },
     "settings": {
       "type": "object",
-      "required": ["handoffMode", "chargeNurse", "showTagsToStudents"],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
         "chargeNurse": { "enum": ["student", "instructor", "off"] },
@@ -22,25 +21,27 @@
         "delegationDelayMin": {
           "type": ["integer", "object"],
           "minimum": 0,
-          "properties": { "LPN": { "type": "integer", "minimum": 0 }, "CNA": { "type": "integer", "minimum": 0 } }
-        }
+          "properties": { "LPN": {"type": "integer", "minimum": 0}, "CNA": {"type": "integer", "minimum": 0} }
+        },
+        "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
+        "delegatedAssessmentRevealsFindings": { "type": "boolean" }
       }
     },
-    "staffAvailable": { "type": "array", "items": { "type": "string" } },
+    "staffAvailable": { "type": "array", "items": {"type": "string"} },
     "assignment": { "enum": ["manual", "random"] },
     "groups": {
       "type": "array",
       "items": {
         "type": "object",
         "required": ["id", "name", "studentCount"],
-        "anyOf": [{ "required": ["patients"] }, { "required": ["tagCounts"] }],
+        "anyOf": [{"required": ["patients"]}, {"required": ["tagCounts"]}],
         "anyOfMessage": "group needs patients or tagCounts",
         "properties": {
           "id": { "type": "string" },
           "name": { "type": "string" },
           "studentCount": { "type": "integer", "minimum": 1 },
-          "patients": { "type": "array", "items": { "type": "string" } },
-          "admissions": { "type": "array", "items": { "type": "string" } },
+          "patients": { "type": "array", "items": {"type": "string"} },
+          "admissions": { "type": "array", "items": {"type": "string"} },
           "tagCounts": {
             "type": "object",
             "properties": {
@@ -54,6 +55,6 @@
       }
     },
     "manualStudents": { "type": "object" },
-    "events": { "type": "array", "items": { "type": "object" } }
+    "events": { "type": "array", "items": {"type": "object"} }
   }
 }

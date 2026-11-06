@@ -1,20 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { templatesById, catalogs, scenario, scenarioWith, MIN } from './fixtures.mjs';
 import * as session from '../js/engine/session.js';
 import * as chart from '../js/engine/chart.js';
 import { collectEvents, eventKey } from '../js/engine/scheduler.js';
 import { prnWarnings, prnOptions } from '../js/engine/prn.js';
-import { releaseLab } from '../js/engine/labs.js';
+import { releaseLab, initLabs } from '../js/engine/labs.js';
 import { measureManual } from '../js/engine/vitals.js';
 import { delegationDelay } from '../js/engine/delegation.js';
 
-const load = (rel) => JSON.parse(readFileSync(new URL(`../data/${rel}`, import.meta.url), 'utf8'));
-const manifest = load('manifest.json');
-const templatesById = Object.fromEntries(manifest.patients.map((rel) => load(rel)).map((p) => [p.id, p]));
-const baseScenario = load('scenarios/busy-medsurg-shift.json');
-const catalogs = { interventions: load('catalogs/interventions.json'), labs: load('catalogs/labs.json') };
-const MIN = 60000;
 const student = { userId: 'student-1', role: 'student' };
 const instructor = { userId: 'instructor', role: 'instructor' };
 const RM = 'p1-robert-miller';
@@ -22,9 +16,9 @@ const LG = 'p4-linda-garcia';
 const JC = 'p6-james-carter';
 
 function started(settings = {}) {
-  const scenario = { ...baseScenario, settings: { ...baseScenario.settings, ...settings } };
+  const scenario = scenarioWith(settings);
   const refs = collectEvents(session.scenarioPatients(scenario).map((p) => p.id), templatesById, scenario);
-  let s = session.createSession(scenario, templatesById);
+  let s = session.createSession(scenario, templatesById, catalogs);
   s = session.controlClock(s, 'start', { now: 0, user: instructor });
   const tick = (st, min) => session.tick(st, { now: min * MIN, refs, templatesById, catalogs }).state;
   return { s, refs, tick };
@@ -59,9 +53,9 @@ test('charted vitals: device values from the patient, manual values as typed, sc
 
 test('revealManualVitals: Measure shows scripted temp/RR/pain only when on', () => {
   const on = started().s;
-  assert.deepEqual(measureManual(on, RM), { tempF: 98.6, rr: 20, pain: '3/10 intermittent chest pressure' });
+  assert.deepEqual(measureManual(on, RM, catalogs.vitals), { tempF: 98.6, rr: 20, pain: '3/10 intermittent chest pressure' });
   const off = started({ revealManualVitals: false }).s;
-  assert.deepEqual(measureManual(off, RM), {});
+  assert.deepEqual(measureManual(off, RM, catalogs.vitals), {});
 });
 
 test('labs: drawing starts the delay; scripted values result on time', () => {
@@ -114,16 +108,47 @@ test('delegation: CNA vitals report back after the delay, with a flowsheet row a
   assert.match(s.alerts.find((a) => a.message.startsWith('CNA:')).message, /HR 108/);
 });
 
-test('delegation: delay is configurable per role or as one number', () => {
-  assert.equal(delegationDelay({ delegationDelayMin: { LPN: 4, CNA: 12 } }, 'LPN'), 4);
-  assert.equal(delegationDelay({ delegationDelayMin: 7 }, 'CNA'), 7);
-  assert.equal(delegationDelay({}, 'CNA'), 10);
+test('delegation: delay is configurable per role or as one number (merged with scenario-defaults)', () => {
+  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: { LPN: 4 } }).settings, 'LPN'), 4);
+  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: { LPN: 4 } }).settings, 'CNA'), 10, 'CNA from the starter scenario');
+  assert.equal(delegationDelay(scenarioWith({ delegationDelayMin: 7 }).settings, 'CNA'), 7);
+  assert.throws(() => delegationDelay({ delegationDelayMin: {} }, 'CNA'));
+});
+
+test('delegated assessment reveals findings only when the scenario setting allows', () => {
+  let { s, tick } = started();
+  s = chart.chartIntervention(s, RM, { interventionId: 'assess-full', delegatedTo: 'LPN' }, ctx(5));
+  s = tick(s, 16);
+  assert.equal(s.patients[RM].revealed.length, 0, 'default: false');
+  ({ s, tick } = started({ delegatedAssessmentRevealsFindings: true }));
+  s = chart.chartIntervention(s, RM, { interventionId: 'assess-full', delegatedTo: 'LPN' }, ctx(5));
+  assert.equal(s.patients[RM].revealed.length, 0, 'nothing until the LPN reports');
+  s = tick(s, 16);
+  assert.deepEqual(s.patients[RM].revealed.map((r) => [r.source, r.atMin]), [['baseline', 15]]);
+});
+
+test('PRN pre-check window comes from the scenario setting when the order has none', () => {
+  const { s } = started({ prnPreCheckWindowMin: 30 });
+  let st = chart.chartIntervention(s, RM, { interventionId: 'vs-bp' }, ctx(0));
+  const ntg = { ...templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg') };
+  ntg.prn = { ...ntg.prn };
+  delete ntg.prn.requiresWithinMin;
+  const warn = (min, settings) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, ...prnOptions(catalogs, st.patients[RM], settings) }).map((w) => w.code);
+  assert.deepEqual(warn(25, st.settings), [], '25 min ago is inside a 30 min window');
+  assert.deepEqual(warn(25, scenario.settings), ['requires'], 'default 15 min window');
+});
+
+test('lab delay falls back to the labs catalog fallbackDelayMin', () => {
+  const t = { ...templatesById[RM], labs: [{ code: 'zz-unknown', value: '1', status: 'pending' }], orders: [] };
+  const labs = initLabs(t, catalogs);
+  assert.equal(labs[0].resultAtMin, catalogs.labs.fallbackDelayMin);
+  assert.throws(() => initLabs(t, { labs: { labs: [] } }));
 });
 
 test('PRN pre-check: delegated BP counts once reported; full vitals include BP; monitor BP counts', () => {
   let { s, tick } = started({ delegationDelayMin: 5 });
   const ntg = templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg');
-  const warn = (st, min) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, ...prnOptions(catalogs, st.patients[RM]) }).map((w) => w.code);
+  const warn = (st, min) => prnWarnings(ntg, { log: st.log, patientId: RM, simMin: min, ...prnOptions(catalogs, st.patients[RM], st.settings) }).map((w) => w.code);
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-bp', delegatedTo: 'LPN' }, ctx(10));
   assert.deepEqual(warn(s, 11), ['requires'], 'request alone is not a BP');
   s = tick(s, 16);

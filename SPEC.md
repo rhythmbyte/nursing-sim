@@ -139,6 +139,8 @@ data/
 
 ### 4.4 Sim setup (`data/scenarios/*.json` + created live)
 
+Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenario only lists what it changes (merged at load). The code has no built-in setting defaults.
+
 ```jsonc
 {
   "id", "name", "startClock": "07:00", "speed": 1,
@@ -149,7 +151,9 @@ data/
     "vitalsCycleDefaultMin": 5,
     "pauseOnClose": true,                 // pause a running sim when the page closes/reloads (default true)
     "revealManualVitals": true,           // "Measure" reveals scripted temp/RR/pain (default true). false = from manikin/instructor
-    "delegationDelayMin": { "LPN": 10, "CNA": 10 }  // or one number; when delegated staff report back (default 10)
+    "delegationDelayMin": { "LPN": 10, "CNA": 10 },  // or one number; when delegated staff report back
+    "prnPreCheckWindowMin": 15,           // PRN pre-check window when the order doesn't set prn.requiresWithinMin
+    "delegatedAssessmentRevealsFindings": false  // does a delegated assessment reveal findings (when staff report back)?
   },
   "groups": [
     {
@@ -331,7 +335,7 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 2. **Manual vitals in class:** for live sessions, should `revealManualVitals` be off (temp/RR/pain from the manikin or instructor), with the debrief comparing charted vs scripted values?
 3. **Delegation timing:** is 10 sim-minutes a sensible default for LPN/CNA tasks, and should it differ by task (vitals vs. lab draw)?
 4. **Robert's repeat troponin** has no scripted value. Rising or flat? (The instructor currently enters it live when it comes due.)
-5. **PRN pre-check (BP before nitro):** any BP in the last 15 sim-minutes counts, whether a monitor-cycle reading, "Take BP now", a charted BP or full vitals, or a BP reported back by delegated staff. The student doesn't have to chart a separate BP. Is that right, and is 15 minutes the right window? (Data: `prn.requiresWithinMin` per order, default 15; catalog `satisfiedByMonitor: true` on the BP check.)
+5. **PRN pre-check (BP before nitro):** any BP in the last 15 sim-minutes counts, whether a monitor-cycle reading, "Take BP now", a charted BP or full vitals, or a BP reported back by delegated staff. The student doesn't have to chart a separate BP. Is that right, and is 15 minutes the right window? (Data: `prn.requiresWithinMin` per order, else scenario setting `prnPreCheckWindowMin`, default 15; catalog `satisfiedByMonitor: true` on the BP check.)
 7. **Flag rule defaults** (`data/catalogs/rules.json`, all proposed):
    - **tier-timeout:** tier 1 within 5 min (red), tier 2 within 15 (amber), counted from when the order arrived. Orders already in place at shift start aren't timed (`includeShiftStartOrders: false`). Only one-time orders and event-triggered PRNs (e.g. "ECG now") are tracked.
    - **priority-order:** amber, within an order set, same tracked orders.
@@ -343,3 +347,6 @@ Open questions to confirm with the instructor. Answers update the relevant secti
 10. **Charted vs scripted tolerance:** temp ±0.3 °F, RR ±2, pain ±1 before the debrief marks "differs". Right?
 11. **Left unattended** is attributed to every student in the patient's group. Should the instructor pick one student?
 12. **Linda's lactates:** the scripted repeat value (4.1) belongs to the STAT lactate in the sepsis order set (`forOrder`). If the "repeat in 2–4 hours" order is also drawn, its result is unscripted and the instructor enters it. Confirm the 4.1 value and which order it belongs to.
+13. **Delegated assessments:** when an LPN does an assessment, should its findings show on the chart once they report back? Default: no (`delegatedAssessmentRevealsFindings: false`); the RN must assess.
+14. **Monitor vs. manual vitals:** BP, HR and SpO₂ (plus the O₂ device) come from the monitor; temp, RR and pain are measured by hand; NIBP cycle choices are off / q5 / q10 / q15 (`data/catalogs/vitals.json`). Right?
+15. **Lab result delay fallback:** 30 sim-minutes for any lab with no delay set in the patient file or the labs catalog (`labs.json` `fallbackDelayMin`). Right?

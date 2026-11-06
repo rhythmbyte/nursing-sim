@@ -1,0 +1,12 @@
+{
+  "title": "Vitals catalog",
+  "type": "object",
+  "required": ["monitorFields", "manualScriptedFields", "otherManualFields", "monitorCycles"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "monitorFields": { "type": "array", "items": { "type": "string" } },
+    "manualScriptedFields": { "type": "array", "items": { "type": "string" } },
+    "otherManualFields": { "type": "array", "items": { "type": "string" } },
+    "monitorCycles": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+  }
+}

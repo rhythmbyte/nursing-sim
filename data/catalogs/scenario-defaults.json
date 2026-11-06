@@ -1,0 +1,15 @@
+{
+  "review": "proposed",
+  "_comment": "Defaults for every scenario setting. A scenario's own settings override these (merged at load). Clinical ones are questions for the instructor in SPEC §14.",
+  "settings": {
+    "handoffMode": "once",
+    "chargeNurse": "instructor",
+    "showTagsToStudents": false,
+    "vitalsCycleDefaultMin": 5,
+    "pauseOnClose": true,
+    "revealManualVitals": true,
+    "delegationDelayMin": { "LPN": 10, "CNA": 10 },
+    "prnPreCheckWindowMin": 15,
+    "delegatedAssessmentRevealsFindings": false
+  }
+}

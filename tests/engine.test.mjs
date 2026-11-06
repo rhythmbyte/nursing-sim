@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { templatesById, catalogs, scenario, scenarioWith, MIN } from './fixtures.mjs';
 import * as clock from '../js/engine/clock.js';
 import { dueEvents, occurrenceAt, eventKey, collectEvents, firstScheduled, eventGroupProblems } from '../js/engine/scheduler.js';
 import * as session from '../js/engine/session.js';
@@ -8,11 +8,6 @@ import { createRunner } from '../js/engine/runner.js';
 import { createStore } from '../js/state.js';
 import { studentSlots } from '../js/engine/assignment.js';
 
-const load = (rel) => JSON.parse(readFileSync(new URL(`../data/${rel}`, import.meta.url), 'utf8'));
-const manifest = load('manifest.json');
-const templatesById = Object.fromEntries(manifest.patients.map((rel) => load(rel)).map((p) => [p.id, p]));
-const scenario = load('scenarios/busy-medsurg-shift.json');
-const MIN = 60000;
 const instructor = { userId: 'instructor', role: 'instructor' };
 const student = { userId: 'student-1', role: 'student' };
 
@@ -45,7 +40,7 @@ test('scheduler: repeats, repeatCount, and manual triggers', () => {
 function startedSession() {
   const ids = session.scenarioPatients(scenario).map((p) => p.id);
   const refs = collectEvents(ids, templatesById, scenario);
-  let s = session.createSession(scenario, templatesById);
+  let s = session.createSession(scenario, templatesById, catalogs);
   s = session.controlClock(s, 'start', { now: 0, user: instructor });
   return { s, refs };
 }
@@ -161,16 +156,17 @@ test('skip to next event: jumps to 08:00 and fires Linda\'s linked events; pause
 test('skip to next event: does nothing before start', () => {
   const ids = session.scenarioPatients(scenario).map((p) => p.id);
   const refs = collectEvents(ids, templatesById, scenario);
-  const s = session.createSession(scenario, templatesById);
+  const s = session.createSession(scenario, templatesById, catalogs);
   assert.equal(session.skipToNext(s, { now: 0, refs, templatesById, user: instructor }), s);
 });
 
 test('pause on close: pauses at the close time; respects pauseOnClose=false', () => {
   const { s } = startedSession();
-  const paused = session.pauseForClose(s, { atWall: 10 * MIN, now: 30 * MIN, pauseOnClose: true });
+  const paused = session.pauseForClose(s, { atWall: 10 * MIN, now: 30 * MIN });
   assert.equal(paused.clock.status, 'paused');
   assert.equal(session.simMinOf(paused, 99 * MIN), 10, 'time after the close does not count');
   assert.equal(paused.log.at(-1).details.reason, 'page-closed');
-  assert.equal(session.pauseForClose(s, { atWall: 10 * MIN, now: 30 * MIN, pauseOnClose: false }), s);
+  const noPause = { ...s, settings: { ...s.settings, pauseOnClose: false } };
+  assert.equal(session.pauseForClose(noPause, { atWall: 10 * MIN, now: 30 * MIN }), noPause);
   assert.equal(session.pauseForClose(paused, { atWall: 40 * MIN, now: 50 * MIN }), paused, 'already paused: no-op');
 });

@@ -6,6 +6,7 @@ import { createStore } from './state.js';
 import { load, save, remove } from './storage.js';
 import { createRunner } from './engine/runner.js';
 import { studentSlots } from './engine/assignment.js';
+import { withDefaults } from './engine/settings.js';
 import { mountShell } from './screens/shell.js';
 import { mountInstructor } from './screens/instructor/index.js';
 import { mountStudentHome } from './screens/student/home.js';
@@ -58,7 +59,8 @@ function scenarioPicker(scenarios, currentId, onChange) {
 
 /** Mounts the whole app for one scenario. Returns a teardown function. */
 function startApp(root, data, scenarioId, restart) {
-  const scenario = data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0];
+  // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
+  const scenario = withDefaults(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.catalogs);
   const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
   const store = createStore({ data });
   const runner = createRunner({

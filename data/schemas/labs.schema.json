@@ -1,7 +1,7 @@
 {
   "title": "Labs catalog",
   "type": "object",
-  "required": ["labs"],
+  "required": ["labs", "fallbackDelayMin"],
   "properties": {
     "review": { "enum": ["approved", "proposed", "partial"] },
     "labs": {
@@ -17,6 +17,7 @@
           "defaultDelayMin": { "type": "integer", "minimum": 0 }
         }
       }
-    }
+    },
+    "fallbackDelayMin": { "type": "integer", "minimum": 0 }
   }
 }

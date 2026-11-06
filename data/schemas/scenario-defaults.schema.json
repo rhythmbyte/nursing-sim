@@ -1,0 +1,38 @@
+{
+  "title": "Scenario setting defaults",
+  "type": "object",
+  "required": ["settings"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "settings": {
+      "type": "object",
+      "required": [
+        "handoffMode",
+        "chargeNurse",
+        "showTagsToStudents",
+        "vitalsCycleDefaultMin",
+        "pauseOnClose",
+        "revealManualVitals",
+        "delegationDelayMin",
+        "prnPreCheckWindowMin",
+        "delegatedAssessmentRevealsFindings"
+      ],
+      "properties": {
+        "handoffMode": { "enum": ["once", "always", "never"] },
+        "chargeNurse": { "enum": ["student", "instructor", "off"] },
+        "showTagsToStudents": { "type": "boolean" },
+        "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 },
+        "pauseOnClose": { "type": "boolean" },
+        "revealManualVitals": { "type": "boolean" },
+        "rules": { "type": "object" },
+        "delegationDelayMin": {
+          "type": ["integer", "object"],
+          "minimum": 0,
+          "properties": { "LPN": {"type": "integer", "minimum": 0}, "CNA": {"type": "integer", "minimum": 0} }
+        },
+        "prnPreCheckWindowMin": { "type": "integer", "minimum": 1 },
+        "delegatedAssessmentRevealsFindings": { "type": "boolean" }
+      }
+    }
+  }
+}

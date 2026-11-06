@@ -29,6 +29,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Processors (timed work besides events):** `session.advance()` runs the monitor cycle, lab results and delegated tasks as processors (`{ due(state, upto), apply(draft, upto, ctx) }`, listed in `PROCESSORS` in `session.js`). It interleaves them with events in time order, so a monitor reading at 08:15 sees the vitals change that fires at 08:15, and a skip or catch-up fills in every reading in between. To add timed work, write a processor in its own engine file and add it to `PROCESSORS`.
 
+**Settings:** every scenario setting has a default in `data/catalogs/scenario-defaults.json`, merged under the scenario's own settings by `withDefaults()` in `main.js`. Engine and screens read the merged settings. **No setting or clinical default lives in code.** If one is missing, the code throws a clear error instead of guessing.
+
 **Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), or can be satisfied by a monitor reading (`satisfiedByMonitor`) is set in `data/catalogs/interventions.json`, not in code. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
 
 **Event groups:** events that are one moment in the story share a `group` string within one patient, for example Robert's call light, vitals change and new findings at 08:15. "Fire now" on any member fires the whole group, so all of their fired counts move together and the scheduled time can't half-fire the group later. The loader rejects a file whose group members don't share `atMin`, `trigger` and repeat settings.
@@ -54,6 +56,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks (`EXTRA_CHECKS`, e.g. event groups) → `{ patients, scenarios, catalogs, problems }` | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
+| `js/engine/settings.js` | `effectiveSettings` / `withDefaults`: scenario settings over `scenario-defaults.json`. Applied once in `main.js`; the engine reads only `state.settings` | built |
+| `js/engine/findings.js` | `revealFindings` (shared by chart actions and delegation) | built |
 | `js/engine/time.js` | `parseClock`, `formatShiftTime(startClock, simMin)` | built |
 | `js/engine/clock.js` | Sim clock as a serializable snapshot + pure functions (`start`, `pause`, `resume`, `end`, `setSpeed`, `simMinutes`). `now` is always passed in | built |
 | `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats; event groups (`groupMembers`, `eventGroupProblems`) | built |
@@ -85,7 +89,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |
 | `data/patients/` | One JSON file per patient template | built |
 | `data/scenarios/` | Saved sim setups | built |
-| `data/catalogs/` | `interventions.json`, `labs.json`, `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances) | built |
+| `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md` | built |
@@ -162,7 +166,7 @@ Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passe
   - **Python 3** (or any static server) to run the site locally.
   - **`jq`** for Claude Code's env-file guard hook (`.claude/hooks/block-env.sh`). The hook fails closed, so without `jq` every Bash command Claude Code tries is blocked with a "jq is required" message. Install it with your package manager (`pacman -S jq`, `brew install jq`, `apt install jq`).
 - **Run:** `python3 -m http.server 8000` from the repo root, then open http://localhost:8000. Opening `index.html` from disk won't work, because `fetch` needs http.
-- **Tests:** `node --test tests/` (Node 18+). They cover:
+- **Tests:** `node --test tests/` (Node 18+). Shared test data (real starter content, all catalogs, merged settings) comes from `tests/fixtures.mjs`. They cover:
   - every data file against its schema, plus the manifest matching the files on disk;
   - the pure modules (time, review helpers, store);
   - engine modules as they're added.

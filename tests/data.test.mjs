@@ -17,6 +17,8 @@ const schemaFor = {
   labs: load('schemas/labs.schema.json'),
   staff: load('schemas/staff.schema.json'),
   rules: load('schemas/rules.schema.json'),
+  vitals: load('schemas/vitals.schema.json'),
+  scenarioDefaults: load('schemas/scenario-defaults.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

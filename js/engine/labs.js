@@ -8,23 +8,25 @@
 import { addAlert } from './alerts.js';
 import { append, SYSTEM } from './log.js';
 
-const DEFAULT_DELAY_MIN = 30;
 
-export function initLabs(template) {
+/** catalogs.labs.fallbackDelayMin applies when neither the lab nor the labs catalog sets a delay. */
+export function initLabs(template, catalogs) {
   const drawable = new Set(template.orders.flatMap((o) => o.labCodes || []));
   const orderIds = new Set(template.orders.map((o) => o.id));
   return template.labs.map((l, i) => {
     const lab = { ...l, uid: `${l.code}#${i}` };
     const canBeDrawn = l.forOrder ? orderIds.has(l.forOrder) : drawable.has(l.code);
     if (l.status === 'pending' && !canBeDrawn) {
-      Object.assign(lab, { drawnAtMin: 0, resultAtMin: l.resultDelayMin ?? DEFAULT_DELAY_MIN });
+      Object.assign(lab, { drawnAtMin: 0, resultAtMin: delayFor(lab, catalogs) });
     }
     return lab;
   });
 }
 
 function delayFor(lab, catalogs) {
-  return lab.resultDelayMin ?? catalogs?.labs?.labs.find((c) => c.code === lab.code)?.defaultDelayMin ?? DEFAULT_DELAY_MIN;
+  const delay = lab.resultDelayMin ?? catalogs?.labs?.labs.find((c) => c.code === lab.code)?.defaultDelayMin ?? catalogs?.labs?.fallbackDelayMin;
+  if (delay == null) throw new Error(`No result delay for lab ${lab.code}: set fallbackDelayMin in data/catalogs/labs.json`);
+  return delay;
 }
 
 /** Draw labs for codes at simMin, for orderId. Mutates draft; returns the drawn labs. */

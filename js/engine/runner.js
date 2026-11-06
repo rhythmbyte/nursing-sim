@@ -12,10 +12,11 @@ import { buildDebrief } from './debrief.js';
 import { studentIdsForGroup, groupOfStudent } from './assignment.js';
 import { collectEvents, groupMembers } from './scheduler.js';
 
+// `scenario` must have merged settings (engine/settings.js withDefaults).
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null }) {
   const ids = session.scenarioPatients(scenario).map((p) => p.id).filter((id) => templatesById[id]);
   const refs = collectEvents(ids, templatesById, scenario);
-  const fresh = () => session.createSession(scenario, templatesById);
+  const fresh = () => session.createSession(scenario, templatesById, catalogs);
   let state = saved && saved.version === session.SESSION_VERSION && saved.scenarioId === scenario.id ? saved : fresh();
 
   function commit(next) {
@@ -64,7 +65,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
 
     /** Called when the page closes, and on boot with the last heartbeat (covers crashes). */
     pauseForClose(atWall) {
-      commit(session.pauseForClose(state, { atWall, now: now(), pauseOnClose: scenario.settings.pauseOnClose }));
+      commit(session.pauseForClose(state, { atWall, now: now() }));
     },
 
     answerCallLight(patientId, user) {
@@ -81,8 +82,8 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
       commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById, catalogs }));
     },
 
-    /** Temp/RR/pain a student would measure now ({} when settings.revealManualVitals is false). */
-    measure: (patientId) => measureManual(state, patientId),
+    /** Manual vitals a student would measure now ({} when settings.revealManualVitals is false). */
+    measure: (patientId) => measureManual(state, patientId, catalogs.vitals),
 
     releaseLab(patientId, uid, value, user) {
       commit(releaseLab(state, patientId, { uid, value }, { now: now(), user, simMin: runner.simMin() }));

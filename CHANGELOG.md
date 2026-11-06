@@ -2,6 +2,15 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Remaining clinical defaults moved to data
+- **New catalog `scenario-defaults.json`** holds the default for every scenario setting; scenarios list only what they change. New settings:
+  - `prnPreCheckWindowMin` (15): PRN pre-check window when the order doesn't set one.
+  - `delegatedAssessmentRevealsFindings` (false): when true, findings appear when the staff member reports back.
+- **New catalog `vitals.json`:** which fields come from the monitor vs. by hand, and the NIBP cycle choices.
+- **Lab delay fallback** is now `labs.json` `fallbackDelayMin` (30).
+- No setting or clinical default remains in code; missing data throws a clear error. SPEC §14 Q13–15 added.
+- Tests share `tests/fixtures.mjs`. 69 passing.
+
 ## Phase 5: flag rules and debrief
 - **All 8 flag rules** from SPEC §7, one file each:
   - priority-order and tier-timeout;

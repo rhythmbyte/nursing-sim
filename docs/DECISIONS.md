@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: No setting or clinical defaults in code
+- **Decision:** All scenario-setting defaults live in `data/catalogs/scenario-defaults.json` and are merged under each scenario's settings at load (`engine/settings.js`). Monitor vs. manual vitals fields and NIBP cycle choices live in `data/catalogs/vitals.json`, and the lab delay fallback in `labs.json`. New settings: `prnPreCheckWindowMin` (15) and `delegatedAssessmentRevealsFindings` (false; when true, findings appear when the staff member reports back). Missing data throws a clear error rather than using a hidden constant.
+- **Why:** The CLAUDE.md clinical-defaults rule. The instructor (or the phase 6 setup wizard) can see and change every default in one place. SPEC §14 Q5, Q13–15.
+- **Alternatives:** Keep fallback constants in code (invisible to the instructor); require every scenario to list every setting (verbose, and old scenarios break when a setting is added).
+- Session shape v4 (settings keys changed).
+
+---
+
 ## 2026-11-05: Flags are recomputed from the log, never stored
 - **Decision:** Rules are pure `evaluate(state, ctx)` functions. Live control and the debrief call `evaluateRules` when they render (live control each sim minute), and nothing is written to state.
 - **Why:** Flags can't drift from the log, there's no de-duplication or undo, and late or time-based flags ("still not done", "unanswered for 7 min") fall out naturally. The full build can run the same functions on the server.

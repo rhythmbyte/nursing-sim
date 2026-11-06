@@ -1,18 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { templatesById, catalogs, scenario, scenarioWith, MIN } from './fixtures.mjs';
 import * as session from '../js/engine/session.js';
 import * as chart from '../js/engine/chart.js';
 import { collectEvents } from '../js/engine/scheduler.js';
-import { prnWarnings } from '../js/engine/prn.js';
+import { prnWarnings, prnOptions } from '../js/engine/prn.js';
 import { studentView } from '../js/engine/student-view.js';
 
-const load = (rel) => JSON.parse(readFileSync(new URL(`../data/${rel}`, import.meta.url), 'utf8'));
-const manifest = load('manifest.json');
-const templatesById = Object.fromEntries(manifest.patients.map((rel) => load(rel)).map((p) => [p.id, p]));
-const scenario = load('scenarios/busy-medsurg-shift.json');
-const catalogs = { interventions: load('catalogs/interventions.json') };
-const MIN = 60000;
 const student = { userId: 'student-1', role: 'student' };
 const RM = 'p1-robert-miller';
 const allKeys = (x, out = new Set()) => {
@@ -23,7 +17,7 @@ const allKeys = (x, out = new Set()) => {
 
 function started() {
   const refs = collectEvents(session.scenarioPatients(scenario).map((p) => p.id), templatesById, scenario);
-  let s = session.createSession(scenario, templatesById);
+  let s = session.createSession(scenario, templatesById, catalogs);
   s = session.controlClock(s, 'start', { now: 0, user: { userId: 'instructor', role: 'instructor' } });
   return { s, refs };
 }
@@ -71,7 +65,7 @@ test('orders: acknowledge, then charting a one-time order marks it done', () => 
 test('PRN nitro: needs a BP check first, max 3, every 5 min', () => {
   let { s } = started();
   const ntg = templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg');
-  const warn = (min) => prnWarnings(ntg, { log: s.log, patientId: RM, simMin: min }).map((w) => w.code);
+  const warn = (min) => prnWarnings(ntg, { log: s.log, patientId: RM, simMin: min, ...prnOptions(catalogs, s.patients[RM], s.settings) }).map((w) => w.code);
   assert.deepEqual(warn(10), ['requires']);
   s = chart.chartIntervention(s, RM, { interventionId: 'vs-bp', fields: { bp: '150/90' } }, ctx(10));
   assert.deepEqual(warn(11), []);

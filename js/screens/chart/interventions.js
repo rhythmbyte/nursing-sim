@@ -18,7 +18,7 @@ export default {
   id: 'interventions',
   label: 'Interventions',
   mount(root, { pid, view, catalogs, act, runner, scenario }) {
-    const reveal = scenario.settings.revealManualVitals !== false;
+    const reveal = scenario.settings.revealManualVitals;
     const cat = catalogs.interventions;
     let category = cat.categories[0].id;
     let selected = null;
@@ -45,7 +45,7 @@ export default {
       if (!selected) { clear(form).append(h('p', { class: 'muted' }, 'Pick an intervention to chart it.')); return; }
       const iv = selected;
       // Vital-sign interventions get the vitals form (device values from the monitor, Measure if revealed).
-      const vf = iv.vitalsCapture ? vitalsInputs(iv.chartFields, { reveal, measure: () => runner.measure(pid) }) : null;
+      const vf = iv.vitalsCapture ? vitalsInputs(iv.chartFields, { reveal, vcat: catalogs.vitals, measure: () => runner.measure(pid) }) : null;
       const inputs = vf ? {} : Object.fromEntries(iv.chartFields.map((f) => [f, h('input', { type: 'text', class: 'input', name: f })]));
       const ps = runner.state.patients[pid];
       const forOrders = view.orders.filter((o) => ps.orders[o.id] && ps.orders[o.id].status !== 'done' && (o.interventionIds || []).includes(iv.id));

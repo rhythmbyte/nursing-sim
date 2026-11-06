@@ -7,7 +7,8 @@ import { append } from './log.js';
 import { progressOrder, findOrder } from './orders.js';
 import { drawLabs } from './labs.js';
 import { requestDelegation } from './delegation.js';
-import { deviceValues, scriptedSnapshot, SCRIPTED_MANUAL_KEYS, OTHER_MANUAL_KEYS, MONITOR_CYCLES } from './vitals.js';
+import { deviceValues, scriptedSnapshot } from './vitals.js';
+import { revealFindings } from './findings.js';
 
 function begin(state, ctx) {
   return { draft: structuredClone(state), simMin: simMinOf(state, ctx.now) };
@@ -80,18 +81,6 @@ export function completeOrder(state, patientId, { orderId }, ctx) {
   return draft;
 }
 
-/** Copies baseline + any pending finding changes into the patient's revealed findings. Mutates draft. */
-function revealFindings(draft, patientId, template, simMin) {
-  const ps = draft.patients[patientId];
-  const shown = new Set(ps.revealed.map((r) => r.source));
-  if (!shown.has('baseline')) ps.revealed.push({ source: 'baseline', atMin: simMin, findings: [...template.findings.baseline] });
-  for (const eventId of ps.findingChanges) {
-    if (shown.has(eventId)) continue;
-    const change = template.findings.changes?.find((c) => c.eventId === eventId);
-    if (change) ps.revealed.push({ source: eventId, atMin: simMin, findings: [...change.findings] });
-  }
-}
-
 const pickTyped = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] != null && String(obj[k]).trim() !== '').map((k) => [k, String(obj[k]).trim()]));
 
 /**
@@ -118,10 +107,12 @@ export function chartIntervention(state, patientId, { interventionId, fields = {
   } else {
     progressOrder(draft, patientId, order, simMin);
     if (iv.revealsFindings) revealFindings(draft, patientId, ctx.templatesById[patientId], simMin);
+    // (Delegated assessments: see delegation.js and settings.delegatedAssessmentRevealsFindings.)
     if (iv.vitalsCapture) {
-      logFields = { ...deviceValues(ps, iv.chartFields), ...pickTyped(fields, iv.chartFields.filter((k) => SCRIPTED_MANUAL_KEYS.includes(k))) };
+      const vcat = ctx.catalogs.vitals;
+      logFields = { ...deviceValues(ps, iv.chartFields, vcat), ...pickTyped(fields, iv.chartFields.filter((k) => vcat.manualScriptedFields.includes(k))) };
       ps.flowsheet.push({ atMin: simMin, source: 'charted', values: logFields, by: ctx.user.userId });
-      extra.scripted = scriptedSnapshot(ps);
+      extra.scripted = scriptedSnapshot(ps, vcat);
     }
     if (iv.drawsLabs && order?.labCodes) extra.drawn = drawLabs(draft, patientId, order.labCodes, simMin, ctx.catalogs, order.id).map((l) => l.uid);
   }
@@ -131,12 +122,13 @@ export function chartIntervention(state, patientId, { interventionId, fields = {
 
 /** Flowsheet manual entries (temp/RR/pain, GCS, glucose, I&O, weight, neuro). Scripted values kept for the debrief. */
 export function flowsheetEntry(state, patientId, { values = {} }, ctx) {
-  const typed = pickTyped(values, [...SCRIPTED_MANUAL_KEYS, ...OTHER_MANUAL_KEYS]);
+  const vcat = ctx.catalogs.vitals;
+  const typed = pickTyped(values, [...vcat.manualScriptedFields, ...vcat.otherManualFields]);
   if (!Object.keys(typed).length) return state;
   const { draft, simMin } = begin(state, ctx);
   const ps = draft.patients[patientId];
   ps.flowsheet.push({ atMin: simMin, source: 'charted', values: typed, by: ctx.user.userId });
-  log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps) });
+  log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps, vcat) });
   return draft;
 }
 
@@ -144,15 +136,16 @@ export function flowsheetEntry(state, patientId, { values = {} }, ctx) {
 export function takeBpNow(state, patientId, _args, ctx) {
   const { draft, simMin } = begin(state, ctx);
   const ps = draft.patients[patientId];
-  const values = deviceValues(ps, ['bp', 'hr', 'spo2']);
+  const values = deviceValues(ps, ctx.catalogs.vitals.monitorFields, ctx.catalogs.vitals);
   ps.flowsheet.push({ atMin: simMin, source: 'monitor', values, by: 'NIBP (started by nurse)' });
   log(draft, simMin, ctx, patientId, 'nibp-now', { values });
   return draft;
 }
 
-/** Monitor cycle: intervalMin ∈ 0 (off), 5, 10, 15. Takes a reading now, then every intervalMin. */
+/** Monitor cycle: intervalMin ∈ catalogs.vitals.monitorCycles (0 = off). First reading on the next tick, then every intervalMin. */
 export function setMonitor(state, patientId, { intervalMin }, ctx) {
-  if (!MONITOR_CYCLES.includes(intervalMin)) throw new Error(`Monitor cycle must be one of ${MONITOR_CYCLES.join(', ')}`);
+  const cycles = ctx.catalogs.vitals.monitorCycles;
+  if (!cycles.includes(intervalMin)) throw new Error(`Monitor cycle must be one of ${cycles.join(', ')}`);
   const current = state.patients[patientId].monitor?.intervalMin ?? 0;
   if (current === intervalMin) return state;
   const { draft, simMin } = begin(state, ctx);

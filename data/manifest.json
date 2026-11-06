@@ -4,7 +4,9 @@
     "interventions": "catalogs/interventions.json",
     "labs": "catalogs/labs.json",
     "staff": "catalogs/staff.json",
-    "rules": "catalogs/rules.json"
+    "rules": "catalogs/rules.json",
+    "vitals": "catalogs/vitals.json",
+    "scenarioDefaults": "catalogs/scenario-defaults.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",
@@ -14,7 +16,5 @@
     "patients/p5-dorothy-evans.json",
     "patients/p6-james-carter.json"
   ],
-  "scenarios": [
-    "scenarios/busy-medsurg-shift.json"
-  ]
+  "scenarios": ["scenarios/busy-medsurg-shift.json"]
 }

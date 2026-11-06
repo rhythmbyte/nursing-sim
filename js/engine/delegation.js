@@ -1,5 +1,5 @@
 // Delegation: an intervention delegated to an LPN/CNA is done after a delay
-// (settings.delegationDelayMin: number or { LPN, CNA }; default 10 sim-min), then the staff member reports
+// (settings.delegationDelayMin[role], from scenario-defaults.json unless the scenario overrides), then the staff member reports
 // back as a staff message. Effects (order progress, vitals row, lab draw) happen at completion, not at request.
 // Whether delegating was APPROPRIATE is judged by the inappropriate-delegation rule (phase 5), not here.
 
@@ -7,14 +7,14 @@ import { addAlert } from './alerts.js';
 import { append } from './log.js';
 import { progressOrder, findOrder } from './orders.js';
 import { drawLabs } from './labs.js';
-import { deviceValues, scriptedSnapshot, revealsManualVitals, SCRIPTED_MANUAL_KEYS } from './vitals.js';
+import { deviceValues, scriptedSnapshot } from './vitals.js';
+import { revealFindings } from './findings.js';
 
-export const DEFAULT_DELEGATION_DELAY_MIN = 10;
-
+/** Delay for a role from merged settings (engine/settings.js turns a single number into per-role values). */
 export function delegationDelay(settings, to) {
-  const d = settings?.delegationDelayMin;
-  if (typeof d === 'number') return d;
-  return d?.[to] ?? DEFAULT_DELEGATION_DELAY_MIN;
+  const d = settings?.delegationDelayMin?.[to];
+  if (d == null) throw new Error(`No delegation delay for ${to}: set settings.delegationDelayMin`);
+  return d;
 }
 
 /** Mutates draft: queues a delegated task. */
@@ -42,11 +42,14 @@ function complete(draft, patientId, task, ctx) {
   if (iv?.vitalsCapture) {
     // Staff report device values; temp/RR/pain only when the scenario reveals manual vitals
     // (otherwise they come from the manikin/instructor, like the student's own checks).
-    const manual = revealsManualVitals(draft.settings) ? iv.chartFields.filter((k) => SCRIPTED_MANUAL_KEYS.includes(k) && ps.vitals[k] != null) : [];
-    values = { ...deviceValues(ps, iv.chartFields), ...Object.fromEntries(manual.map((k) => [k, ps.vitals[k]])) };
+    const vcat = catalogs.vitals;
+    const manual = draft.settings.revealManualVitals ? iv.chartFields.filter((k) => vcat.manualScriptedFields.includes(k) && ps.vitals[k] != null) : [];
+    values = { ...deviceValues(ps, iv.chartFields, vcat), ...Object.fromEntries(manual.map((k) => [k, ps.vitals[k]])) };
     ps.flowsheet.push({ atMin: at, source: 'delegated', values, by: task.to });
   }
   if (iv?.drawsLabs && order?.labCodes) drawLabs(draft, patientId, order.labCodes, at, catalogs, order.id);
+  // Whether a delegated assessment reveals findings is a scenario setting (default false; SPEC §14).
+  if (iv?.revealsFindings && draft.settings.delegatedAssessmentRevealsFindings) revealFindings(draft, patientId, templatesById[patientId], at);
   progressOrder(draft, patientId, order, at);
 
   Object.assign(task, { status: 'done', completedAt: at });
@@ -55,7 +58,7 @@ function complete(draft, patientId, task, ctx) {
   addAlert(draft, { simMin: at, patientId, kind: 'staff-message', message: `${task.to}: ${label} done for ${name}${values ? `: ${summarize(values)}` : '.'}` });
   append(draft, {
     simMin: at, wallTime: now, userId: `staff-${task.to.toLowerCase()}`, role: 'staff', patientId, action: 'delegation-completed',
-    details: { taskId: task.id, interventionId: task.interventionId, orderId: task.orderId, to: task.to, values, ...(values ? { scripted: scriptedSnapshot(ps) } : {}) },
+    details: { taskId: task.id, interventionId: task.interventionId, orderId: task.orderId, to: task.to, values, ...(values ? { scripted: scriptedSnapshot(ps, catalogs.vitals) } : {}) },
   });
 }
 

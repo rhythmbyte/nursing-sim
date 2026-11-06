@@ -1,5 +1,6 @@
 {
   "review": "proposed",
+  "fallbackDelayMin": 30,
   "labs": [
     { "code": "wbc", "name": "WBC", "unit": "×10³/µL", "refRange": "4.5–11.0", "defaultDelayMin": 30 },
     { "code": "hgb", "name": "Hemoglobin", "unit": "g/dL", "refRange": "12.0–17.5", "defaultDelayMin": 30 },

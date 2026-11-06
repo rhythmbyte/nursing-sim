@@ -17,6 +17,8 @@ const SCHEMAS = {
   labs: 'schemas/labs.schema.json',
   staff: 'schemas/staff.schema.json',
   rules: 'schemas/rules.schema.json',
+  vitals: 'schemas/vitals.schema.json',
+  scenarioDefaults: 'schemas/scenario-defaults.schema.json',
 };
 
 async function fetchJson(base, rel) {

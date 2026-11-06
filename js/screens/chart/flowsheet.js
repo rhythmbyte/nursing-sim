@@ -7,7 +7,6 @@ import { at, fieldLabel } from './util.js';
 import { vitalsInputs } from './vitals-form.js';
 import { load, save } from '../../storage.js';
 
-const COLS = ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'];
 const SHORT = { tempF: 'Temp', spo2: 'SpO₂', o2: 'O₂', intakeMl: 'In (mL)', outputMl: 'Out (mL)', weightKg: 'Wt (kg)', glucose: 'Gluc' };
 const SOURCE = { prior: 'Prior shift', monitor: 'Monitor', charted: 'Charted', delegated: 'Reported' };
 const who = (by) => by.replace(/^student-(\d+)$/, 'Student $1');
@@ -37,15 +36,17 @@ export default {
     const HIDE_KEY = `ui.${user.userId}.flowsheet.chartedOnly`;
     // The catalog's full vital-signs intervention (vitalsCapture + temp): counts for VS orders and PRN pre-checks.
     const fullVitals = catalogs.interventions.interventions.find((i) => i.vitalsCapture && i.chartFields.includes('tempF'));
-    const reveal = scenario.settings.revealManualVitals !== false;
+    const vcat = catalogs.vitals;
+    const reveal = scenario.settings.revealManualVitals;
+    const COLS = [...vcat.monitorFields, ...vcat.manualScriptedFields, ...vcat.otherManualFields];
     const cycle = h('select', {
       'aria-label': 'Monitor cycle',
       onchange: (e) => { act('setMonitor', { intervalMin: Number(e.target.value) }); toast(Number(e.target.value) ? `Monitor cycling q${e.target.value} min` : 'Monitor cycle off'); },
-    }, [0, 5, 10, 15].map((m) => h('option', { value: m }, m ? `q${m} min` : 'Off')));
+    }, vcat.monitorCycles.map((m) => h('option', { value: m }, m ? `q${m} min` : 'Off')));
     const defaultCycle = scenario.settings.vitalsCycleDefaultMin;
     const monitorNote = h('span', { class: 'muted small' });
 
-    const form = vitalsInputs(['tempF', 'rr', 'pain', 'gcs', 'glucose', 'intakeMl', 'outputMl', 'weightKg', 'neuro'], { reveal, measure: () => runner.measure(pid) });
+    const form = vitalsInputs([...vcat.manualScriptedFields, ...vcat.otherManualFields], { reveal, vcat, measure: () => runner.measure(pid) });
     const withDevice = h('input', { type: 'checkbox', checked: true });
     const table = h('div', { class: 'table-wrap' });
     let chartedOnly = load(HIDE_KEY, false) === true;
@@ -68,8 +69,8 @@ export default {
           onsubmit: (e) => {
             e.preventDefault();
             const v = form.values();
-            const vitals = Object.fromEntries(Object.entries(v).filter(([k]) => ['tempF', 'rr', 'pain'].includes(k)));
-            const other = Object.fromEntries(Object.entries(v).filter(([k]) => !['tempF', 'rr', 'pain'].includes(k)));
+            const vitals = Object.fromEntries(Object.entries(v).filter(([k]) => vcat.manualScriptedFields.includes(k)));
+            const other = Object.fromEntries(Object.entries(v).filter(([k]) => !vcat.manualScriptedFields.includes(k)));
             if (withDevice.checked) {
               act('chartIntervention', { interventionId: fullVitals.id, fields: vitals });
               if (Object.keys(other).length) act('flowsheetEntry', { values: other });

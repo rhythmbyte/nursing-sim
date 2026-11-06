@@ -28,7 +28,7 @@ export default {
 
     async function give(o) {
       const state = runner.state;
-      const warnings = prnWarnings(o, { log: state.log, patientId: pid, simMin: runner.simMin(), ...prnOptions(catalogs, state.patients[pid]) });
+      const warnings = prnWarnings(o, { log: state.log, patientId: pid, simMin: runner.simMin(), ...prnOptions(catalogs, state.patients[pid], state.settings) });
       if (warnings.length) {
         const ok = await confirmWarnings(`Give ${o.med}?`, 'Check before giving:', warnings.map((w) => w.message), 'Give anyway');
         if (!ok) return;

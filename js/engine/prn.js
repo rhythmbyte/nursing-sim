@@ -1,8 +1,8 @@
 // PRN checks for one med order. Pure, no DOM. Single source of truth: the MAR warns with it now,
 // and the prn-limit flag rule (phase 5) reuses it.
-// order.prn: { max?, intervalMin?, requiresBefore?: [interventionId], requiresWithinMin? (default 15) }
+// order.prn: { max?, intervalMin?, requiresBefore?: [interventionId], requiresWithinMin? }
+// requiresWithinMin falls back to the scenario setting prnPreCheckWindowMin (via prnOptions).
 
-export const DEFAULT_REQUIRES_WITHIN_MIN = 15;
 
 /**
  * Does this log entry count as the required check `req`? Own charting (not a delegation request) or a
@@ -29,7 +29,7 @@ export function dosesGiven(log, patientId, orderId) {
  * includesOf(id) lists the checks an intervention also covers (catalog `includes`).
  */
 export function prnWarnings(order, {
-  log, patientId, simMin, labelOf = (id) => id, includesOf = () => [], readings = [], monitorSatisfies = () => false,
+  log, patientId, simMin, labelOf = (id) => id, includesOf = () => [], readings = [], monitorSatisfies = () => false, windowMin,
 }) {
   const prn = order.prn;
   if (!prn) return [];
@@ -44,7 +44,8 @@ export function prnWarnings(order, {
     const wait = Math.ceil(prn.intervalMin - (simMin - last.simMin));
     warnings.push({ code: 'interval', message: `Too soon: minimum interval is ${prn.intervalMin} min (about ${wait} min to go).` });
   }
-  const within = prn.requiresWithinMin ?? DEFAULT_REQUIRES_WITHIN_MIN;
+  const within = prn.requiresWithinMin ?? windowMin;
+  if ((prn.requiresBefore || []).length && within == null) throw new Error('No pre-check window: set prn.requiresWithinMin or settings.prnPreCheckWindowMin');
   for (const req of prn.requiresBefore || []) {
     const inWindow = (t) => simMin - t <= within && simMin >= t;
     const done = log.some((l) => l.patientId === patientId && inWindow(l.simMin) && satisfies(l, req, includesOf))
@@ -54,8 +55,8 @@ export function prnWarnings(order, {
   return warnings;
 }
 
-/** Catalog- and patient-derived options for prnWarnings (one place, so every caller checks the same way). */
-export function prnOptions(catalogs, patientState) {
+/** Catalog-, settings- and patient-derived options for prnWarnings (one place, so every caller checks the same way). */
+export function prnOptions(catalogs, patientState, settings) {
   const ivs = catalogs?.interventions?.interventions || [];
   const byId = Object.fromEntries(ivs.map((i) => [i.id, i]));
   return {
@@ -63,5 +64,6 @@ export function prnOptions(catalogs, patientState) {
     includesOf: (id) => byId[id]?.includes || [],
     monitorSatisfies: (id) => byId[id]?.satisfiedByMonitor === true,
     readings: patientState?.flowsheet || [],
+    windowMin: settings?.prnPreCheckWindowMin,
   };
 }

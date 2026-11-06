@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { templatesById, catalogs, scenario, scenarioWith, MIN } from './fixtures.mjs';
 import * as session from '../js/engine/session.js';
 import * as chart from '../js/engine/chart.js';
 import { collectEvents, eventKey } from '../js/engine/scheduler.js';
@@ -11,12 +11,6 @@ import { buildDebrief } from '../js/engine/debrief.js';
 import { studentIdsForGroup, groupOfStudent } from '../js/engine/assignment.js';
 import { prnWarnings, prnOptions } from '../js/engine/prn.js';
 
-const load = (rel) => JSON.parse(readFileSync(new URL(`../data/${rel}`, import.meta.url), 'utf8'));
-const manifest = load('manifest.json');
-const templatesById = Object.fromEntries(manifest.patients.map((rel) => load(rel)).map((p) => [p.id, p]));
-const baseScenario = load('scenarios/busy-medsurg-shift.json');
-const catalogs = { interventions: load('catalogs/interventions.json'), labs: load('catalogs/labs.json'), rules: load('catalogs/rules.json') };
-const MIN = 60000;
 const S1 = { userId: 'student-1', role: 'student' };
 const INS = { userId: 'instructor', role: 'instructor' };
 const RM = 'p1-robert-miller';
@@ -24,9 +18,9 @@ const LG = 'p4-linda-garcia';
 const JC = 'p6-james-carter';
 
 function started(settings = {}) {
-  const scenario = { ...baseScenario, settings: { ...baseScenario.settings, ...settings } };
+  const scenario = scenarioWith(settings);
   const refs = collectEvents(session.scenarioPatients(scenario).map((p) => p.id), templatesById, scenario);
-  let s = session.createSession(scenario, templatesById);
+  let s = session.createSession(scenario, templatesById, catalogs);
   s = session.controlClock(s, 'start', { now: 0, user: INS });
   const tick = (st, min) => session.tick(st, { now: min * MIN, refs, templatesById, catalogs }).state;
   const fire = (st, pid, eid, min) => session.fireNow(st, refs.find((r) => r.key === eventKey(pid, eid)), { now: min * MIN, refs, templatesById, catalogs, user: INS });
@@ -133,7 +127,7 @@ test('allergy-conflict: name and class matching (data-driven)', () => {
 test('prn-limit: nitro given over a warning is a red flag', () => {
   let { s, flags } = started();
   const ntg = templatesById[RM].orders.find((o) => o.id === 'o-p1-ntg');
-  const warnings = prnWarnings(ntg, { log: s.log, patientId: RM, simMin: 5, ...prnOptions(catalogs, s.patients[RM]) });
+  const warnings = prnWarnings(ntg, { log: s.log, patientId: RM, simMin: 5, ...prnOptions(catalogs, s.patients[RM], s.settings) });
   s = chart.medAction(s, RM, { orderId: 'o-p1-ntg', result: 'given', warnings }, ctx(5));
   const f = flags(s, 6, 'prn-limit');
   assert.equal(f[0].severity, 'red');

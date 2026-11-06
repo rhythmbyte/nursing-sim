@@ -18,7 +18,7 @@ import { delegationProcessor } from './delegation.js';
 // Order matters within one instant: monitor readings see vitals after that instant's events.
 const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
 
-export const SESSION_VERSION = 3; // bump when the shape changes; older saved sessions are discarded
+export const SESSION_VERSION = 4; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -28,7 +28,7 @@ export function scenarioPatients(scenario) {
   ]);
 }
 
-function initialPatientState(t, groupId, admission) {
+function initialPatientState(t, groupId, admission, catalogs) {
   const orders = {};
   for (const o of t.orders) {
     // Orders in place at shift start count as already acknowledged (received in report).
@@ -44,7 +44,7 @@ function initialPatientState(t, groupId, admission) {
     findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
     revealed: [],       // [{ source: 'baseline' | eventId, atMin, findings }] once the student assesses
     orders,
-    labs: initLabs(t),
+    labs: initLabs(t, catalogs),
     flowsheet: initFlowsheet(t), // [{ atMin, source, values, by }]
     monitor: null,               // { intervalMin, fromMin, count } when the student runs a cycle
     delegations: [],             // tasks delegated to LPN/CNA (engine/delegation.js)
@@ -52,7 +52,8 @@ function initialPatientState(t, groupId, admission) {
   };
 }
 
-export function createSession(scenario, templatesById) {
+/** scenario.settings must already be merged with defaults (engine/settings.js withDefaults). */
+export function createSession(scenario, templatesById, catalogs) {
   const patients = {};
   for (const { id, groupId, admission } of scenarioPatients(scenario)) {
     const t = templatesById[id];
@@ -60,7 +61,7 @@ export function createSession(scenario, templatesById) {
       console.warn(`Scenario ${scenario.id} lists unknown patient ${id}; skipped`);
       continue;
     }
-    patients[id] = initialPatientState(t, groupId, admission);
+    patients[id] = initialPatientState(t, groupId, admission, catalogs);
   }
   return {
     version: SESSION_VERSION,
@@ -209,11 +210,11 @@ export function controlClock(state, action, { now, user, speed, reason }) {
 }
 
 /**
- * Pause-on-close (scenario setting `pauseOnClose`, default true). Pauses a running clock as of
+ * Pause-on-close (scenario setting `pauseOnClose`). Pauses a running clock as of
  * `atWall` — the moment the page closed, or the last heartbeat if it crashed/froze.
  */
-export function pauseForClose(state, { atWall, now, pauseOnClose }) {
-  if (pauseOnClose === false || state.clock.status !== 'running') return state;
+export function pauseForClose(state, { atWall, now }) {
+  if (!state.settings.pauseOnClose || state.clock.status !== 'running') return state;
   const at = Math.min(atWall ?? now, now);
   return controlClock(state, 'pause', { now: at, user: SYSTEM, reason: 'page-closed' });
 }
