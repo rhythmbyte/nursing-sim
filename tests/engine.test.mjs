@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as clock from '../js/engine/clock.js';
-import { dueEvents, occurrenceAt, eventKey, collectEvents, firstScheduled } from '../js/engine/scheduler.js';
+import { dueEvents, occurrenceAt, eventKey, collectEvents, firstScheduled, eventGroupProblems } from '../js/engine/scheduler.js';
 import * as session from '../js/engine/session.js';
 import { createRunner } from '../js/engine/runner.js';
 import { createStore } from '../js/state.js';
@@ -123,4 +123,54 @@ test('runner: pushes state to the store, persists, and resumes a saved session',
 
 test('assignment: student slots follow group studentCount', () => {
   assert.deepEqual(studentSlots({ groups: [{ id: 'a', name: 'A', studentCount: 2 }, { id: 'b', name: 'B', studentCount: 1 }] }).map((s) => s.groupId), ['a', 'a', 'b']);
+});
+
+test('groups: Fire now fires the whole group, and the scheduled time does not re-fire it', () => {
+  let { s, refs } = startedSession();
+  const ref = refs.find((r) => r.key === eventKey('p1-robert-miller', 'e-p1-pain-returns'));
+  s = session.fireNow(s, ref, { now: 5 * MIN, refs, templatesById, user: instructor });
+  const robert = s.patients['p1-robert-miller'];
+  assert.ok(robert.callLight);
+  assert.equal(robert.vitals.hr, 108, 'linked vitals change fired too');
+  assert.deepEqual(robert.findingChanges, ['e-p1-pain-returns'], 'linked findings fired too');
+  assert.equal(s.log.filter((l) => l.action === 'event-fired').length, 3);
+  ({ state: s } = session.tick(s, { now: 76 * MIN, refs, templatesById }));
+  const robertFired = s.log.filter((l) => l.action === 'event-fired' && l.patientId === 'p1-robert-miller');
+  assert.equal(robertFired.length, 3, 'nothing for Robert re-fires at 08:15');
+});
+
+test('groups: members must share timing', () => {
+  for (const t of Object.values(templatesById)) assert.deepEqual(eventGroupProblems(t.events), [], t.id);
+  const bad = eventGroupProblems([{ id: 'e-a', group: 'g', atMin: 5 }, { id: 'e-b', group: 'g', atMin: 6 }]);
+  assert.equal(bad.length, 1);
+});
+
+test('skip to next event: jumps to 08:00 and fires Linda\'s linked events; paused stays paused', () => {
+  let { s, refs } = startedSession();
+  s = session.controlClock(s, 'pause', { now: 1 * MIN, user: instructor });
+  assert.equal(session.nextEventMin(s, refs, 1 * MIN), 60);
+  s = session.skipToNext(s, { now: 2 * MIN, refs, templatesById, user: instructor });
+  assert.equal(session.simMinOf(s, 50 * MIN), 60);
+  assert.equal(s.clock.status, 'paused');
+  const fired = s.log.filter((l) => l.action === 'event-fired').map((l) => l.details.eventId);
+  assert.deepEqual(fired, ['e-p4-worsens', 'e-p4-worsens-findings']);
+  assert.equal(s.log.find((l) => l.action === 'clock-skip').details.toMin, 60);
+  assert.equal(session.nextEventMin(s, refs, 50 * MIN), 75);
+});
+
+test('skip to next event: does nothing before start', () => {
+  const ids = session.scenarioPatients(scenario).map((p) => p.id);
+  const refs = collectEvents(ids, templatesById, scenario);
+  const s = session.createSession(scenario, templatesById);
+  assert.equal(session.skipToNext(s, { now: 0, refs, templatesById, user: instructor }), s);
+});
+
+test('pause on close: pauses at the close time; respects pauseOnClose=false', () => {
+  const { s } = startedSession();
+  const paused = session.pauseForClose(s, { atWall: 10 * MIN, now: 30 * MIN, pauseOnClose: true });
+  assert.equal(paused.clock.status, 'paused');
+  assert.equal(session.simMinOf(paused, 99 * MIN), 10, 'time after the close does not count');
+  assert.equal(paused.log.at(-1).details.reason, 'page-closed');
+  assert.equal(session.pauseForClose(s, { atWall: 10 * MIN, now: 30 * MIN, pauseOnClose: false }), s);
+  assert.equal(session.pauseForClose(paused, { atWall: 40 * MIN, now: 50 * MIN }), paused, 'already paused: no-op');
 });

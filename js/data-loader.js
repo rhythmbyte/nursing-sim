@@ -2,6 +2,13 @@
 // No DOM. Invalid files are reported in `problems` and left out of the results.
 
 import { validate } from './validate.js';
+import { eventGroupProblems } from './engine/scheduler.js';
+
+// Checks JSON Schema can't express (cross-field rules), per kind of file.
+const EXTRA_CHECKS = {
+  patient: (d) => eventGroupProblems(d.events, '$.events'),
+  scenario: (d) => eventGroupProblems(d.events, '$.events'),
+};
 
 const SCHEMAS = {
   patient: 'schemas/patient.schema.json',
@@ -28,10 +35,11 @@ export async function loadAll(base = 'data/') {
   const schemas = Object.fromEntries(schemaEntries);
   const problems = [];
 
-  async function loadChecked(rel, schema) {
+  async function loadChecked(rel, schema, kind) {
     try {
       const data = await fetchJson(base, rel);
-      const errors = validate(data, schema);
+      let errors = validate(data, schema);
+      if (!errors.length && EXTRA_CHECKS[kind]) errors = EXTRA_CHECKS[kind](data);
       if (errors.length) {
         problems.push({ file: rel, errors });
         return null;
@@ -44,8 +52,8 @@ export async function loadAll(base = 'data/') {
   }
 
   const [patients, scenarios, catalogEntries] = await Promise.all([
-    Promise.all(manifest.patients.map((rel) => loadChecked(rel, schemas.patient))),
-    Promise.all(manifest.scenarios.map((rel) => loadChecked(rel, schemas.scenario))),
+    Promise.all(manifest.patients.map((rel) => loadChecked(rel, schemas.patient, 'patient'))),
+    Promise.all(manifest.scenarios.map((rel) => loadChecked(rel, schemas.scenario, 'scenario'))),
     Promise.all(
       Object.entries(manifest.catalogs).map(async ([k, rel]) => [k, await loadChecked(rel, schemas[k])]),
     ),

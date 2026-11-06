@@ -47,3 +47,32 @@ export function nextAt(ref, fired) {
 export function firstScheduled(events) {
   return [...events].filter((e) => typeof e.atMin === 'number').sort((a, b) => a.atMin - b.atMin)[0] || null;
 }
+
+// ---- Event groups --------------------------------------------------------------------------
+// Events with the same `group` (within one patient, or within the scenario's sim-level events)
+// are one moment in the story: e.g. a call light + its vitals change + its new findings.
+// "Fire now" fires the whole group, so scheduled firing stays in sync (fired counts move together).
+
+/** Refs in the same group as `ref` (same patient + same group), in data order. Just [ref] if ungrouped. */
+export function groupMembers(refs, ref) {
+  if (!ref.event.group) return [ref];
+  return refs.filter((r) => r.patientId === ref.patientId && r.event.group === ref.event.group);
+}
+
+/** Data check: members of a group must share timing, or they'd drift apart. Returns error strings. */
+export function eventGroupProblems(events, where = '$') {
+  const byGroup = new Map();
+  for (const e of events || []) {
+    if (!e.group) continue;
+    if (!byGroup.has(e.group)) byGroup.set(e.group, []);
+    byGroup.get(e.group).push(e);
+  }
+  const problems = [];
+  for (const [group, members] of byGroup) {
+    const timing = (e) => JSON.stringify([e.atMin ?? null, e.trigger ?? null, e.repeatEveryMin ?? null, e.repeatCount ?? null]);
+    if (new Set(members.map(timing)).size > 1) {
+      problems.push(`${where}: events in group "${group}" (${members.map((e) => e.id).join(', ')}) must share atMin/trigger/repeat settings`);
+    }
+  }
+  return problems;
+}

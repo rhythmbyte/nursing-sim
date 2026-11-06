@@ -45,3 +45,10 @@ export function setSpeed(c, speed, now) {
   if (c.status === 'running') return { ...c, speed, baseMs: simMs(c, now), anchorWall: now };
   return { ...c, speed };
 }
+
+/** Jump sim time to `toMin` (forward only). Keeps status; a running clock re-anchors at `now`. */
+export function jumpTo(c, toMin, now) {
+  const toMs = toMin * 60000;
+  if (c.status === 'ready' || c.status === 'ended' || toMs <= simMs(c, now)) return c;
+  return { ...c, baseMs: toMs, anchorWall: c.status === 'running' ? now : null };
+}

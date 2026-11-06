@@ -75,9 +75,9 @@
     { "id": "o-p2-notify", "text": "Notify provider for increased bleeding, changes in neurovascular status, uncontrolled pain, or signs of DVT", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "parameter": { "watch": "instructor", "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
   ],
   "events": [
-    { "id": "e-p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "Margaret is requesting pain medication. Reports pain 8/10 and says she doesn't want to get out of bed because it hurts too much." } },
-    { "id": "e-p2-pain-vitals", "type": "vitals-change", "atMin": 120, "payload": { "keyframe": "e-p2-pain" } },
-    { "id": "e-p2-pain-findings", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } }
+    { "id": "e-p2-pain", "group": "p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "Margaret is requesting pain medication. Reports pain 8/10 and says she doesn't want to get out of bed because it hurts too much." } },
+    { "id": "e-p2-pain-vitals", "group": "p2-pain", "type": "vitals-change", "atMin": 120, "payload": { "keyframe": "e-p2-pain" } },
+    { "id": "e-p2-pain-findings", "group": "p2-pain", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } }
   ],
   "outcome": { "mode": "survive", "notes": "" },
   "codeBranch": null,

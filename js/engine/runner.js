@@ -3,7 +3,7 @@
 // Store events: 'tick' (simMin) on every tick; store.set({ session }) whenever state changes.
 
 import * as session from './session.js';
-import { collectEvents } from './scheduler.js';
+import { collectEvents, groupMembers } from './scheduler.js';
 
 export function createRunner({ store, scenario, templatesById, now = () => Date.now(), persist = () => {}, saved = null }) {
   const ids = session.scenarioPatients(scenario).map((p) => p.id).filter((id) => templatesById[id]);
@@ -42,7 +42,22 @@ export function createRunner({ store, scenario, templatesById, now = () => Date.
         console.warn(`fireNow: unknown event ${key}`);
         return;
       }
-      commit(session.fireNow(state, ref, { ...ctx(), user }));
+      commit(session.fireNow(state, ref, { ...ctx(), refs, user }));
+    },
+
+    /** Linked events that "Fire now" on this ref would fire (including itself). */
+    groupOf: (ref) => groupMembers(refs, ref),
+
+    nextEventMin: () => session.nextEventMin(state, refs, now()),
+
+    skipToNext(user) {
+      commit(session.skipToNext(state, { ...ctx(), refs, user }));
+      store.emit('tick', runner.simMin());
+    },
+
+    /** Called when the page closes, and on boot with the last heartbeat (covers crashes). */
+    pauseForClose(atWall) {
+      commit(session.pauseForClose(state, { atWall, now: now(), pauseOnClose: scenario.settings.pauseOnClose }));
     },
 
     answerCallLight(patientId, user) {

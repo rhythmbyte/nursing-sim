@@ -10,7 +10,8 @@
     "handoffMode": "once",
     "chargeNurse": "instructor",
     "showTagsToStudents": false,
-    "vitalsCycleDefaultMin": 5
+    "vitalsCycleDefaultMin": 5,
+    "pauseOnClose": true
   },
   "staffAvailable": ["lpn", "cna", "charge", "provider"],
   "assignment": "random",

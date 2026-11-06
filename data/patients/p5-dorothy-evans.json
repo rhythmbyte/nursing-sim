@@ -81,9 +81,9 @@
     { "id": "o-p5-neuro-q1", "review": "proposed", "text": "Neuro checks every 1 hour", "type": "scheduled", "frequencyMin": 60, "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["assess-neuro"], "delegable": false }
   ],
   "events": [
-    { "id": "e-p5-confused", "review": "proposed", "type": "staff-message", "atMin": 105, "payload": { "from": "CNA", "message": "Dorothy is more confused than earlier. She keeps trying to climb out of bed, says her head hurts worse, and she just threw up." } },
-    { "id": "e-p5-confused-vitals", "review": "proposed", "type": "vitals-change", "atMin": 105, "payload": { "keyframe": "e-p5-confused" } },
-    { "id": "e-p5-confused-findings", "review": "proposed", "type": "findings-change", "atMin": 105, "payload": { "change": "e-p5-confused" } },
+    { "id": "e-p5-confused", "group": "p5-confused", "review": "proposed", "type": "staff-message", "atMin": 105, "payload": { "from": "CNA", "message": "Dorothy is more confused than earlier. She keeps trying to climb out of bed, says her head hurts worse, and she just threw up." } },
+    { "id": "e-p5-confused-vitals", "group": "p5-confused", "review": "proposed", "type": "vitals-change", "atMin": 105, "payload": { "keyframe": "e-p5-confused" } },
+    { "id": "e-p5-confused-findings", "group": "p5-confused", "review": "proposed", "type": "findings-change", "atMin": 105, "payload": { "change": "e-p5-confused" } },
     { "id": "e-p5-neuro-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p5-neuro", "message": "New orders from provider for Dorothy Evans.", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "survive", "notes": "" },

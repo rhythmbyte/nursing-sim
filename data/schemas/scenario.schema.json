@@ -15,7 +15,8 @@
         "handoffMode": { "enum": ["once", "always", "never"] },
         "chargeNurse": { "enum": ["student", "instructor", "off"] },
         "showTagsToStudents": { "type": "boolean" },
-        "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 }
+        "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 },
+        "pauseOnClose": { "type": "boolean" }
       }
     },
     "staffAvailable": { "type": "array", "items": { "type": "string" } },

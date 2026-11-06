@@ -1,11 +1,16 @@
 // Event timeline with "Fire now". Lists every event in the session: scheduled ones by time,
-// then trigger-only ones (fired only from here).
+// then trigger-only ones (fired only from here). Linked events (same `group`) fire together.
 
 import { h } from '../shared/dom.js';
 import { reviewBadge } from '../shared/badge.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { nextAt } from '../../engine/scheduler.js';
 import { getEventType } from '../../engine/registry.js';
+
+function linkedNote(members) {
+  if (members.length < 2) return null;
+  return h('span', { class: 'linked-note', title: members.map((m) => m.event.id).join(', ') }, `linked ×${members.length}`);
+}
 
 export function eventsPanel(runner, templatesById, user) {
   const { state, refs } = { state: runner.state, refs: runner.refs };
@@ -27,14 +32,15 @@ export function eventsPanel(runner, templatesById, user) {
         h('td', {},
           h('code', {}, ref.event.type), ' ',
           ref.event.payload?.message || (type ? type.describe(ref.event) : ref.event.id), ' ',
-          reviewBadge(ref.event)),
+          reviewBadge(ref.event),
+          linkedNote(runner.groupOf(ref))),
         h('td', {}, status),
         h('td', {}, h('button', {
           class: 'btn btn-small',
           disabled: state.clock.status === 'ended',
-          title: 'Fire this event now',
+          title: runner.groupOf(ref).length > 1 ? 'Fire this event and its linked events now' : 'Fire this event now',
           onclick: () => runner.fireNow(ref.key, user),
-        }, 'Fire now')),
+        }, runner.groupOf(ref).length > 1 ? 'Fire group' : 'Fire now')),
       );
     })),
   );

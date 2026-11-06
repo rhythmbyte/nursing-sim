@@ -146,7 +146,8 @@ data/
     "handoffMode": "once" | "always" | "never",
     "chargeNurse": "student" | "instructor" | "off",
     "showTagsToStudents": false,
-    "vitalsCycleDefaultMin": 5
+    "vitalsCycleDefaultMin": 5,
+    "pauseOnClose": true                  // pause a running sim when the page closes/reloads (default true)
   },
   "groups": [
     {
@@ -169,7 +170,9 @@ data/
 
 ## 5. Event types (one file each in `js/engine/events/`)
 
-Every event: `{ id, type, atMin | trigger, repeatEveryMin?, repeatCount?, payload }`. Every event can also be fired live from the instructor "Fire now" panel.
+Every event: `{ id, type, atMin | trigger, group?, repeatEveryMin?, repeatCount?, payload }`. Every event can also be fired live from the instructor "Fire now" panel.
+
+**Linked events:** events that are one moment (a call light + its vitals change + its new findings) share a `group` string within the patient. "Fire now" fires the whole group, and members must share `atMin`/`trigger`/repeat settings (checked on load).
 
 | Type | What it does |
 |---|---|
@@ -241,7 +244,7 @@ Rule file shape: `{ id, label, evaluate(state, logEntry?) → flags[] }`.
    - add groups; per group: student count, then pick patients OR enter tag counts
    - assignment manual or random
    - "Create sim" → generates a 6-character join code
-4. **Live control** — clock controls; per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
+4. **Live control** — clock controls, "Skip to next event" (jumps sim time to the next scheduled event and fires it); per-group/per-patient view of what each student is doing; "Fire now" for any event; push ad-hoc orders; toggle call lights; release labs; code controls (code start, "first responder charted at…", ROSC / no ROSC); mark "left unattended".
 5. **Debrief** — per student: timeline of every action with sim times, red/amber flags inline, order sequence per order set (shown as done-order vs correct-order), handoff notes, response times (call lights, codes, parameter breaches). Export CSV + print view.
 
 ---
@@ -302,7 +305,8 @@ Things in the prototype that will need to change for the real website (logins, b
 | `storage.js` writes to `localStorage` (per browser, per device) | Backend client; sim state and logs are server-owned and shared across devices | `js/storage.js` |
 | One page with a tab per role; anyone can open any tab | Each user sees only their role's screens after login; role comes from the auth session, not a tab | `js/screens/shell.js`, `js/main.js` |
 | Instructor-only content (`debrief`, `reviewNotes`, `teachingNote`, etc.) ships to every browser in the patient JSON. Phase 3 adds a student-view filter, but it is a **UI convenience only, not security**: the full JSON is still downloaded and visible in dev tools | Server strips instructor-only fields before sending patient data to students. This is the real protection | `js/screens/student/` filter (phase 3) → API |
-| Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` (phase 2) |
+| Sim clock runs in the browser | Server is the clock authority; clients sync to it so every device sees the same sim time | `js/engine/clock.js` |
+| Pause on close (`settings.pauseOnClose`): the browser pauses its own sim on `pagehide`, or on boot using a heartbeat | The server owns the clock, so closing one device never pauses the sim. Drop the pagehide/heartbeat code. Pausing becomes an explicit instructor action (maybe an auto-pause when the instructor disconnects) | `js/main.js`, `session.pauseForClose` |
 | Store pub/sub is in-memory | Same `on`/`emit` API, fed by a realtime channel (e.g. Supabase Realtime) | `js/state.js` |
 | Join codes and student "joins" are simulated per tab | Real join flow tied to student accounts | `js/engine/assignment.js` (phase 6) |
 | User identities are hard-coded (`instructor`, `student-N`) in `main.js` | `userId`/`role` come from the auth session; log format is unchanged | `js/main.js` |

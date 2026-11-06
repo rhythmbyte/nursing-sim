@@ -15,6 +15,8 @@ import { h } from './screens/shared/dom.js';
 const TICK_MS = 250;
 const SCENARIO_KEY = 'ui.scenario';
 const SESSION_KEY = 'session';
+const HEARTBEAT_KEY = 'heartbeat';
+const HEARTBEAT_MS = 5000;
 
 // Prototype identities. Full build: these come from the logged-in user (SPEC §13).
 const INSTRUCTOR = { userId: 'instructor', role: 'instructor', name: 'Instructor' };
@@ -76,10 +78,23 @@ function startApp(root, data, scenarioId, restart) {
     restart(id);
   });
 
+  // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
+  // closed without warning (crash/freeze): pause it as of the last heartbeat.
+  runner.pauseForClose(load(HEARTBEAT_KEY));
+  const onPageHide = () => runner.pauseForClose(Date.now());
+  window.addEventListener('pagehide', onPageHide);
+  const heartbeat = setInterval(() => save(HEARTBEAT_KEY, Date.now()), HEARTBEAT_MS);
+  save(HEARTBEAT_KEY, Date.now());
+
   const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: picker });
   const timer = setInterval(() => runner.tick(), TICK_MS);
   runner.tick();
-  return () => { clearInterval(timer); teardownShell(); };
+  return () => {
+    clearInterval(timer);
+    clearInterval(heartbeat);
+    window.removeEventListener('pagehide', onPageHide);
+    teardownShell();
+  };
 }
 
 async function boot() {

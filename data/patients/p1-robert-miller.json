@@ -74,9 +74,9 @@
     { "id": "o-p1-iv", "text": "Maintain IV access", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["iv-check", "iv-start"], "delegable": true }
   ],
   "events": [
-    { "id": "e-p1-pain-returns", "type": "call-light", "atMin": 75, "payload": { "message": "Robert is on his call light: his chest pain has returned, now 7/10." } },
-    { "id": "e-p1-pain-vitals", "type": "vitals-change", "atMin": 75, "payload": { "keyframe": "e-p1-pain-returns" } },
-    { "id": "e-p1-pain-findings", "type": "findings-change", "atMin": 75, "payload": { "change": "e-p1-pain-returns" } }
+    { "id": "e-p1-pain-returns", "group": "p1-pain-returns", "type": "call-light", "atMin": 75, "payload": { "message": "Robert is on his call light: his chest pain has returned, now 7/10." } },
+    { "id": "e-p1-pain-vitals", "group": "p1-pain-returns", "type": "vitals-change", "atMin": 75, "payload": { "keyframe": "e-p1-pain-returns" } },
+    { "id": "e-p1-pain-findings", "group": "p1-pain-returns", "type": "findings-change", "atMin": 75, "payload": { "change": "e-p1-pain-returns" } }
   ],
   "outcome": { "mode": "survive", "notes": "No code in the original case." },
   "codeBranch": null,

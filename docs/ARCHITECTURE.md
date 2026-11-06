@@ -27,6 +27,10 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **The live loop:** `main.js` calls `runner.tick()` every 250 ms. The runner asks `session.tick()` for any events due at the current sim minute. If state changed, it calls `store.set({ session })` and persists the session. It always emits `store.emit('tick', simMin)`. Screens subscribe to `set` to re-render, and they use `tick` for cheap updates such as the clock and elapsed times. User actions (Start, Fire now, Answer) call runner methods, which follow the same path.
 
+**Event groups:** events that are one moment in the story share a `group` string within one patient, for example Robert's call light, vitals change and new findings at 08:15. "Fire now" on any member fires the whole group, so all of their fired counts move together and the scheduled time can't half-fire the group later. The loader rejects a file whose group members don't share `atMin`, `trigger` and repeat settings.
+
+**Pause on close:** if the scenario's `settings.pauseOnClose` is on (the default), `main.js` pauses a running clock on `pagehide`. It also saves a heartbeat every 5 s, and on boot it pauses a still-running sim as of the last heartbeat. That covers a crash or freeze where `pagehide` never fired.
+
 **Screen lifecycle:** a tab's `mount(root)` may return a cleanup function, which unsubscribes from the store. The shell calls it before mounting the next tab. Any screen that subscribes **must** return a cleanup.
 
 ---
@@ -38,20 +42,20 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `index.html` | Page shell; loads `css/base.css` and `js/main.js` | built |
 | `css/base.css` | Design tokens (colors, triage colors, spacing), dark mode, shared component styles | built |
 | `css/chart.css` | Epic-style chart look | planned, phase 3 |
-| `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms) and the prototype user identities | built |
+| `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms), the pause-on-close hooks (`pagehide` + a 5 s heartbeat), and the prototype user identities | built |
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`; keys prefixed `nursing-sim:`) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
-| `js/data-loader.js` | `loadAll()`: manifest → fetch → validate → `{ patients, scenarios, catalogs, problems }` | built |
+| `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks (`EXTRA_CHECKS`, e.g. event groups) → `{ patients, scenarios, catalogs, problems }` | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
 | `js/engine/time.js` | `parseClock`, `formatShiftTime(startClock, simMin)` | built |
 | `js/engine/clock.js` | Sim clock as a serializable snapshot + pure functions (`start`, `pause`, `resume`, `end`, `setSpeed`, `simMinutes`). `now` is always passed in | built |
-| `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats | built |
+| `js/engine/scheduler.js` | Which events are due (`collectEvents`, `dueEvents`, `nextAt`, `firstScheduled`); handles repeats; event groups (`groupMembers`, `eventGroupProblems`) | built |
 | `js/engine/registry.js` | Event-type and flag-rule registries | built |
 | `js/engine/events/` | One file per event type + `index.js` that registers them all (all SPEC §5 types except `ems-arrival`) | built |
 | `js/engine/alerts.js` | `addAlert()` for alerts raised by events | built |
 | `js/engine/log.js` | Append-only action log; every entry has `userId` + `role` | built |
-| `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow`, `answerCallLight`, `controlClock`) | built |
+| `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule | planned, phase 5 |
 | `js/engine/vitals.js`, `labs.js` | Monitor cycles, lab delays | planned, phase 4 |
@@ -100,7 +104,8 @@ Things that are UI conveniences only, **not** security: hiding instructor-only f
 2. Fill it in following SPEC §4.1. Tag anything drafted by AI with `"review": "proposed"`, and never remove those tags.
 3. Add the path to `data/manifest.json` → `patients`.
 4. Run `node --test tests/`. The data test fails if the file is invalid or missing from the manifest.
-5. To use the patient in a sim, add its id to a scenario group's `patients` (or `admissions`).
+5. Events that happen together (a call light plus its vitals and findings) share a `"group"` and must have the same `atMin`. The loader and tests enforce this.
+6. To use the patient in a sim, add its id to a scenario group's `patients` (or `admissions`).
 
 ### Add an event type
 1. Create `js/engine/events/<type>.js` that default-exports `{ type, apply(draft, event, ctx), describe(event) }`.
@@ -108,6 +113,7 @@ Things that are UI conveniences only, **not** security: hiding instructor-only f
    - Use `addAlert()` from `engine/alerts.js` to notify users. Don't touch the DOM.
 2. Add one import and one array entry in `js/engine/events/index.js`.
 3. Add the type name to the `event.type` enum in `data/schemas/patient.schema.json`.
+   - If the new event belongs with others at the same moment, give them all the same `group` (see "Event groups" in §1).
 4. Add a test in `tests/` that fires it against a small fixture.
 5. Update SPEC §5 if it's a new kind of event.
 

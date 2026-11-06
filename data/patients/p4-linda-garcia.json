@@ -79,8 +79,8 @@
     { "id": "o-p4-foley", "review": "proposed", "text": "Insert indwelling urinary catheter for hourly urine output", "type": "once", "tier": 3, "orderSet": "os-p4-sepsis", "activeOnEvent": "e-p4-sepsis-orders", "interventionIds": ["foley"], "delegable": true }
   ],
   "events": [
-    { "id": "e-p4-worsens", "type": "vitals-change", "atMin": 60, "payload": { "keyframe": "e-p4-worsens" } },
-    { "id": "e-p4-worsens-findings", "type": "findings-change", "atMin": 60, "payload": { "change": "e-p4-worsens" } },
+    { "id": "e-p4-worsens", "group": "p4-worsens", "type": "vitals-change", "atMin": 60, "payload": { "keyframe": "e-p4-worsens" } },
+    { "id": "e-p4-worsens-findings", "group": "p4-worsens", "type": "findings-change", "atMin": 60, "payload": { "change": "e-p4-worsens" } },
     { "id": "e-p4-sepsis-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p4-sepsis", "message": "New orders from provider for Linda Garcia (sepsis bundle).", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "instructor", "notes": "Instructor decides whether the sepsis branch progresses." },

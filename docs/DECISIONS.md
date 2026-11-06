@@ -4,10 +4,28 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Linked events share a `group` field
+- **Decision:** Events that make up one moment carry the same `group` string (scoped to the patient). "Fire now" fires every member, and the loader requires members to share timing.
+- **Why:** Firing a call light early used to leave its vitals and findings waiting for the scheduled time, so the story contradicted itself. With a group, the members' fired counts always move together.
+- **Alternatives:** One compound event with several effects (a bigger change to the data format and the editor); `linkedTo` pointers between events (more ways to get the links wrong).
+
+## 2026-11-05: Pause on close is the default (`settings.pauseOnClose`)
+- **Decision:** A running sim pauses when the page closes or reloads, and on boot after a crash (as of the last 5 s heartbeat). Scenarios can opt out with `pauseOnClose: false`. **Supersedes** "A saved session resumes with wall time still counting" for the default.
+- **Why:** An accidental close shouldn't fire 20 minutes of events at once when the page reopens. The machine this runs on can freeze, so the heartbeat covers closes where `pagehide` never fires.
+- **Alternatives:** Always keep counting (the old default, still available via the setting); asking on reopen (an extra step mid-class). In the full build the server owns the clock and this goes away (SPEC §13).
+
+## 2026-11-05: "Skip to next event" jumps the clock and fires what's due
+- **Decision:** The instructor can jump sim time forward to the next scheduled firing, which fires that event (and anything else due at that minute) and logs a `clock-skip` entry with from/to. It works when running or paused, and keeps the current status.
+- **Why:** At 8x an 8-hour shift still takes an hour of real time. Skipping makes short class periods workable without changing the scenario.
+- **Alternatives:** Faster speeds (16x or more makes the call-light response times meaningless); a free "jump to time" (easier to skip past something by mistake). Skipped time counts as sim time, so rules in phase 5 must treat it like any other elapsed time.
+
+---
+
 ## 2026-11-05: A saved session resumes with wall time still counting
 - **Decision:** The session (clock snapshot, fired events, log) is saved through `storage.js` on every change. On reload, a running clock picks up from its wall-time anchor, so time passed while the page was closed counts and due events fire in order on the first tick.
 - **Why:** If the page freezes or reloads mid-sim, the sim keeps its place, matching the real-time feel the instructor runs on. A paused clock stays paused.
 - **Alternatives:** Auto-pause on unload (safer for an accidental close, but then a refresh silently pauses a live class); not persisting at all (a freeze loses the sim). Revisit with the instructor.
+- **Status:** superseded as the default by "Pause on close is the default". This behavior remains when `pauseOnClose: false`.
 
 ## 2026-11-05: Orders active at shift start begin as "acknowledged"
 - **Decision:** Orders with `activeFromMin: 0` start as `acknowledged` (received in shift report). Orders that activate later (by time or event) start as `new` and highlight until acknowledged.

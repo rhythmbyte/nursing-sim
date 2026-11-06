@@ -24,6 +24,7 @@ function clockControls(runner, user) {
     btn('Resume', 'resume', s === 'paused', 'btn-primary'),
     btn('End', 'end', s === 'running' || s === 'paused', 'btn-danger'),
     h('label', { class: 'inline' }, 'Speed ', speed),
+    skipButton(runner, user),
     h('button', {
       class: 'btn btn-ghost',
       onclick: () => {
@@ -31,6 +32,18 @@ function clockControls(runner, user) {
       },
     }, 'Reset sim'),
   );
+}
+
+function skipButton(runner, user) {
+  const s = runner.state.clock.status;
+  const next = runner.nextEventMin();
+  const can = (s === 'running' || s === 'paused') && next != null;
+  return h('button', {
+    class: 'btn',
+    disabled: !can,
+    title: 'Jump sim time to the next scheduled event and fire it',
+    onclick: () => runner.skipToNext(user),
+  }, next != null ? `Skip to next event (${formatShiftTime(runner.state.startClock, next)})` : 'Skip to next event');
 }
 
 function callLights(runner, templatesById) {

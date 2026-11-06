@@ -6,7 +6,7 @@
 import './events/index.js';
 import { getEventType } from './registry.js';
 import * as clock from './clock.js';
-import { dueEvents } from './scheduler.js';
+import { dueEvents, groupMembers, nextAt } from './scheduler.js';
 import { append, SYSTEM } from './log.js';
 
 export const SESSION_VERSION = 1;
@@ -103,6 +103,11 @@ function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
 /** Advance to the current sim time: fire due events, activate timed orders. Returns { state, fired }. */
 export function tick(state, { now, refs, templatesById }) {
   if (state.clock.status !== 'running') return { state, fired: 0 };
+  return advance(state, { now, refs, templatesById });
+}
+
+/** Fire everything due at the clock's current sim minute (any clock status). Returns { state, fired }. */
+function advance(state, { now, refs, templatesById }) {
   const simMin = simMinOf(state, now);
   const due = dueEvents(refs, state.fired, simMin);
   if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length) return { state, fired: 0 };
@@ -116,11 +121,36 @@ export function tick(state, { now, refs, templatesById }) {
   return { state: draft, fired: due.length };
 }
 
-/** Instructor "Fire now": fires one event immediately (counts as its next occurrence). */
-export function fireNow(state, ref, { now, templatesById, user }) {
+/**
+ * Instructor "Fire now": fires the event and every event in its group immediately
+ * (each counts as its next occurrence, so the scheduled firing won't repeat it).
+ */
+export function fireNow(state, ref, { now, refs = [ref], templatesById, user }) {
   const draft = structuredClone(state);
-  fireInto(draft, ref, { simMin: simMinOf(state, now), now, templatesById, user, source: 'manual' });
+  const simMin = simMinOf(state, now);
+  const members = refs.includes(ref) ? groupMembers(refs, ref) : [ref];
+  for (const m of members) {
+    fireInto(draft, m, { simMin, now, templatesById, user, source: members.length > 1 ? `manual-group:${ref.event.group}` : 'manual' });
+  }
   return draft;
+}
+
+/** Sim minute of the next scheduled firing after now, or null if nothing is left. */
+export function nextEventMin(state, refs, now) {
+  const simMin = simMinOf(state, now);
+  const times = refs.map((r) => nextAt(r, state.fired)).filter((t) => t != null && t > simMin);
+  return times.length ? Math.min(...times) : null;
+}
+
+/** Instructor "Skip to next event": jump sim time to the next scheduled event and fire what's due. */
+export function skipToNext(state, { now, refs, templatesById, user }) {
+  if (state.clock.status !== 'running' && state.clock.status !== 'paused') return state;
+  const to = nextEventMin(state, refs, now);
+  if (to == null) return state;
+  const from = simMinOf(state, now);
+  const draft = { ...state, clock: clock.jumpTo(state.clock, to, now), log: [...state.log] };
+  append(draft, { simMin: to, wallTime: now, ...user, action: 'clock-skip', details: { fromMin: Math.round(from * 100) / 100, toMin: to } });
+  return advance(draft, { now, refs, templatesById }).state;
 }
 
 /** Student answers a call light; logs response time in sim minutes. */
@@ -140,7 +170,7 @@ export function answerCallLight(state, patientId, { now, user }) {
 const CLOCK_ACTIONS = { start: clock.start, pause: clock.pause, resume: clock.resume, end: clock.end };
 
 /** Clock control: 'start' | 'pause' | 'resume' | 'end' | 'speed'. Logged with the acting user. */
-export function controlClock(state, action, { now, user, speed }) {
+export function controlClock(state, action, { now, user, speed, reason }) {
   const before = state.clock;
   let after;
   if (action === 'speed') after = clock.setSpeed(before, speed, now);
@@ -148,6 +178,16 @@ export function controlClock(state, action, { now, user, speed }) {
   else throw new Error(`Unknown clock action: ${action}`);
   if (after === before) return state;
   const draft = { ...state, clock: after, log: [...state.log] };
-  append(draft, { simMin: clock.simMinutes(after, now), wallTime: now, ...user, action: `clock-${action}`, details: action === 'speed' ? { speed } : {} });
+  append(draft, { simMin: clock.simMinutes(after, now), wallTime: now, ...user, action: `clock-${action}`, details: { ...(action === 'speed' ? { speed } : {}), ...(reason ? { reason } : {}) } });
   return draft;
+}
+
+/**
+ * Pause-on-close (scenario setting `pauseOnClose`, default true). Pauses a running clock as of
+ * `atWall` — the moment the page closed, or the last heartbeat if it crashed/froze.
+ */
+export function pauseForClose(state, { atWall, now, pauseOnClose }) {
+  if (pauseOnClose === false || state.clock.status !== 'running') return state;
+  const at = Math.min(atWall ?? now, now);
+  return controlClock(state, 'pause', { now: at, user: SYSTEM, reason: 'page-closed' });
 }

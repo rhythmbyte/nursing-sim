@@ -183,6 +183,7 @@
         "id": { "type": "string", "pattern": "^e-" },
         "type": { "enum": ["new-orders", "call-light", "vitals-change", "findings-change", "staff-message", "lab-result", "code", "admission", "ems-arrival"] },
         "atMin": { "type": "integer", "minimum": 0 },
+        "group": { "type": "string", "minLength": 1 },
         "repeatEveryMin": { "type": "integer", "minimum": 1 },
         "repeatCount": { "type": "integer", "minimum": 1 },
         "review": { "$ref": "#/$defs/review" },
