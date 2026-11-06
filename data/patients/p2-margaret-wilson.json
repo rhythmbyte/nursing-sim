@@ -7,6 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 2",
   "demographics": { "name": "Margaret Wilson", "age": 74, "sex": "F", "room": "202" },
+  "case": { "title": "Post-op ortho 1", "sex": "either", "ageRange": [66, 80], "review": "proposed" },
   "tag": "yellow",
   "priorityLabel": "Moderate priority – pain and mobility management",
   "patientTags": {"license": ["lpn", "rn"], "unit": ["med-surg", "surgical", "rehab"], "topic": ["post-op", "pain", "falls"], "age": ["geriatric"]},
@@ -14,7 +15,7 @@
   "admittingDx": "Osteoarthritis, status post right total knee arthroplasty",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Sulfa medications", "reaction": "" }],
-  "hpi": "Margaret underwent a right total knee replacement yesterday morning due to severe osteoarthritis. Her postoperative course has been uncomplicated so far. She reports pain at the surgical site, especially with movement. She has been able to ambulate short distances with physical therapy and a walker. Her medical history includes hypertension, hypothyroidism, and osteoarthritis.",
+  "hpi": "{firstName} underwent a right total knee replacement yesterday morning due to severe osteoarthritis. {His/Her} postoperative course has been uncomplicated so far. {He/She} reports pain at the surgical site, especially with movement. {He/She} has been able to ambulate short distances with physical therapy and a walker. {His/Her} medical history includes hypertension, hypothyroidism, and osteoarthritis.",
   "pmh": ["Hypertension", "Hypothyroidism", "Osteoarthritis", "Obesity"],
   "homeMeds": [
     { "name": "Levothyroxine", "dose": "75 mcg", "freq": "daily" },
@@ -23,13 +24,15 @@
   ],
   "handoff": {
     "review": "proposed",
-    "situation": "74F, POD 1 right total knee arthroplasty.",
+    "situation": "{age}{sex}, POD 1 right total knee arthroplasty.",
     "background": "HTN, hypothyroidism, OA, obesity. Sulfa allergy. Full code.",
     "assessment": "Pain 6/10 with movement, 3/10 at rest. Dressing intact, minimal drainage. NV intact. Ambulating short distances with walker and PT.",
     "recommendation": "Pain control before PT. NV checks q4h. Enoxaparin due today. Fall precautions."
   },
   "vitals": {
     "review": "proposed",
+    "ranges": { "hr": [82, 92], "rr": [16, 20], "tempF": [98.8, 99.6], "sbp": [130, 142], "dbp": [74, 82] },
+    "rangesReview": "proposed",
     "baseline": { "rhythm": "sinus", "bp": "136/78", "hr": 88, "rr": 18, "tempF": 99.1, "spo2": 96, "o2": "RA", "pain": "6/10 with movement, 3/10 at rest" },
     "keyframes": [
       { "atMin": 120, "eventId": "e-p2-pain", "values": { "pain": "8/10" } }
@@ -50,20 +53,20 @@
       "No signs of acute respiratory distress"
     ],
     "changes": [
-      { "eventId": "e-p2-pain", "findings": ["Reports pain 8/10", "States she does not want to get out of bed because it hurts too much"] }
+      { "eventId": "e-p2-pain", "findings": ["Reports pain 8/10", "States {he/she} does not want to get out of bed because it hurts too much"] }
     ]
   },
-  "script": {"review": "proposed", "initialState": "baseline", "states": [{"id": "baseline", "label": "Post-op day 1", "review": "proposed"}], "reactions": [{"id": "r-p2-oxy-poss", "label": "Oxycodone given: drowsier (POSS 2) and pain eases", "review": "proposed", "when": {"kind": "med", "orderId": "o-p2-oxy"}, "then": [{"type": "assessment", "answers": {"poss": {"level": 2}, "pain-nrs": {"score": 4}}}], "repeat": true, "maxFires": 4}, {"id": "r-p2-poss-high", "label": "POSS 3 or more charted: CNA mentions she's hard to keep awake", "review": "proposed", "when": {"kind": "assessment", "toolId": "poss", "op": ">=", "value": 3}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "Margaret keeps nodding off in the middle of talking to me."}}}]}]},
+  "script": {"review": "proposed", "initialState": "baseline", "states": [{"id": "baseline", "label": "Post-op day 1", "review": "proposed"}], "reactions": [{"id": "r-p2-oxy-poss", "label": "Oxycodone given: drowsier (POSS 2) and pain eases", "review": "proposed", "when": {"kind": "med", "orderId": "o-p2-oxy"}, "then": [{"type": "assessment", "answers": {"poss": {"level": 2}, "pain-nrs": {"score": 4}}}], "repeat": true, "maxFires": 4}, {"id": "r-p2-poss-high", "label": "POSS 3 or more charted: CNA mentions {he/she}'s hard to keep awake", "review": "proposed", "when": {"kind": "assessment", "toolId": "poss", "op": ">=", "value": 3}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "{firstName} keeps nodding off in the middle of talking to me."}}}]}]},
   "assessments": { "review": "proposed", "baseline": {"poss": {"level": 1}, "pain-nrs": {"score": 3, "location": "Right knee", "quality": "Aching, 6/10 with movement"}, "braden": {"sensory": 4, "moisture": 3, "activity": 3, "mobility": 3, "nutrition": 3, "friction": 2}} },
   "labs": [
-    { "code": "wbc", "value": "11.8", "status": "resulted" },
+    { "code": "wbc", "value": "11.8", "range": [10.6, 12.6], "rangeReview": "proposed", "status": "resulted" },
     { "code": "hgb", "value": "10.8", "status": "resulted" },
     { "code": "hct", "value": "32", "status": "resulted" },
     { "code": "plt", "value": "220", "status": "resulted" },
     { "code": "na", "value": "138", "status": "resulted" },
     { "code": "k", "value": "4.0", "status": "resulted" },
     { "code": "cr", "value": "0.9", "status": "resulted" },
-    { "code": "glu", "value": "142", "status": "resulted" }
+    { "code": "glu", "value": "142", "range": [128, 156], "rangeReview": "proposed", "status": "resulted" }
   ],
   "orders": [
     { "id": "o-p2-vs", "text": "Vital signs every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 3, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
@@ -80,7 +83,7 @@
     { "id": "o-p2-notify", "text": "Notify provider for increased bleeding, changes in neurovascular status, uncontrolled pain, or signs of DVT", "type": "parameter", "tier": 1, "review": "proposed", "orderSet": "os-p2-postop", "activeFromMin": 0, "parameter": { "watch": "instructor", "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
   ],
   "events": [
-    { "id": "e-p2-pain", "group": "p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "Margaret is requesting pain medication. Reports pain 8/10 and says she doesn't want to get out of bed because it hurts too much." } },
+    { "id": "e-p2-pain", "group": "p2-pain", "type": "call-light", "atMin": 120, "payload": { "message": "{firstName} is requesting pain medication. Reports pain 8/10 and says {he/she} doesn't want to get out of bed because it hurts too much." } },
     { "id": "e-p2-pain-vitals", "group": "p2-pain", "type": "vitals-change", "atMin": 120, "payload": { "keyframe": "e-p2-pain" } },
     { "id": "e-p2-pain-findings", "group": "p2-pain", "type": "findings-change", "atMin": 120, "payload": { "change": "e-p2-pain" } },
     {"id": "e-p2-pain-assess", "group": "p2-pain", "review": "proposed", "type": "assessment-change", "atMin": 120, "payload": {"answers": {"pain-nrs": {"score": 8}}}}

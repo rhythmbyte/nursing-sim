@@ -7,6 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 4",
   "demographics": { "name": "Linda Garcia", "age": 63, "sex": "F", "room": "204" },
+  "case": { "title": "Sepsis 1", "sex": "either", "ageRange": [56, 70], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – possible clinical deterioration",
   "patientTags": {"license": ["rn"], "unit": ["med-surg"], "topic": ["respiratory", "sepsis"], "age": ["adult"]},
@@ -15,23 +16,25 @@
   "codeStatus": "Full code",
   "allergies": [],
   "allergyText": "No known drug allergies",
-  "hpi": "Linda was admitted yesterday evening with fever, productive cough, shortness of breath, and weakness. Chest X-ray demonstrated bilateral lower lobe infiltrates. She has a history of COPD and type 2 diabetes. She has been receiving IV antibiotics and supplemental oxygen. Overnight, nursing staff reported increasing fatigue and decreased oral intake.",
+  "hpi": "{firstName} was admitted yesterday evening with fever, productive cough, shortness of breath, and weakness. Chest X-ray demonstrated bilateral lower lobe infiltrates. {He/She} has a history of COPD and type 2 diabetes. {He/She} has been receiving IV antibiotics and supplemental oxygen. Overnight, nursing staff reported increasing fatigue and decreased oral intake.",
   "pmh": ["COPD", "Type 2 diabetes", "Hypertension", "Tobacco use history"],
   "homeMeds": [
     { "name": "Albuterol inhaler", "dose": "", "freq": "as needed" },
     { "name": "Tiotropium inhaler", "dose": "", "freq": "daily" },
     { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" },
-    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" }
+    { "name": "Lisinopril", "medClass": "ace-inhibitor", "dose": "10 mg", "freq": "daily" }
   ],
   "handoff": {
     "review": "proposed",
-    "situation": "63F admitted last evening with bilateral lower lobe CAP. On IV abx and 2 L NC.",
+    "situation": "{age}{sex} admitted last evening with bilateral lower lobe CAP. On IV abx and 2 L NC.",
     "background": "COPD, T2DM, HTN, former smoker. NKDA. Full code.",
-    "assessment": "Fatigued, febrile 101.3, HR 104, RR 24, BP 102/64, SpO2 91% on 2 L. Crackles bilateral bases. Decreased intake and urine output overnight. Lactate 2.8, WBC 17.8, Cr 1.4 (baseline 0.9).",
+    "assessment": "Fatigued, febrile {tempF}, HR {hr}, RR {rr}, BP {bp}, SpO2 {spo2}% on 2 L. Crackles bilateral bases. Decreased intake and urine output overnight. Lactate 2.8, WBC {lab.wbc}, Cr 1.4 (baseline 0.9).",
     "recommendation": "Watch closely for sepsis. Repeat lactate due. Strict I&O. COPD O2 target 88–92%."
   },
   "vitals": {
     "review": "proposed",
+    "ranges": { "hr": [100, 108], "rr": [22, 26], "spo2": [90, 92], "tempF": [100.8, 101.8], "sbp": [98, 106], "dbp": [60, 68] },
+    "rangesReview": "proposed",
     "baseline": { "rhythm": "sinus-tach", "bp": "102/64", "hr": 104, "rr": 24, "tempF": 101.3, "spo2": 91, "o2": "2 L NC", "pain": "2/10" },
     "keyframes": [
       { "atMin": 60, "eventId": "e-p4-worsens", "values": { "rhythm": "sinus-tach", "bp": "86/52", "hr": 122, "rr": 30, "tempF": 102.2, "spo2": 88, "o2": "2 L NC" } }
@@ -59,13 +62,13 @@
   "normalRangesReview": "proposed",
   "assessments": { "review": "proposed", "baseline": {"cam": {"acute": 0, "inattention": 0, "disorganized": 0, "loc": 0}, "pain-nrs": {"score": 2}} },
   "labs": [
-    { "code": "wbc", "value": "17.8", "status": "resulted" },
+    { "code": "wbc", "value": "17.8", "range": [16.0, 19.5], "rangeReview": "proposed", "status": "resulted" },
     { "code": "hgb", "value": "12.0", "status": "resulted" },
-    { "code": "na", "value": "133", "status": "resulted" },
+    { "code": "na", "value": "133", "range": [132, 135], "rangeReview": "proposed", "status": "resulted" },
     { "code": "k", "value": "4.6", "status": "resulted" },
-    { "code": "cr", "value": "1.4", "status": "resulted", "notes": "Baseline 0.9" },
-    { "code": "glu", "value": "214", "status": "resulted" },
-    { "code": "lactate", "value": "2.8", "unit": "mmol/L", "status": "resulted" },
+    { "code": "cr", "value": "1.4", "teachingPoint": true, "status": "resulted", "notes": "Baseline 0.9" },
+    { "code": "glu", "value": "214", "range": [190, 240], "rangeReview": "proposed", "status": "resulted" },
+    { "code": "lactate", "value": "2.8", "teachingPoint": true, "unit": "mmol/L", "status": "resulted" },
     { "code": "lactate", "label": "Repeat lactate", "forOrder": "o-p4-stat-lactate", "value": "4.1", "status": "pending", "resultDelayMin": 20, "review": "proposed", "notes": "Value drafted; case only says repeat in 2–4 hours." }
   ],
   "orders": [
@@ -90,25 +93,25 @@
     { "id": "e-p4-worsens", "group": "p4-worsens", "type": "vitals-change", "atMin": 60, "payload": { "keyframe": "e-p4-worsens" } },
     { "id": "e-p4-worsens-findings", "group": "p4-worsens", "type": "findings-change", "atMin": 60, "payload": { "change": "e-p4-worsens" } },
     {"id": "e-p4-worsens-assess", "group": "p4-worsens", "review": "proposed", "type": "assessment-change", "atMin": 60, "payload": {"answers": {"cam": {"acute": 1, "inattention": 1, "disorganized": 1}}}},
-    { "id": "e-p4-sepsis-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p4-sepsis", "message": "New orders from provider for Linda Garcia (sepsis bundle).", "note": "Instructor fires this once the student notifies the provider." } }
+    { "id": "e-p4-sepsis-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p4-sepsis", "message": "New orders from provider for {fullName} (sepsis bundle).", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "instructor", "notes": "Instructor decides whether the sepsis branch progresses." },
   "codeBranch": {
     "review": "proposed",
     "enabled": false,
-    "description": "Optional: turns Linda into the black (coding) patient if sepsis isn't escalated.",
+    "description": "Optional: turns {firstName} into the black (coding) patient if sepsis isn't escalated.",
     "trigger": { "ifNotCharted": ["notify-provider", "rapid-response"], "byMin": 90 },
-    "event": { "id": "e-p4-code", "type": "code", "payload": { "rhythm": "PEA", "message": "Linda Garcia is unresponsive. No pulse." } }
+    "event": { "id": "e-p4-code", "type": "code", "payload": { "rhythm": "PEA", "message": "{fullName} is unresponsive. No pulse." } }
   },
   "script": {
     "review": "proposed",
     "initialState": "baseline",
     "states": [
-      {"id": "baseline", "label": "Baseline: 2 L NC, SpO₂ about 91%", "review": "proposed"},
+      {"id": "baseline", "label": "Baseline: 2 L NC, SpO₂ about {spo2}%", "review": "proposed"},
       {"id": "desaturating", "label": "Desaturating (SpO₂ falling)", "vitals": {"values": {"spo2": 86, "rr": 30}, "overMin": 5}, "review": "proposed"},
-      {"id": "low-flow", "label": "Low-flow O₂: still below target (SpO₂ about 86%)", "vitals": {"values": {"spo2": 86, "rr": 28}, "overMin": 3}, "note": "Titrated, but not into her 88–92% COPD target: still hypoxemic.", "review": "proposed"},
+      {"id": "low-flow", "label": "Low-flow O₂: still below target (SpO₂ about 86%)", "vitals": {"values": {"spo2": 86, "rr": 28}, "overMin": 3}, "note": "Titrated, but not into {his/her} 88–92% COPD target: still hypoxemic.", "review": "proposed"},
       {"id": "in-target", "label": "In COPD target (SpO₂ 88–92%)", "vitals": {"values": {"spo2": 90, "rr": 26}, "overMin": 5}, "review": "proposed"},
-      {"id": "over-oxygenated", "label": "Over-oxygenated (above COPD target)", "vitals": {"values": {"spo2": 96, "rr": 24}, "overMin": 5}, "note": "Teaching point: SpO₂ 94–98% is above her 88–92% COPD target (risk of CO₂ retention).", "review": "proposed"},
+      {"id": "over-oxygenated", "label": "Over-oxygenated (above COPD target)", "vitals": {"values": {"spo2": 96, "rr": 24}, "overMin": 5}, "note": "Teaching point: SpO₂ 94–98% is above {his/her} 88–92% COPD target (risk of CO₂ retention).", "review": "proposed"},
       {"id": "hypoxic", "label": "Hypoxic (SpO₂ 82%, RR 32)", "vitals": {"values": {"spo2": 82, "rr": 32, "hr": 128}}, "findings": "state-p4-hypoxic", "assessments": {"cam": {"acute": 1, "inattention": 1, "disorganized": 1, "loc": 0}}, "review": "proposed"},
       {"id": "crashing", "label": "Crashing", "vitals": {"values": {"spo2": 76, "rr": 36, "hr": 138, "bp": "78/44"}, "overMin": 5}, "findings": "state-p4-crashing", "note": "Reached because no oxygen or escalation followed the hypoxia.", "review": "proposed"}
     ],
@@ -118,12 +121,12 @@
       {"id": "r-p4-o2-target", "short": "O₂ 5–9 L", "label": "O₂ 5–9 L: into COPD target", "review": "proposed", "when": {"kind": "intervention", "interventionId": "o2-apply", "where": {"lpm": {"min": 5, "max": 9}, "device": {"excludes": ["NRB", "non-rebreather"]}}}, "if": {"notInState": ["baseline", "in-target"]}, "then": [{"type": "state", "to": "in-target"}], "repeat": true, "maxFires": 5},
       {"id": "r-p4-o2-high", "short": "O₂ ≥10 L / NRB", "label": "O₂ ≥ 10 L or NRB: over-oxygenated", "review": "proposed", "when": {"kind": "intervention", "interventionId": "o2-apply", "where": [{"lpm": {"min": 10}}, {"device": {"matches": ["NRB", "non-rebreather"]}}]}, "if": {"notInState": ["baseline", "over-oxygenated"]}, "then": [{"type": "state", "to": "over-oxygenated"}], "repeat": true, "maxFires": 5},
       {"id": "r-p4-no-o2", "short": "no O₂ 5 min", "label": "No O₂ within 5 min: hypoxic", "review": "proposed", "when": {"kind": "elapsed", "since": "state", "state": "desaturating", "afterMin": 5, "without": [{"kind": "intervention", "interventionId": "o2-apply"}]}, "then": [{"type": "state", "to": "hypoxic"}]},
-      {"id": "r-p4-spo2-82", "label": "CNA reports the SpO₂ drop", "review": "proposed", "when": {"kind": "vitals", "field": "spo2", "op": "<=", "value": 82}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "Linda's sat just dropped to 82% and she looks really short of breath."}}}]},
+      {"id": "r-p4-spo2-82", "label": "CNA reports the SpO₂ drop", "review": "proposed", "when": {"kind": "vitals", "field": "spo2", "op": "<=", "value": 82}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "CNA", "message": "{firstName}'s sat just dropped to 82% and {he/she} looks really short of breath."}}}]},
       {"id": "r-p4-no-response", "short": "no response 10 min", "label": "No response within 10 more min: crashing", "review": "proposed", "when": {"kind": "elapsed", "since": "state", "state": "hypoxic", "afterMin": 10, "without": [{"kind": "intervention", "interventionId": "o2-apply"}, {"kind": "intervention", "interventionId": "rapid-response"}]}, "then": [{"type": "state", "to": "crashing"}]},
-      {"id": "r-p4-crash-light", "label": "Family hits the call light", "review": "proposed", "when": {"kind": "fired", "reactionId": "r-p4-no-response"}, "then": [{"type": "event", "event": {"type": "call-light", "payload": {"message": "Daughter at the bedside: \"Mom isn't making sense and she's turning blue!\""}}}]},
+      {"id": "r-p4-crash-light", "label": "Family hits the call light", "review": "proposed", "when": {"kind": "fired", "reactionId": "r-p4-no-response"}, "then": [{"type": "event", "event": {"type": "call-light", "payload": {"message": "Daughter at the bedside: \"{Dad/Mom} isn't making sense and {he/she}'s turning blue!\""}}}]},
       {"id": "r-p4-penalty-hypoxia", "label": "SpO₂ ≤ 82% for 5+ min: recovery reduced 20%", "review": "proposed", "when": {"kind": "duration", "field": "spo2", "op": "<=", "value": 82, "forMin": 5}, "then": [{"type": "penalty", "label": "Hypoxic 5+ min before O₂", "percent": 20, "vitals": ["spo2", "rr"], "wearOffMin": 30}]},
       {"id": "r-p4-penalty-severe", "label": "SpO₂ ≤ 78% for 3+ min: more penalty, SpO₂ capped at 92", "review": "proposed", "when": {"kind": "duration", "field": "spo2", "op": "<=", "value": 78, "forMin": 3}, "then": [{"type": "penalty", "label": "Severe hypoxia 3+ min", "percent": 20, "caps": {"spo2": 92}, "vitals": ["spo2", "rr", "hr"], "slowFactor": 1.5}]},
-      {"id": "r-p4-penalty-rrt", "label": "Penalty reaches 40%: charge nurse calls rapid response", "review": "proposed", "when": {"kind": "penalty", "atLeastPercent": 40}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "Charge nurse", "message": "Linda isn't bouncing back. I'm calling the rapid response team."}}}]}
+      {"id": "r-p4-penalty-rrt", "label": "Penalty reaches 40%: charge nurse calls rapid response", "review": "proposed", "when": {"kind": "penalty", "atLeastPercent": 40}, "then": [{"type": "event", "event": {"type": "staff-message", "payload": {"from": "Charge nurse", "message": "{firstName} isn't bouncing back. I'm calling the rapid response team."}}}]}
     ]
   },
   "debrief": {

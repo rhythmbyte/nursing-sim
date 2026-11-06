@@ -123,7 +123,7 @@
      "name": "rivaroxaban",
      "dose": "20 mg",
      "route": "PO",
-     "freq": "daily with the evening meal",
+     "freq": "daily",
      "frequencyMin": 1440
     }
    ]

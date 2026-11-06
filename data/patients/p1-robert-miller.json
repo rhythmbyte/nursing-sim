@@ -7,6 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 1",
   "demographics": { "name": "Robert Miller", "age": 68, "sex": "M", "room": "201" },
+  "case": { "title": "Cardiac 1", "sex": "either", "ageRange": [62, 74], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – immediate assessment",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "pain"], "age": ["geriatric"]},
@@ -14,23 +15,25 @@
   "admittingDx": "Chest pain, rule out acute coronary syndrome (ACS)",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Penicillin", "reaction": "Rash" }],
-  "hpi": "Robert presented to the emergency department at 0430 reporting intermittent chest pressure that began while doing yard work the previous evening. He describes the pain as pressure-like, located in the center of his chest, with radiation into his left arm. He reports associated nausea and shortness of breath. He has a history of hypertension, hyperlipidemia, and coronary artery disease. He had a cardiac stent placed five years ago. He reports that the pain initially improved with rest but returned this morning.",
+  "hpi": "{firstName} presented to the emergency department at 0430 reporting intermittent chest pressure that began while doing yard work the previous evening. {He/She} describes the pain as pressure-like, located in the center of {his/her} chest, with radiation into {his/her} left arm. {He/She} reports associated nausea and shortness of breath. {He/She} has a history of hypertension, hyperlipidemia, and coronary artery disease. {He/She} had a cardiac stent placed five years ago. {He/She} reports that the pain initially improved with rest but returned this morning.",
   "pmh": ["Coronary artery disease", "Hypertension", "Hyperlipidemia", "Type 2 diabetes"],
   "homeMeds": [
     { "name": "Aspirin", "dose": "81 mg", "freq": "daily" },
-    { "name": "Atorvastatin", "dose": "40 mg", "freq": "nightly" },
-    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" },
+    { "name": "Atorvastatin", "medClass": "statin", "dose": "40 mg", "freq": "nightly" },
+    { "name": "Lisinopril", "medClass": "ace-inhibitor", "dose": "10 mg", "freq": "daily" },
     { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" }
   ],
   "handoff": {
     "review": "proposed",
-    "situation": "68M admitted from ED at 0430 for chest pain, rule out ACS. On telemetry.",
+    "situation": "{age}{sex} admitted from ED at 0430 for chest pain, rule out ACS. On telemetry.",
     "background": "CAD with stent 5 years ago, HTN, HLD, T2DM. PCN allergy (rash). Full code.",
-    "assessment": "Intermittent substernal pressure 3/10, mild nausea. BP 148/88, HR 96, SpO2 94% RA. Initial hs-troponin 12, repeat pending.",
+    "assessment": "Intermittent substernal pressure 3/10, mild nausea. BP {bp}, HR {hr}, SpO2 {spo2}% RA. Initial hs-troponin 12, repeat pending.",
     "recommendation": "Watch for recurrent pain. Nitro SL PRN with BP check first. Follow up repeat troponin."
   },
   "vitals": {
     "review": "proposed",
+    "ranges": { "hr": [90, 100], "rr": [18, 22], "spo2": [93, 95], "sbp": [142, 154], "dbp": [84, 92] },
+    "rangesReview": "proposed",
     "baseline": { "rhythm": "sinus", "bp": "148/88", "hr": 96, "rr": 20, "tempF": 98.6, "spo2": 94, "o2": "RA", "pain": "3/10 intermittent chest pressure" },
     "keyframes": [
       { "atMin": 75, "eventId": "e-p1-pain-returns", "values": { "rhythm": "sinus-tach", "bp": "158/92", "hr": 108, "rr": 24, "spo2": 92, "o2": "RA", "pain": "7/10 radiating to L arm" } }
@@ -55,13 +58,13 @@
   },
   "assessments": { "review": "proposed", "baseline": {"pain-nrs": {"score": 3, "location": "Chest", "quality": "Intermittent pressure"}} },
   "labs": [
-    { "code": "wbc", "value": "8.2", "status": "resulted" },
+    { "code": "wbc", "value": "8.2", "range": [6.5, 9.5], "rangeReview": "proposed", "status": "resulted" },
     { "code": "hgb", "value": "14.1", "status": "resulted" },
     { "code": "k", "value": "4.2", "status": "resulted" },
-    { "code": "na", "value": "139", "status": "resulted" },
+    { "code": "na", "value": "139", "range": [136, 142], "rangeReview": "proposed", "status": "resulted" },
     { "code": "cr", "value": "1.0", "status": "resulted" },
     { "code": "glu", "value": "168", "status": "resulted" },
-    { "code": "trop-hs", "label": "Initial hs-troponin", "value": "12", "unit": "ng/L", "status": "resulted" },
+    { "code": "trop-hs", "label": "Initial hs-troponin", "value": "12", "teachingPoint": true, "unit": "ng/L", "status": "resulted" },
     { "code": "trop-hs", "label": "Repeat hs-troponin", "value": null, "status": "pending", "resultDelayMin": 45, "review": "proposed", "notes": "Case lists this as Pending with no value. Instructor to set the result (rising vs. flat changes the scenario)." }
   ],
   "labNote": "For this simulation, use a high-sensitivity troponin reference limit of 19 ng/L or less. Interpret serial values and changes according to the laboratory's actual assay.",
@@ -78,7 +81,7 @@
     { "id": "o-p1-iv", "text": "Maintain IV access", "type": "continuous", "tier": 2, "review": "proposed", "orderSet": "os-p1-admit", "activeFromMin": 0, "interventionIds": ["iv-check", "iv-start"], "delegable": true }
   ],
   "events": [
-    { "id": "e-p1-pain-returns", "group": "p1-pain-returns", "type": "call-light", "atMin": 75, "payload": { "message": "Robert is on his call light: his chest pain has returned, now 7/10." } },
+    { "id": "e-p1-pain-returns", "group": "p1-pain-returns", "type": "call-light", "atMin": 75, "payload": { "message": "{firstName} is on {his/her} call light: {his/her} chest pain has returned, now 7/10." } },
     { "id": "e-p1-pain-vitals", "group": "p1-pain-returns", "type": "vitals-change", "atMin": 75, "payload": { "keyframe": "e-p1-pain-returns" } },
     { "id": "e-p1-pain-findings", "group": "p1-pain-returns", "type": "findings-change", "atMin": 75, "payload": { "change": "e-p1-pain-returns" } },
     {"id": "e-p1-pain-assess", "group": "p1-pain-returns", "review": "proposed", "type": "assessment-change", "atMin": 75, "payload": {"answers": {"pain-nrs": {"score": 7, "location": "Chest, radiating to left arm", "quality": "Pressure"}}}}

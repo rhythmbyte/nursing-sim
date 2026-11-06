@@ -17,6 +17,18 @@
         "room": { "type": "string" }
       }
     },
+    "case": {
+      "type": "object",
+      "description": "Case template (engine/cases.js): the sim instantiates a concrete patient from a seed.",
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "sex": { "enum": ["M", "F", "either"] },
+        "ageRange": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+        "excludeDrugs": { "type": "array", "items": { "type": "string" } },
+        "locked": { "type": "array", "items": { "type": "object", "required": ["seed"], "properties": { "seed": { "type": "string", "minLength": 1 }, "label": { "type": "string" } } } },
+        "review": { "$ref": "#/$defs/review" }
+      }
+    },
     "tag": { "$ref": "#/$defs/tag" },
     "priorityLabel": { "type": "string" },
     "admittingDx": { "type": "string", "minLength": 1 },
@@ -37,7 +49,7 @@
       "items": {
         "type": "object",
         "required": ["name"],
-        "properties": { "name": { "type": "string" }, "dose": { "type": "string" }, "freq": { "type": "string" } }
+        "properties": { "name": { "type": "string" }, "dose": { "type": "string" }, "freq": { "type": "string" }, "medClass": { "type": "string" } }
       }
     },
     "handoff": {
@@ -56,15 +68,19 @@
       "properties": {
         "review": { "$ref": "#/$defs/review" },
         "baseline": { "$ref": "#/$defs/vitalValues" },
+        "ranges": { "type": "object", "properties": { "hr": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }, "rr": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }, "spo2": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }, "tempF": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }, "sbp": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }, "dbp": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 } } },
+        "rangesReview": { "$ref": "#/$defs/review" },
         "keyframes": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["values"],
+            "anyOf": [{ "required": ["values"] }, { "required": ["valuesRel"] }],
+            "anyOfMessage": "keyframe needs values or valuesRel",
             "properties": {
               "atMin": { "type": "integer", "minimum": 0 },
               "eventId": { "type": "string" },
-              "values": { "$ref": "#/$defs/vitalValues" }
+              "values": { "$ref": "#/$defs/vitalValues" },
+              "valuesRel": { "$ref": "#/$defs/vitalDeltas" }
             }
           }
         }
@@ -101,6 +117,9 @@
           "status": { "enum": ["resulted", "pending"] },
           "resultDelayMin": { "type": "integer", "minimum": 0 },
           "forOrder": { "type": "string", "pattern": "^o-" },
+          "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+          "rangeReview": { "$ref": "#/$defs/review" },
+          "teachingPoint": { "type": "boolean" },
           "review": { "$ref": "#/$defs/review" }
         }
       }
@@ -138,12 +157,13 @@
   "$defs": {
     "fieldTest": {"type": "object", "properties": {"min": {"type": "number"}, "max": {"type": "number"}, "equals": {"type": ["string", "number"]}, "matches": {"type": "array", "items": {"type": "string", "minLength": 1}}, "excludes": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
     "matcher": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["intervention", "order", "med"]}, "interventionId": {"type": "string"}, "orderId": {"type": "string"}, "med": {"type": "string"}, "result": {"enum": ["given", "held", "not-given"]}, "dose": {"$ref": "#/$defs/fieldTest"}, "where": {"type": ["object", "array"]}}},
-    "scriptState": {"type": "object", "required": ["id", "label"], "properties": {"id": {"type": "string", "pattern": "^[a-z0-9-]+$"}, "label": {"type": "string", "minLength": 1}, "vitals": {"type": "object", "properties": {"values": {"$ref": "#/$defs/vitalValues"}, "overMin": {"type": "number", "minimum": 0}, "overMinBy": {"type": "object"}}}, "rhythm": {"type": "string", "minLength": 1}, "findings": {"type": "string", "minLength": 1}, "note": {"type": "string"}, "assessments": {"type": "object"}, "review": {"$ref": "#/$defs/review"}}},
+    "scriptState": {"type": "object", "required": ["id", "label"], "properties": {"id": {"type": "string", "pattern": "^[a-z0-9-]+$"}, "label": {"type": "string", "minLength": 1}, "vitals": {"type": "object", "properties": {"values": {"$ref": "#/$defs/vitalValues"}, "valuesRel": { "$ref": "#/$defs/vitalDeltas" }, "overMin": {"type": "number", "minimum": 0}, "overMinBy": {"type": "object"}}}, "rhythm": {"type": "string", "minLength": 1}, "findings": {"type": "string", "minLength": 1}, "note": {"type": "string"}, "assessments": {"type": "object"}, "review": {"$ref": "#/$defs/review"}}},
     "trigger": {"type": "object", "required": ["kind"], "properties": {"kind": {"enum": ["intervention", "order", "med", "vitals", "duration", "elapsed", "fired", "penalty", "assessment"]}, "toolId": {"type": "string"}, "rise": {"type": "number"}, "interventionId": {"type": "string"}, "orderId": {"type": "string"}, "med": {"type": "string"}, "result": {"enum": ["given", "held", "not-given"]}, "dose": {"$ref": "#/$defs/fieldTest"}, "where": {"type": ["object", "array"]}, "field": {"enum": ["spo2", "hr", "rr", "sbp", "dbp", "tempF", "gcs", "glucose"]}, "op": {"enum": ["<=", "<", ">=", ">"]}, "value": {"type": "number"}, "since": {"enum": ["state", "event", "reaction", "start"]}, "state": {"type": "string"}, "eventId": {"type": "string"}, "reactionId": {"type": "string"}, "afterMin": {"type": "number", "minimum": 0}, "forMin": {"type": "number", "minimum": 0}, "atLeastPercent": {"type": "number", "minimum": 0, "maximum": 100}, "without": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}}},
-    "effect": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["state", "vitals", "findings", "event", "fire", "penalty", "assessment"]}, "answers": {"type": "object"}, "label": {"type": "string"}, "percent": {"type": "number", "minimum": 0, "maximum": 100}, "caps": {"type": "object"}, "vitals": {"type": "array", "items": {"enum": ["spo2", "hr", "rr", "sbp", "dbp", "tempF"]}}, "wearOffMin": {"type": "number", "minimum": 0}, "slowFactor": {"type": "number", "minimum": 1}, "to": {"type": "string"}, "values": {"$ref": "#/$defs/vitalValues"}, "overMin": {"type": "number", "minimum": 0}, "change": {"type": "string"}, "eventId": {"type": "string"}, "event": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["new-orders", "call-light", "staff-message", "lab-result", "code", "admission"]}, "payload": {"type": "object"}}}}},
+    "effect": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["state", "vitals", "findings", "event", "fire", "penalty", "assessment"]}, "answers": {"type": "object"}, "label": {"type": "string"}, "percent": {"type": "number", "minimum": 0, "maximum": 100}, "caps": {"type": "object"}, "vitals": {"type": "array", "items": {"enum": ["spo2", "hr", "rr", "sbp", "dbp", "tempF"]}}, "wearOffMin": {"type": "number", "minimum": 0}, "slowFactor": {"type": "number", "minimum": 1}, "to": {"type": "string"}, "values": {"$ref": "#/$defs/vitalValues"}, "valuesRel": { "$ref": "#/$defs/vitalDeltas" }, "overMin": {"type": "number", "minimum": 0}, "change": {"type": "string"}, "eventId": {"type": "string"}, "event": {"type": "object", "required": ["type"], "properties": {"type": {"enum": ["new-orders", "call-light", "staff-message", "lab-result", "code", "admission"]}, "payload": {"type": "object"}}}}},
     "reaction": {"type": "object", "required": ["id", "when", "then"], "properties": {"id": {"type": "string", "pattern": "^r-"}, "label": {"type": "string"}, "short": {"type": "string", "maxLength": 28}, "review": {"$ref": "#/$defs/review"}, "when": {"$ref": "#/$defs/trigger"}, "if": {"type": "object", "properties": {"inState": {"type": "array", "items": {"type": "string"}}, "notInState": {"type": "array", "items": {"type": "string"}}, "vitals": {"type": "object"}, "done": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}, "notDone": {"type": "array", "items": {"$ref": "#/$defs/matcher"}}, "betweenMin": {"type": "array", "items": {"type": "number"}}}}, "then": {"type": "array", "items": {"$ref": "#/$defs/effect"}}, "repeat": {"type": "boolean"}, "maxFires": {"type": "integer", "minimum": 1}}},
     "review": { "enum": ["approved", "proposed", "partial"] },
     "tag": { "enum": ["red", "yellow", "green", "black"] },
+    "vitalDeltas": { "type": "object", "description": "Change from this patient's baseline, e.g. { \"sbp\": -30, \"hr\": 20 }", "properties": { "hr": { "type": "number" }, "rr": { "type": "number" }, "spo2": { "type": "number" }, "tempF": { "type": "number" }, "sbp": { "type": "number" }, "dbp": { "type": "number" } } },
     "vitalValues": {
       "type": "object",
       "properties": {
@@ -174,6 +194,7 @@
         "activeOnEvent": { "type": "string" },
         "interventionIds": { "type": "array", "items": { "type": "string" } },
         "frequencyMin": { "type": "integer", "minimum": 1 },
+        "medClass": { "type": "string" },
         "prn": {
           "type": "object",
           "properties": {

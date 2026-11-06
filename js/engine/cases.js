@@ -5,8 +5,9 @@
 //   vitals.ranges: { hr: [lo, hi], sbp, dbp, rr, spo2, tempF }      labs[i].range: [lo, hi] (unless teachingPoint)
 //   valuesRel on keyframes / state vitals / vitals effects: relative to the instantiated baseline ({ sbp: -30 })
 //   homeMeds[i].medClass / orders[i].medClass: 'beta-blocker' → one drug per class per patient (med-classes.json)
-//   Text placeholders anywhere: {firstName} {lastName} {fullName} {age} {sex} {he/she} {He/She} {his/her} {His/Her}
-//   {him/her} {Mr/Ms} {med.<class>} {med.<class>.Name|dose|route|freq}
+//   Text placeholders anywhere: {firstName} {lastName} {fullName} {age} {sex} {room}, any {male/female} word pair
+//   ({he/she} {His/Her} {Mr/Ms} {wife/husband}…), this patient's baseline {bp} {hr} {rr} {spo2} {tempF}, first lab value
+//   {lab.<code>}, and the class drug {med.<class>} {med.<class>.Name|dose|route|freq}
 // Instance meta on the result: t.instance = { caseId, caseTitle, seed, meds: { class: drugName } } (instructor-only).
 
 import { allergyMatch } from './rules/allergy-conflict.js';
@@ -20,22 +21,30 @@ export function seededRandom(seed) {
 }
 const pick = (rng, list) => list[Math.floor(rng() * list.length)];
 const between = (rng, [lo, hi], dec = 0) => { const p = 10 ** dec; return Math.round((lo + rng() * (hi - lo)) * p) / p; };
+const norm = (s) => String(s || '').trim().toLowerCase();
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 const parseBp = (bp) => { const m = /^(\d+)\/(\d+)/.exec(String(bp ?? '')); return m ? [Number(m[1]), Number(m[2])] : null; };
 
 /** Fill placeholders in one string. Unknown placeholders are left as they are. */
 export function fillText(s, ctx) {
-  return s.replace(/\{([A-Za-z]+(?:\/[A-Za-z]+)?|med\.[a-z0-9-]+(?:\.[A-Za-z]+)?)\}/g, (all, key) => {
+  return s.replace(/\{([A-Za-z][A-Za-z0-9]*(?:\/[A-Za-z]+)?|(?:med|lab)\.[a-z0-9-]+(?:\.[A-Za-z]+)?)\}/g, (all, key) => {
     if (key.startsWith('med.')) {
       const [, cls, part = 'name'] = key.split('.');
       const d = ctx.meds[cls];
       if (!d) return all;
       return part === 'Name' ? cap(d.name) : d[part] ?? all;
     }
+    if (key.startsWith('lab.')) return ctx.labs?.[key.slice(4)] ?? all;
     const m = ctx.sex === 'M';
-    const v = { firstName: ctx.first, lastName: ctx.last, fullName: `${ctx.first} ${ctx.last}`, age: String(ctx.age), sex: ctx.sex,
-      'he/she': m ? 'he' : 'she', 'He/She': m ? 'He' : 'She', 'his/her': m ? 'his' : 'her', 'His/Her': m ? 'His' : 'Her', 'him/her': m ? 'him' : 'her', 'Mr/Ms': m ? 'Mr.' : 'Ms.' }[key];
-    return v ?? all;
+    if (key.includes('/')) { // any {male/female} word pair: {he/she}, {his/her}, {Mr/Ms}, {wife/husband}, {Dad/Mom}…
+      if (key === 'Mr/Ms') return m ? 'Mr.' : 'Ms.';
+      const [a, b] = key.split('/');
+      return m ? a : b;
+    }
+    const vit = ctx.vitals || {};
+    const v = { firstName: ctx.first, lastName: ctx.last, fullName: `${ctx.first} ${ctx.last}`, age: String(ctx.age), sex: ctx.sex, room: ctx.room,
+      bp: vit.bp, hr: vit.hr, rr: vit.rr, spo2: vit.spo2, tempF: vit.tempF }[key];
+    return v == null ? all : String(v);
   });
 }
 function fillAll(o, ctx) {
@@ -99,7 +108,6 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
     const ok = allowedDrugs(template, cls, catalogs);
     if (ok.length) meds[cls] = nominal ? ok[0] : pick(rng, ok);
   }
-  const ctx = { first, last, sex, age, meds };
   // Baseline ranges and labs (teaching-point values stay as written).
   const base = t.vitals.baseline;
   if (!nominal) {
@@ -108,18 +116,25 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
     if (r.sbp || r.dbp) { const bp = parseBp(base.bp) || [120, 80]; base.bp = `${r.sbp ? between(rng, r.sbp) : bp[0]}/${r.dbp ? between(rng, r.dbp) : bp[1]}`; }
     for (const l of t.labs) if (l.range && !l.teachingPoint && l.value != null) l.value = String(between(rng, l.range, l.decimals ?? (String(l.value).includes('.') ? String(l.value).split('.')[1].length : 0)));
   }
+  const labs = {};
+  for (const l of t.labs) if (l.value != null && !(l.code in labs)) labs[l.code] = l.value;
+  const ctx = { first, last, sex, age, meds, room: t.demographics.room, vitals: base, labs };
   // Relative scripted changes → absolute against this patient's baseline.
   for (const k of t.vitals.keyframes || []) resolveRel(k, base);
   for (const s of t.script?.states || []) if (s.vitals) resolveRel(s.vitals, base);
   for (const r of t.script?.reactions || []) for (const e of r.then) if (e.type === 'vitals') resolveRel(e, base);
   for (const e of t.events) if (e.payload) resolveRel(e.payload, base);
   // Home meds and orders from a class.
-  for (const m of t.homeMeds || []) if (m.medClass && meds[m.medClass]) Object.assign(m, { name: cap(meds[m.medClass].name), dose: meds[m.medClass].dose, freq: meds[m.medClass].freq });
+  // (The same drug as the file keeps the file's dose and frequency; another drug from the class uses the catalog's.)
+  for (const m of t.homeMeds || []) {
+    const d = m.medClass && meds[m.medClass];
+    if (d && norm(m.name) !== norm(d.name)) Object.assign(m, { name: cap(d.name), dose: d.dose, freq: d.freq });
+  }
   for (const o of t.orders) {
     const d = o.medClass && meds[o.medClass];
     if (!d) continue;
     o.med = `${cap(d.name)} ${d.dose} ${d.route}`;
-    if (o.type === 'scheduled' && d.frequencyMin) o.frequencyMin = d.frequencyMin;
+    if (o.frequencyMin && d.frequencyMin) o.frequencyMin = d.frequencyMin; // only orders that repeat on an interval
   }
   const out = fillAll(t, ctx);
   out.demographics = { ...out.demographics, name: `${first} ${last}`, age, sex };

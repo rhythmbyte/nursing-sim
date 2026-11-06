@@ -6,6 +6,7 @@
   ],
   "source": "Drafted to fill Patient 6 slot of The Busy Med-Surg Shift",
   "demographics": { "name": "James Carter", "age": 76, "sex": "M", "room": "206" },
+  "case": { "title": "Heart failure 1", "sex": "either", "ageRange": [68, 84], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – unexpected admission",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "heart-failure", "admission"], "age": ["geriatric"]},
@@ -14,22 +15,24 @@
   "codeStatus": "Full code",
   "allergies": [],
   "allergyText": "No known drug allergies",
-  "hpi": "James presented to the emergency department with 4 days of worsening shortness of breath, now short of breath at rest and unable to lie flat. He reports a 4 kg weight gain over the past week and increasing leg swelling. He admits to running out of his furosemide 5 days ago and eating at restaurants over the holiday weekend. He received one dose of furosemide 40 mg IV in the ED with modest urine output and is being admitted to the medical-surgical unit.",
+  "hpi": "{firstName} presented to the emergency department with 4 days of worsening shortness of breath, now short of breath at rest and unable to lie flat. {He/She} reports a 4 kg weight gain over the past week and increasing leg swelling. {He/She} admits to running out of {his/her} furosemide 5 days ago and eating at restaurants over the holiday weekend. {He/She} received one dose of furosemide 40 mg IV in the ED with modest urine output and is being admitted to the medical-surgical unit.",
   "pmh": ["Heart failure with reduced ejection fraction (EF 30%)", "Hypertension", "Type 2 diabetes", "Chronic kidney disease stage 3a"],
   "homeMeds": [
     { "name": "Furosemide", "dose": "40 mg", "freq": "daily (ran out 5 days ago)" },
     { "name": "Metoprolol succinate", "dose": "50 mg", "freq": "daily" },
-    { "name": "Lisinopril", "dose": "10 mg", "freq": "daily" },
+    { "name": "Lisinopril", "medClass": "ace-inhibitor", "dose": "10 mg", "freq": "daily" },
     { "name": "Metformin", "dose": "500 mg", "freq": "twice daily" }
   ],
   "handoff": {
-    "situation": "76M coming up from ED with CHF exacerbation. Received furosemide 40 mg IV in the ED.",
+    "situation": "{age}{sex} coming up from ED with CHF exacerbation. Received furosemide 40 mg IV in the ED.",
     "background": "HFrEF EF 30%, HTN, T2DM, CKD 3a. Ran out of furosemide 5 days ago, high-sodium diet over the weekend. NKDA. Full code.",
-    "assessment": "Dyspneic at rest, can't lie flat. Crackles to mid lung fields, 3+ pitting edema, JVD. SpO2 89% RA, on 4 L NC now 93%. BP 162/94, HR 112.",
+    "assessment": "Dyspneic at rest, can't lie flat. Crackles to mid lung fields, 3+ pitting edema, JVD. SpO2 89% RA, on 4 L NC now 93%. BP {bp}, HR {hr}.",
     "recommendation": "Needs reassessment on arrival, admission orders to follow. Watch respiratory status closely."
   },
   "vitals": {
     "review": "proposed",
+    "ranges": { "hr": [106, 116], "rr": [26, 30], "sbp": [156, 168], "dbp": [90, 98] },
+    "rangesReview": "proposed",
     "baseline": { "rhythm": "sinus-tach", "bp": "162/94", "hr": 112, "rr": 28, "tempF": 98.2, "spo2": 93, "o2": "4 L NC", "pain": "0/10" },
     "keyframes": [
       { "atMin": 0, "relativeTo": "admission", "values": { "spo2": 93, "o2": "4 L NC" } },
@@ -76,8 +79,8 @@
     { "id": "o-p6-notify", "text": "Notify provider for SpO2 < 90% on oxygen, increasing work of breathing, SBP < 90, K < 3.5, or urine output < 30 mL/hr", "type": "parameter", "tier": 1, "orderSet": "os-p6-admit", "activeOnEvent": "e-p6-admit-orders", "parameter": { "watch": "labs.k", "op": "<", "value": 3.5, "requires": "notify-provider", "withinMin": 15 }, "interventionIds": ["notify-provider"], "delegable": false }
   ],
   "events": [
-    { "id": "e-p6-admission", "type": "admission", "atMin": 150, "payload": { "message": "ED is sending up an admission to room 206: 76M, CHF exacerbation.", "assignTo": "charge-or-scenario" } },
-    { "id": "e-p6-admit-orders", "type": "new-orders", "atMin": 155, "payload": { "orderSet": "os-p6-admit", "message": "Admission orders for James Carter." } }
+    { "id": "e-p6-admission", "type": "admission", "atMin": 150, "payload": { "message": "ED is sending up an admission to room {room}: {age}{sex}, CHF exacerbation.", "assignTo": "charge-or-scenario" } },
+    { "id": "e-p6-admit-orders", "type": "new-orders", "atMin": 155, "payload": { "orderSet": "os-p6-admit", "message": "Admission orders for {fullName}." } }
   ],
   "outcome": { "mode": "survive", "notes": "" },
   "codeBranch": null,

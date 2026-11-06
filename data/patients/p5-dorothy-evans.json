@@ -8,6 +8,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 5 (partial)",
   "demographics": { "name": "Dorothy Evans", "age": 82, "sex": "F", "room": "205" },
+  "case": { "title": "Neuro 1", "sex": "either", "ageRange": [76, 90], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – immediate post-fall assessment",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "neuro"], "topic": ["neuro", "falls"], "age": ["geriatric"]},
@@ -15,22 +16,24 @@
   "admittingDx": "Mechanical fall with head injury evaluation",
   "codeStatus": "Full code",
   "allergies": [{ "agent": "Codeine", "reaction": "Nausea" }],
-  "hpi": "Dorothy was admitted yesterday after falling at home while walking to the bathroom. She reports hitting the back of her head but denies losing consciousness. She has a history of atrial fibrillation and hypertension. She takes apixaban for stroke prevention. CT of the head on admission showed no acute intracranial hemorrhage. She has been admitted for observation and fall-risk assessment.",
+  "hpi": "{firstName} was admitted yesterday after falling at home while walking to the bathroom. {He/She} reports hitting the back of {his/her} head but denies losing consciousness. {He/She} has a history of atrial fibrillation and hypertension. {He/She} takes {med.doac} for stroke prevention. CT of the head on admission showed no acute intracranial hemorrhage. {He/She} has been admitted for observation and fall-risk assessment.",
   "pmh": ["Atrial fibrillation", "Hypertension", "Osteoporosis", "Mild cognitive impairment"],
   "homeMeds": [
-    { "name": "Apixaban", "dose": "5 mg", "freq": "twice daily" },
-    { "name": "Metoprolol", "dose": "25 mg", "freq": "twice daily" },
+    { "name": "Apixaban", "medClass": "doac", "dose": "5 mg", "freq": "twice daily" },
+    { "name": "Metoprolol", "medClass": "beta-blocker", "dose": "25 mg", "freq": "twice daily" },
     { "name": "Calcium with vitamin D", "dose": "", "freq": "" }
   ],
   "handoff": {
     "review": "proposed",
-    "situation": "82F admitted yesterday after mechanical fall, struck occiput, no LOC. Observation and fall-risk eval.",
-    "background": "AFib on apixaban, HTN, osteoporosis, mild cognitive impairment. Codeine allergy (nausea). Full code. Admission head CT negative.",
-    "assessment": "Baseline mild forgetfulness, oriented x3. Mild occipital headache. BP 142/80, HR 88 irregular, SpO2 96% RA.",
-    "recommendation": "Neuro checks q2h — she's anticoagulated, so watch closely for any change. High fall risk, bed alarm on."
+    "situation": "{age}{sex} admitted yesterday after mechanical fall, struck occiput, no LOC. Observation and fall-risk eval.",
+    "background": "AFib on {med.doac}, HTN, osteoporosis, mild cognitive impairment. Codeine allergy (nausea). Full code. Admission head CT negative.",
+    "assessment": "Baseline mild forgetfulness, oriented x3. Mild occipital headache. BP {bp}, HR {hr} irregular, SpO2 {spo2}% RA.",
+    "recommendation": "Neuro checks q2h — {he/she}'s anticoagulated, so watch closely for any change. High fall risk, bed alarm on."
   },
   "vitals": {
     "review": "proposed",
+    "ranges": { "hr": [80, 94], "spo2": [95, 97], "sbp": [136, 148], "dbp": [76, 84] },
+    "rangesReview": "proposed",
     "baseline": { "rhythm": "afib", "bp": "142/80", "hr": 88, "hrNote": "irregular", "rr": 16, "tempF": 98.3, "spo2": 96, "o2": "RA", "pain": "2/10 occipital headache", "painReview": "proposed" },
     "keyframes": [
       { "atMin": 105, "eventId": "e-p5-confused", "review": "proposed", "values": { "rhythm": "afib", "bp": "172/94", "hr": 64, "hrNote": "irregular", "rr": 16, "spo2": 95, "o2": "RA", "pain": "6/10 headache, worsening", "gcs": 14 } }
@@ -61,35 +64,35 @@
   },
   "assessments": { "review": "proposed", "baseline": {"gcs": {"eye": 4, "verbal": 5, "motor": 6}, "nihss": {"1a": 0, "1b": 0, "1c": 0, "2": 0, "3": 0, "4": 0, "5a": 0, "5b": 0, "6a": 0, "6b": 0, "7": 0, "8": 0, "9": 0, "10": 0, "11": 0}, "pupils": {"left-size": 3, "left-react": 0, "right-size": 3, "right-react": 0}, "morse": {"history": 25, "secondary": 15, "aid": 15, "iv": 20, "gait": 10, "mental": 15}, "cam": {"acute": 0, "inattention": 0, "disorganized": 0, "loc": 0}} },
   "labs": [
-    { "code": "wbc", "value": "7.4", "status": "resulted", "review": "proposed" },
+    { "code": "wbc", "value": "7.4", "range": [6.2, 8.6], "rangeReview": "proposed", "status": "resulted", "review": "proposed" },
     { "code": "hgb", "value": "12.6", "status": "resulted", "review": "proposed" },
-    { "code": "plt", "value": "210", "status": "resulted", "review": "proposed" },
+    { "code": "plt", "value": "210", "teachingPoint": true, "status": "resulted", "review": "proposed" },
     { "code": "na", "value": "138", "status": "resulted", "review": "proposed" },
     { "code": "k", "value": "4.3", "status": "resulted", "review": "proposed" },
     { "code": "cr", "value": "1.1", "status": "resulted", "review": "proposed" },
-    { "code": "glu", "value": "112", "status": "resulted", "review": "proposed" },
-    { "code": "pt-inr", "value": "INR 1.3", "status": "resulted", "review": "proposed", "notes": "Apixaban doesn't reliably raise INR; included for realism." }
+    { "code": "glu", "value": "112", "range": [100, 124], "rangeReview": "proposed", "status": "resulted", "review": "proposed" },
+    { "code": "pt-inr", "value": "INR 1.3", "teachingPoint": true, "status": "resulted", "review": "proposed", "notes": "{med.doac.Name} doesn't reliably raise INR; included for realism." }
   ],
   "orders": [
     { "id": "o-p5-vs", "review": "proposed", "text": "Vital signs every 4 hours", "type": "scheduled", "frequencyMin": 240, "tier": 3, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["vs-full"], "delegable": true },
     { "id": "o-p5-neuro", "assessment": {"tools": ["gcs", "nihss", "pupils"], "everyMin": 120}, "review": "proposed", "text": "Neuro checks every 2 hours", "type": "scheduled", "frequencyMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["assess-neuro"], "delegable": false },
     { "id": "o-p5-falls", "assessment": {"tools": ["morse"], "once": true}, "review": "proposed", "text": "Fall precautions with bed alarm", "type": "continuous", "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["fall-precautions"], "delegable": true },
-    { "id": "o-p5-apixaban", "review": "proposed", "text": "Apixaban 5 mg PO twice daily (due 0900)", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Apixaban 5 mg PO", "delegable": true, "teachingNote": "Giving this after the neuro change should flag in debrief — it should be held and the provider notified." },
-    { "id": "o-p5-metoprolol", "review": "proposed", "text": "Metoprolol 25 mg PO twice daily; hold for HR < 55 or SBP < 100", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Metoprolol 25 mg PO", "delegable": true },
+    { "id": "o-p5-apixaban", "medClass": "doac", "review": "proposed", "text": "{med.doac.Name} {med.doac.dose} PO {med.doac.freq} (due 0900)", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Apixaban 5 mg PO", "delegable": true, "teachingNote": "Giving this after the neuro change should flag in debrief — it should be held and the provider notified." },
+    { "id": "o-p5-metoprolol", "medClass": "beta-blocker", "review": "proposed", "text": "{med.beta-blocker.Name} {med.beta-blocker.dose} PO {med.beta-blocker.freq}; hold for HR < 55 or SBP < 100", "type": "scheduled", "dueAtMin": 120, "tier": 2, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": ["med-give", "med-hold"], "med": "Metoprolol 25 mg PO", "delegable": true },
     { "id": "o-p5-ptot", "review": "proposed", "text": "PT/OT evaluation for fall risk", "type": "once", "tier": 3, "orderSet": "os-p5-admit", "activeFromMin": 0, "interventionIds": [], "delegable": true },
     { "id": "o-p5-notify", "review": "proposed", "text": "Notify provider immediately for any change in neurological status, worsening headache, or vomiting", "type": "parameter", "tier": 1, "orderSet": "os-p5-admit", "activeFromMin": 0, "parameter": { "watchEvent": "e-p5-confused", "requires": "notify-provider", "withinMin": 5 }, "interventionIds": ["notify-provider"], "delegable": false },
 
     { "id": "o-p5-ct", "review": "proposed", "text": "STAT non-contrast CT head", "type": "once", "tier": 1, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["imaging-request"], "delegable": false },
-    { "id": "o-p5-hold-apix", "review": "proposed", "text": "Hold apixaban", "type": "once", "tier": 1, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["med-hold"], "delegable": false },
+    { "id": "o-p5-hold-apix", "review": "proposed", "text": "Hold {med.doac}", "type": "once", "tier": 1, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["med-hold"], "delegable": false },
     { "id": "o-p5-npo", "review": "proposed", "text": "NPO", "type": "continuous", "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": [], "delegable": true },
     { "id": "o-p5-neuro-q1", "assessment": {"tools": ["gcs", "nihss", "pupils"], "everyMin": 60}, "review": "proposed", "text": "Neuro checks every 1 hour", "type": "scheduled", "frequencyMin": 60, "tier": 2, "orderSet": "os-p5-neuro", "activeOnEvent": "e-p5-neuro-orders", "interventionIds": ["assess-neuro"], "delegable": false }
   ],
   "events": [
-    { "id": "e-p5-confused", "group": "p5-confused", "review": "proposed", "type": "staff-message", "atMin": 105, "payload": { "from": "CNA", "message": "Dorothy is more confused than earlier. She keeps trying to climb out of bed, says her head hurts worse, and she just threw up." } },
+    { "id": "e-p5-confused", "group": "p5-confused", "review": "proposed", "type": "staff-message", "atMin": 105, "payload": { "from": "CNA", "message": "{firstName} is more confused than earlier. {He/She} keeps trying to climb out of bed, says {his/her} head hurts worse, and {he/she} just threw up." } },
     { "id": "e-p5-confused-vitals", "group": "p5-confused", "review": "proposed", "type": "vitals-change", "atMin": 105, "payload": { "keyframe": "e-p5-confused" } },
     { "id": "e-p5-confused-findings", "group": "p5-confused", "review": "proposed", "type": "findings-change", "atMin": 105, "payload": { "change": "e-p5-confused" } },
     {"id": "e-p5-confused-assess", "group": "p5-confused", "review": "proposed", "type": "assessment-change", "atMin": 105, "payload": {"answers": {"gcs": {"verbal": 4}, "nihss": {"1b": 1, "4": 1, "5a": 1, "6a": 1}, "pupils": {"right-size": 4, "right-react": 1}, "cam": {"acute": 1, "inattention": 1, "disorganized": 1}}}},
-    { "id": "e-p5-neuro-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p5-neuro", "message": "New orders from provider for Dorothy Evans.", "note": "Instructor fires this once the student notifies the provider." } }
+    { "id": "e-p5-neuro-orders", "review": "proposed", "type": "new-orders", "trigger": "manual", "payload": { "orderSet": "os-p5-neuro", "message": "New orders from provider for {fullName}.", "note": "Instructor fires this once the student notifies the provider." } }
   ],
   "outcome": { "mode": "survive", "notes": "" },
   "codeBranch": null,
@@ -99,9 +102,9 @@
       "An anticoagulated older adult with a head injury can develop a delayed intracranial bleed even after a negative admission CT.",
       "New confusion, worsening headache, vomiting, and an unequal pupil are a neurological change requiring immediate RN assessment — not something to delegate.",
       "Notify the provider immediately and anticipate a STAT CT.",
-      "Hold the scheduled apixaban and clarify with the provider rather than giving it on schedule.",
+      "Hold the scheduled {med.doac} and clarify with the provider rather than giving it on schedule.",
       "Keep the patient safe: fall precautions, bed low, stay with or arrange observation for a patient trying to get out of bed.",
-      "Compare to baseline — her mild cognitive impairment does not explain an acute change."
+      "Compare to baseline — {his/her} mild cognitive impairment does not explain an acute change."
     ],
     "instructorNotes": []
   }
