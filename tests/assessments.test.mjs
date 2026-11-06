@@ -79,3 +79,59 @@ test('charting a tool: score, band, expected snapshot, order progress; delegatio
   const off = live();
   assert.throws(() => chart.chartAssessment(off.s, DE, { toolId: 'braden', answers: {} }, off.ctx(5)), /not available in this sim/);
 });
+
+test('required reassessments: neuro checks q2h are timed; tools the sim does not offer are not', async () => {
+  const { timelinessItems } = await import('../js/engine/timeliness.js');
+  const ctxAt = (simMin) => ({ templatesById, catalogs, simMin });
+  const L = live();
+  let s = L.tick(L.s, 50);
+  s = chart.chartAssessment(s, DE, { toolId: 'gcs', answers: { eye: 4, verbal: 5, motor: 6 } }, L.ctx(55));
+  const items = (st, m) => timelinessItems(st, ctxAt(m)).filter((i) => i.kind === 'assessment' && i.patientId === DE);
+  const first = items(s, 70);
+  assert.deepEqual(first.map((i) => [i.startAt, i.tag]), [[60, 'on-time']], 'first due 60 min into the shift; the 07:55 GCS counts (within 30 min early)');
+  assert.match(first[0].label, /^Glasgow Coma Scale \/ NIH Stroke Scale \/ Pupils \(Neuro checks every 2 hours\)/);
+  assert.deepEqual(items(s, 250).map((i) => [i.startAt, i.tag]), [[60, 'on-time'], [180, 'open-very-late']]);
+  assert.ok(!items(s, 240).some((i) => i.tools.includes('morse')), 'Morse is not public: not offered, not timed');
+  const all = live({ assessmentTools: 'all' });
+  assert.ok(timelinessItems(all.tick(all.s, 70), ctxAt(70)).some((i) => i.kind === 'assessment' && i.patientId === DE && i.tools.includes('morse')));
+});
+
+test('scenario changes and reactions change what assessments find; scores trigger reactions', () => {
+  const L = live({ assessmentTools: 'all' });
+  let s = L.tick(L.s, 106); // Dorothy's neuro decline at 105
+  assert.equal(expectedResult(s, DE, 'gcs', catalogs).score, 14);
+  assert.equal(expectedResult(s, DE, 'nihss', catalogs).score, 4);
+  assert.equal(expectedResult(s, DE, 'cam', catalogs).band.label, 'CAM positive: delirium likely');
+  const MW = 'p2-margaret-wilson';
+  s = chart.medAction(s, MW, { orderId: 'o-p2-oxy', result: 'given' }, L.ctx(107));
+  s = L.tick(s, 108);
+  assert.equal(s.patients[MW].assessmentsExpected.poss.level, 2, 'oxycodone → POSS 2');
+  s = chart.chartAssessment(s, MW, { toolId: 'poss', answers: { level: 3 } }, L.ctx(130));
+  s = L.tick(s, 131);
+  assert.ok(s.alerts.some((a) => /nodding off/.test(a.message)), 'POSS ≥ 3 charted → reaction');
+  assert.equal(expectedResult(s, LG, 'cam', catalogs).score, 1, 'Linda: CAM positive after her 08:00 change');
+  assert.equal(scoreTool(T('news2'), {}, { vitals: s.patients[LG].vitals, alert: false }).score, expectedResult(s, LG, 'news2', catalogs).score, 'NEWS2 counts her confusion');
+});
+
+test('dry run: a student assessment shows what they would find and what it triggers', async () => {
+  const { dryRun } = await import('../js/engine/reactions/dry-run.js');
+  const mw = templatesById['p2-margaret-wilson'];
+  const f = dryRun(mw, { catalogs, settings: scenarioWith().settings, steps: [
+    { kind: 'assess', toolId: 'poss' }, { kind: 'med', orderId: 'o-p2-oxy' }, { kind: 'assess', toolId: 'poss' }, { kind: 'assess', toolId: 'poss', answers: { level: 3 } }] });
+  assert.deepEqual(f.slice(1).map((x) => x.assessments[0]?.score), [1, undefined, 2, 3]);
+  assert.ok(f[4].fired.some((x) => x.reactionId === 'r-p2-poss-high'));
+});
+
+test('builder round-trips: assessment reactions and scenario-change assessment answers', async () => {
+  const { reactionToForm, formToReaction } = await import('../js/screens/instructor/script-model.js');
+  const { changeToForm, formToChange } = await import('../js/screens/instructor/change-model.js');
+  const mw = templatesById['p2-margaret-wilson'];
+  for (const r of mw.script.reactions) assert.deepEqual(formToReaction(mw, reactionToForm(mw, r.id), r.id).script.reactions.find((x) => x.id === r.id), r, r.id);
+  const de = templatesById[DE];
+  const form = changeToForm(de, 'p5-confused', '07:00');
+  assert.equal(form.assessments.gcs.verbal, 4);
+  const back = formToChange(de, form, '07:00').template;
+  assert.deepEqual(back.events.find((e) => e.id === 'e-p5-confused-assess').payload.answers, de.events.find((e) => e.id === 'e-p5-confused-assess').payload.answers);
+  const cleared = formToChange(de, { ...form, assessments: {} }, '07:00').template;
+  assert.ok(!cleared.events.some((e) => e.type === 'assessment-change'), 'cleared answers remove the event');
+});

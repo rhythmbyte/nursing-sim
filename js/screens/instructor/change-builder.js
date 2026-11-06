@@ -5,6 +5,7 @@ import { helpField, helpTip } from '../shared/help.js';
 import { h } from '../shared/dom.js';
 import { openModal } from '../shared/modal.js';
 import { changeToForm, formToChange } from './change-model.js';
+import { answersEditor } from './assessment-answers.js';
 
 const VITALS = [['rhythm', 'Rhythm (monitor)'], ['bp', 'BP'], ['hr', 'HR'], ['rr', 'RR'], ['tempF', 'Temp °F'], ['spo2', 'SpO₂ %'], ['o2', 'O₂'], ['pain', 'Pain']];
 const field = (label, el, hint) => helpField('change', label, el, hint); // help text: data/catalogs/help.json
@@ -23,6 +24,7 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
     Object.entries(catalogs.rhythms?.rhythms || {}).map(([id, r]) => h('option', { value: id, selected: id === f.vitals.rhythm }, r.label)));
   const findings = h('textarea', { class: 'input', rows: 3 }, f.findings);
   const recognize = h('textarea', { class: 'input', rows: 3 }, f.recognize);
+  const assess = answersEditor(catalogs, f.assessments, { title: 'Change' });
   const orderRows = [];
   const ordersBody = h('div', { class: 'pick-list' });
   const err = h('p', { class: 'form-error', role: 'alert' });
@@ -55,6 +57,7 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
       h('h4', {}, 'New vitals (leave blank to keep)'),
       h('div', { class: 'editor-grid' }, Object.keys(vitals).map((k) => field(VITALS.find(([x]) => x === k)?.[1] || k, vitals[k]))),
       field('New assessment findings (one per line; students see them when they reassess)', findings),
+      h('h4', {}, 'Assessment findings from now on (blank = no change)'), assess.el,
       h('h4', {}, 'New orders'), ordersBody,
       h('button', { class: 'btn btn-small', type: 'button', onclick: () => addOrder() }, 'Add order'),
       field('What students should recognize (debrief, one per line)', recognize),
@@ -65,7 +68,7 @@ export function openChangeBuilder({ template, key, startClock, catalogs, onSave 
         label: 'Save change', kind: 'primary', onClick: () => {
           if (!manual.checked && !time.value) { err.textContent = 'Pick a time or make it instructor-triggered.'; return false; }
           const form = { ...f, time: time.value, manual: manual.checked, start: start.value, from: from.value, message: message.value.trim(),
-            vitals: Object.fromEntries(Object.entries(vitals).map(([k, el]) => [k, el.value.trim()])), findings: findings.value, recognize: recognize.value,
+            vitals: Object.fromEntries(Object.entries(vitals).map(([k, el]) => [k, el.value.trim()])), findings: findings.value, recognize: recognize.value, assessments: assess.value(),
             orders: orderRows.map((r) => ({ id: r.id, text: r.text.value, type: r.type.value, tier: Number(r.tier.value), interventionId: r.iv.value, med: r.med.value.trim() })) };
           if (form.start !== 'silent' && !form.message) { err.textContent = 'Write what the patient says or what is reported.'; return false; }
           onSave(formToChange(template, form, startClock).template);

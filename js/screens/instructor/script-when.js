@@ -8,7 +8,7 @@ import { select, input, checkList, VITAL_LABELS } from './script-parts.js';
 const field = (label, el, hint) => helpField('script', label, el, hint);
 const KINDS = [['intervention', 'A student charts an intervention'], ['order', 'Work is done on an order'], ['med', 'A med is given, held or not given'],
   ['vitals', 'A vital sign crosses a threshold'], ['duration', 'A vital sign stays past a threshold for N minutes'], ['elapsed', 'Time passes (optionally without an action)'],
-  ['fired', 'Another reaction or event fires'], ['penalty', 'The recovery penalty reaches a percent']];
+  ['fired', 'Another reaction or event fires'], ['penalty', 'The recovery penalty reaches a percent'], ['assessment', 'A charted assessment score (e.g. NIHSS +4, CIWA > 15)']];
 const OPS = [['<=', '≤ (falls to)'], ['<', '< (falls below)'], ['>=', '≥ (rises to)'], ['>', '> (rises above)']];
 const THRESHOLD_FIELDS = VITAL_LABELS.filter(([k]) => !['bp', 'o2', 'pain'].includes(k));
 const show = (el, on) => { el.hidden = !on; };
@@ -38,6 +38,9 @@ export function whenPart(w, opts) {
   const afterMin = input('Minutes', w.afterMin, { type: 'number', min: 0 });
   const forMin = input('For at least (min)', w.forMin, { type: 'number', min: 0 });
   const atLeast = input('Penalty reaches %', w.atLeastPercent, { type: 'number', min: 0, max: 100 });
+  const aTool = select('Assessment tool', opts.scoredTools.map((t) => [t.id, t.name]), w.toolId, { blank: '(pick a tool)' });
+  const aRule = select('Score rule', [['>=', 'score ≥'], ['>', 'score >'], ['<=', 'score ≤'], ['<', 'score <'], ['rise', 'rises by at least']], w.rise != null ? 'rise' : w.op || '>=');
+  const aValue = input('Score', w.rise ?? w.scoreValue ?? '', { type: 'number' });
   const since = select('Counting from', [['state', 'entering a state'], ['event', 'an event firing'], ['reaction', 'a reaction firing'], ['start', 'the start of the sim']], w.since);
   const sState = select('Countdown state', opts.states.map((s) => [s.id, s.label]), w.state, { blank: '(pick one)' });
   const sEvent = select('Event', opts.events.map((e) => [e.id, e.label]), w.eventId, { blank: '(pick one)' });
@@ -52,6 +55,7 @@ export function whenPart(w, opts) {
     vitals: h('div', { class: 'editor-grid' }, field('Vital sign', vfield), field('Direction', op), field('Threshold', value)),
     duration: h('div', { class: 'editor-grid' }, field('For at least (min)', forMin)),
     penalty: h('div', { class: 'editor-grid' }, field('Penalty reaches %', atLeast)),
+    assessment: h('div', { class: 'editor-grid' }, field('Assessment tool', aTool), field('Score rule', aRule), field('Score', aValue)),
     elapsed: h('div', {}, h('div', { class: 'editor-grid' }, field('Minutes', afterMin), field('Counting from', since)), sState, sEvent, sReaction, without.el),
     fired: h('div', { class: 'editor-grid' }, field('Fired by', firedKind)),
   };
@@ -72,7 +76,7 @@ export function whenPart(w, opts) {
     value: () => ({
       kind: kind.value, interventionId: iv.value, where: { mode: mode.value, rows: rows.map((r) => ({ field: r.field.value, min: r.min.value, max: r.max.value, matches: r.matches.value, excludes: r.excludes.value })), raw: w.where.raw },
       orderId: kind.value === 'med' ? medOrder.value : order.value, medResult: medResult.value, doseMin: doseMin.value, doseMax: doseMax.value,
-      field: vfield.value, op: op.value, value: value.value, afterMin: afterMin.value, forMin: forMin.value, atLeastPercent: atLeast.value, since: since.value, state: sState.value,
+      field: vfield.value, op: op.value, value: value.value, afterMin: afterMin.value, forMin: forMin.value, atLeastPercent: atLeast.value, toolId: aTool.value, scoreRule: aRule.value, scoreValue: aValue.value, since: since.value, state: sState.value,
       eventId: kind.value === 'fired' ? firedWrap.event.querySelector('select').value : sEvent.value,
       reactionId: kind.value === 'fired' ? firedWrap.reaction.querySelector('select').value : sReaction.value,
       without: without.value(), firedKind: firedKind.value,

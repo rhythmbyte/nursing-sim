@@ -2,7 +2,7 @@
 // scenario changes (timeline + builder), outcome and code branch. Works on a copy (`work`); Save validates
 // and stores it in this browser. "Advanced: edit JSON" stays available but hidden.
 
-import { helpField } from '../shared/help.js';
+import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
 import { toast } from '../shared/toast.js';
@@ -15,6 +15,7 @@ import { openChangeBuilder } from './change-builder.js';
 import { patientTimeline } from './patient-timeline.js';
 import { setLeaveGuard, clearLeaveGuard } from '../shared/leave-guard.js';
 import { scriptSection } from './script-editor.js';
+import { answersEditor } from './assessment-answers.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
 const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
@@ -46,12 +47,16 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const chk = (k) => (inputs[k] = h('input', { type: 'checkbox', checked: Boolean(f[k]) }));
     const orders = ordersTable(work.orders, catalogs);
     const labs = labsTable(work.labs, catalogs, work.orders);
+    const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
     const errBox = h('div', {});
     collect = () => {
       const values = Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.type === 'checkbox' ? el.checked : el.value]));
-      return fromForm(values, work, { orders: orders.collect(work.id), labs: labs.collect() });
+      const next = fromForm(values, work, { orders: orders.collect(work.id), labs: labs.collect() });
+      const baseline = baselineAssess.value();
+      const { assessments, ...rest } = next;
+      return Object.keys(baseline).length ? { ...rest, assessments: { review: assessments?.review || 'proposed', ...assessments, baseline } } : rest;
     };
     const showErrors = (errors) => clear(errBox).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.slice(0, 10).map((e) => h('li', {}, e)))));
 
@@ -121,6 +126,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       h('section', { class: 'panel' }, h('h3', {}, 'Handoff (SBAR)'), ['situation', 'background', 'assessment', 'recommendation'].map((k) => field(k[0].toUpperCase() + k.slice(1), area(k, 2)))),
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'].map((k) => field(k, inp(`v_${k}`)))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline findings'), field('Shown when the student assesses (one per line)', area('findings', 5))),
+      h('section', { class: 'panel' }, h('h3', {}, 'Baseline assessment findings ', helpTip('editor.assessments')), h('p', { class: 'muted small' }, 'What each tool finds at the start (NEWS2 is calculated from vitals). Scenario changes, states and reactions can change them later.'), baselineAssess.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Orders at shift start'), orders.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Labs'), labs.el),
       h('section', { class: 'panel' },

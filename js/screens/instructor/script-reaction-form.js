@@ -7,15 +7,17 @@ import { openModal } from '../shared/modal.js';
 import { reactionToForm, formToReaction } from './script-model.js';
 import { scriptOptions, select, input, vitalLabel } from './script-parts.js';
 import { whenPart, ifPart } from './script-when.js';
+import { answersEditor } from './assessment-answers.js';
 import { penaltyPreview } from '../../engine/reactions/describe.js';
 import { limitOne } from '../../engine/penalties.js';
 
 const field = (label, el, hint) => helpField('script', label, el, hint);
-const EFFECTS = [['state', 'Go to a state'], ['vitals', 'Change vitals'], ['penalty', 'Recovery penalty (late treatment helps less)'], ['findings', 'Reveal new findings'], ['event', 'Call light, message, orders, lab or code'], ['fire', 'Fire one of this patient\'s events']];
+const EFFECTS = [['state', 'Go to a state'], ['vitals', 'Change vitals'], ['assessment', 'Change what assessments will find'], ['penalty', 'Recovery penalty (late treatment helps less)'], ['findings', 'Reveal new findings'], ['event', 'Call light, message, orders, lab or code'], ['fire', 'Fire one of this patient\'s events']];
 const EVENT_TYPES = [['staff-message', 'Staff message'], ['call-light', 'Call light'], ['new-orders', 'New orders (order set)'], ['lab-result', 'Release a pending lab'], ['code', 'Start a code']];
 const VITALS = ['spo2', 'hr', 'rr', 'bp', 'tempF', 'o2', 'rhythm'];
 
-function effectRow(e, opts, n, onRemove, preview) {
+function effectRow(e, opts, n, onRemove, preview, catalogs) {
+  const assess = answersEditor(catalogs, e.answers || {}, { title: `Effect ${n}` });
   const type = select(`Effect ${n}`, EFFECTS, e.type);
   const to = select(`Effect ${n} state`, opts.states.map((s) => [s.id, s.label]), e.to, { blank: '(pick a state)' });
   const values = Object.fromEntries(VITALS.map((k) => [k, k === 'rhythm'
@@ -44,6 +46,7 @@ function effectRow(e, opts, n, onRemove, preview) {
     penalty: h('div', {}, h('div', { class: 'pick-row' }, pLabel, pPercent, ...Object.values(pCaps), pWear, pSlow),
       h('div', { class: 'pick-row' }, 'Limits: ', ...Object.entries(pVitals).map(([k, x]) => h('label', { class: 'inline' }, x, ` ${vitalLabel(k)}`)), h('span', { class: 'muted small' }, '(none ticked = all)')), pPreview),
     state: h('div', {}, to),
+    assessment: h('div', {}, assess.el),
     vitals: h('div', { class: 'pick-row' }, ...Object.values(values), overMin),
     findings: h('div', {}, findings),
     event: h('div', { class: 'pick-row' }, eventType, from, message, orderSet, lab, codeRhythm),
@@ -63,6 +66,7 @@ function effectRow(e, opts, n, onRemove, preview) {
     el,
     value: () => ({ type: type.value, to: to.value, values: Object.fromEntries(Object.entries(values).map(([k, x]) => [k, x.value])), overMin: overMin.value,
       findingsText: findings.value, change: e.change, eventType: eventType.value, eventId: eventId.value,
+      answers: type.value === 'assessment' ? assess.value() : {},
       label: pLabel.value, percent: pPercent.value, caps: Object.fromEntries(Object.entries(pCaps).map(([k, x]) => [k, x.value])), vitals: penaltyValue().vitals, wearOffMin: pWear.value, slowFactor: pSlow.value,
       payload: { from: from.value, message: message.value, orderSet: orderSet.value, code: lab.value, label: lab.value === p.code ? p.label || '' : '', rhythm: codeRhythm.value } }),
   };
@@ -87,7 +91,7 @@ export function openReactionForm({ template, reactionId = null, catalogs, onSave
     const data = { kind: w.kind, field: w.field, op: w.op, value: Number(w.value), forMin: Number(w.forMin), afterMin: Number(w.afterMin), without: w.without };
     return penaltyPreview(['vitals', 'duration', 'elapsed'].includes(w.kind) ? data : null, pe, template, limitOne, catalogs.vitals?.recovery?.normal);
   };
-  const add = (e = { type: 'state' }) => { const r = effectRow(e, opts, rows.length + 1, () => rows.splice(rows.indexOf(r), 1), preview); rows.push(r); thenBox.append(r.el); };
+  const add = (e = { type: 'state' }) => { const r = effectRow(e, opts, rows.length + 1, () => rows.splice(rows.indexOf(r), 1), preview, catalogs); rows.push(r); thenBox.append(r.el); };
   f.then.forEach(add);
   if (!f.then.length) add();
   const err = h('p', { class: 'form-error', role: 'alert' });

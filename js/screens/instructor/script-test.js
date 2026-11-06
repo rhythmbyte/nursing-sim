@@ -9,7 +9,7 @@ import { dryRun } from '../../engine/reactions/dry-run.js';
 import { names, causeText } from '../../engine/reactions/describe.js';
 import { scriptOptions, select, input } from './script-parts.js';
 
-const KINDS = [['wait', 'Wait'], ['chart', 'Student charts'], ['med', 'Student gives a med'], ['order', 'Student marks an order done'], ['fire', 'Fire an event'], ['force', 'Instructor forces a state']];
+const KINDS = [['wait', 'Wait'], ['chart', 'Student charts'], ['med', 'Student gives a med'], ['order', 'Student marks an order done'], ['fire', 'Fire an event'], ['force', 'Instructor forces a state'], ['assess', 'Student does an assessment tool']];
 
 function stepRow(step, opts, n, onRemove) {
   const kind = select(`Step ${n}`, KINDS, step.kind);
@@ -28,7 +28,8 @@ function stepRow(step, opts, n, onRemove) {
   const order = select(`Step ${n} order`, opts.orders.map((o) => [o.id, o.label]), step.orderId, { blank: '(order)' });
   const ev = select(`Step ${n} event`, opts.events.map((e) => [e.id, e.label]), step.eventId, { blank: '(event)' });
   const st = select(`Step ${n} state`, opts.states.map((s) => [s.id, s.label]), step.stateId, { blank: '(state)' });
-  const parts = { wait: h('span', {}, min, ' min'), chart: h('span', {}, iv, fieldsBox), med: h('span', {}, med, result), order: h('span', {}, order), fire: h('span', {}, ev), force: h('span', {}, st) };
+  const tool = select(`Step ${n} tool`, opts.scoredTools.map((x) => [x.id, x.name]), step.toolId, { blank: '(tool)' });
+  const parts = { wait: h('span', {}, min, ' min'), chart: h('span', {}, iv, fieldsBox), med: h('span', {}, med, result), order: h('span', {}, order), fire: h('span', {}, ev), force: h('span', {}, st), assess: h('span', {}, tool, h('span', { class: 'muted small' }, ' finds the scripted answers')) };
   const sync = () => { for (const [k, el] of Object.entries(parts)) el.hidden = kind.value !== k; };
   kind.addEventListener('change', sync); sync();
   const el = h('div', { class: 'pick-row test-step' }, kind, ...Object.values(parts), h('button', { class: 'btn btn-small btn-ghost', type: 'button', onclick: () => { el.remove(); onRemove(); } }, 'Remove'));
@@ -41,6 +42,7 @@ function stepRow(step, opts, n, onRemove) {
       if (k === 'med') return { kind: k, orderId: med.value, result: result.value };
       if (k === 'order') return { kind: k, orderId: order.value };
       if (k === 'fire') return { kind: k, eventId: ev.value };
+      if (k === 'assess') return { kind: k, toolId: tool.value };
       return { kind: k, stateId: st.value };
     },
   };
@@ -74,7 +76,8 @@ export function openScriptTest({ template, catalogs, settings, startClock }) {
         h('td', {}, f.error ? h('span', { class: 'form-error' }, f.error) : f.stateLabel),
         h('td', {}, f.vitals ? VIT(f.vitals) : '', f.trend ? h('div', { class: 'muted small' }, `trending to ${Object.entries(f.trend.to).map(([k, v]) => `${k} ${v}`).join(', ')} by ${at(f.trend.toMin)}`) : null),
         differs ? h('td', {}, plain[i]?.vitals ? VIT(plain[i].vitals) : '', plain[i]?.trend ? h('div', { class: 'muted small' }, `trending to ${Object.entries(plain[i].trend.to).map(([k, v]) => `${k} ${v}`).join(', ')}`) : null) : null,
-        h('td', {}, (f.fired || []).map((x) => h('div', {}, `${x.label} `, h('span', { class: 'muted small' }, `(${causeText(x.cause, n)})`))), (f.events || []).length ? h('div', { class: 'muted small' }, `Events: ${f.events.join(', ')}`) : null),
+        h('td', {}, (f.fired || []).map((x) => h('div', {}, `${x.label} `, h('span', { class: 'muted small' }, `(${causeText(x.cause, n)})`))), (f.events || []).length ? h('div', { class: 'muted small' }, `Events: ${f.events.join(', ')}`) : null,
+          ...(f.assessments || []).map((a) => h('div', {}, `${a.toolId}: ${a.score ?? '—'}${a.band ? ` (${a.band})` : ''}${a.complete ? '' : ' · no scripted answers'}`))),
         h('td', {}, (f.alerts || []).map((a) => h('div', { class: 'small' }, a))))))));
   }
   openModal({

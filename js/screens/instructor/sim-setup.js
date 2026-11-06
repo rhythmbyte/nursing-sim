@@ -4,6 +4,7 @@
 
 import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
+import { badge } from '../shared/badge.js';
 import { toast } from '../shared/toast.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { saveLocal } from '../../data-loader.js';
@@ -36,7 +37,11 @@ export function mountSimSetup(root, { data, switchScenario }) {
     delegatedAssessmentRevealsFindings: h('input', { type: 'checkbox', checked: defaults.delegatedAssessmentRevealsFindings }),
     prnPreCheckWindowMin: h('input', { class: 'input', type: 'number', min: 1, value: defaults.prnPreCheckWindowMin }),
     delegationDelayMin: h('input', { class: 'input', type: 'number', min: 0, value: defaults.delegationDelayMin.CNA }),
+    revealAssessmentFindings: h('input', { type: 'checkbox', checked: defaults.revealAssessmentFindings }),
+    gradeAssessments: h('input', { type: 'checkbox', checked: defaults.gradeAssessments }),
   };
+  // Assessment tools offered to students: public ones ticked by default; others show "License check needed".
+  const toolBoxes = (data.catalogs.assessmentTools?.tools || []).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
   const groupsBox = h('div', {});
   const result = h('div', {});
 
@@ -78,6 +83,8 @@ export function mountSimSetup(root, { data, switchScenario }) {
         revealManualVitals: set.revealManualVitals.checked, pauseOnClose: set.pauseOnClose.checked,
         delegatedAssessmentRevealsFindings: set.delegatedAssessmentRevealsFindings.checked,
         prnPreCheckWindowMin: Number(set.prnPreCheckWindowMin.value), delegationDelayMin: Number(set.delegationDelayMin.value),
+        assessmentTools: toolBoxes.every((x) => x.box.checked === (x.t.license?.status === 'public')) ? 'public' : toolBoxes.filter((x) => x.box.checked).map((x) => x.t.id),
+        revealAssessmentFindings: set.revealAssessmentFindings.checked, gradeAssessments: set.gradeAssessments.checked,
       },
       assignment: assignment.value,
       groups: filled.map(({ filledFrom, ...g }) => g),
@@ -115,6 +122,10 @@ export function mountSimSetup(root, { data, switchScenario }) {
       h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain ', helpTip('setup.reveal-manual-vitals')),
       h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes ', helpTip('setup.pause-on-close')),
       h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings ', helpTip('setup.delegated-assessment-reveals'))),
+    h('section', { class: 'panel' }, h('h3', {}, 'Assessment tools ', helpTip('setup.assessment-tools')),
+      h('label', { class: 'inline' }, set.revealAssessmentFindings, ' "Check patient" shows the scripted finding for each item ', helpTip('setup.reveal-assessment-findings')),
+      h('label', { class: 'inline' }, set.gradeAssessments, ' Grade reassessments and mismatches (flags) ', helpTip('setup.grade-assessments')),
+      h('div', { class: 'check-grid' }, toolBoxes.map(({ t, box }) => h('label', { class: 'inline' }, box, ` ${t.name} `, t.license?.status !== 'public' ? badge('License check needed', 'review') : null)))),
     groupsBox,
     h('div', { class: 'controls' }, h('button', { class: 'btn', onclick: addGroup }, 'Add group'), h('button', { class: 'btn btn-primary', onclick: create }, 'Create sim')),
     result,

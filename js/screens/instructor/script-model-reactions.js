@@ -41,6 +41,7 @@ function effectToForm(t, e) {
   if (e.type === 'findings') return { ...base, change: e.change, findingsText: changeText(t, e.change) };
   if (e.type === 'event') return { ...base, eventType: e.event.type, payload: { ...e.event.payload } };
   if (e.type === 'fire') return { ...base, eventId: e.eventId };
+  if (e.type === 'assessment') return { ...base, answers: structuredClone(e.answers || {}) };
   if (e.type === 'penalty') return { ...base, label: e.label || '', percent: e.percent ?? '', caps: { ...(e.caps || {}) }, vitals: [...(e.vitals || [])], wearOffMin: e.wearOffMin ?? '', slowFactor: e.slowFactor ?? '' };
   return { ...base, ...e };
 }
@@ -64,6 +65,10 @@ function formToEffect(t, f, rid) {
     return { type: 'event', event: { type: f.eventType, payload } };
   }
   if (f.type === 'fire') { if (!f.eventId) throw new Error('Pick the event to fire'); return { type: 'fire', eventId: f.eventId }; }
+  if (f.type === 'assessment') {
+    if (!Object.keys(f.answers || {}).length) throw new Error('Assessment effect: set at least one tool item');
+    return { type: 'assessment', answers: structuredClone(f.answers) };
+  }
   if (f.type === 'penalty') {
     const e = { type: 'penalty' };
     if (String(f.label || '').trim()) e.label = f.label.trim();
@@ -88,7 +93,7 @@ export function reactionToForm(t, rid) {
     when: {
       kind: w.kind, interventionId: w.interventionId || '', where: whereToForm(w.where), orderId: w.orderId || '', medResult: w.result || 'given',
       doseMin: w.dose?.min ?? '', doseMax: w.dose?.max ?? '', field: w.field || 'spo2', op: w.op || '<=', value: w.value ?? '',
-      forMin: w.forMin ?? 5, atLeastPercent: w.atLeastPercent ?? 40,
+      forMin: w.forMin ?? 5, atLeastPercent: w.atLeastPercent ?? 40, toolId: w.toolId || '', scoreRule: w.rise != null ? 'rise' : w.op || '>=', scoreValue: w.rise ?? (w.kind === 'assessment' ? w.value : '') ?? '',
       since: w.since || 'state', state: w.state || '', eventId: w.eventId || '', reactionId: w.reactionId || '', afterMin: w.afterMin ?? 5,
       without: (w.without || []).map(matcherKey), firedKind: w.reactionId ? 'reaction' : 'event',
     },
@@ -108,6 +113,11 @@ function formToWhen(f) {
   }
   if (f.kind === 'vitals' || f.kind === 'duration') { if (numOrNull(f.value) == null) throw new Error('Enter the threshold value'); Object.assign(w, { field: f.field, op: f.op, value: Number(f.value) }); }
   if (f.kind === 'duration') { if (numOrNull(f.forMin) == null) throw new Error('Enter how many minutes the threshold must hold'); w.forMin = Number(f.forMin); }
+  if (f.kind === 'assessment') {
+    if (!f.toolId) throw new Error('Pick the assessment tool'); if (numOrNull(f.scoreValue) == null) throw new Error('Enter the score');
+    w.toolId = f.toolId;
+    if (f.scoreRule === 'rise') w.rise = Number(f.scoreValue); else Object.assign(w, { op: f.scoreRule, value: Number(f.scoreValue) });
+  }
   if (f.kind === 'penalty') { if (numOrNull(f.atLeastPercent) == null) throw new Error('Enter the penalty %'); w.atLeastPercent = Number(f.atLeastPercent); }
   if (f.kind === 'elapsed') {
     if (numOrNull(f.afterMin) == null) throw new Error('Enter how many minutes'); Object.assign(w, { since: f.since, afterMin: Number(f.afterMin) });

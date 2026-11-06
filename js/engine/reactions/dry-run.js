@@ -3,7 +3,9 @@
 // processors, so what fires here is what would fire live. Pure, no DOM.
 //
 // steps: [{ kind: 'wait', min } | { kind: 'chart', interventionId, fields? } | { kind: 'med', orderId, result? }
-//         | { kind: 'order', orderId } | { kind: 'fire', eventId } | { kind: 'force', stateId }]
+//         | { kind: 'order', orderId } | { kind: 'fire', eventId } | { kind: 'force', stateId }
+//         | { kind: 'assess', toolId, answers? }]  (assess: the student finds the scripted answers unless `answers` is given;
+//         every tool is available in the dry run so any scripted tool can be tested)
 // Returns frames: one per step + the start, each { label, atMin, state, stateLabel, vitals, trend, fired, transitions, events, alerts }.
 
 import * as session from '../session.js';
@@ -26,6 +28,7 @@ export function stepLabel(step, n) {
   if (step.kind === 'order') return `Mark done: ${n.order(step.orderId)}`;
   if (step.kind === 'fire') return `Fire event ${step.eventId}`;
   if (step.kind === 'force') return `Force state ${n.state(step.stateId)}`;
+  if (step.kind === 'assess') return `Student does ${step.toolId}${step.answers ? ' (own answers)' : ''}`;
   return step.kind;
 }
 
@@ -33,7 +36,7 @@ export function stepLabel(step, n) {
 export function dryRun(template, { catalogs, settings, steps = [], startClock = '07:00' }) {
   const pid = template.id;
   const templatesById = { [pid]: template };
-  const scenario = { id: 'dry-run', name: 'Dry run', startClock, speed: 1, settings, groups: [{ id: 'dry', name: 'Dry run', patients: [pid] }] };
+  const scenario = { id: 'dry-run', name: 'Dry run', startClock, speed: 1, settings: { ...settings, assessmentTools: 'all' }, groups: [{ id: 'dry', name: 'Dry run', patients: [pid] }] };
   const refs = collectEvents([pid], templatesById, scenario);
   const n = names(template, catalogs);
   let t = 0;
@@ -53,6 +56,7 @@ export function dryRun(template, { catalogs, settings, steps = [], startClock = 
       fired: fresh.filter((l) => l.action === 'reaction-fired').map((l) => ({ reactionId: l.details.reactionId, label: l.details.label, cause: l.details.cause })),
       transitions: fresh.filter((l) => l.action === 'script-state').map((l) => ({ atMin: l.simMin, from: l.details.from, to: l.details.to, cause: l.details.cause })),
       events: fresh.filter((l) => l.action === 'event-fired').map((l) => l.details.eventId),
+      assessments: fresh.filter((l) => l.action === 'assessment').map((l) => ({ toolId: l.details.toolId, score: l.details.score, band: l.details.band, complete: l.details.complete })),
       alerts: s.alerts.slice(seenAlerts).map((a) => a.message),
     });
     seenLog = s.log.length;
@@ -68,6 +72,7 @@ export function dryRun(template, { catalogs, settings, steps = [], startClock = 
       else if (step.kind === 'order') s = chart.completeOrder(s, pid, { orderId: step.orderId }, ctx());
       else if (step.kind === 'fire') s = session.fireNow(s, refs.find((r) => r.key === eventKey(pid, step.eventId)), { now: t * MIN, refs, templatesById, catalogs, user: INSTRUCTOR });
       else if (step.kind === 'force') s = forceState(s, pid, step.stateId, ctx(INSTRUCTOR));
+      else if (step.kind === 'assess') s = chart.chartAssessment(s, pid, { toolId: step.toolId, answers: step.answers || { ...(s.patients[pid].assessmentsExpected?.[step.toolId] || {}) } }, ctx());
       settle();
       snap(stepLabel(step, n));
     } catch (e) {

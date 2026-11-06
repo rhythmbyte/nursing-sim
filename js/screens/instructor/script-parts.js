@@ -17,6 +17,7 @@ export function scriptOptions(t, catalogs) {
     events: t.events.map((e) => ({ id: e.id, label: `${e.id} (${e.type}${typeof e.atMin === 'number' ? `, minute ${e.atMin}` : ', on trigger'})` })),
     orderSets: [...new Set(t.orders.map((o) => o.orderSet).filter(Boolean))],
     pendingLabs: t.labs.filter((l) => l.status === 'pending').map((l) => ({ code: l.code, label: l.label || l.code })),
+    scoredTools: (catalogs.assessmentTools?.tools || []).filter((x) => (x.scoring || 'sum') !== 'none'),
     rhythms: Object.entries(catalogs.rhythms?.rhythms || {}).map(([id, r]) => ({ id, label: r.label })),
     /** Actions for "without" / "done" lists: interventions, orders, med orders. */
     matchers: [

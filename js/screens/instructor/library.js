@@ -38,6 +38,16 @@ function patientCard(p, selected, onSelect, startClock) {
   );
 }
 
+/** Assessment tools catalog with license status: anything not clearly public shows "License check needed". */
+function toolsPanel(catalogs) {
+  const tools = catalogs.assessmentTools?.tools || [];
+  if (!tools.length) return null;
+  return h('details', { class: 'panel' }, h('summary', {}, h('strong', {}, `Assessment tools (${tools.length})`), ` · ${tools.filter((t) => t.license?.status !== 'public').length} need a license check`),
+    h('table', { class: 'data-table' }, h('thead', {}, h('tr', {}, ['Tool', 'Category', 'Reassess', 'License', 'Source'].map((c) => h('th', {}, c)))),
+      h('tbody', {}, tools.map((t) => h('tr', {}, h('td', {}, t.name, ' ', t.review !== 'approved' ? badge('Needs review', 'review') : null), h('td', {}, t.category), h('td', {}, `${t.reassessMin} min`),
+        h('td', {}, t.license?.status === 'public' ? badge('Public', 'neutral') : badge('License check needed', 'review')), h('td', { class: 'small muted' }, t.license?.note || ''))))));
+}
+
 export function mountLibrary(root, { data: { patients, catalogs, problems }, scenario }) {
   const sorted = [...patients].sort((a, b) => a.demographics.room.localeCompare(b.demographics.room, undefined, { numeric: true }));
   const startClock = scenario?.startClock || '07:00';
@@ -66,6 +76,7 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
     ),
     problems.length ? problemsBanner(problems) : null,
     h('div', { class: 'library' }, list, detail),
+    toolsPanel(catalogs),
   ];
   clear(root).append(...parts.filter(Boolean));
   render();

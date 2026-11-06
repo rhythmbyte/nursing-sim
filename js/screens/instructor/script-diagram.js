@@ -88,7 +88,7 @@ export function stateDiagram(template, catalogs, { onState, onReaction, current 
     const g = clickable(svg('g', { class: `sd-state${s.id === sc.initialState ? ' sd-initial' : ''}${s.id === current ? ' sd-current' : ''}` }), `Edit state ${s.label}`, () => onState(s.id));
     g.append(svg('rect', { x: p.x, y: p.y, width: W, height: H, rx: 8 }),
       svg('text', { x: p.x + 10, y: p.y + 21, class: 'sd-state-label' }, short(s.label, 31)),
-      svg('text', { x: p.x + 10, y: p.y + 40, class: 'sd-state-sub' }, short(Object.entries(s.vitals?.values || {}).map(([k, v]) => `${k} ${v}`).join(' · ') || (s.id === sc.initialState ? 'start' : 'no vitals change'), 35)));
+      svg('text', { x: p.x + 10, y: p.y + 40, class: 'sd-state-sub' }, short([Object.entries(s.vitals?.values || {}).map(([k, v]) => `${k} ${v}`).join(' · '), Object.keys(s.assessments || {}).length ? `assess: ${Object.keys(s.assessments).join(', ')}` : ''].filter(Boolean).join(' · ') || (s.id === sc.initialState ? 'start' : 'no vitals change'), 35)));
     root.append(g);
   }
   return h('div', { class: 'script-diagram-wrap' }, root,

@@ -6,7 +6,7 @@
 // manage (admission, code, lab-result) are kept and retimed with the change.
 
 import { lines } from '../shared/text.js';
-const MANAGED = ['call-light', 'staff-message', 'vitals-change', 'findings-change', 'new-orders'];
+const MANAGED = ['call-light', 'staff-message', 'vitals-change', 'findings-change', 'new-orders', 'assessment-change'];
 const VITAL_KEYS = ['rhythm', 'bp', 'hr', 'rr', 'tempF', 'spo2', 'o2', 'pain'];
 const NUMERIC = ['hr', 'rr', 'tempF', 'spo2', 'gcs', 'glucose'];
 
@@ -44,6 +44,7 @@ export function changeToForm(t, key, startClock) {
   const ve = events.find((e) => e.type === 'vitals-change');
   const fe = events.find((e) => e.type === 'findings-change');
   const oe = events.find((e) => e.type === 'new-orders');
+  const ae = events.find((e) => e.type === 'assessment-change');
   const kf = ve && t.vitals.keyframes?.find((k) => k.eventId === ve.payload.keyframe);
   const fc = fe && t.findings.changes?.find((c) => c.eventId === fe.payload.change);
   const orders = oe ? t.orders.filter((o) => o.orderSet === oe.payload.orderSet) : [];
@@ -58,10 +59,11 @@ export function changeToForm(t, key, startClock) {
     // Every key the keyframe has (gcs, hrNote, …) plus the standard ones, so nothing is lost on save.
     vitals: { ...Object.fromEntries(VITAL_KEYS.map((k) => [k, ''])), ...(kf?.values || {}) },
     findings: fc ? fc.findings.join('\n') : '',
+    assessments: structuredClone(ae?.payload?.answers || {}), // what assessment tools find from this moment (assessment-change)
     orders: orders.map((o) => ({ id: o.id, text: o.text, type: o.type, tier: o.tier, interventionId: o.interventionIds?.[0] || '', med: o.med || '', delegable: Boolean(o.delegable) })),
     recognize: (t.debrief?.byChange?.[key] || []).join('\n'),
     keep: events.filter((e) => !MANAGED.includes(e.type)),
-    ids: { start: start?.id, vitals: ve?.id, findings: fe?.id, orders: oe?.id, orderSet: oe?.payload?.orderSet },
+    ids: { start: start?.id, vitals: ve?.id, findings: fe?.id, orders: oe?.id, orderSet: oe?.payload?.orderSet, assess: ae?.id },
   };
 }
 
@@ -119,6 +121,7 @@ export function formToChange(t, f, startClock) {
     const msg = f.start === 'silent' && f.message ? f.message : prev[id('orders')]?.payload?.message || 'New orders from provider.';
     out.push(ev('orders', 'new-orders', { orderSet, message: msg }));
   }
+  if (Object.keys(f.assessments || {}).length) out.push({ ...ev('assess', 'assessment-change', {}), payload: { answers: f.assessments } });
   for (const k of f.keep || []) { const { atMin, trigger, ...rest } = k; out.push({ ...rest, group: key, ...timing }); }
 
   const byChange = { ...(t.debrief?.byChange || {}) };

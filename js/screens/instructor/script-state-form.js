@@ -6,6 +6,7 @@ import { helpField } from '../shared/help.js';
 import { openModal } from '../shared/modal.js';
 import { stateToForm, formToState } from './script-model.js';
 import { select, input, vitalLabel } from './script-parts.js';
+import { answersEditor } from './assessment-answers.js';
 
 const field = (label, el, hint) => helpField('script', label, el, hint); // help: data/catalogs/help.json "script.*"
 
@@ -19,6 +20,7 @@ export function openStateForm({ template, stateId = null, catalogs, onSave }) {
   const rhythm = select('Rhythm', (catalogs.rhythms ? Object.entries(catalogs.rhythms.rhythms) : []).map(([rid, r]) => [rid, r.label]), f.rhythm, { blank: '(no change)' });
   const findings = h('textarea', { class: 'input', rows: 3, 'aria-label': 'Findings' }); findings.value = f.findingsText;
   const note = input('Teaching note', f.note, { placeholder: 'Shown in the debrief when the patient reaches this state' });
+  const assess = answersEditor(catalogs, f.assessments, { title: 'State' });
   const review = select('Review status', [['proposed', 'proposed'], ['partial', 'partial'], ['approved', 'approved']], f.review);
   const err = h('p', { class: 'form-error', role: 'alert' });
 
@@ -32,12 +34,13 @@ export function openStateForm({ template, stateId = null, catalogs, onSave }) {
         field('Trend over minutes', overMin, '0 = apply at once'), field('Rhythm', rhythm)),
       field('Findings', findings, 'One per line; students see them at their next assessment'),
       field('Teaching note', note),
+      h('h4', {}, 'Assessment findings in this state (blank = no change)'), assess.el,
       err),
     actions: [
       { label: 'Cancel', kind: 'ghost' },
       { label: 'Save state', kind: 'primary', onClick: () => {
         try {
-          const form = { ...f, id: id.value, label: label.value, review: review.value, overMin: overMin.value, rhythm: rhythm.value, findingsText: findings.value, note: note.value,
+          const form = { ...f, id: id.value, label: label.value, review: review.value, overMin: overMin.value, rhythm: rhythm.value, findingsText: findings.value, note: note.value, assessments: assess.value(),
             values: Object.fromEntries(Object.entries(values).map(([k, el]) => [k, el.value])) };
           const next = formToState(template, form, stateId);
           onSave(next, next.script.states.find((s) => s.label === form.label.trim())?.id);
