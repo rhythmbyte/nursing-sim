@@ -29,7 +29,9 @@ export function describeEntry(l, { labelOf, orderText, patientName }) {
     case 'assessment-delegated': return `Delegated ${d.toolId ?? 'an assessment'} to ${d.to ?? 'staff'}`;
     case 'task-started': return `Started ${d.label || 'a task'}${d.lockSec ? ` (busy ${Math.round(d.lockSec)} s)` : ''}`;
     case 'task-finished': return `Finished ${d.label || 'a task'}${d.how === 'ended-early' ? ' (ended early by the instructor)' : ''}`;
-    case 'task-interrupted': return `Interrupted ${d.label || 'a task'} (not done)`;
+    case 'task-interrupted': return `${d.dropped ? 'Dropped paused task' : 'Interrupted'} ${d.label || 'a task'} (not done)`;
+    case 'task-paused': return `Paused ${d.label || 'a task'}${d.leftMin != null ? ` (${d.leftMin} min left)` : ''}`;
+    case 'task-resumed': return `Resumed ${d.label || 'a task'}${d.pausedMin != null ? ` after ${d.pausedMin} min` : ''}`;
     case 'task-ended-early': return `Instructor ended ${d.label || 'a task'} early`;
     case 'task-failed': return `Task could not be completed: ${d.label || ''}${d.error ? ` (${d.error})` : ''}`;
     case 'delegation-started': return `Helper free: delegated task started after waiting ${d.waitedMin ?? '?'} min`;

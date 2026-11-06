@@ -4,7 +4,7 @@
 
 import * as session from './session.js';
 import * as chart from './chart.js';
-import { taskPlan, beginTask, interruptTask, endTaskNow, busyView } from './tasks.js';
+import { taskPlan, beginTask, interruptTask, endTaskNow, busyView, pauseTask, resumeTask, pausedView } from './tasks.js';
 import * as staffOps from './staff.js';
 import { releaseLab } from './labs.js';
 import { measureManual } from './vitals.js';
@@ -110,6 +110,11 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     /** The student's current task: { label, patientId, endsAt, leftSec, fraction } or null. */
     busy: (userId) => busyView(state, userId, runner.simMin()),
     interruptTask(user) { commit(interruptTask(state, { now: now(), user })); },
+    /** Step away from the current task / come back to it / drop the paused one (not charted). */
+    pauseTask(user) { commit(pauseTask(state, { now: now(), user })); },
+    resumeTask(user) { commit(resumeTask(state, { now: now(), user })); runner.tick(); },
+    dropPausedTask(user) { commit(interruptTask(state, { now: now(), user, paused: true })); },
+    paused: (userId) => pausedView(state, userId),
     /** Delegation helpers of a group: { helpers, queued } (engine/staff.js). */
     staffView: (groupId) => staffOps.staffView(state, groupId, runner.simMin(), catalogs),
     /** Charge / instructor: name ∈ moveHelper(helperId, groupId), setOnBreak(helperId, on), setStaffCount(groupId, role, n). */

@@ -4,7 +4,8 @@
 // (short lockout: duration × taskTimerManikinFactor, at least taskTimerMinLockoutSec) | 'off' (as before).
 // Durations: catalog durationSec (interventions, assessment tools), task-timing.json (MAR, default), overridden by the
 // patient's taskDurations and the scenario's settings.taskDurations (keys: interventionId, tool:<id>, mar:<result>).
-// Student record: state.students[userId].task = { id, name, args, patientId, label, startedAt, endsAt, durationSec, lockSec }.
+// Student record: state.students[userId].task = { id, name, args, patientId, label, startedAt, runFrom, activeMin, endsAt, durationSec, lockSec }
+// and .pausedTask (one at a time): a task the student stepped away from, with leftMin; resuming restarts its countdown.
 
 import { simMinOf } from './session.js';
 import { append } from './log.js';
@@ -51,6 +52,9 @@ export function taskPlan(state, name, pid, args, { catalogs, templatesById }) {
   return lockSec > 0 ? { ...key, durationSec: sec, lockSec } : null;
 }
 
+const r2 = (x) => Math.round(x * 100) / 100;
+/** Minutes actually spent on a task (pauses excluded) up to `at`. */
+export const activeMinutes = (t, at) => r2((t.activeMin || 0) + (at - (t.runFrom ?? t.startedAt)));
 const busyMessage = (task, simMin) => `You're busy: ${task.label} (${Math.max(0, Math.ceil((task.endsAt - simMin) * 60))} s left). Finish or interrupt it first.`;
 
 /** Throws if the student is busy and this call would start another task. */
@@ -66,7 +70,7 @@ export function beginTask(state, pid, name, args, plan, ctx) {
   const simMin = simMinOf(state, ctx.now);
   draft.students[ctx.user.userId] ??= { seen: {}, handoff: {} };
   const id = `t${draft.log.length + 1}`;
-  const task = { id, name, args, user: { ...ctx.user }, patientId: pid, label: plan.label, startedAt: simMin, endsAt: simMin + plan.lockSec / 60, durationSec: plan.durationSec, lockSec: plan.lockSec };
+  const task = { id, name, args, user: { ...ctx.user }, patientId: pid, label: plan.label, startedAt: simMin, runFrom: simMin, activeMin: 0, endsAt: simMin + plan.lockSec / 60, durationSec: plan.durationSec, lockSec: plan.lockSec };
   draft.students[ctx.user.userId].task = task;
   append(draft, { simMin, wallTime: ctx.now, ...ctx.user, patientId: pid, action: 'task-started', details: { taskId: id, label: plan.label, name, durationSec: plan.durationSec, lockSec: plan.lockSec, endsAt: task.endsAt, mode: state.settings.taskTimerMode } });
   return draft;
@@ -83,7 +87,7 @@ function applyTask(draft, userId, task, atMin, ctx, how) {
     append(draft, { simMin: atMin, wallTime: ctx.now, userId, role, patientId: task.patientId, action: 'task-failed', details: { taskId: task.id, label: task.label, error: e.message } });
     return;
   }
-  append(draft, { simMin: atMin, wallTime: ctx.now, userId, role, patientId: task.patientId, action: 'task-finished', details: { taskId: task.id, label: task.label, minutes: Math.round((atMin - task.startedAt) * 100) / 100, how } });
+  append(draft, { simMin: atMin, wallTime: ctx.now, userId, role, patientId: task.patientId, action: 'task-finished', details: { taskId: task.id, label: task.label, minutes: activeMinutes(task, atMin), how } });
 }
 
 /** Tick processor: finishes tasks whose time is up, in time order. */
@@ -102,14 +106,51 @@ export const taskProcessor = {
 };
 
 /** "Interrupt task": the student stops; nothing is charted, the task is logged as interrupted. */
-export function interruptTask(state, { now, user }) {
-  const t = currentTask(state, user.userId);
+export function interruptTask(state, { now, user, paused = false }) {
+  const rec = state.students?.[user.userId];
+  const t = paused ? rec?.pausedTask : rec?.task;
   if (!t) return state;
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
-  draft.students[user.userId].task = null;
-  append(draft, { simMin, wallTime: now, ...user, patientId: t.patientId, action: 'task-interrupted', details: { taskId: t.id, label: t.label, minutes: Math.round((simMin - t.startedAt) * 100) / 100, leftMin: Math.round((t.endsAt - simMin) * 100) / 100 } });
+  if (paused) delete draft.students[user.userId].pausedTask; else draft.students[user.userId].task = null;
+  append(draft, { simMin, wallTime: now, ...user, patientId: t.patientId, action: 'task-interrupted', details: { taskId: t.id, label: t.label,
+    minutes: paused ? r2(t.activeMin || 0) : activeMinutes(t, simMin), leftMin: paused ? t.leftMin : r2(t.endsAt - simMin), ...(paused ? { dropped: true } : {}) } });
   return draft;
+}
+
+/** "Pause task": step away (e.g. an emergency) and come back to it. Frees the student; one paused task at a time. */
+export function pauseTask(state, { now, user }) {
+  const rec = state.students?.[user.userId];
+  const t = rec?.task;
+  if (!t) return state;
+  if (rec.pausedTask) throw new Error(`You already paused ${rec.pausedTask.label}. Resume or drop it first.`);
+  const draft = structuredClone(state);
+  const simMin = simMinOf(state, now);
+  const paused = { ...t, activeMin: activeMinutes(t, simMin), leftMin: r2(Math.max(0, t.endsAt - simMin)), pausedAt: simMin, endsAt: null, runFrom: null };
+  Object.assign(draft.students[user.userId], { task: null, pausedTask: paused });
+  append(draft, { simMin, wallTime: now, ...user, patientId: t.patientId, action: 'task-paused', details: { taskId: t.id, label: t.label, leftMin: paused.leftMin } });
+  return draft;
+}
+
+/** "Resume": the paused task becomes the current task again with the time it had left. */
+export function resumeTask(state, { now, user }) {
+  const rec = state.students?.[user.userId];
+  const p = rec?.pausedTask;
+  if (!p) return state;
+  if (rec.task) throw new Error(busyMessage(rec.task, simMinOf(state, now)));
+  const draft = structuredClone(state);
+  const simMin = simMinOf(state, now);
+  const { leftMin, pausedAt, ...rest } = p;
+  Object.assign(draft.students[user.userId], { task: { ...rest, runFrom: simMin, endsAt: simMin + leftMin } });
+  delete draft.students[user.userId].pausedTask;
+  append(draft, { simMin, wallTime: now, ...user, patientId: p.patientId, action: 'task-resumed', details: { taskId: p.id, label: p.label, pausedMin: r2(simMin - pausedAt), leftMin } });
+  return draft;
+}
+
+/** Paused-task view: { label, patientId, leftSec, pausedAt } or null. */
+export function pausedView(state, userId) {
+  const p = state.students?.[userId]?.pausedTask;
+  return p ? { label: p.label, patientId: p.patientId, leftSec: Math.ceil(p.leftMin * 60), pausedAt: p.pausedAt } : null;
 }
 
 /** Instructor ends a student's task early: it counts as done now (logged as ended by the instructor). */
@@ -127,6 +168,6 @@ export function endTaskNow(state, userId, ctx) {
 export function busyView(state, userId, simMin) {
   const t = currentTask(state, userId);
   if (!t) return null;
-  const total = t.endsAt - t.startedAt;
-  return { label: t.label, patientId: t.patientId, startedAt: t.startedAt, endsAt: t.endsAt, leftSec: Math.max(0, Math.ceil((t.endsAt - simMin) * 60)), fraction: total > 0 ? Math.min(1, (simMin - t.startedAt) / total) : 1 };
+  const total = t.lockSec / 60; // active time the task needs; pauses don't count
+  return { label: t.label, patientId: t.patientId, startedAt: t.startedAt, endsAt: t.endsAt, leftSec: Math.max(0, Math.ceil((t.endsAt - simMin) * 60)), fraction: total > 0 ? Math.min(1, activeMinutes(t, simMin) / total) : 1, resumed: Boolean(t.activeMin) };
 }

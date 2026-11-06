@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Pause a task
+- **Pause task** in the busy banner: step away from a task (e.g. an emergency) and come back to it. The student is free while it's paused; **Resume** carries on with the time it had left; **Drop task** gives it up (logged as interrupted, not charted). One paused task at a time; you can't resume while busy with another task.
+- Durations count active time only: the debrief's Task time excludes pauses (and marks paused tasks), and nothing counts as "went late while busy" during a pause. Live control → Students shows a student's paused task.
+- Tests: 205 passing.
+
 ## Command center: staffing per group
 - Each group card shows its delegation helpers: "Staff: CNAs 2/2 busy · LPNs 0/1 busy · 1 waiting for a helper". It's highlighted when every helper of a role is busy or on break, or a task is waiting. From `staffing()` in `engine/command-center.js`, built on `staffView`.
 - Tests: 203 passing.

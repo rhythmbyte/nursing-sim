@@ -187,7 +187,7 @@ Every setting has a default in `data/catalogs/scenario-defaults.json`; a scenari
 
 ### 4.9 Task timers
 
-Interventions and assessment tools have `durationSec`; MAR actions and the default live in `task-timing.json`; overrides go in a patient's `taskDurations` and a scenario's `settings.taskDurations` (keys: intervention id, `tool:<id>`, `mar:<result>`). `settings.taskTimerMode` is `screen-only`, `manikin` (lockout = duration × `taskTimerManikinFactor`, at least `taskTimerMinLockoutSec`) or `off`. While a student is busy they can't start another task. Actions in `allowedWhileBusy`, call lights, alarms and anything that isn't a task always work. The chart action is applied when the task finishes. Interrupted tasks are logged and not charted.
+Interventions and assessment tools have `durationSec`; MAR actions and the default live in `task-timing.json`; overrides go in a patient's `taskDurations` and a scenario's `settings.taskDurations` (keys: intervention id, `tool:<id>`, `mar:<result>`). `settings.taskTimerMode` is `screen-only`, `manikin` (lockout = duration × `taskTimerManikinFactor`, at least `taskTimerMinLockoutSec`) or `off`. While a student is busy they can't start another task. They can **pause** it (one at a time) to step away, then resume it with the time it had left, or drop it. Actions in `allowedWhileBusy`, call lights, alarms and anything that isn't a task always work. The chart action is applied when the task finishes. Interrupted tasks are logged and not charted.
 
 ### 4.8 Patient tags (`data/catalogs/patient-tags.json` + `patientTags` in a patient file)
 

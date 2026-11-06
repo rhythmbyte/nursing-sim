@@ -93,3 +93,40 @@ test('debrief: task times, busy vs idle, interrupted, what went late while busy'
   assert.equal(d.tasks.interrupted, 1);
   assert.ok(d.tasks.waiting.some((w) => w.kind === 'callLight' && w.during === 'Head-to-toe assessment'), 'Robert\'s call light went late (5 min) at 08:20 during the head-to-toe');
 });
+
+test('pause: step away (free), do something else, resume with the time left; one paused at a time; drop', () => {
+  const { runner, at } = rig({ taskTimerMode: 'screen-only' });
+  at(10);
+  runner.chart('chartIntervention', LG, { interventionId: 'assess-full' }, S1); // 8 min
+  at(13); runner.pauseTask(S1);
+  assert.equal(runner.busy('student-1'), null, 'free while paused');
+  assert.equal(runner.paused('student-1').leftSec, 300);
+  runner.chart('chartIntervention', RM, { interventionId: 'vs-bp' }, S1); // 45 s, can't pause a second while one is paused
+  assert.throws(() => runner.pauseTask(S1), /already paused Head-to-toe/);
+  assert.throws(() => runner.resumeTask(S1), /You're busy/);
+  at(14); runner.resumeTask(S1);
+  assert.equal(runner.busy('student-1').leftSec, 300);
+  at(18.5);
+  assert.ok(runner.busy('student-1'), 'still 0.5 min to go (3 + 4.5 of 8 active)');
+  at(19.1);
+  const done = runner.state.log.find((l) => l.action === 'task-finished' && l.details.label === 'Head-to-toe assessment');
+  assert.deepEqual([done.simMin, done.details.minutes], [19, 8], 'active time only');
+  const rev = runner.state.log.map((l) => l.action).filter((a) => a.startsWith('task-'));
+  assert.deepEqual(rev, ['task-started', 'task-paused', 'task-started', 'task-finished', 'task-resumed', 'task-finished']);
+  runner.chart('chartIntervention', LG, { interventionId: 'foley' }, S1);
+  at(20); runner.pauseTask(S1); runner.dropPausedTask(S1);
+  assert.ok(runner.state.log.at(-1).details.dropped);
+  assert.equal(runner.paused('student-1'), null);
+});
+
+test('debrief: paused time is not busy time, and nothing "went late while busy" during the pause', () => {
+  const { runner, at } = rig({ taskTimerMode: 'screen-only' });
+  runner.join('student-1', 'Ana', runner.state.joinCode);
+  at(70); runner.chart('chartIntervention', LG, { interventionId: 'assess-full' }, S1);
+  at(72); runner.pauseTask(S1); // Robert's call light lights at 75 and goes late at 80, while the task is paused
+  at(85); runner.resumeTask(S1);
+  at(92);
+  const d = runner.debrief('student-1');
+  assert.deepEqual(d.tasks.rows.map((r) => [r.minutes, r.outcome, r.paused]), [[8, 'finished', true]]);
+  assert.ok(!d.tasks.waiting.some((w) => w.kind === 'callLight'), 'the call light went late during the pause, not while busy');
+});

@@ -302,3 +302,4 @@ body.standalone-monitor { background: #000; }
 .cc-busy { color: var(--review-text); font-weight: 600; }
 .cc-staff { font-size: 0.85rem; }
 .cc-staff-full { color: var(--review-text); background: var(--review-bg); border-radius: 6px; padding: 2px 6px; }
+.paused-banner { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); background: var(--surface-2); border: 1px dashed var(--border); }

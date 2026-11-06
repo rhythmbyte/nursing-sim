@@ -4,6 +4,12 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Paused tasks are set aside, not frozen in place
+- **Decision:** `pauseTask` moves the current task to `students[uid].pausedTask` with its time left and frees the student; `resumeTask` makes it current again. A task keeps `activeMin` and `runFrom`, so finished minutes and the debrief count active time only.
+- **Why:** Pausing exists so the student can deal with something else. Freezing the busy lock would defeat that. One paused task at a time keeps it simple to follow (and to grade).
+
+---
+
 ## 2026-11-07: Task timers default to manikin mode
 - **Decision:** `taskTimerMode` defaults to `manikin` (short lockout), not `screen-only`.
 - **Why:** In class the real task happens on the manikin, so the screen lockout only needs to stop rapid-fire charting. Full screen-only waits made the demo slow (an 8-minute head-to-toe at 1x). Sims without manikins choose screen-only in Sim setup.
