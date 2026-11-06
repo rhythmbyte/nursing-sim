@@ -2,6 +2,7 @@
 // actions: [{ label, kind?: 'primary'|'danger'|'ghost', onClick?(close) }]. onClick returning false keeps it open.
 // dismissable=false blocks Esc (for steps that must be finished on purpose, like closing a handoff).
 
+import { textDraft } from './drafts.js';
 import { h } from './dom.js';
 
 export function openModal({ title, body, actions = [], onClose = null, dismissable = true, wide = false }) {
@@ -51,10 +52,11 @@ export function confirmWarnings(title, intro, warnings, proceedLabel = 'Proceed 
 }
 
 /** Promise-based single text prompt. Resolves the text, or null if cancelled. */
-export function promptText(title, label, { required = true, okLabel = 'Save' } = {}) {
+export function promptText(title, label, { required = true, okLabel = 'Save', draftKey = null } = {}) {
   return new Promise((resolve) => {
     let answer = null;
     const input = h('input', { type: 'text', class: 'input', 'aria-label': label });
+    const draft = draftKey ? textDraft(input, draftKey) : null;
     const err = h('p', { class: 'form-error', hidden: true }, 'Required.');
     openModal({
       title,
@@ -65,6 +67,7 @@ export function promptText(title, label, { required = true, okLabel = 'Save' } =
           label: okLabel, kind: 'primary', onClick: () => {
             if (required && !input.value.trim()) { err.hidden = false; return false; }
             answer = input.value.trim();
+            draft?.clear();
             return true;
           },
         },

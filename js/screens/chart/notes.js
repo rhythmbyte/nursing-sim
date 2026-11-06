@@ -2,6 +2,7 @@
 // Quick actions = catalog interventions with a `quickAction` label (data), charted like any other
 // intervention so rules see them. "Escalated" is its own log action.
 
+import { textDraft, draftNote } from '../shared/drafts.js';
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, byWhom, patientLog } from './util.js';
@@ -17,19 +18,22 @@ export default {
       { label: 'Escalated', escalate: true },
     ];
     const text = h('textarea', { class: 'input notes-box', rows: 5, 'aria-label': 'Nursing note' });
+    const draft = textDraft(text, `notes.${ctx.user.userId}.${pid}`); // typed text survives a reload or crash
     const list = h('div', {});
 
     root.append(h('div', { class: 'chart-grid two' },
       h('section', { class: 'panel' },
         h('h3', {}, 'New note'),
+        draft.restored ? draftNote(() => { text.value = ''; draft.clear(); }) : null,
         text,
         h('div', { class: 'controls' },
           h('button', {
             class: 'btn btn-primary',
             onclick: () => {
               if (!text.value.trim()) return;
-              act('addNote', { text: text.value });
+              if (!act('addNote', { text: text.value })) return;
               text.value = '';
+              draft.clear();
               toast('Note saved');
             },
           }, 'Save note')),

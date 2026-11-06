@@ -2,6 +2,7 @@
 // "Performed by" offers Me / LPN / CNA on every intervention; whether delegating was appropriate is
 // judged by the inappropriate-delegation rule, not here.
 
+import { formDraft, loadDraft, saveDraft, clearDraft } from '../shared/drafts.js';
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, byWhom, fieldLabel, patientLog } from './util.js';
@@ -24,7 +25,10 @@ export default {
     const reveal = scenario.settings.revealManualVitals;
     const cat = catalogs.interventions;
     let category = cat.categories[0].id;
-    let selected = null;
+    // A form in progress is a draft (shared/drafts.js): which intervention, and what was typed.
+    const SEL = `ivsel.${ctx.user.userId}.${pid}`;
+    let selected = cat.interventions.find((i) => i.id === loadDraft(SEL)) || null;
+    let fd = null;
 
     const search = h('input', { class: 'input iv-search', type: 'search', placeholder: 'Search interventions (e.g. foley, EKG, vitals)', 'aria-label': 'Search interventions', oninput: () => renderBars() });
     const recentRow = h('div', { class: 'pill-row', role: 'group', 'aria-label': 'Recent' });
@@ -64,13 +68,14 @@ export default {
         forOrders.map((o, i) => h('option', { value: o.id, selected: i === 0 }, o.text.length > 90 ? `${o.text.slice(0, 88)}…` : o.text)));
       const by = h('select', { name: 'by' }, ['Me', 'LPN', 'CNA'].map((x) => h('option', { value: x === 'Me' ? '' : x }, x === 'Me' ? 'Me' : `Delegate to ${x}`)));
 
-      clear(form).append(h('form', {
+      const formEl = h('form', {
         class: 'iv-form',
         onsubmit: (e) => {
           e.preventDefault();
           const fields = vf ? vf.values() : Object.fromEntries(Object.entries(inputs).map(([k, el]) => [k, el.value.trim()]));
           const r = act('chartIntervention', { interventionId: iv.id, fields, orderId: orderSel.value || null, delegatedTo: by.value || null });
           if (!r) return;
+          fd?.clear(); clearDraft(SEL);
           toast(by.value ? `Delegated to ${by.value}: ${iv.label}. They'll report back.` : r.task ? `Started: ${iv.label} (${Math.round(r.task.lockSec)} s)` : `Charted: ${iv.label}`);
           renderBars(); // refresh the Recent row
           renderForm();
@@ -85,7 +90,11 @@ export default {
         h('label', { class: 'field' }, h('span', {}, 'For order'), orderSel),
         h('label', { class: 'field' }, h('span', {}, 'Performed by'), by),
         h('button', { class: 'btn btn-primary', type: 'submit' }, 'Save'),
-      ));
+      );
+      clear(form).append(formEl);
+      fd = formDraft(formEl, `iv.${ctx.user.userId}.${pid}.${iv.id}`);
+      formEl.addEventListener('input', () => saveDraft(SEL, iv.id), { once: true });
+      if (fd.note) formEl.prepend(fd.note);
     }
 
     root.append(h('div', { class: 'chart-grid two' },

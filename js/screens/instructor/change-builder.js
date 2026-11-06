@@ -3,6 +3,7 @@
 // guided event builder; "From" auto-fills with what the patient will be at that time (dry run, without this change).
 // Saving generates the linked events (shared group) via change-model.js. Reopening edits the same change.
 
+import { formDraft } from '../shared/drafts.js';
 import { helpField, helpTip } from '../shared/help.js';
 import { h } from '../shared/dom.js';
 import { openModal } from '../shared/modal.js';
@@ -41,7 +42,8 @@ export function openChangeBuilder({ template, key, startClock, catalogs, setting
   manual.addEventListener('change', sync);
   sync();
 
-  openModal({
+  let fd = null; // the form is a draft until saved or cancelled (shared/drafts.js)
+  const modal = openModal({
     title: key ? 'Edit scenario change' : 'New scenario change',
     wide: true,
     body: h('div', { class: 'iv-form' },
@@ -53,7 +55,7 @@ export function openChangeBuilder({ template, key, startClock, catalogs, setting
       field('What students should recognize (debrief, one per line)', recognize),
       err),
     actions: [
-      { label: 'Cancel', kind: 'ghost' },
+      { label: 'Cancel', kind: 'ghost', onClick: () => { fd?.clear(); return true; } },
       {
         label: 'Save change', kind: 'primary', onClick: () => {
           if (!manual.checked && !time.value) { err.textContent = 'Pick a time or make it instructor-triggered.'; return false; }
@@ -64,10 +66,12 @@ export function openChangeBuilder({ template, key, startClock, catalogs, setting
             const form = gesToChangeForm(list, { ...f, time: time.value, manual: manual.checked, findings: findings.value, recognize: recognize.value }, fromVitals());
             if (!list.length && !form.findings.trim()) throw new Error('Add at least one event (or new findings).');
             onSave(formToChange(template, form, startClock).template);
-            return true;
+            fd?.clear(); return true;
           } catch (e) { err.textContent = e.message; return false; }
         },
       },
     ],
   });
+  fd = formDraft(modal.el.querySelector('.modal-body'), `change.${template.id}.${key || 'new'}`);
+  if (fd.note) modal.el.querySelector('.modal-body').prepend(fd.note);
 }

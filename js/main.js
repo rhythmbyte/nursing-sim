@@ -133,6 +133,14 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   const brk = breakBanner(store, () => runner.state);
   const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo), banner: brk.el });
   const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
+  // Remember the scroll position per screen (tab / view / patient / section) and put it back after a reload or Back.
+  const placeKey = () => `ui.scroll.${JSON.stringify(history.state?.nav || {})}`;
+  let scrollTimer = null;
+  const onScroll = () => { clearTimeout(scrollTimer); scrollTimer = setTimeout(() => save(placeKey(), Math.round(window.scrollY)), 300); };
+  const restoreScroll = () => setTimeout(() => { const y = load(placeKey()); if (y) window.scrollTo(0, y); }, 60);
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('popstate', restoreScroll);
+  if (pageLoad) restoreScroll();
   // Soak / automated checks only: ?debug=1 exposes the runner to the page (never linked from the app).
   if (new URLSearchParams(window.location.search).has('debug')) window.__nursingSim = { runner, store, data, scenario };
   runner.tick();
@@ -142,6 +150,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     window.removeEventListener('pagehide', onPageHide);
     teardownShell();
     brk.destroy();
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('popstate', restoreScroll);
   };
 }
 

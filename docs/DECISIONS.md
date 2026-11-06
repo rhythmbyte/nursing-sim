@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Drafts are generic form snapshots, restored in document order
+- **Decision:** `formDraft(container, key)` saves every field's value by a stable key (data-draft, aria-label, name, or position) and restores them in order, firing input/change. Then a dropdown that builds more fields (the guided event type, the When trigger) creates them before their own values are restored. Single fields use `textDraft`; the patient editor saves its working copy as JSON.
+- **Why:** One mechanism covers a dozen forms without each one knowing about drafts. Restoring in order handles the dynamic forms.
+- **Limits:** chip-style controls (patient tags) aren't inputs and aren't restored mid-edit. Drafts are per browser in the prototype.
+
+---
+
 ## 2026-11-07: Memoize timeliness and flags per state; coalesce heavy re-renders
 - **Decision:** session states are immutable, so `timelinessItems` and `evaluateRules` cache their result per (state object, sim minute) in a WeakMap. The Command center and Live control re-render through `coalesce` (at most every 250 ms).
 - **Why (soak test, 4-hour sim, 3 groups):** before, one Command center render took 51 ms and every action re-rendered it; it called timeliness about six times per render. After: 7 ms, with renders capped. Memory stayed flat (heap 2.2 → 4.3 MB over 811 log entries). The remaining ~30 ms per action is the synchronous clone and save of the 286 KB session, which "save everything instantly" requires.

@@ -2,6 +2,7 @@
 // scenario changes (timeline + builder), outcome and code branch. Works on a copy (`work`); Save validates
 // and stores it in this browser. "Advanced: edit JSON" stays available but hidden.
 
+import { loadDraft, saveDraft, clearDraft, draftNote } from '../shared/drafts.js';
 import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
@@ -33,13 +34,20 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
   let dirty = false;
   let collect = () => work;
 
-  function load(pid) {
+  // The working copy is a draft (shared/drafts.js): saved as you edit, restored after a reload or crash until Save.
+  let restored = false;
+  const DRAFT = (pid) => `editor.${pid}`;
+  function load(pid, { useDraft = true } = {}) {
     const t = data.patients.find((p) => p.id === pid) || data.patients[0];
-    id = t?.id; work = t ? structuredClone(t) : null; isNew = false; dirty = false;
+    id = t?.id; work = t ? structuredClone(t) : null; isNew = false; dirty = false; restored = false;
+    const d = useDraft && id ? loadDraft(DRAFT(id)) : null;
+    if (d && JSON.stringify(d) !== JSON.stringify(t)) { work = d; dirty = true; restored = true; } else if (d) clearDraft(DRAFT(id));
   }
+  let draftTimer = null;
+  const keepDraft = () => { clearTimeout(draftTimer); draftTimer = setTimeout(() => { if (work && dirty) { try { saveDraft(DRAFT(work.id), collect()); } catch { /* half-typed form: next keystroke */ } } }, 500); };
   /** Pull form + tables into `work` (before any re-render, so nothing typed is lost). */
   function sync() { work = collect(); }
-  function update(next) { work = next; dirty = true; render(); }
+  function update(next) { work = next; dirty = true; render(); keepDraft(); }
 
   function render() {
     if (!work) { clear(body).append(h('p', { class: 'muted' }, 'No patients.')); return; }
@@ -103,6 +111,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       if (errors.length) { showErrors(errors); return; }
       editorTarget.set(work.id);
       dirty = false; // saved: nothing to protect any more
+      clearDraft(DRAFT(work.id)); restored = false;
       toast('Saved in this browser');
       await reloadData();
     }
@@ -134,6 +143,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
 
     clear(body).append(
       h('header', { class: 'screen-header' }, h('h2', {}, 'Patient editor'), picker,
+        restored ? draftNote(() => { clearDraft(DRAFT(id)); load(id, { useDraft: false }); render(); }, 'Unsaved edits restored') : null,
         isNew ? badge('New, not saved', 'review') : isLocal ? badge(inFiles ? 'Edited in this browser' : 'Created in this browser', 'pending') : badge('File version', 'neutral'),
         dirty && !isNew ? badge('Unsaved changes', 'review') : null,
         h('div', { class: 'debrief-actions' },
@@ -144,6 +154,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
           isLocal ? h('button', { class: 'btn btn-ghost', onclick: async () => {
             if (!window.confirm(inFiles ? 'Discard this browser\'s edits and go back to the file version?' : 'Delete this browser-only patient?')) return;
             removeLocal('patient', id);
+            clearDraft(DRAFT(id));
             if (!inFiles) editorTarget.set(null);
             await reloadData();
           } }, inFiles ? 'Revert to file' : 'Delete') : null)),
@@ -197,7 +208,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
   load(id);
   root.append(body);
   // Typing anywhere in the form counts as an unsaved change (builder/timeline/JSON changes go through update()).
-  body.addEventListener('input', () => { dirty = true; });
+  body.addEventListener('input', () => { dirty = true; keepDraft(); });
   body.addEventListener('change', (e) => { if (!e.target.closest('.screen-header')) dirty = true; });
   const guard = { isDirty: () => dirty, message: 'The patient editor has unsaved changes. Leave and discard them?' };
   setLeaveGuard(guard);

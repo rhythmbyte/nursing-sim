@@ -2,6 +2,7 @@
 // admissions); manual or random assignment. "Create sim" fills tag counts (randomizer), validates, saves
 // the scenario in this browser, and switches to it (a new join code is generated).
 
+import { formDraft } from '../shared/drafts.js';
 import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
@@ -22,6 +23,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
   const defaults = data.catalogs.scenarioDefaults.settings;
   const lib = [...data.patients].sort((a, b) => a.demographics.room.localeCompare(b.demographics.room, undefined, { numeric: true }));
   const groups = [];
+  let clearSetupDraft = () => {};
   const body = h('div', {});
 
   const name = h('input', { class: 'input', value: 'New sim' });
@@ -137,6 +139,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
       clear(result).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not created:'), h('ul', {}, errors.map((e) => h('li', {}, e)))));
       return;
     }
+    clearSetupDraft();
     toast(`Created "${scenario.name}"`);
     if (warnings.length) window.alert(`Created, with randomizer warnings:\n\n${warnings.join('\n')}`);
     save('ui.instructor.view', 'live'); // land on Live control to show the new join code
@@ -173,4 +176,11 @@ export function mountSimSetup(root, { data, switchScenario }) {
   addGroup();
   refreshCounts();
   root.append(body);
+  // The whole form is a draft until "Create sim" (shared/drafts.js): groups first, then every field.
+  const draft = formDraft(body, 'setup', { extra: {
+    get: () => groups.map(({ refreshCount, patients, admissions, ...g }) => ({ ...g, patients: [...patients], admissions: [...admissions] })),
+    set: (saved) => { groups.length = 0; saved.forEach((g) => groups.push({ ...g, patients: new Set(g.patients), admissions: new Set(g.admissions) })); renderGroups(); refreshCounts(); },
+  } });
+  if (draft.note) body.prepend(draft.note);
+  clearSetupDraft = () => draft.clear();
 }

@@ -3,6 +3,7 @@
 // the sim reveals assessment findings (settings.revealAssessmentFindings); otherwise assess the manikin/instructor.
 // NEWS2 is calculated from the current vitals (view only, can be recorded). Scoring: engine/assessment-score.js.
 
+import { formDraft, loadDraft, saveDraft, clearDraft } from '../shared/drafts.js';
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { helpTip } from '../shared/help.js';
@@ -21,7 +22,9 @@ export default {
     const { pid, catalogs, act, runner, scenario } = ctx;
     const tools = runner.assessmentTools();
     const reveal = scenario.settings.revealAssessmentFindings;
-    let selected = ctx.takePending?.('assessments')?.toolId || null;
+    const SEL = `assesssel.${ctx.user.userId}.${pid}`;
+    let selected = ctx.takePending?.('assessments')?.toolId || loadDraft(SEL) || null; // a tool in progress is a draft
+    let fd = null;
     const picker = h('div', {});
     const form = h('div', {});
     const charted = h('div', {});
@@ -73,11 +76,12 @@ export default {
         return h('div', { class: 'assess-item' }, h('label', { class: 'field' }, h('span', {}, item.label), el), check, note);
       });
       const by = tool.delegableTo.length ? h('select', { 'aria-label': 'Performed by' }, h('option', { value: '' }, 'Me'), tool.delegableTo.map((x) => h('option', { value: x }, `Delegate to ${x}`))) : null;
-      clear(form).append(h('form', { class: 'iv-form', onsubmit: (e) => {
+      const formEl = h('form', { class: 'iv-form', onsubmit: (e) => {
         e.preventDefault();
         const delegatedTo = by?.value || null;
         const r = act('chartAssessment', { toolId: tool.id, answers: delegatedTo ? {} : answers(), delegatedTo });
         if (!r) return;
+        fd?.clear(); clearDraft(SEL);
         toast(delegatedTo ? `Delegated to ${delegatedTo}: ${tool.name}` : r.task ? `Doing ${tool.name} (${Math.round(r.task.lockSec)} s)` : `Charted ${tool.name}`);
         renderForm();
       } },
@@ -85,7 +89,12 @@ export default {
         reveal ? null : h('p', { class: 'muted small' }, 'Assess the manikin (or ask the instructor) and enter what you find.'),
         ...rows, total,
         by ? h('label', { class: 'field' }, h('span', {}, 'Performed by'), by) : null,
-        h('button', { class: 'btn btn-primary', type: 'submit' }, 'Save')));
+        h('button', { class: 'btn btn-primary', type: 'submit' }, 'Save'));
+      clear(form).append(formEl);
+      fd = formDraft(formEl, `assess.${ctx.user.userId}.${pid}.${tool.id}`);
+      formEl.addEventListener('input', () => saveDraft(SEL, tool.id), { once: true });
+      formEl.addEventListener('change', () => saveDraft(SEL, tool.id), { once: true });
+      if (fd.note) formEl.prepend(fd.note);
       refresh();
     }
 

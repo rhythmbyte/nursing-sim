@@ -1,6 +1,7 @@
 // Patient chart (Epic-lite): banner + section tabs. Sections come from screens/chart/index.js.
 // Re-renders only each section's dynamic parts on store changes, so forms keep what the student typed.
 
+import { navPush, onNav } from '../shared/nav.js';
 import { h, clear } from '../shared/dom.js';
 import { busyBanner } from './busy-banner.js';
 import { staffPanel } from './staff-panel.js';
@@ -72,7 +73,7 @@ export function mountPatientView(root, ctx) {
       class: `chart-tab${s.id === activeId ? ' active' : ''}`,
       role: 'tab',
       'aria-selected': s.id === activeId ? 'true' : 'false',
-      onclick: () => { activeId = s.id; save(SECTION_KEY, s.id); renderTabs(); mountSection(); },
+      onclick: () => { activeId = s.id; save(SECTION_KEY, s.id); renderTabs(); mountSection(); navPush({ section: s.id }); },
     }, s.label, s.id === 'orders' && newOrders ? h('span', { class: 'tab-count' }, String(newOrders)) : null)));
   }
 
@@ -132,6 +133,7 @@ export function mountPatientView(root, ctx) {
   renderPrio();
   mountSection();
 
+  const offNav = onNav((e) => { if (e.patient === pid && e.section && e.section !== activeId && sections.some((x) => x.id === e.section)) { activeId = e.section; save(SECTION_KEY, activeId); renderTabs(); mountSection(); } });
   const off = store.subscribe(() => {
     renderTabs();
     renderLight();
@@ -141,5 +143,5 @@ export function mountPatientView(root, ctx) {
   // Elapsed times in the call-light banners change every sim minute.
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); renderLight(); } });
-  return () => { off(); offTick(); clock.destroy(); busy.destroy(); if (mounted?.destroy) mounted.destroy(); };
+  return () => { offNav(); off(); offTick(); clock.destroy(); busy.destroy(); if (mounted?.destroy) mounted.destroy(); };
 }

@@ -1,6 +1,7 @@
 // Instructor tab: Live control | Sim setup | Review queue | Patient editor | Patient library.
 // The chosen sub-view (and the patient open in the editor) is remembered.
 
+import { navPush, onNav } from '../shared/nav.js';
 import { h, clear } from '../shared/dom.js';
 import { load, save } from '../../storage.js';
 import { canLeave } from '../shared/leave-guard.js';
@@ -40,7 +41,7 @@ export function mountInstructor(root, ctx) {
     clear(nav).append(...views.map((v) => h('button', {
       class: `subnav-btn${v.id === active ? ' active' : ''}`,
       'aria-pressed': v.id === active ? 'true' : 'false',
-      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); saveSession('ui.instructor.chosen', true); if (v.id === 'live') save('ui.live.filter', null); render(); },
+      onclick: () => { if (v.id === active || !canLeave()) return; active = v.id; save(VIEW_KEY, v.id); saveSession('ui.instructor.chosen', true); if (v.id === 'live') save('ui.live.filter', null); render(); navPush({ tab: 'instructor', view: v.id }); },
     }, v.label)));
     if (typeof cleanup === 'function') cleanup();
     cleanup = views.find((v) => v.id === active).mount(clear(body));
@@ -55,5 +56,6 @@ export function mountInstructor(root, ctx) {
   }
   root.append(nav, body);
   render();
-  return () => { if (typeof cleanup === 'function') cleanup(); };
+  const offNav = onNav((e) => { if (e.tab === 'instructor' && e.view && e.view !== active && views.some((v) => v.id === e.view) && canLeave()) { active = e.view; save(VIEW_KEY, active); render(); } });
+  return () => { offNav(); if (typeof cleanup === 'function') cleanup(); };
 }

@@ -1,6 +1,7 @@
 // Script builder: one patient state (name, target vitals now or as a trend, rhythm, findings, teaching note).
 // Saving goes through script-model.js formToState; nothing here knows the data shape beyond the form.
 
+import { formDraft } from '../shared/drafts.js';
 import { h } from '../shared/dom.js';
 import { helpField } from '../shared/help.js';
 import { openModal } from '../shared/modal.js';
@@ -27,7 +28,8 @@ export function openStateForm({ template, stateId = null, catalogs, onSave }) {
   const review = select('Review status', [['proposed', 'proposed'], ['partial', 'partial'], ['approved', 'approved']], f.review);
   const err = h('p', { class: 'form-error', role: 'alert' });
 
-  openModal({
+  let fd = null; // the form is a draft until saved or cancelled (shared/drafts.js)
+  const modal = openModal({
     title: stateId ? `Edit state: ${f.label}` : 'New state',
     wide: true,
     body: h('div', { class: 'iv-form' },
@@ -37,7 +39,7 @@ export function openStateForm({ template, stateId = null, catalogs, onSave }) {
       field('Teaching note', note),
       err),
     actions: [
-      { label: 'Cancel', kind: 'ghost' },
+      { label: 'Cancel', kind: 'ghost', onClick: () => { fd?.clear(); return true; } },
       { label: 'Save state', kind: 'primary', onClick: () => {
         try {
           const g = gesToState(events.value(), fromVitals());
@@ -45,9 +47,11 @@ export function openStateForm({ template, stateId = null, catalogs, onSave }) {
             vitalsDirect: g.vitals || { values: {} }, rhythm: g.rhythm || '', assessments: g.assessments || {} };
           const next = formToState(template, form, stateId);
           onSave(next, next.script.states.find((s) => s.label === form.label.trim())?.id);
-          return true;
+          fd?.clear(); return true;
         } catch (e) { err.textContent = e.message; return false; }
       } },
     ],
   });
+  fd = formDraft(modal.el.querySelector('.modal-body'), `state.${template.id}.${stateId || 'new'}`);
+  if (fd.note) modal.el.querySelector('.modal-body').prepend(fd.note);
 }

@@ -411,6 +411,7 @@ Things in the prototype that will need to change for the real website (logins, b
 | Reactions run in the browser that owns the session (the one writer window), as a processor in `session.advance()` | They run on the server, which is the clock authority; student actions reach it as API calls, and the same pure `engine/reactions.js` runs there | `js/engine/reactions.js`, `session.js` |
 | Assessment tools whose license isn't clearly public (Braden, Wong-Baker FACES, CAM, POSS: permission needed; Morse, FLACC, CPOT, RASS, COWS, NEWS2: terms unknown) are in the catalog with paraphrased wording, flagged and left out of default sims | Confirm each license (or buy it) before the real course; replace paraphrases with licensed wording or drop the tool | `data/catalogs/assessment-tools.json` `license` |
 | The answer key for assessments (`assessmentsExpected`) is in the browser; students get one item at a time via Check patient | The server holds expected answers and returns one item only when the sim allows | `engine/assessments.js` `revealItem` |
+| Charted actions are saved to this browser before the screen updates (`runner.commit`); drafts autosave on the device (`draft.*` keys) | Every action is written to the server immediately and acknowledged. Unacknowledged actions stay on the device and retry with their original timestamps (the server orders by them). Drafts sync per user so a different device resumes them | `js/engine/runner.js`, `js/screens/shared/drafts.js` |
 
 ---
 

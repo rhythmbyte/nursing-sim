@@ -40,7 +40,7 @@ export default {
     }
 
     async function withReason(o, result, title) {
-      const reason = await promptText(`${title}: ${o.med}`, 'Reason');
+      const reason = await promptText(`${title}: ${o.med}`, 'Reason', { draftKey: `mar.${ctx.user.userId}.${pid}.${o.id}.${result}` });
       if (reason == null) return;
       const r = act('medAction', { orderId: o.id, result, reason });
       if (r) toast(`${title}: ${o.med}`);

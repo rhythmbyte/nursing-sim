@@ -1,6 +1,7 @@
 // Script builder: a reaction written as "When / If / Then" with dropdowns from the catalogs and this patient.
 // Saving goes through script-model.js formToReaction (readable errors shown in the form).
 
+import { formDraft } from '../shared/drafts.js';
 import { h } from '../shared/dom.js';
 import { helpField, helpTip } from '../shared/help.js';
 import { openModal } from '../shared/modal.js';
@@ -72,7 +73,8 @@ export function openReactionForm({ template, reactionId = null, catalogs, onSave
   const err = h('p', { class: 'form-error', role: 'alert' });
   if (f.when.where.raw) err.textContent = 'This trigger has field tests the form can\'t show (several alternatives with several fields). They are kept unless you add field tests here.';
 
-  openModal({
+  let fd = null; // the form is a draft until saved or cancelled (shared/drafts.js)
+  const modal = openModal({
     title: reactionId ? `Edit reaction: ${f.label || f.id}` : 'New reaction',
     wide: true,
     body: h('div', { class: 'iv-form script-form' },
@@ -83,16 +85,18 @@ export function openReactionForm({ template, reactionId = null, catalogs, onSave
       h('div', { class: 'editor-grid' }, h('label', { class: 'inline' }, repeat, ' Can fire more than once ', helpTip('script.repeat')), field('Most times it can fire', maxFires)),
       err),
     actions: [
-      { label: 'Cancel', kind: 'ghost' },
+      { label: 'Cancel', kind: 'ghost', onClick: () => { fd?.clear(); return true; } },
       { label: 'Save reaction', kind: 'primary', onClick: () => {
         try {
           const form = { ...f, id: id.value, label: label.value, review: review.value, repeat: repeat.checked, maxFires: maxFires.value, short: short.value, when: when.value(), cond: cond.value(),
             then: then.value().flatMap((ge) => geToEffects(ge, fromVitals())).map((effect) => ({ effect })) };
           const next = formToReaction(template, form, reactionId);
           onSave(next, next.script.reactions.find((r) => !template.script?.reactions.some((x) => x.id === r.id))?.id || reactionId);
-          return true;
+          fd?.clear(); return true;
         } catch (e) { err.textContent = e.message; return false; }
       } },
     ],
   });
+  fd = formDraft(modal.el.querySelector('.modal-body'), `reaction.${template.id}.${reactionId || 'new'}`);
+  if (fd.note) modal.el.querySelector('.modal-body').prepend(fd.note);
 }

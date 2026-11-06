@@ -3,6 +3,7 @@
 // runs before the next tab mounts. The active tab is remembered via storage.
 // Returns a teardown function.
 
+import { navPush, onNav, installNav } from './shared/nav.js';
 import { h, clear } from './shared/dom.js';
 import { load, save } from '../storage.js';
 import { canLeave } from './shared/leave-guard.js';
@@ -28,7 +29,7 @@ export function mountShell(root, tabs, { headerExtra = null, banner = null } = {
       role: 'tab',
       id: `tab-${t.id}`,
       'aria-selected': t.id === active ? 'true' : 'false',
-      onclick: () => { if (t.id !== active && canLeave()) activate(t.id); },
+      onclick: () => { if (t.id !== active && canLeave()) { activate(t.id); navPush({ tab: t.id, view: null, patient: null, section: null }); } },
     }, t.label)));
     panel.setAttribute('aria-labelledby', `tab-${active}`);
     runCleanup();
@@ -52,5 +53,8 @@ export function mountShell(root, tabs, { headerExtra = null, banner = null } = {
     panel,
   );
   render();
-  return runCleanup;
+  // Back / Forward between tabs (shared/nav.js); the in-tab parts handle their own entries.
+  const offNav = onNav((e) => { if (e.tab && e.tab !== active && tabs.some((t) => t.id === e.tab)) activate(e.tab); });
+  installNav({ tab: active });
+  return () => { offNav(); runCleanup(); };
 }

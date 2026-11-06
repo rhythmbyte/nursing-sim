@@ -1,6 +1,7 @@
 // Per-patient instructor controls: push an order (as the provider), call light on/off, start a code,
 // and record ROSC / no ROSC. Clinical choices stay with the instructor; nothing here judges them.
 
+import { formDraft } from '../shared/drafts.js';
 import { h } from '../shared/dom.js';
 import { openModal, promptText } from '../shared/modal.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -16,18 +17,22 @@ export function openLiveEvent(runner, pid, name, template, catalogs, user, prese
   const fromVitals = () => ({ ...runner.state.patients[pid].vitals });
   const form = eventForm(preset, { context: 'live', template, catalogs, fromVitals, normal: normalFor(template, catalogs) });
   const err = h('p', { class: 'form-error', role: 'alert' });
-  openModal({
+  let fd = null;
+  const modal = openModal({
     title: `Add event now · ${name}`, wide: true, body: h('div', { class: 'iv-form' }, form.el, err),
-    actions: [{ label: 'Cancel', kind: 'ghost' }, { label: 'Apply now', kind: 'primary', onClick: () => {
+    actions: [{ label: 'Cancel', kind: 'ghost', onClick: () => { fd?.clear(); return true; } }, { label: 'Apply now', kind: 'primary', onClick: () => {
       try {
         for (const c of geToLiveCalls(form.value(), fromVitals())) {
           if (c.method === 'script') runner.script(c.args[0], pid, c.args[1], user);
           else runner[c.method](pid, ...c.args, user);
         }
+        fd?.clear();
         return true;
       } catch (e) { err.textContent = e.message; return false; }
     } }],
   });
+  fd = formDraft(modal.el.querySelector('.modal-body'), `live-event.${pid}`);
+  if (fd.note) modal.el.querySelector('.modal-body').prepend(fd.note);
 }
 
 function pushOrderModal(runner, pid, name, catalogs, user) {

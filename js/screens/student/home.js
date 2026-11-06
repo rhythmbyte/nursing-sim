@@ -1,6 +1,8 @@
 // Student tab: home (patient list) ↔ patient chart. The open patient is remembered per student.
 // Student screens only see `studentView` templates (UI convenience only, not security; see engine/student-view.js).
 
+import { textDraft, draftNote } from '../shared/drafts.js';
+import { navPush, onNav } from '../shared/nav.js';
 import { h, clear } from '../shared/dom.js';
 import { busyBanner } from './busy-banner.js';
 import { staffPanel } from './staff-panel.js';
@@ -66,11 +68,12 @@ export function mountStudentHome(root, ctx) {
   }
 
   function openPatient(pid) {
+    save(OPEN_KEY, pid); // remembered now, so a reload with the handoff report open comes back to it
     const mode = scenario.settings.handoffMode;
     const handoff = runner.state.students[user.userId]?.handoff?.[pid];
     if (mode === 'once' && !handoff && views[pid].handoff) {
       runner.chart('openHandoff', pid, {}, user);
-      openHandoffModal({ view: views[pid], onClose: (notes) => {
+      openHandoffModal({ view: views[pid], draftKey: `handoff.${user.userId}.${pid}`, onClose: (notes) => {
         runner.chart('closeHandoff', pid, { notes }, user);
         showPatient(pid);
       } });
@@ -78,7 +81,7 @@ export function mountStudentHome(root, ctx) {
     }
     if (mode === 'once' && handoff && handoff.closedAt == null) {
       // Page reloaded mid-handoff: the report is still open, so show it again.
-      openHandoffModal({ view: views[pid], notes: handoff.notes, onClose: (notes) => {
+      openHandoffModal({ view: views[pid], notes: handoff.notes, draftKey: `handoff.${user.userId}.${pid}`, onClose: (notes) => {
         runner.chart('closeHandoff', pid, { notes }, user);
         showPatient(pid);
       } });
@@ -92,7 +95,8 @@ export function mountStudentHome(root, ctx) {
     save(OPEN_KEY, pid);
     runner.chart('openPatient', pid, {}, user);
     refreshViews();
-    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, getView: () => { refreshViews(); return views[pid]; }, onBack: showHome, onOpenPatient: openPatient });
+    cleanupChild = mountPatientView(clear(root), { ...ctx, pid, view: views[pid], views, getView: () => { refreshViews(); return views[pid]; }, onBack: () => { showHome(); navPush({ patient: null, section: null }); }, onOpenPatient: openPatient });
+    navPush({ tab: user.userId, patient: pid });
   }
 
   // End-of-sim reflection (questions: data/catalogs/reflection.json). Built once, so typing isn't lost on re-render.
@@ -103,11 +107,13 @@ export function mountStudentHome(root, ctx) {
     if (reflectionForm) return reflectionForm;
     const qs = ctx.catalogs.reflection?.questions || [];
     const boxes = Object.fromEntries(qs.map((q) => [q.id, h('textarea', { class: 'input', rows: 3, 'aria-label': q.text })]));
+    const drafts = Object.entries(boxes).map(([id, el]) => textDraft(el, `reflection.${user.userId}.${id}`));
     const err = h('p', { class: 'form-error', role: 'alert' });
     reflectionForm = h('section', { class: 'panel reflection' }, h('h3', {}, 'The shift is over: reflection'),
+      drafts.some((d) => d.restored) ? draftNote(() => { Object.values(boxes).forEach((el) => { el.value = ''; }); drafts.forEach((d) => d.clear()); }) : null,
       qs.map((q) => h('label', { class: 'field' }, h('span', {}, q.text), boxes[q.id])), err,
       h('button', { class: 'btn btn-primary', onclick: () => {
-        try { runner.submitReflection(user.userId, Object.fromEntries(Object.entries(boxes).map(([k, el]) => [k, el.value])), user); }
+        try { runner.submitReflection(user.userId, Object.fromEntries(Object.entries(boxes).map(([k, el]) => [k, el.value])), user); drafts.forEach((d) => d.clear()); }
         catch (e) { err.textContent = e.message; }
       } }, 'Submit reflection'));
     return reflectionForm;
@@ -170,5 +176,12 @@ export function mountStudentHome(root, ctx) {
   const reopen = load(OPEN_KEY);
   if (reopen && views[reopen] && runner.state.patients[reopen]?.present) openPatient(reopen);
   else cleanupChild = mountHome();
-  return () => { if (cleanupChild) cleanupChild(); };
+  // Back / Forward: chart ↔ my patients (shared/nav.js).
+  const offNav = onNav((e) => {
+    if (e.tab !== user.userId) return;
+    const open = load(OPEN_KEY);
+    if (e.patient && e.patient !== open && views[e.patient]) showPatient(e.patient);
+    else if (!e.patient && open) showHome();
+  });
+  return () => { offNav(); if (cleanupChild) cleanupChild(); };
 }

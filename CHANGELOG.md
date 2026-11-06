@@ -2,6 +2,15 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Save everything instantly (Part C)
+- **Audit:** every charted action, priority, join, reflection, break and staff change is saved (`runner.commit` persists before the screen updates). What wasn't saved was typing in progress, so:
+- **Drafts autosave as you type** (`shared/drafts.js`, 250 ms debounce, flushed when the page hides, via storage.js): chart notes, handoff notes while the report is open, reflection answers, the intervention and assessment forms in progress (which one, and the fields), MAR reasons, the scenario-change / reaction / state builders, Live control → Add event, Sim setup (groups and every field) and the patient editor's working copy. Coming back shows "✎ Draft restored · Discard". Submitting or Cancel clears it.
+- **Back button stays in the app** (`shared/nav.js`): Back moves between tabs, instructor views, the patient chart and its sections. Back from the first screen asks "Leave the sim? Your work is saved".
+- **Back where you were** after a reload or crash: tab, instructor view, open patient (even with the handoff report open), chart section, scroll position per screen.
+- **Fixed:** a reload while the handoff report was open came back to the patient list.
+- SPEC §13: in the full build every action is written to the server and acknowledged, and unacknowledged actions retry from the device with their original timestamps.
+- Tests: 207 passing; browser check: reload restores the handoff notes, the oxygen form with 3 L, the half-typed note, the editor's unsaved name, the section and the scroll; Back walks Notes → Interventions → patient list; leaving asks first.
+
 ## Soak test: a 4-hour sim (Part B)
 - Ran a full 07:00–11:00 sim in headless Chromium: 3 groups (one with an admission), 3 students charting every few minutes, assessments, notes, CNA delegation with queuing, call lights, every reactive script, recovery penalties, task timers (manikin) and the staff pool. Results at the end: **811 log entries, 286 KB saved session, JS heap 2.2 → 4.3 MB** (no leak; it grows with the log only).
 - **Fixed:** the Command center and Live control recomputed timeliness and every flag rule several times per render, and re-rendered on every update. Now `timelinessItems` and `evaluateRules` are memoized per (immutable state, minute), and both screens coalesce bursts of updates into at most ~4 renders a second. Command center render at 4 h: **51 → 7 ms**; tick at 4 h 51 → 34 ms average; debrief render 85 ms; CSV export 44 ms.
