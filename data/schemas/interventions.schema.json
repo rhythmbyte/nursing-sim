@@ -23,7 +23,10 @@
           "label": { "type": "string" },
           "chartFields": { "type": "array", "items": { "type": "string" } },
           "delegableTo": { "type": "array", "items": { "enum": ["LPN", "CNA"] } },
-          "revealsFindings": { "type": "boolean" }
+          "revealsFindings": { "type": "boolean" },
+          "vitalsCapture": { "type": "boolean" },
+          "drawsLabs": { "type": "boolean" },
+          "includes": { "type": "array", "items": { "type": "string" } }
         }
       }
     }

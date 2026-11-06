@@ -1,7 +1,9 @@
 // Live session state + pure transitions. No DOM, no timers; wall time (`now`) is passed in.
 // Shape (SPEC §4.5):
-// { version, scenarioId, startClock, clock, patients: { id → patientState }, students: { userId → { seen, handoff } },
-//   fired: { key → n }, alerts, log }
+// { version, scenarioId, startClock, settings, clock, patients: { id → patientState },
+//   students: { userId → { seen, handoff } }, fired: { key → n }, alerts, log }
+// Timed work besides events (monitor cycles, lab results, delegated tasks) runs as "processors",
+// interleaved with events in time order (see advance()).
 // Every transition returns a NEW state; event types mutate a structuredClone draft.
 
 import './events/index.js';
@@ -9,8 +11,14 @@ import { getEventType } from './registry.js';
 import * as clock from './clock.js';
 import { dueEvents, groupMembers, nextAt } from './scheduler.js';
 import { append, SYSTEM } from './log.js';
+import { initLabs, labsProcessor } from './labs.js';
+import { initFlowsheet, monitorProcessor } from './vitals.js';
+import { delegationProcessor } from './delegation.js';
 
-export const SESSION_VERSION = 2; // bump when the shape changes; older saved sessions are discarded
+// Order matters within one instant: monitor readings see vitals after that instant's events.
+const PROCESSORS = [monitorProcessor, labsProcessor, delegationProcessor];
+
+export const SESSION_VERSION = 3; // bump when the shape changes; older saved sessions are discarded
 
 /** Patients in the scenario: [{ id, groupId, admission }]. */
 export function scenarioPatients(scenario) {
@@ -36,7 +44,10 @@ function initialPatientState(t, groupId, admission) {
     findingChanges: [], // event ids whose findings are waiting to be revealed by an assessment
     revealed: [],       // [{ source: 'baseline' | eventId, atMin, findings }] once the student assesses
     orders,
-    labs: t.labs.map((l) => ({ ...l })),
+    labs: initLabs(t),
+    flowsheet: initFlowsheet(t), // [{ atMin, source, values, by }]
+    monitor: null,               // { intervalMin, fromMin, count } when the student runs a cycle
+    delegations: [],             // tasks delegated to LPN/CNA (engine/delegation.js)
     code: null,
   };
 }
@@ -55,6 +66,7 @@ export function createSession(scenario, templatesById) {
     version: SESSION_VERSION,
     scenarioId: scenario.id,
     startClock: scenario.startClock,
+    settings: { ...scenario.settings },
     clock: clock.createClock(scenario.speed),
     patients,
     students: {},
@@ -104,19 +116,30 @@ function fireInto(draft, ref, { simMin, now, templatesById, user, source }) {
 }
 
 /** Advance to the current sim time: fire due events, activate timed orders. Returns { state, fired }. */
-export function tick(state, { now, refs, templatesById }) {
+export function tick(state, { now, refs, templatesById, catalogs }) {
   if (state.clock.status !== 'running') return { state, fired: 0 };
-  return advance(state, { now, refs, templatesById });
+  return advance(state, { now, refs, templatesById, catalogs });
+}
+
+function runProcessors(draft, upto, ctx) {
+  for (const p of PROCESSORS) if (p.due(draft, upto)) p.apply(draft, upto, ctx);
 }
 
 /** Fire everything due at the clock's current sim minute (any clock status). Returns { state, fired }. */
-function advance(state, { now, refs, templatesById }) {
+function advance(state, { now, refs, templatesById, catalogs }) {
   const simMin = simMinOf(state, now);
   const due = dueEvents(refs, state.fired, simMin);
-  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length) return { state, fired: 0 };
+  if (!due.length && !pendingTimedOrders(state, templatesById, simMin).length && !PROCESSORS.some((p) => p.due(state, simMin))) {
+    return { state, fired: 0 };
+  }
 
   const draft = structuredClone(state);
-  for (const { ref, at } of due) fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled' });
+  const ctx = { now, templatesById, catalogs };
+  for (const { ref, at } of due) {
+    runProcessors(draft, at - 1e-9, ctx); // everything strictly before this event's instant
+    fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled' });
+  }
+  runProcessors(draft, simMin, ctx);
   // Re-check after firing: an admission may have just made a patient present.
   for (const [pid, o] of pendingTimedOrders(draft, templatesById, simMin)) {
     draft.patients[pid].orders[o.id] = { status: o.activeFromMin === 0 ? 'acknowledged' : 'new', activeAtMin: o.activeFromMin };
@@ -146,14 +169,14 @@ export function nextEventMin(state, refs, now) {
 }
 
 /** Instructor "Skip to next event": jump sim time to the next scheduled event and fire what's due. */
-export function skipToNext(state, { now, refs, templatesById, user }) {
+export function skipToNext(state, { now, refs, templatesById, catalogs, user }) {
   if (state.clock.status !== 'running' && state.clock.status !== 'paused') return state;
   const to = nextEventMin(state, refs, now);
   if (to == null) return state;
   const from = simMinOf(state, now);
   const draft = { ...state, clock: clock.jumpTo(state.clock, to, now), log: [...state.log] };
   append(draft, { simMin: to, wallTime: now, ...user, action: 'clock-skip', details: { fromMin: Math.round(from * 100) / 100, toMin: to } });
-  return advance(draft, { now, refs, templatesById }).state;
+  return advance(draft, { now, refs, templatesById, catalogs }).state;
 }
 
 /** Student answers a call light; logs response time in sim minutes. */

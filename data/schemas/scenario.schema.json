@@ -16,7 +16,13 @@
         "chargeNurse": { "enum": ["student", "instructor", "off"] },
         "showTagsToStudents": { "type": "boolean" },
         "vitalsCycleDefaultMin": { "type": "integer", "minimum": 0 },
-        "pauseOnClose": { "type": "boolean" }
+        "pauseOnClose": { "type": "boolean" },
+        "revealManualVitals": { "type": "boolean" },
+        "delegationDelayMin": {
+          "type": ["integer", "object"],
+          "minimum": 0,
+          "properties": { "LPN": { "type": "integer", "minimum": 0 }, "CNA": { "type": "integer", "minimum": 0 } }
+        }
       }
     },
     "staffAvailable": { "type": "array", "items": { "type": "string" } },

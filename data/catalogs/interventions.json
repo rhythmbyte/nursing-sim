@@ -23,8 +23,8 @@
     { "id": "assess-wound", "category": "assessment", "label": "Dressing / wound check", "chartFields": ["site", "appearance", "drainage"], "delegableTo": ["LPN"] },
     { "id": "reassess", "category": "assessment", "label": "Reassess after intervention", "chartFields": ["intervention", "response"], "delegableTo": [] },
 
-    { "id": "vs-full", "category": "monitoring", "label": "Full vital signs", "chartFields": ["bp", "hr", "rr", "tempF", "spo2", "pain"], "delegableTo": ["LPN", "CNA"] },
-    { "id": "vs-bp", "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "vs-full", "vitalsCapture": true, "includes": ["vs-bp"], "category": "monitoring", "label": "Full vital signs", "chartFields": ["bp", "hr", "rr", "tempF", "spo2", "pain"], "delegableTo": ["LPN", "CNA"] },
+    { "id": "vs-bp", "vitalsCapture": true, "category": "monitoring", "label": "Blood pressure", "chartFields": ["bp"], "delegableTo": ["LPN", "CNA"] },
     { "id": "monitor-cycle", "category": "monitoring", "label": "Set monitor cycle", "chartFields": ["intervalMin"], "delegableTo": [] },
     { "id": "tele", "category": "monitoring", "label": "Place on telemetry / cardiac monitor", "chartFields": [], "delegableTo": ["LPN"] },
     { "id": "pulse-ox-cont", "category": "monitoring", "label": "Continuous pulse oximetry", "chartFields": [], "delegableTo": ["LPN", "CNA"] },
@@ -50,7 +50,7 @@
     { "id": "cardioversion-prep", "category": "cardiac", "label": "Prep for synchronized cardioversion", "chartFields": [], "delegableTo": [] },
     { "id": "pads-on", "category": "cardiac", "label": "Apply defib pads", "chartFields": [], "delegableTo": [] },
 
-    { "id": "lab-draw", "category": "diagnostics", "label": "Draw / send labs", "chartFields": ["labs"], "delegableTo": ["LPN"] },
+    { "id": "lab-draw", "drawsLabs": true, "category": "diagnostics", "label": "Draw / send labs", "chartFields": ["labs"], "delegableTo": ["LPN"] },
     { "id": "imaging-request", "category": "diagnostics", "label": "Arrange imaging (CT / CXR)", "chartFields": ["study"], "delegableTo": [] },
 
     { "id": "foley", "category": "procedures", "label": "Insert Foley catheter", "chartFields": ["size", "returnMl"], "delegableTo": ["LPN"] },

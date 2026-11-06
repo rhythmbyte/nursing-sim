@@ -11,7 +11,9 @@
     "chargeNurse": "instructor",
     "showTagsToStudents": false,
     "vitalsCycleDefaultMin": 5,
-    "pauseOnClose": true
+    "pauseOnClose": true,
+    "revealManualVitals": true,
+    "delegationDelayMin": { "LPN": 10, "CNA": 10 }
   },
   "staffAvailable": ["lpn", "cna", "charge", "provider"],
   "assignment": "random",

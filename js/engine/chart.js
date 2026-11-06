@@ -4,6 +4,10 @@
 
 import { simMinOf } from './session.js';
 import { append } from './log.js';
+import { progressOrder, findOrder } from './orders.js';
+import { drawLabs } from './labs.js';
+import { requestDelegation } from './delegation.js';
+import { deviceValues, scriptedSnapshot, SCRIPTED_MANUAL_KEYS, OTHER_MANUAL_KEYS, MONITOR_CYCLES } from './vitals.js';
 
 function begin(state, ctx) {
   return { draft: structuredClone(state), simMin: simMinOf(state, ctx.now) };
@@ -19,7 +23,7 @@ function studentRec(draft, user) {
 }
 
 function orderOf(ctx, patientId, orderId) {
-  return ctx.templatesById[patientId].orders.find((o) => o.id === orderId) || null;
+  return findOrder(ctx.templatesById, patientId, orderId);
 }
 
 /** Student opens a patient's chart. Records "last seen". */
@@ -76,14 +80,6 @@ export function completeOrder(state, patientId, { orderId }, ctx) {
   return draft;
 }
 
-/** Charting work on an order: acknowledges it if new; a one-time order becomes done. Mutates draft. */
-function progressOrder(draft, patientId, order, simMin) {
-  const os = order && draft.patients[patientId].orders[order.id];
-  if (!os) return;
-  if (os.status === 'new') Object.assign(os, { status: 'acknowledged', ackAtMin: simMin });
-  if (order.type === 'once' && os.status !== 'done') Object.assign(os, { status: 'done', doneAtMin: simMin });
-}
-
 /** Copies baseline + any pending finding changes into the patient's revealed findings. Mutates draft. */
 function revealFindings(draft, patientId, template, simMin) {
   const ps = draft.patients[patientId];
@@ -96,14 +92,62 @@ function revealFindings(draft, patientId, template, simMin) {
   }
 }
 
-/** args: { interventionId, fields, orderId?, delegatedTo?: 'LPN'|'CNA' } */
+const pickTyped = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] != null && String(obj[k]).trim() !== '').map((k) => [k, String(obj[k]).trim()]));
+
+/**
+ * Chart an intervention. args: { interventionId, fields, orderId?, delegatedTo?: 'LPN'|'CNA' }
+ * - Delegated: queued; effects happen when the staff member reports back (engine/delegation.js).
+ * - vitalsCapture (vs-full, vs-bp): device values (BP/HR/SpO₂/O₂) come from the patient; temp/RR/pain are
+ *   what the student entered (revealed via "Measure" or told by the manikin/instructor). Adds a flowsheet row;
+ *   the log keeps the scripted values for the debrief.
+ * - drawsLabs: draws the order's labCodes; results come after each lab's delay.
+ */
 export function chartIntervention(state, patientId, { interventionId, fields = {}, orderId = null, delegatedTo = null }, ctx) {
   const iv = ctx.catalogs.interventions.interventions.find((i) => i.id === interventionId);
   if (!iv) throw new Error(`Unknown intervention ${interventionId}`);
   const { draft, simMin } = begin(state, ctx);
-  progressOrder(draft, patientId, orderOf(ctx, patientId, orderId), simMin);
-  if (iv.revealsFindings && !delegatedTo) revealFindings(draft, patientId, ctx.templatesById[patientId], simMin);
-  log(draft, simMin, ctx, patientId, 'intervention', { interventionId, category: iv.category, fields, orderId, delegatedTo });
+  const order = orderOf(ctx, patientId, orderId);
+  const ps = draft.patients[patientId];
+  let logFields = fields;
+  const extra = {};
+
+  if (delegatedTo) {
+    const task = requestDelegation(draft, patientId, { interventionId, orderId, to: delegatedTo, fields, simMin });
+    extra.taskId = task.id;
+    extra.dueAt = task.dueAt;
+  } else {
+    progressOrder(draft, patientId, order, simMin);
+    if (iv.revealsFindings) revealFindings(draft, patientId, ctx.templatesById[patientId], simMin);
+    if (iv.vitalsCapture) {
+      logFields = { ...deviceValues(ps, iv.chartFields), ...pickTyped(fields, iv.chartFields.filter((k) => SCRIPTED_MANUAL_KEYS.includes(k))) };
+      ps.flowsheet.push({ atMin: simMin, source: 'charted', values: logFields, by: ctx.user.userId });
+      extra.scripted = scriptedSnapshot(ps);
+    }
+    if (iv.drawsLabs && order?.labCodes) extra.drawn = drawLabs(draft, patientId, order.labCodes, simMin, ctx.catalogs).map((l) => l.uid);
+  }
+  log(draft, simMin, ctx, patientId, 'intervention', { interventionId, category: iv.category, fields: logFields, orderId, delegatedTo, ...extra });
+  return draft;
+}
+
+/** Flowsheet manual entries (temp/RR/pain, GCS, glucose, I&O, weight, neuro). Scripted values kept for the debrief. */
+export function flowsheetEntry(state, patientId, { values = {} }, ctx) {
+  const typed = pickTyped(values, [...SCRIPTED_MANUAL_KEYS, ...OTHER_MANUAL_KEYS]);
+  if (!Object.keys(typed).length) return state;
+  const { draft, simMin } = begin(state, ctx);
+  const ps = draft.patients[patientId];
+  ps.flowsheet.push({ atMin: simMin, source: 'charted', values: typed, by: ctx.user.userId });
+  log(draft, simMin, ctx, patientId, 'flowsheet-entry', { values: typed, scripted: scriptedSnapshot(ps) });
+  return draft;
+}
+
+/** Monitor cycle: intervalMin ∈ 0 (off), 5, 10, 15. Takes a reading now, then every intervalMin. */
+export function setMonitor(state, patientId, { intervalMin }, ctx) {
+  if (!MONITOR_CYCLES.includes(intervalMin)) throw new Error(`Monitor cycle must be one of ${MONITOR_CYCLES.join(', ')}`);
+  const current = state.patients[patientId].monitor?.intervalMin ?? 0;
+  if (current === intervalMin) return state;
+  const { draft, simMin } = begin(state, ctx);
+  draft.patients[patientId].monitor = intervalMin ? { intervalMin, fromMin: simMin, count: 0 } : null;
+  log(draft, simMin, ctx, patientId, 'monitor-set', { intervalMin });
   return draft;
 }
 

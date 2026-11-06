@@ -4,6 +4,8 @@
 
 import * as session from './session.js';
 import * as chart from './chart.js';
+import { releaseLab } from './labs.js';
+import { measureManual } from './vitals.js';
 import { collectEvents, groupMembers } from './scheduler.js';
 
 export function createRunner({ store, scenario, templatesById, catalogs = null, now = () => Date.now(), persist = () => {}, saved = null }) {
@@ -19,7 +21,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     store.set({ session: state });
   }
 
-  const ctx = () => ({ now: now(), templatesById });
+  const ctx = () => ({ now: now(), templatesById, catalogs });
 
   const runner = {
     refs,
@@ -68,11 +70,18 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     /**
      * Student chart actions: runner.chart(name, patientId, args, user).
      * name ∈ openPatient, openHandoff, closeHandoff, saveHandoffNotes, acknowledgeOrder, completeOrder,
-     *        chartIntervention, medAction, addNote, escalate (see engine/chart.js).
+     *        chartIntervention, flowsheetEntry, setMonitor, medAction, addNote, escalate (see engine/chart.js).
      */
     chart(name, patientId, args, user) {
       if (typeof chart[name] !== 'function') throw new Error(`Unknown chart action ${name}`);
       commit(chart[name](state, patientId, args || {}, { now: now(), user, templatesById, catalogs }));
+    },
+
+    /** Temp/RR/pain a student would measure now ({} when settings.revealManualVitals is false). */
+    measure: (patientId) => measureManual(state, patientId),
+
+    releaseLab(patientId, uid, value, user) {
+      commit(releaseLab(state, patientId, { uid, value }, { now: now(), user, simMin: runner.simMin() }));
     },
 
     reset() {
