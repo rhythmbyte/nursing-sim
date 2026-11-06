@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Full check (unsaved-changes guard, one writer window, catalog checks)
+- Full browser run through every tab with no console errors and no unlabelled controls; multi-window check with real tabs (second window read-only, Take over, monitor page unaffected).
+- README: one-window note. Tests: 134 passing.
+
 ## Per-entry checks for rhythms and help catalogs
 - `rhythms.json`: each rhythm needs a label and a known drawing shape (sinus, fib, vf, flat); numbers in range; true/false flags; aliases are names, and no name may point to two rhythms. `help.json`: keys look like `screen.field`, texts non-empty. Run by the loader (bad catalog → problem banner) and the tests.
 - Tests: 134 passing.
