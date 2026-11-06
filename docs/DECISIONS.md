@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: One writer window via a storage lock
+- **Decision:** `js/window-lock.js` keeps `{ id, at }` in storage (via `storage.js`), refreshed every 2 s by the writer window. A window that sees a fresh lock it doesn't own becomes read-only: the tick, saves, heartbeat and pause-on-close are all gated on `isWriter()`, and a non-dismissable notice offers Take over. Read-only windows never claim a lock on their own; they offer Continue once it's free or stale (> 6 s). Take over skips the lock release during its own reload. The window id lives in sessionStorage so a reload keeps it.
+- **Why:** Two windows writing one session overwrote each other (last write wins).
+- **Alternatives:** BroadcastChannel leader election (more moving parts for the same result); merging writes (no real-time merge without a server). Full build: the server decides who controls a sim (SPEC §13).
+
+---
+
 ## 2026-11-05: Reflection coverage is a keyword aid, not grading
 - **Decision:** `reflectionCoverage` marks a should-recognize item "possible mention" when the reflection shares 2+ significant words with it (or one word of 8+ letters), ignoring a short stop-word list. The UI says it's a reading aid.
 - **Why:** It helps the instructor scan quickly without pretending to judge clinical reasoning. Real grading of free text would need the full build's AI (with instructor review) or the instructor's own judgment.

@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## One window writes the sim
+- If the sim is open in a second window of the same browser, that window is **read-only** (no ticking, saving or pause-on-close) and shows "This sim is open in another window" with **Take over here**. Taking over makes the other window read-only within ~2 s. If the writing window closes or stops responding, the notice offers **Continue here**. The standalone monitor page never takes the lock.
+- Checked with real tabs in the browser; the first version lost the lock during the take-over reload (fixed).
+- Tests: 133 passing.
+
 ## Unsaved editor changes are protected
 - The patient editor now asks before you leave with unsaved changes: switching instructor sub-views, switching top-level tabs, or closing/reloading the page (browser prompt). Typing in any editor field counts as a change (before, only builder/timeline/JSON changes did). Saving clears it.
 - Tests: 129 passing; checked in the browser (clean editor leaves silently; unsaved + Cancel stays; OK leaves).

@@ -5,6 +5,7 @@ import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
+import { createWindowLock } from './window-lock.js';
 import { openModal } from './screens/shared/modal.js';
 import { setHelp } from './screens/shared/help.js';
 import { onBeforeUnload } from './screens/shared/leave-guard.js';
@@ -72,7 +73,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   const runner = createRunner({
     store, scenario, templatesById, catalogs: data.catalogs,
     saved: load(SESSION_KEY),
-    persist: (s) => save(SESSION_KEY, s),
+    persist: (s) => { if (writer()) save(SESSION_KEY, s); }, // only the writer window saves
   });
 
   // switchScenario: used by the scenario picker and by Sim setup after creating a sim.
@@ -102,7 +103,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
   // closed without warning (crash/freeze): pause it as of the last heartbeat.
   // Only at a real page load: an in-page remount (after an edit, approval or new sim) must not pause or rewind.
-  if (pageLoad) runner.pauseForClose(load(HEARTBEAT_KEY));
+  if (pageLoad && writer()) runner.pauseForClose(load(HEARTBEAT_KEY));
   if (loadSession('pendingDemo', false)) {
     saveSession('pendingDemo', false);
     const demo = data.catalogs.ui.demo;
@@ -110,9 +111,9 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     if (err) console.warn('Demo student could not join:', err);
     runner.clock('start', INSTRUCTOR);
   }
-  const onPageHide = () => runner.pauseForClose(Date.now());
+  const onPageHide = () => { if (writer()) runner.pauseForClose(Date.now()); };
   window.addEventListener('pagehide', onPageHide);
-  const heartbeat = setInterval(() => save(HEARTBEAT_KEY, Date.now()), HEARTBEAT_MS);
+  const heartbeat = setInterval(() => { if (writer()) save(HEARTBEAT_KEY, Date.now()); }, HEARTBEAT_MS);
   save(HEARTBEAT_KEY, Date.now());
 
   // Reset demo: clears this browser's sim, edits, approvals and created sims, then reloads the page.
@@ -129,7 +130,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     },
   }, 'Reset demo');
   const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo) });
-  const timer = setInterval(() => runner.tick(), TICK_MS);
+  const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
   runner.tick();
   return () => {
     clearInterval(timer);
@@ -170,6 +171,33 @@ function watchSaveFailures() {
   });
 }
 
+// ---- One writer window (js/window-lock.js) ----
+let windowLock = null;
+const writer = () => !windowLock || windowLock.isWriter();
+let lockNotice = null;
+
+function showReadOnlyNotice(state) {
+  lockNotice?.close();
+  lockNotice = null;
+  if (state === 'writer') return;
+  const stale = state === 'stale-other';
+  lockNotice = openModal({
+    title: stale ? 'The other window stopped' : 'This sim is open in another window',
+    body: h('p', {}, stale
+      ? 'The window that was running the sim has closed or stopped responding. Continue here to take it over.'
+      : 'Only one window can run the sim at a time, so this window is read-only. Close it, or take over here (the other window becomes read-only).'),
+    dismissable: false,
+    actions: [{ label: stale ? 'Continue here' : 'Take over here', kind: 'primary', onClick: () => { windowLock.takeOver(); window.location.reload(); return false; } }],
+  });
+}
+
+function startWindowLock() {
+  windowLock = createWindowLock({ onChange: showReadOnlyNotice });
+  windowLock.check();
+  setInterval(() => windowLock.check(), 2000);
+  window.addEventListener('pagehide', () => windowLock.release());
+}
+
 async function boot() {
   watchSaveFailures();
   window.addEventListener('beforeunload', onBeforeUnload);
@@ -200,6 +228,7 @@ async function boot() {
       if (teardown) teardown();
       teardown = startApp(root, data, id, restart, reloadData, opts);
     };
+    startWindowLock(); // after the standalone-monitor check: that page never takes the lock
     restart(load(SCENARIO_KEY), { pageLoad: true });
     showWelcome(data.catalogs.ui?.welcome);
   } catch (err) {

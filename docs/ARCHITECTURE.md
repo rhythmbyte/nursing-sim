@@ -61,6 +61,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/main.js` | Boots the app: load data → pick scenario → create store + runner → build tabs → mount shell. Owns the tick timer (`setInterval`, 250 ms), the pause-on-close hooks (`pagehide` + a 5 s heartbeat), and the prototype user identities | built |
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`, `clearAll`, per-session `loadSession`/`saveSession`; keys prefixed `nursing-sim:`). `onSaveFailure(fn)` reports full or blocked storage (main.js shows a banner) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
+| `js/window-lock.js` | One writer window: `lockState` (pure), `createWindowLock` (check / takeOver / release / isWriter), used by `main.js` to gate ticking and saving | built |
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks → overlay this browser's edits → `{ patients, scenarios, catalogs, schemas, local, fileIds, problems }`. Also `validateItem`, `saveLocal`, `removeLocal` (instructor edits via `storage.js`) | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
