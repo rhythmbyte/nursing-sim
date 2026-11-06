@@ -5,6 +5,7 @@ import { h, clear } from '../shared/dom.js';
 import { simClock, elapsed } from '../shared/timer.js';
 import { load, save } from '../../storage.js';
 import { chartSections } from '../chart/index.js';
+import { newOrderCount } from '../../engine/orders.js';
 
 function allergyText(view) {
   if (view.allergies.length) return view.allergies.map((a) => `${a.agent}${a.reaction ? ` (${a.reaction})` : ''}`).join(', ');
@@ -34,7 +35,7 @@ export function mountPatientView(root, ctx) {
 
   function renderTabs() {
     const ps = runner.state.patients[pid];
-    const newOrders = Object.values(ps.orders).filter((o) => o.status === 'new').length;
+    const newOrders = newOrderCount(ps);
     clear(tabBar).append(...sections.map((s) => h('button', {
       class: `chart-tab${s.id === activeId ? ' active' : ''}`,
       role: 'tab',

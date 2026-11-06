@@ -59,7 +59,7 @@ function scenarioPicker(scenarios, currentId, onChange) {
 }
 
 /** Mounts the whole app for one scenario. Returns a teardown function. */
-function startApp(root, data, scenarioId, restart, reloadData) {
+function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = false } = {}) {
   // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
   const scenario = withDefaults(data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0], data.catalogs);
   const templatesById = Object.fromEntries(data.patients.map((p) => [p.id, p]));
@@ -88,7 +88,8 @@ function startApp(root, data, scenarioId, restart, reloadData) {
 
   // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
   // closed without warning (crash/freeze): pause it as of the last heartbeat.
-  runner.pauseForClose(load(HEARTBEAT_KEY));
+  // Only at a real page load: an in-page remount (after an edit, approval or new sim) must not pause or rewind.
+  if (pageLoad) runner.pauseForClose(load(HEARTBEAT_KEY));
   const onPageHide = () => runner.pauseForClose(Date.now());
   window.addEventListener('pagehide', onPageHide);
   const heartbeat = setInterval(() => save(HEARTBEAT_KEY, Date.now()), HEARTBEAT_MS);
@@ -130,11 +131,11 @@ async function boot() {
       data = await loadAll();
       restart(id);
     };
-    const restart = (id) => {
+    const restart = (id, opts) => {
       if (teardown) teardown();
-      teardown = startApp(root, data, id, restart, reloadData);
+      teardown = startApp(root, data, id, restart, reloadData, opts);
     };
-    restart(load(SCENARIO_KEY));
+    restart(load(SCENARIO_KEY), { pageLoad: true });
   } catch (err) {
     console.error(err);
     root.replaceChildren(h('div', { class: 'banner banner-error', role: 'alert' },

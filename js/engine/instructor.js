@@ -45,7 +45,7 @@ export function startCode(state, patientId, { rhythm = '', message = '' }, { now
   if (state.patients[patientId]?.code) return state;
   const draft = structuredClone(state);
   const simMin = simMinOf(state, now);
-  getEventType('code').apply(draft, { id: 'e-live-code', type: 'code', payload: { rhythm, message: message || 'Patient is unresponsive. No pulse.' } }, { simMin, patientId });
+  getEventType('code').apply(draft, { id: 'e-live-code', type: 'code', payload: { rhythm, message: message || state.settings.messages.codeStarted } }, { simMin, patientId });
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-started', details: { rhythm } });
   return draft;
 }
@@ -61,7 +61,7 @@ export function setCodeOutcome(state, patientId, outcome, { now, user }) {
   ps.code.endedMin = simMin;
   if (outcome === 'rosc') ps.tag = state.settings.roscTag;
   else ps.alive = false;
-  addAlert(draft, { simMin, patientId, kind: 'code', message: outcome === 'rosc' ? 'ROSC achieved.' : 'Resuscitation stopped. No ROSC.', audience: ['student', 'instructor', 'charge'] });
+  addAlert(draft, { simMin, patientId, kind: 'code', message: outcome === 'rosc' ? state.settings.messages.rosc : state.settings.messages.noRosc, audience: ['student', 'instructor', 'charge'] });
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-outcome', details: { outcome, durationMin: Math.round((simMin - code.startedMin) * 100) / 100 } });
   return draft;
 }

@@ -7,6 +7,7 @@ import { badge } from '../shared/badge.js';
 import { elapsed } from '../shared/timer.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { waitingAdmissions } from '../../engine/admissions.js';
+import { newOrderCount } from '../../engine/orders.js';
 
 export function unitOverview(runner, templatesById, scenario) {
   const state = runner.state;
@@ -29,7 +30,7 @@ export function unitOverview(runner, templatesById, scenario) {
         const d = templatesById[pid].demographics;
         const f = flags.filter((x) => x.patientId === pid);
         const red = f.filter((x) => x.severity === 'red').length;
-        const newOrders = Object.values(ps.orders).filter((o) => o.status === 'new').length;
+        const newOrders = newOrderCount(ps);
         const now = [
           ps.callLight ? `call light ${elapsed(simMin, ps.callLight.since)}` : null,
           ps.code && !ps.code.outcome ? `CODING since ${at(ps.code.startedMin)}` : null,

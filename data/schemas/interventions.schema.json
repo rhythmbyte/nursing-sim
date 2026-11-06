@@ -27,6 +27,7 @@
           "vitalsCapture": { "type": "boolean" },
           "drawsLabs": { "type": "boolean" },
           "satisfiedByMonitor": { "type": "boolean" },
+          "quickAction": { "type": "string" },
           "includes": { "type": "array", "items": { "type": "string" } }
         }
       }

@@ -67,9 +67,9 @@
     { "id": "teach-back", "category": "education", "label": "Teach-back", "chartFields": ["topic", "understood"], "delegableTo": [] },
     { "id": "discharge", "category": "education", "label": "Discharge patient", "chartFields": ["criteriaMet", "notes"], "delegableTo": [] },
 
-    { "id": "notify-provider", "category": "communication", "label": "Notify provider (SBAR)", "chartFields": ["sbar"], "delegableTo": [] },
-    { "id": "rapid-response", "category": "communication", "label": "Call rapid response", "chartFields": [], "delegableTo": [] },
-    { "id": "notify-charge", "category": "communication", "label": "Notify charge nurse", "chartFields": ["reason"], "delegableTo": [] },
+    { "id": "notify-provider", "quickAction": "Notified provider", "category": "communication", "label": "Notify provider (SBAR)", "chartFields": ["sbar"], "delegableTo": [] },
+    { "id": "rapid-response", "quickAction": "Called rapid response", "category": "communication", "label": "Call rapid response", "chartFields": [], "delegableTo": [] },
+    { "id": "notify-charge", "quickAction": "Notified charge nurse", "category": "communication", "label": "Notify charge nurse", "chartFields": ["reason"], "delegableTo": [] },
     { "id": "code-respond", "category": "communication", "label": "Respond to code", "chartFields": ["role"], "delegableTo": [] }
   ]
 }

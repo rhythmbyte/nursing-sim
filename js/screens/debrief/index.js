@@ -19,11 +19,11 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
   const body = h('div', { class: 'debrief-body' });
 
   function csvFor(d, at) {
-    const header = ['sim_time', 'sim_min', 'wall_time', 'user', 'role', 'patient', 'action', 'description', 'flag_severity', 'flag_rule', 'flag_message', 'details_json'];
+    const header = ['sim_time', 'sim_min', 'wall_time_utc', 'wall_time_local', 'user', 'role', 'patient', 'action', 'description', 'flag_severity', 'flag_rule', 'flag_message', 'details_json'];
     const rows = d.timeline.map((t) => {
       const l = t.entry;
       const f = t.flags;
-      return [at(t.atMin), t.atMin, l?.wallTime ?? '', l?.userId ?? '', l?.role ?? '', l?.patientId ?? f[0]?.patientId ?? '',
+      return [at(t.atMin), t.atMin, l?.wallTime ?? '', l ? new Date(l.wallTime).toLocaleString() : '', l?.userId ?? '', l?.role ?? '', l?.patientId ?? f[0]?.patientId ?? '',
         l?.action ?? 'flag', l ? describeEntry(l, { labelOf, orderText, patientName }) : '',
         f.map((x) => x.severity).join('|'), f.map((x) => x.ruleId).join('|'), f.map((x) => x.message).join(' | '), l ? JSON.stringify(l.details) : ''];
     });

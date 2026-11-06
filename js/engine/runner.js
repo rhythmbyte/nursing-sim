@@ -20,7 +20,10 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
   const ids = session.scenarioPatients(scenario).map((p) => p.id).filter((id) => templatesById[id]);
   const refs = collectEvents(ids, templatesById, scenario);
   const fresh = () => session.createSession(scenario, templatesById, catalogs, { joinCode: generateJoinCode(rng) });
-  let state = saved && saved.version === session.SESSION_VERSION && saved.scenarioId === scenario.id ? saved : fresh();
+  const usable = saved && saved.version === session.SESSION_VERSION && saved.scenarioId === scenario.id
+    && Object.keys(saved.patients || {}).every((id) => templatesById[id]);
+  if (saved && !usable) console.warn('Saved session discarded (different scenario, older format, or a patient is missing).');
+  let state = usable ? saved : fresh();
 
   function commit(next) {
     if (next === state) return;

@@ -11,6 +11,11 @@
     "delegationDelayMin": { "LPN": 10, "CNA": 10 },
     "prnPreCheckWindowMin": 15,
     "delegatedAssessmentRevealsFindings": false,
-    "roscTag": "red"
+    "roscTag": "red",
+    "messages": {
+      "codeStarted": "Patient is unresponsive. No pulse.",
+      "rosc": "ROSC achieved.",
+      "noRosc": "Resuscitation stopped. No ROSC."
+    }
   }
 }

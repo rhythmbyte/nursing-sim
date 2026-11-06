@@ -1,21 +1,19 @@
 // Notes: free-text nursing notes (time-stamped) + quick escalation actions.
-// Quick actions chart the matching catalog intervention, so rules see them like any other charting.
+// Quick actions = catalog interventions with a `quickAction` label (data), charted like any other
+// intervention so rules see them. "Escalated" is its own log action.
 
 import { h, clear } from '../shared/dom.js';
 import { toast } from '../shared/toast.js';
 import { at, byWhom, patientLog } from './util.js';
 
-const QUICK = [
-  { label: 'Notified provider', interventionId: 'notify-provider' },
-  { label: 'Called rapid response', interventionId: 'rapid-response' },
-  { label: 'Notified charge nurse', interventionId: 'notify-charge' },
-  { label: 'Escalated', escalate: true },
-];
-
 export default {
   id: 'notes',
   label: 'Notes',
-  mount(root, { pid, act }) {
+  mount(root, { pid, act, catalogs }) {
+    const QUICK = [
+      ...catalogs.interventions.interventions.filter((i) => i.quickAction).map((i) => ({ label: i.quickAction, interventionId: i.id })),
+      { label: 'Escalated', escalate: true },
+    ];
     const text = h('textarea', { class: 'input notes-box', rows: 5, 'aria-label': 'Nursing note' });
     const list = h('div', {});
 

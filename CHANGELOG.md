@@ -2,6 +2,20 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Review pass
+- **Modularity audit:** 3 violations fixed:
+  - quick-action ids hard-coded in `notes.js` (now `quickAction` in the catalog);
+  - code/ROSC text in the engine (now `settings.messages`);
+  - the "new orders" count duplicated in 3 screens (now `newOrderCount`).
+- **Bugs fixed:**
+  - an edit, approval or new sim during a running sim paused and rewound it;
+  - a stale saved session with a missing patient crashed on load;
+  - the CSV gains a local time column.
+- Removed the unused placeholder screen.
+- Full browser run: every tab as the instructor, two students, a student charge nurse, pause/resume, skip, reload mid-sim, scenario switch. No console errors.
+- README: Demo guide.
+- Tests: 82 passing.
+
 ## Phase 7: charge nurse and admissions
 - **Charge tab:**
   - **Admissions board:** incoming patient with report (SBAR, diagnosis, code status), **Assign now** to a group (shows each group's load) or **Hold** with a reason.

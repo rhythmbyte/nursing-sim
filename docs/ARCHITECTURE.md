@@ -31,7 +31,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 
 **Settings:** every scenario setting has a default in `data/catalogs/scenario-defaults.json`, merged under the scenario's own settings by `withDefaults()` in `main.js`. Engine and screens read the merged settings. **No setting or clinical default lives in code.** If one is missing, the code throws a clear error instead of guessing.
 
-**Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), or can be satisfied by a monitor reading (`satisfiedByMonitor`) is set in `data/catalogs/interventions.json`, not in code. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
+**Catalog-driven behavior (B1):** which interventions reveal findings (`revealsFindings`), capture vitals (`vitalsCapture`), draw labs (`drawsLabs`), include another check (`includes`, e.g. full vitals include a BP), can be satisfied by a monitor reading (`satisfiedByMonitor`), or appears as a Notes quick action (`quickAction`) is set in `data/catalogs/interventions.json`, not in code. Code-start and ROSC alert text is `settings.messages`. Patient labs can be reserved for one order (`forOrder`). Clinical defaults that aren't data yet go in scenario `settings`, and each one is a question in SPEC §14.
 
 **Event groups:** events that are one moment in the story share a `group` string within one patient, for example Robert's call light, vitals change and new findings at 08:15. "Fire now" on any member fires the whole group, so all of their fired counts move together and the scheduled time can't half-fire the group later. The loader rejects a file whose group members don't share `atMin`, `trigger` and repeat settings.
 
@@ -80,7 +80,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/vitals.js` | Monitor cycle (processor), device vs manual vitals, `measureManual` (respects `revealManualVitals`), scripted snapshots for the debrief | built |
 | `js/engine/labs.js` | `initLabs`, `drawLabs`, result-delay processor, `releaseLab` (instructor) | built |
 | `js/engine/delegation.js` | Delegated tasks: queued with a delay, completed by a processor (staff message, flowsheet row, lab draw, order progress) | built |
-| `js/engine/orders.js` | `progressOrder`, `findOrder` (shared by chart actions and delegation) | built |
+| `js/engine/orders.js` | `progressOrder`, `findOrder`, `firstWork`, `newOrderCount` (one helper for every "new orders" badge) | built |
 | `js/engine/assignment.js` | Join codes, `placeStudent` (manual roster / random open slot, never over-fills), `fillByTagCounts` (randomizer, no reuse), roster lookups | built |
 | `js/engine/admissions.js` | `assignAdmission` (re-bases orders that arrived while waiting), `holdAdmission`, `waitingAdmissions` | built |
 | `js/engine/roster.js` | `joinSim` (code check, placement, overflow alert) | built |

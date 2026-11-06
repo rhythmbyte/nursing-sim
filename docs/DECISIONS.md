@@ -4,6 +4,19 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-05: Review pass fixes (after phase 7)
+- **Boundary fixes:**
+  - Notes quick actions come from the catalog (`quickAction`), not ids in `notes.js` (B1).
+  - Code/ROSC alert text moved to `settings.messages` (no clinical text in JS).
+  - The "new orders" count lives in one engine helper (`newOrderCount`) instead of three screens.
+- **Bugs fixed:**
+  - Saving an edit, approving or creating a sim remounted the app and re-ran the crash-recovery pause, which paused and rewound a running sim by up to 5 s. That pause now runs only at a real page load.
+  - A saved session that references a missing patient is discarded with a warning instead of crashing.
+  - Debrief CSV adds a local wall-time column next to UTC.
+- **Kept as is:** `Math.random`/`Date.now` appear in the engine only as overridable defaults (B4 still holds; tests pass their own). Generic fallback text in event types ("Call light on", "New orders") is UI copy, not clinical content.
+
+---
+
 ## 2026-11-05: Admissions go to the charge nurse's board when the role is on
 - **Decision:** With `settings.chargeNurse` not `off`, an admission waits on the admissions board (not present to students) until the charge nurse assigns it to a group or holds it. Decisions are logged with the wait time (`admission-assigned`, `admission-held`, role `charge`). With `off`, it goes straight to its scenario group. Orders that arrived while the patient waited are re-based to the assignment time (`orderedAtMin` keeps the original), so tier timeouts don't count time no student could act on.
 - **Why:** SPEC §9. Fairness of timing flags.

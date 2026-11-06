@@ -154,3 +154,22 @@ test('phase 7: admission waits on the board; charge assigns it; held admissions 
   assert.deepEqual(waitingAdmissions(s), []);
   assert.throws(() => assignAdmission({ ...s, patients: { ...s.patients, x: { admission: { status: 'pending', arrivedAtMin: 0 } } } }, 'x', { groupId: 'nope' }, { now: 0, user: CHARGE, scenario: sc }));
 });
+
+test('review fixes: newOrderCount, code text from settings, quick actions in catalog, stale saved session discarded', async () => {
+  const { newOrderCount } = await import('../js/engine/orders.js');
+  assert.equal(newOrderCount({ orders: { a: { status: 'new' }, b: { status: 'done' } } }), 1);
+  assert.equal(newOrderCount(undefined), 0);
+  const sc = scenarioWith({ messages: { codeStarted: 'Custom code text' } });
+  let s = session.createSession(sc, templatesById, catalogs, { joinCode: 'X' });
+  s = startCode(s, 'p4-linda-garcia', {}, { now: 0, user: INS });
+  assert.equal(s.alerts.at(-1).message, 'Custom code text');
+  assert.equal(sc.settings.messages.rosc, 'ROSC achieved.', 'other messages keep defaults');
+  assert.deepEqual(catalogs.interventions.interventions.filter((i) => i.quickAction).map((i) => i.id), ['notify-provider', 'rapid-response', 'notify-charge']);
+  const saved = { ...session.createSession(scenarioWith(), templatesById, catalogs), joinCode: 'SAVED1' };
+  const { ['p1-robert-miller']: _gone, ...fewer } = templatesById;
+  const origWarn = console.warn; console.warn = () => {};
+  try {
+    const r = createRunner({ store: createStore(), scenario: scenarioWith(), templatesById: fewer, catalogs, saved, now: () => 0, rng: () => 0 });
+    assert.notEqual(r.state.joinCode, 'SAVED1', 'stale session replaced');
+  } finally { console.warn = origWarn; }
+});

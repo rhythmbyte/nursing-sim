@@ -35,3 +35,8 @@ export function firstWork(state, patientId, order) {
   }
   return best;
 }
+
+/** Orders on a patient still waiting to be acknowledged (badges on home, chart tabs, charge overview). */
+export function newOrderCount(patientState) {
+  return Object.values(patientState?.orders || {}).filter((o) => o.status === 'new').length;
+}

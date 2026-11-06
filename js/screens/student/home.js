@@ -8,12 +8,13 @@ import { badge } from '../shared/badge.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { studentView } from '../../engine/student-view.js';
 import { load, save } from '../../storage.js';
+import { newOrderCount } from '../../engine/orders.js';
 import { mountPatientView } from './patient-view.js';
 import { openHandoffModal } from './handoff-modal.js';
 
 function patientRow(pid, ps, view, { runner, user, simMin, seenAt, onOpen }) {
   const d = view.demographics;
-  const newOrders = Object.values(ps.orders).filter((o) => o.status === 'new').length;
+  const newOrders = newOrderCount(ps);
   const pendingLabs = ps.labs.filter((l) => l.status === 'pending').length;
   return h('li', { class: `student-patient${ps.callLight ? ' has-light' : ''}` },
     h('button', { class: 'sp-open', onclick: () => onOpen(pid), 'aria-label': `Open chart: ${d.name}, room ${d.room}` },

@@ -10,6 +10,7 @@ export function effectiveSettings(scenarioSettings = {}, catalogs) {
   merged.delegationDelayMin = typeof own === 'number'
     ? Object.fromEntries(Object.keys(defaults.delegationDelayMin).map((role) => [role, own]))
     : { ...defaults.delegationDelayMin, ...(own || {}) };
+  merged.messages = { ...defaults.messages, ...(scenarioSettings.messages || {}) };
   return merged;
 }
 
