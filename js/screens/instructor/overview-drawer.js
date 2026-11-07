@@ -26,6 +26,7 @@ export function createDrawer({ store, runner, scenario, catalogs, user }) {
     body);
   title.id = 'drawer-title';
   const scripts = h('div', {});
+  let eventsOpen = false; // the folded Events section stays as the instructor left it across re-renders
 
   function render() {
     if (!open) { el.hidden = true; return; }
@@ -43,7 +44,7 @@ export function createDrawer({ store, runner, scenario, catalogs, user }) {
         section('Vitals and actions', patientsPanel(runner, t, catalogs, user, f)),
         scripts,
         section('Labs to release', labsPanel(runner, t, user, f)),
-        section('Events for this patient', eventsPanel(runner, t, user, f)));
+        (() => { const d = h('details', { class: 'drawer-section', open: eventsOpen }, h('summary', {}, h('strong', {}, 'Events for this patient'), ' (timeline, Fire now)'), eventsPanel(runner, t, user, f)); d.addEventListener('toggle', () => { eventsOpen = d.open; }); return d; })());
     } else if (open.kind === 'student') {
       const r = state.roster[open.id];
       if (!r) { close(); return; }

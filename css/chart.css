@@ -392,3 +392,5 @@ body.projector-page { background: var(--bg); }
 .program-card { font: inherit; text-align: left; cursor: pointer; color: var(--text); }
 .program-card:hover, .program-card:focus-visible { border-color: var(--accent); outline: none; }
 .program-card h3 { text-transform: none; letter-spacing: 0; color: var(--text); font-size: 1.1rem; margin: 0 0 6px; }
+.preset-desc { margin: var(--space-1) 0 var(--space-2); }
+.customize > summary, .randomizer > summary, .advanced-group > summary { cursor: pointer; }

@@ -46,5 +46,16 @@ const rn = await counts();
 console.log('RN wizard:', JSON.stringify(rn));
 if (lpn.charge) fail('LPN has no charge-nurse choice in its program, but setup shows one');
 if (rn.cases !== 6 || rn.roles.split(',').sort().join() !== 'CNA,LPN' || !rn.charge) fail('RN should offer every case, CNA and LPN helpers, and the charge nurse choice');
+// Presets: step 5 starts with "Choose a preset"; Beginner fills in its settings under Customize; Review names it.
+for (let i = 0; i < 4; i++) { await click('button', 'Next'); await sleep(250); }
+console.log('presets:', await ev(`[...document.querySelector('select[aria-label="Preset"]').options].map(o=>o.text).join(', ')`));
+await ev(`(() => { const s=document.querySelector('select[aria-label="Preset"]'); s.value='beginner'; s.dispatchEvent(new Event('change')); })()`); await sleep(300);
+const handoff = await ev(`[...document.querySelectorAll('.customize select')].find(s=>[...s.options].some(o=>o.value==='always'))?.value`);
+console.log('beginner → handoff', handoff, '| customize closed by default:', await ev(`!document.querySelector('.customize').open`), '|', await text('.preset-desc'));
+if (handoff !== 'always') fail('choosing the Beginner preset did not set its handoff mode');
+await click('button', 'Next'); await sleep(300);
+const review = await text('.review-list');
+console.log('review:', review.slice(0, 200));
+if (!/Preset: Beginner/.test(review)) fail('Review does not name the preset');
 const u = await unl(); console.log('unlabeled', u); if (u !== 'none') fail(`unlabeled controls: ${u}`);
 sock.close();

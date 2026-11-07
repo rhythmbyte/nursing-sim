@@ -14,12 +14,12 @@ import { fillByTagCounts } from '../../engine/assignment.js';
 import { effectiveSettings } from '../../engine/settings.js';
 import { durationOverrides } from './duration-overrides.js';
 import { createGroups } from './setup-groups.js';
-import { scenarioOffered, caseOffered } from '../../engine/program.js';
+import { scenarioOffered, caseOffered, presetsFor, applyPreset } from '../../engine/program.js';
 import { SPEEDS } from '../../engine/clock.js';
 import { load, save } from '../../storage.js';
 
 const field = (label, el, hint) => helpField('setup', label, el, hint);
-const STEPS = ['Start from', 'Groups and students', 'Patients', 'Variation', 'Sim options', 'Review'];
+const STEPS = ['Start from', 'Groups and students', 'Patients', 'Variation', 'Preset and options', 'Review'];
 const STEP_KEY = 'ui.wizard.step';
 export const READY_KEY = 'ui.setup.ready'; // the scenario id the wizard just created: the Instructor tab shows Ready
 
@@ -60,11 +60,25 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   const simDurs = durationOverrides(data.catalogs, {}, { label: 'Sim task time' });
   const toolBoxes = (data.catalogs.assessmentTools?.tools || []).filter((t) => t.offered !== false).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
 
-  /** A saved scenario as the starting point: every step shows its values. */
-  function prefill(sc) {
-    const s = effectiveSettings(sc.settings, data.catalogs);
-    name.value = `${sc.name} (copy)`; startClock.value = sc.startClock || '07:00'; endClock.value = sc.endClock || ''; speed.value = String(sc.speed || 1);
-    assignment.value = sc.assignment === 'manual' ? 'manual' : 'random';
+  // Presets (presets.json, the program's list): a named bundle of settings; individual ones are under Customize.
+  const presets = presetsFor(data.catalogs, program);
+  const presetSel = h('select', { 'aria-label': 'Preset' }, presets.map((p) => h('option', { value: p.id }, p.label)));
+  const presetDesc = h('p', { class: 'muted preset-desc' });
+  const chosenPreset = () => presets.find((p) => p.id === presetSel.value) || null;
+  function usePreset() {
+    const p = chosenPreset();
+    presetDesc.textContent = p?.description || '';
+    if (!p) return;
+    const s = effectiveSettings(applyPreset({}, p), data.catalogs);
+    setControls(s);
+    if (p.speed) speed.value = String(p.speed);
+    for (const gr of g.groups) gr.staff = { ...s.staffPool };
+    g.render();
+  }
+  presetSel.addEventListener('change', usePreset);
+
+  /** Every individual setting control from merged settings. */
+  function setControls(s) {
     for (const [k, el] of Object.entries(set)) {
       if (k === 'tagsStudent') el.checked = s.showTagsTo.includes('student');
       else if (k === 'tagsCharge') el.checked = s.showTagsTo.includes('charge');
@@ -72,6 +86,14 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
       else if (s[k] != null) el.value = String(s[k]);
     }
     for (const x of toolBoxes) x.box.checked = s.assessmentTools === 'all' || (s.assessmentTools === 'public' ? x.t.license?.status === 'public' : (s.assessmentTools || []).includes(x.t.id));
+  }
+
+  /** A saved scenario as the starting point: every step shows its values. */
+  function prefill(sc) {
+    name.value = `${sc.name} (copy)`; startClock.value = sc.startClock || '07:00'; endClock.value = sc.endClock || ''; speed.value = String(sc.speed || 1);
+    assignment.value = sc.assignment === 'manual' ? 'manual' : 'random';
+    if (sc.preset && presets.some((p) => p.id === sc.preset)) { presetSel.value = sc.preset; presetDesc.textContent = chosenPreset()?.description || ''; }
+    setControls(effectiveSettings(sc.settings, data.catalogs));
     g.load(sc.groups.map((gr) => ({ ...gr, mode: gr.tagCounts && !gr.patients?.length ? 'tags' : 'pick', names: (sc.manualStudents?.[gr.id] || []).join('\n') })));
   }
 
@@ -83,7 +105,9 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
     const scenario = {
       id: `sc-${name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sim'}-${Date.now().toString(36)}`,
       name: name.value.trim() || 'New sim', ...(program ? { program: program.id } : {}), startClock: startClock.value, ...(endClock.value ? { endClock: endClock.value } : {}), speed: Number(speed.value),
+      ...(chosenPreset() ? { preset: chosenPreset().id } : {}),
       settings: {
+        ...(chosenPreset()?.settings?.rules ? { rules: chosenPreset().settings.rules } : {}), // timing rules from the preset
         randomizeNames: set.randomizeNames.checked, randomizeValues: set.randomizeValues.checked, randomizeMeds: set.randomizeMeds.checked,
         handoffMode: set.handoffMode.value, chargeNurse: set.chargeNurse.value, showTagsTo: ['instructor', ...(set.tagsStudent.checked ? ['student'] : []), ...(set.tagsCharge.checked ? ['charge'] : [])], priorityScale: set.priorityScale.value,
         revealManualVitals: set.revealManualVitals.checked, pauseOnClose: set.pauseOnClose.checked, delegatedAssessmentRevealsFindings: set.delegatedAssessmentRevealsFindings.checked,
@@ -131,6 +155,7 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
         h('li', {}, `${scenario.groups.length} group${scenario.groups.length === 1 ? '' : 's'}, ${scenario.groups.reduce((n, x) => n + x.studentCount, 0)} student slots, ${assignment.value === 'manual' ? 'named roster' : 'random placement'}`),
         ...scenario.groups.map((x) => h('li', {}, `${x.name}: ${x.patients?.length || 0} patients${x.admissions?.length ? ` + ${x.admissions.length} admission` : ''}${x.tagCounts ? ' (random by tags; picked at Create)' : ''}`)),
         h('li', {}, `Variation: names ${yes(s.randomizeNames)} · vitals & labs ${yes(s.randomizeValues)} · meds ${yes(s.randomizeMeds)}`),
+        h('li', {}, `Preset: ${chosenPreset()?.label || 'none'}`),
         h('li', {}, `Shift ${scenario.startClock}–${scenario.endClock || 'open'} at ${scenario.speed}x · handoff ${s.handoffMode} · charge nurse ${s.chargeNurse} · task timers ${s.taskTimerMode}`)),
     );
   }
@@ -149,30 +174,32 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
       field('Assignment', assignment), g.boxes.students, h('button', { class: 'btn', type: 'button', onclick: () => g.add() }, 'Add group')),
     h('section', { class: 'panel' }, h('h3', {}, '3. Patients ', helpTip('setup.wizard-patients')),
       h('p', { class: 'muted' }, 'Pick cases for each group, or let the randomizer pick by patient tags and triage color counts (match counts update as you click). You see "(C1) Robert Miller"; students never see the code.'),
-      g.randomizer, g.boxes.patients),
+      g.randomizer ? h('details', { class: 'randomizer' }, h('summary', {}, 'Narrow the randomizer by patient tags (optional)'), g.randomizer) : null, g.boxes.patients),
     h('section', { class: 'panel' }, h('h3', {}, '4. Variation ', helpTip('setup.wizard-variation')),
       h('p', { class: 'muted' }, 'Case templates can make a different patient in each sim. Off = the case exactly as written. Teaching points never change.'),
       h('label', { class: 'inline' }, set.randomizeNames, ' Randomize names (and age and sex within the case\'s range)'),
       h('label', { class: 'inline' }, set.randomizeValues, ' Randomize vitals & labs within their ranges'),
       h('label', { class: 'inline' }, set.randomizeMeds, ' Randomize meds within their class (never a drug the patient is allergic to)')),
-    h('section', { class: 'panel' }, h('h3', {}, '5. Sim options ', helpTip('setup.wizard-options')),
-      h('div', { class: 'editor-grid' }, field('Shift start', startClock), field('Shift end (sim stops; blank = no end)', endClock), field('Speed', speed),
-        field('Handoff', set.handoffMode), feature('chargeNurse') ? field('Charge nurse', set.chargeNurse) : null, feature('taskTimers') ? field('Task timer mode', set.taskTimerMode) : null),
-      feature('delegation') ? h('h4', {}, 'Staff per group ', helpTip('setup.wizard-staff')) : null, feature('delegation') ? g.boxes.staff : null,
-      feature('assessments') ? h('h4', {}, 'Assessments available ', helpTip('setup.assessment-tools')) : null,
-      feature('assessments') && h('div', { class: 'check-grid' }, toolBoxes.map(({ t, box }) => h('label', { class: 'inline' }, box, ` ${t.name} `, t.license?.status !== 'public' ? badge('License check needed', 'review') : null))),
-      h('details', {}, h('summary', {}, 'More options'),
+    h('section', { class: 'panel' }, h('h3', {}, '5. Preset and options ', helpTip('setup.wizard-options')),
+      h('div', { class: 'editor-grid' }, field('Preset', presetSel), field('Shift start', startClock), field('Shift end (sim stops; blank = no end)', endClock), field('Speed', speed)),
+      presetDesc,
+      h('details', { class: 'customize' }, h('summary', {}, 'Customize (every setting) ', helpTip('setup.customize')),
+        h('div', { class: 'editor-grid' }, field('Handoff', set.handoffMode), feature('chargeNurse') ? field('Charge nurse', set.chargeNurse) : null, feature('taskTimers') ? field('Task timer mode', set.taskTimerMode) : null),
+        feature('delegation') ? h('h4', {}, 'Staff per group ', helpTip('setup.wizard-staff')) : null, feature('delegation') ? g.boxes.staff : null,
+        feature('assessments') ? h('h4', {}, 'Assessments available ', helpTip('setup.assessment-tools')) : null,
+        feature('assessments') && h('div', { class: 'check-grid' }, toolBoxes.map(({ t, box }) => h('label', { class: 'inline' }, box, ` ${t.name} `, t.license?.status !== 'public' ? badge('License check needed', 'review') : null))),
+        h('h4', {}, 'More'),
         h('div', { class: 'editor-grid' }, field('Student priority scale', set.priorityScale), field('PRN pre-check window (min)', set.prnPreCheckWindowMin),
-          field('Manikin lockout (fraction of the task time)', set.taskTimerManikinFactor), field('Shortest lockout (seconds)', set.taskTimerMinLockoutSec)),
-        h('label', { class: 'inline' }, set.delegationQueue, ' Students can queue a task when no helper is free ', helpTip('setup.delegation-queue')),
+          feature('taskTimers') ? field('Manikin lockout (fraction of the task time)', set.taskTimerManikinFactor) : null, feature('taskTimers') ? field('Shortest lockout (seconds)', set.taskTimerMinLockoutSec) : null),
+        feature('delegation') ? h('label', { class: 'inline' }, set.delegationQueue, ' Students can queue a task when no helper is free ', helpTip('setup.delegation-queue')) : null,
         h('label', { class: 'inline' }, set.tagsStudent, ' Students see the instructor\'s tags ', helpTip('setup.tags-student')),
-        h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags ', helpTip('setup.tags-charge')),
+        feature('chargeNurse') ? h('label', { class: 'inline' }, set.tagsCharge, ' A student charge nurse sees the instructor\'s tags ', helpTip('setup.tags-charge')) : null,
         h('label', { class: 'inline' }, set.revealManualVitals, ' Measure button reveals temp/RR/pain ', helpTip('setup.reveal-manual-vitals')),
         h('label', { class: 'inline' }, set.pauseOnClose, ' Pause when the page closes ', helpTip('setup.pause-on-close')),
-        h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings ', helpTip('setup.delegated-assessment-reveals')),
-        h('label', { class: 'inline' }, set.revealAssessmentFindings, ' "Check patient" shows the scripted finding for each item ', helpTip('setup.reveal-assessment-findings')),
-        h('label', { class: 'inline' }, set.gradeAssessments, ' Grade reassessments and mismatches (flags) ', helpTip('setup.grade-assessments')),
-        h('details', {}, h('summary', {}, 'Task times for this sim (optional)'), simDurs.el))),
+        feature('delegation') ? h('label', { class: 'inline' }, set.delegatedAssessmentRevealsFindings, ' Delegated assessments reveal findings ', helpTip('setup.delegated-assessment-reveals')) : null,
+        feature('assessments') ? h('label', { class: 'inline' }, set.revealAssessmentFindings, ' "Check patient" shows the scripted finding for each item ', helpTip('setup.reveal-assessment-findings')) : null,
+        feature('assessments') ? h('label', { class: 'inline' }, set.gradeAssessments, ' Grade reassessments and mismatches (flags) ', helpTip('setup.grade-assessments')) : null,
+        feature('taskTimers') ? h('details', {}, h('summary', {}, 'Task times for this sim (optional)'), simDurs.el) : null)),
     h('section', { class: 'panel' }, h('h3', {}, '6. Review and create ', helpTip('setup.wizard-review')), field('Sim name', name), review,
       h('div', { class: 'controls' }, h('button', { class: 'btn btn-primary', type: 'button', onclick: create }, 'Create sim')), result),
   ];
@@ -199,6 +226,7 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
     h('header', { class: 'screen-header' }, h('h2', {}, 'Set up a sim')),
     bar, crumbs, ...stepEls, h('div', { class: 'controls wizard-nav' }, back, next));
   g.add();
+  usePreset(); // the program's first preset (Standard), unless a draft or a saved sim says otherwise
   show();
   root.append(body);
   const draft = formDraft(body, 'wizard', { extra: { get: () => ({ groups: g.plain(), prefilledFrom }), set: (saved) => { prefilledFrom = saved.prefilledFrom ?? null; g.load(saved.groups || []); } } });

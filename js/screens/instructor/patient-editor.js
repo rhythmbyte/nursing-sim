@@ -174,9 +174,6 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
         field('HPI', area('hpi', 5)), field('PMH', area('pmh', 3), 'One per line'), field('Home meds', area('homeMeds', 3), 'One per line: name | dose | frequency')),
       h('section', { class: 'panel' }, h('h3', {}, 'Handoff (SBAR)'), ['situation', 'background', 'assessment', 'recommendation'].map((k) => field(k[0].toUpperCase() + k.slice(1), area(k, 2)))),
       h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Baseline vitals'), field('Rhythm', rhythmSel('v_rhythm', '(none)')), ['bp', 'hr', 'rr', 'tempF', 'spo2', 'pain'].map((k) => field(k, inp(`v_${k}`))), field('o2', o2Field('v_o2'))),
-      h('section', { class: 'panel' }, h('h3', {}, 'Normal ranges for this patient ', helpTip('editor.normal-ranges')), h('p', { class: 'muted small' }, 'Blank = the usual range (shown faded). Used for recovery penalties, the event builder\'s "To" hint and the debrief.'),
-        h('div', { class: 'editor-grid' }, Object.entries(nr).map(([k, [lo, hi]]) => h('div', { class: 'pick-row' }, h('span', { class: 'tag-group' }, k), lo, '–', hi)))),
-      h('section', { class: 'panel' }, h('h3', {}, 'Task times for this patient ', helpTip('editor.task-times')), h('p', { class: 'muted small' }, 'Only where this patient differs from the usual time (e.g. a hard IV start). The usual time is in brackets.'), durs.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline findings'), field('Shown when the student assesses (one per line)', area('findings', 5))),
       h('section', { class: 'panel' }, h('h3', {}, 'Baseline assessment findings ', helpTip('editor.assessments')), h('p', { class: 'muted small' }, 'What each tool finds at the start (NEWS2 is calculated from vitals). Scenario changes, states and reactions can change them later.'), baselineAssess.el),
       h('section', { class: 'panel' }, h('h3', {}, 'Orders at shift start'), orders.el),
@@ -192,19 +189,24 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
           h('button', { class: 'btn btn-small btn-ghost', onclick: () => { if (window.confirm('Delete this scenario change?')) { sync(); update(deleteChange(work, c.key, startClock)); } } }, 'Delete'))))
           : h('p', { class: 'muted' }, 'No scenario changes yet.')),
       scriptSection({ work: () => work, sync, update, catalogs, scenario, schemas: data.schemas, reloadData }),
-      h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Outcome and code branch'),
+      h('section', { class: 'panel' }, h('h3', {}, 'Debrief (instructor only)'),
+        field('Should recognize', area('shouldRecognize', 4), 'One per line (per-change notes live in each scenario change)'), field('Instructor notes', area('instructorNotes', 3)),
+        field('Notes for review', area('reviewNotes', 3), 'Things to confirm, one per line')),
+      // Rarely needed: kept out of the way (each still saves with the patient).
+      h('details', { class: 'panel advanced-group' }, h('summary', {}, h('strong', {}, 'Advanced'), ' · normal ranges, task times, outcome and code branch, JSON ', helpTip('editor.advanced')),
+        h('section', { class: 'panel' }, h('h3', {}, 'Normal ranges for this patient ', helpTip('editor.normal-ranges')), h('p', { class: 'muted small' }, 'Blank = the usual range (shown faded). Used for recovery penalties, the event builder\'s "To" hint and the debrief.'),
+        h('div', { class: 'editor-grid' }, Object.entries(nr).map(([k, [lo, hi]]) => h('div', { class: 'pick-row' }, h('span', { class: 'tag-group' }, k), lo, '–', hi)))),
+        h('section', { class: 'panel' }, h('h3', {}, 'Task times for this patient ', helpTip('editor.task-times')), h('p', { class: 'muted small' }, 'Only where this patient differs from the usual time (e.g. a hard IV start). The usual time is in brackets.'), durs.el),
+        h('section', { class: 'panel editor-grid' }, h('h3', {}, 'Outcome and code branch'),
         field('Outcome', sel('outcomeMode', ['survive', 'die', 'instructor'])), field('Outcome notes', inp('outcomeNotes')),
         h('label', { class: 'inline' }, chk('cbOn'), ' Has a code branch'), h('label', { class: 'inline' }, chk('cbEnabled'), ' Code branch enabled'),
         field('Code branch description', inp('cbDescription')), field('Codes if NOT charted', ivPicker('cbIfNotCharted')),
         field('…by sim minute', inp('cbByMin', 'number')), field('Code rhythm', rhythmSel('cbRhythm', '(arrest rhythm)')), field('Code message', inp('cbMessage'))),
-      h('section', { class: 'panel' }, h('h3', {}, 'Debrief (instructor only)'),
-        field('Should recognize', area('shouldRecognize', 4), 'One per line (per-change notes live in each scenario change)'), field('Instructor notes', area('instructorNotes', 3)),
-        field('Notes for review', area('reviewNotes', 3), 'Things to confirm, one per line')),
-      h('details', { class: 'panel advanced' }, h('summary', {}, 'Advanced: edit JSON'),
+        h('details', { class: 'panel advanced' }, h('summary', {}, 'Advanced: edit JSON'),
         h('p', { class: 'muted small' }, 'For fields without a form (PRN limits, parameters). Applying replaces the working copy; Save still checks it.'),
         jsonBox, h('button', { class: 'btn btn-small', onclick: () => {
           try { update(JSON.parse(jsonBox.value)); } catch (e) { showErrors([`Not valid JSON: ${e.message}`]); }
-        } }, 'Apply JSON')),
+        } }, 'Apply JSON'))),
       h('div', { class: 'controls' }, h('button', { class: 'btn btn-primary', onclick: onSave }, 'Save')),
     );
     cases.refresh();

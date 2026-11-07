@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Simple by default (scale, Part B)
+- **Presets in the wizard:** step 5 is now "Preset and options": choose a preset (Standard med-surg, Beginner – gentle timing, Code-heavy, Delegation focus, Manikin lab, Screen-only; the program's list), see what it changes, set the shift times. Every individual setting is under **Customize** (closed by default). A sim remembers its preset; a preset's timing rules (e.g. Beginner's doubled late limits) go into the sim's settings.
+- **Depth on demand:** the wizard's randomizer tags fold away ("Narrow the randomizer by patient tags"); the Patient editor's rarely used sections (normal ranges, task times, outcome and code branch, JSON) are under one **Advanced**; the Overview drawer folds "Events for this patient" (and remembers if you opened it). Setup hides what the program doesn't use (charge nurse, delegation, assessments, task timers).
+- **Consistent language:** help text no longer points to screens that moved ("Live control" → the Overview's patient drawer, "Sim setup" → the setup wizard); the header's picker is "Sim"; the full panel set under More controls is "All controls".
+- Browser suites: the programs suite checks presets (Beginner fills in its settings; Review names it).
+
 ## Program profiles (scale, Part A)
 - **Programs** (`data/catalogs/programs.json`, proposed): RN and LPN / LVN, with room for EMT / Paramedic. A program sets what new sims default to (helper roles and staff pool, assessment tools, charge nurse) and which cases and saved sims are offered (by patient tags). It also sets which parts of setup show (charge nurse, delegation, assessments, task timers) and its wording.
 - The instructor **picks a program once** (first visit to the Instructor tab; "Just looking? Start the demo sim" skips it). It's remembered, and **Program** at the top changes it.

@@ -147,7 +147,7 @@ export function mountLiveControl(root, ctx) {
 
 
   root.append(
-    h('header', { class: 'screen-header' }, h('h2', {}, `Live control · ${scenario.name}`), h('span', { class: 'muted small' }, 'Keys: Space pause/resume · N next event · ? help'), clock.el),
+    h('header', { class: 'screen-header' }, h('h2', {}, `All controls · ${scenario.name}`), h('span', { class: 'muted small' }, 'Keys: Space pause/resume · N next event · ? help'), clock.el),
     controls,
     filterBar,
     unitList,

@@ -66,8 +66,8 @@ function buildTabs(ctx) {
 }
 
 function scenarioPicker(scenarios, currentId, onChange) {
-  return h('label', { class: 'inline' }, 'Scenario ',
-    h('select', { 'aria-label': 'Scenario', onchange: (e) => onChange(e.target.value, e.target) },
+  return h('label', { class: 'inline' }, 'Sim ',
+    h('select', { 'aria-label': 'Sim', onchange: (e) => onChange(e.target.value, e.target) },
       scenarios.map((s) => h('option', { value: s.id, selected: s.id === currentId }, s.name))));
 }
 
