@@ -47,18 +47,33 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 
 **First visit:** the Instructor tab asks which program you teach (RN or LPN / LVN; change it later with **Program** at the top), or **Just looking? Start the demo sim**.
 
-**Fastest start:** Instructor → Setup → **Start demo sim** (starter scenario with the cases as written, a joined test student, clock running).
+**Fastest start:** Home → **Start demo sim** (the starter sim with its cases as written, a joined test student, clock running).
 
-**The instructor flow in 3 minutes (wizard → Overview → debrief)**
+**The instructor flow in 3 minutes (Home → Overview → debrief)**
 
-1. **Instructor → Setup** is a six-step wizard: **Start from** (pick "Saved: The Busy Med-Surg Shift" or New sim) → **Groups and students** → **Patients** (pick cases, or "Random by patient tags and triage counts" with live match counts) → **Variation** (randomize names / vitals & labs / meds; off = the case as written) → **Sim options** (handoff, charge nurse, task timers, staff per group, assessments, shift times, speed; the rest under More options) → **Review** → **Create sim**. Defaults are fine: Next, Next, Next, Next, Next, Create.
-2. **Ready** shows the join code big, who has joined and this sim's patients as "(C1) Cardiac 1 — *name, age, drugs*" with **Reroll** and **Lock variant**. **Projector view** opens the join code big, with who has joined, for the classroom screen (a second window; no patient information). Join on the **Student 1** tab with the code and a name, then **Start sim**.
-3. **Overview** is the only screen while the sim runs. It starts with **Needs attention** (the most urgent things first, each one click away) and shows only the groups and patients that need you ("N patients stable"; tick **Show all patients** or **Compact** for big classes; **Autopilot** in a patient's drawer keeps a stable patient quiet). Also: the clock bar (Pause, Break 5/10/15, Speed, Skip, End sim), the alerts strip (call lights, alarms, codes, rejoin requests) and one card per group. **Click a patient** for the drawer with everything for them: Adjust vitals, push order, call light, Add event, code / ROSC, script state with armed reactions and penalties, labs to release, events. **Click a student** for their status and rejoin approval. Everything else from the old Live control is under **More controls**. The **Builder** tab (editor, library, review queue) hides while the sim runs.
-4. **End sim** goes straight to the **Debrief**: a **Summary** card per group (on time, late, very late, misprioritized, missed, flags, response averages; **Print summary** for one page), **Talking points** per group (prompts grouped by theme; tick as discussed, hide, or **Evidence →**), and the **Full breakdown** per student (every table, timeline and CSV export). After that, **Run again** (on the summary) repeats the same setup with a new code and new patients, or **1. New sim** starts a different one.
+1. **Pick or make a sim from Home.**
+   - **Start a saved sim:** the sim library, each sim with a **Ready** / **Needs work** badge and the reasons (try the starter: it needs work because two cases order assessment tools still waiting on a license check, and one case is still a draft). **Start** → join code → **Start sim** is two clicks. Saved sims can also be edited, duplicated, renamed and deleted.
+   - **Generate a sim:** e.g. 4 students × 3 patients, Standard difficulty, Beginner preset → **Generate** shows each group's cases and the readiness check → **Start** or **Save to library**.
+   - **Custom setup:** the six-step wizard (start from · groups and students · patients · variation · **preset** and options, with every setting under Customize · review → **Create sim** or **Save to library**).
+2. **Ready** shows the join code big, who has joined and this sim's patients as "(C1) Cardiac 1 — *name, age, drugs*" with **Reroll** and **Lock variant**. **Projector view** opens the join code for the classroom screen (no patient information). Join on the **Student 1** tab, then **Start sim**.
+3. **Overview** is the only screen while the sim runs:
+   - **Needs attention** comes first: the most urgent things, each one click away.
+   - Only the groups and patients that need you are shown ("N patients stable"). For big classes, tick **Show all patients** or **Compact**, and **Autopilot** in a patient's drawer keeps a stable patient quiet.
+   - The clock bar has Pause, Break 5/10/15, Speed, Skip and End sim, with one card per group below.
+   - **Click a patient** for everything about them: Adjust vitals, push order, call light, Add event, code / ROSC, script state, labs, autopilot.
+   - **Click a student** for their status and rejoin approval.
+   - The rest of the old Live control is under **More controls**. **Menu** has ⌂ Home (it asks first) and Debrief so far.
+4. **End sim** goes straight to the **Debrief**:
+   - A **Summary** card per group (**Print summary** prints one page).
+   - **Talking points** by theme (tick, hide, **Evidence →**).
+   - The **Full breakdown** per student.
+   - **Run again** repeats the same setup with new patients. Every finished sim stays under Home → **Past debriefs**.
+
+**Programs and presets:** the program you teach (RN or LPN / LVN, at the top) decides which cases, helper roles, assessment tools and setup options you see. Presets (Standard med-surg, Beginner – gentle timing, Code-heavy, Delegation focus, Manikin lab, Screen-only) bundle the settings, so most sims never open Customize.
 
 **The deeper tour (The Busy Med-Surg Shift)** below uses the older panel names in places: "Live control" is now the Overview's patient drawer or **More controls**, "Sim setup" is the wizard, the Patient editor and library are in the **Builder** tab, and the Debrief tab is the Instructor tab's **Debrief**.
 
-**Case templates:** the demo uses each case as written (Robert Miller, Linda Garcia, …). Any other new sim makes new patients from the cases (per the wizard's Variation step); instructors always see the case code, e.g. "(C1) Robert Miller". The Ready screen lists them with **Reroll** and **Lock variant**. Builder → Patient editor → **Case template** has the code, ranges, medication classes, warnings and **Check variants**.
+**Case templates:** the demo uses each case as written (Robert Miller, Linda Garcia, …). Any other new sim makes new patients from the cases (per the wizard's Variation step); instructors always see the case code, e.g. "(C1) Robert Miller". The Ready screen lists them with **Reroll** and **Lock variant**. Builder → Patient editor → **Case template** has the code, ranges, medication classes, warnings, **Check variants** and **Autopilot by default**; every case in the Builder library shows Ready / Needs work with the reasons.
 
 **One window at a time.** If you open the sim in a second window of the same browser, that window is read-only and offers **Take over here** (the bedside monitor page is the exception: it only displays).
 
