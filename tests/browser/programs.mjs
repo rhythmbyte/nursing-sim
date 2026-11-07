@@ -15,6 +15,7 @@ console.log('first visit:', q, '| cards:', await text('.program-card h3'));
 if (!/Which program/.test(q)) fail('no program picker on the first visit');
 await shot('program-picker');
 await click('.program-card', 'LPN'); await sleep(4000);
+await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
 console.log('header program:', await ev(`document.querySelector('select[aria-label="Program"]')?.selectedOptions[0]?.text`), '| phase:', await text('.phase-btn.active'));
 const counts = async () => {
   for (let i = 0; i < 2; i++) { await click('button', 'Next'); await sleep(250); }

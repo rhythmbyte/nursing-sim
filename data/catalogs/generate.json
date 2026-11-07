@@ -1,0 +1,11 @@
+{
+  "review": "proposed",
+  "_comment": "Generate a sim (engine/generate.js): difficulty levels as triage-color weights per student (a student with 4 patients and weights red 1, yellow 1, green 1 gets about 1–2 of each). Limits for the form. Drafts for the instructor (SPEC §14).",
+  "limits": { "students": [2, 10], "patientsPerStudent": [1, 6] },
+  "defaults": { "students": 4, "patientsPerStudent": 3, "difficulty": "standard" },
+  "difficulties": [
+    { "id": "gentle", "label": "Gentle", "description": "Mostly stable patients: no red, more green.", "mix": { "red": 0, "yellow": 1, "green": 2 } },
+    { "id": "standard", "label": "Standard", "description": "An even mix of red, yellow and green.", "mix": { "red": 1, "yellow": 1, "green": 1 } },
+    { "id": "challenging", "label": "Challenging", "description": "Mostly unstable patients: more red, few green.", "mix": { "red": 2, "yellow": 1, "green": 0 } }
+  ]
+}

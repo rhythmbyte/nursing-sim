@@ -35,6 +35,7 @@ if (!/Edited in this browser/.test(badge)) fail(`patient not saved: ${badge}`);
 
 // Setup wizard → Patients → random by patient tags.
 await click('.tab', 'Instructor'); await sleep(400);
+await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
 await click('button', 'Next'); await sleep(250); await click('button', 'Next'); await sleep(250);
 await ev(`(() => { const sel=[...document.querySelectorAll('.wizard select')].find(s=>[...s.options].some(o=>o.value==='tags')); sel.value='tags'; sel.dispatchEvent(new Event('change')); return 1; })()`); await sleep(300);
 const before = await text('.wizard section.panel:not([hidden]) .tag-count');

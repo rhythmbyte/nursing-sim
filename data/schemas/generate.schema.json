@@ -1,0 +1,11 @@
+{
+  "title": "Generate a sim",
+  "type": "object",
+  "required": ["limits", "defaults", "difficulties"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "limits": { "type": "object" },
+    "defaults": { "type": "object" },
+    "difficulties": { "type": "array", "items": { "type": "object", "required": ["id", "label", "mix"], "properties": { "id": { "type": "string" }, "label": { "type": "string" }, "description": { "type": "string" }, "mix": { "type": "object" } } } }
+  }
+}

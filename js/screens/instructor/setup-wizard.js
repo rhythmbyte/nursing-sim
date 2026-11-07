@@ -16,7 +16,7 @@ import { durationOverrides } from './duration-overrides.js';
 import { createGroups } from './setup-groups.js';
 import { scenarioOffered, caseOffered, presetsFor, applyPreset } from '../../engine/program.js';
 import { SPEEDS } from '../../engine/clock.js';
-import { load, save } from '../../storage.js';
+import { load, save, remove } from '../../storage.js';
 
 const field = (label, el, hint) => helpField('setup', label, el, hint);
 const STEPS = ['Start from', 'Groups and students', 'Patients', 'Variation', 'Preset and options', 'Review'];
@@ -223,10 +223,13 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   }
 
   const body = h('div', { class: 'wizard' },
-    h('header', { class: 'screen-header' }, h('h2', {}, 'Set up a sim')),
+    h('header', { class: 'screen-header' }, h('h3', {}, 'Build a sim step by step')),
     bar, crumbs, ...stepEls, h('div', { class: 'controls wizard-nav' }, back, next));
   g.add();
   usePreset(); // the program's first preset (Standard), unless a draft or a saved sim says otherwise
+  // Sim library → "Edit a copy": start from that sim (every step filled in) at step 2.
+  const from = load('ui.wizard.from');
+  if (from && [...startFrom.options].some((o) => o.value === from)) { remove('ui.wizard.from'); startFrom.value = from; step = 0; go(1); }
   show();
   root.append(body);
   const draft = formDraft(body, 'wizard', { extra: { get: () => ({ groups: g.plain(), prefilledFrom }), set: (saved) => { prefilledFrom = saved.prefilledFrom ?? null; g.load(saved.groups || []); } } });

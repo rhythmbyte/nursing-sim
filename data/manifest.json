@@ -21,7 +21,9 @@
     "medClasses": "catalogs/med-classes.json",
     "debriefPoints": "catalogs/debrief-points.json",
     "programs": "catalogs/programs.json",
-    "presets": "catalogs/presets.json"
+    "presets": "catalogs/presets.json",
+    "readiness": "catalogs/readiness.json",
+    "generate": "catalogs/generate.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

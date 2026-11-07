@@ -13,6 +13,8 @@ import { matchesTags, filterText } from '../../engine/patient-tags.js';
 import { tagChips } from './patient-tags-ui.js';
 import { helpTip } from '../shared/help.js';
 import { caseOffered } from '../../engine/program.js';
+import { caseReadiness } from '../../engine/readiness.js';
+import { readinessBlock } from './sim-library.js';
 
 const SELECTED_KEY = 'ui.library.selected';
 
@@ -45,6 +47,7 @@ function patientCard(p, selected, onSelect, startClock) {
     firstEventLine(p, startClock),
     h('div', { class: 'card-badges' },
       pending ? badge(`Needs review (${pending})`, 'review', `${pending} item(s) drafted by AI await instructor approval`) : badge('Approved', 'ok'),
+      h('span', { class: 'card-ready', 'data-case': p.id }),
     ),
   );
 }
@@ -90,7 +93,14 @@ export function mountLibrary(root, { data: { patients, catalogs, problems, progr
     clear(list).append(...(vis.length ? [...groups.entries()].sort(([a], [b]) => (a === 'Other') - (b === 'Other') || a.localeCompare(b)).flatMap(([c, ps]) => [
       h('h4', { class: 'library-group' }, c), ...ps.sort(byTitle).map((p) => patientCard(p, p.id === selectedId, select, startClock))]) : [h('p', { class: 'muted' }, 'No patients match these patient tags.')]));
     const p = sorted.find((x) => x.id === selectedId);
-    clear(detail).append(p ? patientDetail(p, { catalogs, startClock }) : h('p', { class: 'muted' }, 'No patients loaded.'));
+    const ready = h('div', { class: 'panel case-readiness' }, h('h3', {}, 'Readiness ', helpTip('library.readiness')), h('span', { class: 'muted small' }, 'Checking…'));
+    clear(detail).append(...(p ? [ready, patientDetail(p, { catalogs, startClock })] : [h('p', { class: 'muted' }, 'No patients loaded.')]));
+    // Readiness runs dry runs (cached per case), so it fills in after the list shows.
+    setTimeout(() => {
+      const check = (t) => caseReadiness(t, { catalogs, program });
+      for (const el of list.querySelectorAll('.card-ready')) { const t = sorted.find((x) => x.id === el.dataset.case); if (t) clear(el).append(check(t).status === 'ready' ? badge('✓ Ready', 'ok') : badge('Needs work', 'review', check(t).blocking.map((b) => b.message).join('\n'))); }
+      if (p) clear(ready).append(h('h3', {}, 'Readiness ', helpTip('library.readiness')), readinessBlock(check(p)));
+    }, 0);
   }
 
   function select(id) {

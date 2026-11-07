@@ -5,7 +5,8 @@
 import { h, clear } from '../shared/dom.js';
 import { load, save } from '../../storage.js';
 import { canLeave } from '../shared/leave-guard.js';
-import { mountSetupWizard, READY_KEY } from './setup-wizard.js';
+import { READY_KEY } from './setup-wizard.js';
+import { mountSetupHome } from './setup-home.js';
 import { mountSetupReady } from './setup-ready.js';
 import { mountOverview } from './overview.js';
 import { mountDebrief } from '../debrief/index.js';
@@ -58,7 +59,7 @@ export function mountInstructor(root, ctx) {
     if (p === 'overview') cleanup = mountOverview(body, ctx);
     else if (p === 'debrief') cleanup = mountDebrief(body, ctx);
     else if (setupKind === 'ready') cleanup = mountSetupReady(body, ctx, { onChangeSetup: () => { save(READY_KEY, null); render(true); } });
-    else cleanup = mountSetupWizard(body, ctx);
+    else cleanup = mountSetupHome(body, ctx);
   }
 
   // Data problems (schema or broken references) show on every instructor phase.

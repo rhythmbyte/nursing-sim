@@ -1,0 +1,18 @@
+{
+  "review": "proposed",
+  "_comment": "Readiness check (engine/readiness.js): which reasons make a case or sim 'Needs work' (blocking) and which are only notes. Codes: broken-references (an order, event or reaction points at something missing), variant-errors (the variant check found a variant that behaves differently from the case as written), range-warnings (a range could put a variant past a threshold), unreviewed-case (the whole case is still a draft, review: proposed), tools-unavailable (an order needs an assessment tool the program doesn't offer), partial-review (parts still drafts), proposed-items (individual drafted items), no-script (no reactive script), empty-group, missing-case. Draft for the instructor (SPEC §14).",
+  "blocking": ["broken-references", "variant-errors", "range-warnings", "unreviewed-case", "tools-unavailable", "empty-group", "missing-case"],
+  "variantSamples": 8,
+  "messages": {
+    "broken-references": "Broken reference: {detail}",
+    "variant-errors": "A variant behaves differently from the case as written: {detail}",
+    "range-warnings": "A range could break the script: {detail}",
+    "unreviewed-case": "The whole case is still a draft (not reviewed by an instructor)",
+    "partial-review": "Parts of the case are still drafts",
+    "proposed-items": "{detail} drafted item(s) still need review",
+    "no-script": "No reactive script: the patient won't react to care on its own (you can still drive it from the Overview)",
+    "tools-unavailable": "Needs assessment tool(s) your program doesn't offer: {detail}",
+    "empty-group": "{detail} has no patients",
+    "missing-case": "Case not found in the library: {detail}"
+  }
+}

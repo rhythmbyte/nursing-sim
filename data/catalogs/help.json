@@ -165,5 +165,12 @@
   "program.choose": "Your program (RN, LPN…) sets what new sims start with: helper roles and staff, assessment tools offered, charge nurse, and which cases and saved sims you see. It never hides anything a running sim needs. Change it any time with Program at the top of the page. The program settings are drafts for review (data/catalogs/programs.json).",
   "setup.customize": "Every individual setting. Choosing a preset fills these in; change any of them here. Most sims never need to open this.",
   "editor.advanced": "Things most cases never change: this patient's own normal ranges, task times, the outcome and code branch, and editing the JSON directly.",
-  "setup.preset": "A ready-made bundle of settings for a kind of sim (your program's list). Its description says what it changes. Customize shows every individual setting."
+  "setup.preset": "A ready-made bundle of settings for a kind of sim (your program's list). Its description says what it changes. Customize shows every individual setting.",
+  "library.readiness": "Is this case ready to run? Needs work lists what blocks it: broken references, a variant that behaves differently from the case as written, a range that could break the script, a case still entirely a draft, or an assessment tool the sims won't offer. Notes (no reactive script, drafted items) don't block. What blocks is set in data/catalogs/readiness.json.",
+  "setup.library": "Saved sims for your program, each checked: Ready means every case passed the readiness check. Start goes to the join code; Start sim begins. Edit a copy opens it in Build step by step.",
+  "generate.how": "Pick the number of students and patients each, a difficulty (how many red, yellow and green patients) and a preset. Each student gets their own group; a case can appear in several groups, and each group gets its own patient from it. You see the result and its readiness before anything starts.",
+  "generate.students": "How many students (2–10). Each gets their own group and patients.",
+  "generate.patients-per-student": "How many patients each student cares for (1–6). If fewer cases match, each student gets as many as there are.",
+  "generate.difficulty": "How many red, yellow and green patients each student gets (generate.json). Custom lets you set the weights.",
+  "generate.preset": "The settings bundle for the sim (timing, task timers, staff). Code-heavy and Beginner also steer which cases are picked."
 }

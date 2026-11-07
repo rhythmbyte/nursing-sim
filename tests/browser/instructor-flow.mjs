@@ -8,6 +8,7 @@ await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
 await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send("Page.reload"); await sleep(7000);
 console.log('tabs:', await text('.tab'), '| phase:', await text('.phase-btn'));
 console.log('wizard step:', await text('.wizard section.panel:not([hidden]) h3'));
+await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
 await ev(`(() => { const s=document.querySelector('select[aria-label="Start from"]'); s.value=s.options[1].value; s.dispatchEvent(new Event('change',{bubbles:true})); })()`);
 for (let i = 0; i < 5; i++) { await click('button', 'Next'); await sleep(300); console.log(' step:', await text('.wizard section.panel:not([hidden]) h3')); }
 await shot('w-review');

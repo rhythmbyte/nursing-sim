@@ -2,6 +2,14 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Ready-to-run sims and Generate (scale, Part C)
+- **Readiness check** (`engine/readiness.js`, rules in `data/catalogs/readiness.json`, proposed). A case is **Needs work** when it has broken references, a variant behaving differently from the case as written, a range that could break its script, the whole case still a draft, or an order needing an assessment tool the sim won't offer. Notes that don't block: no reactive script, drafted items. A sim is Ready when every case is, no group is empty and every case exists.
+- **Sim library** (Setup now opens on it): saved sims for the program with a Ready / Needs work badge and reasons; **Start** → the join code → **Start sim** (two clicks); **Edit a copy** opens the wizard filled in; Remove hides a browser-made sim.
+- **Generate a sim:** students (2–10), patients per student (1–6), difficulty (data: Gentle / Standard / Challenging triage weights, or a custom mix), optional patient tags, and a preset. Each student gets a group; cases are spread evenly within each triage color and reused across groups (each group gets its own patient). A one-screen summary with readiness and warnings comes before **Start**, **Save to library and start** or **Save to library**.
+- **Builder:** every case card shows Ready / Needs work, and the case detail lists the reasons.
+- Found by the check (not changed, a question for the instructor): with the default "public tools only", Margaret's POSS and Dorothy's NIHSS and Morse orders can't be charted, because those tools still need a license check. James Carter's case is still entirely a draft. So the starter sim shows Needs work.
+- Tests: 241 unit; new browser suite `library-generate`.
+
 ## Simple by default (scale, Part B)
 - **Presets in the wizard:** step 5 is now "Preset and options": choose a preset (Standard med-surg, Beginner – gentle timing, Code-heavy, Delegation focus, Manikin lab, Screen-only; the program's list), see what it changes, set the shift times. Every individual setting is under **Customize** (closed by default). A sim remembers its preset; a preset's timing rules (e.g. Beginner's doubled late limits) go into the sim's settings.
 - **Depth on demand:** the wizard's randomizer tags fold away ("Narrow the randomizer by patient tags"); the Patient editor's rarely used sections (normal ranges, task times, outcome and code branch, JSON) are under one **Advanced**; the Overview drawer folds "Events for this patient" (and remembers if you opened it). Setup hides what the program doesn't use (charge nurse, delegation, assessments, task timers).

@@ -1,0 +1,11 @@
+{
+  "title": "Readiness check",
+  "type": "object",
+  "required": ["blocking", "messages"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "blocking": { "type": "array", "items": { "type": "string" } },
+    "variantSamples": { "type": "integer", "minimum": 1 },
+    "messages": { "type": "object" }
+  }
+}

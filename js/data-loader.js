@@ -42,6 +42,8 @@ const SCHEMAS = {
   debriefPoints: 'schemas/debrief-points.schema.json',
   programs: 'schemas/programs.schema.json',
   presets: 'schemas/presets.schema.json',
+  readiness: 'schemas/readiness.schema.json',
+  generate: 'schemas/generate.schema.json',
 };
 
 async function fetchJson(base, rel) {

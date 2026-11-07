@@ -394,3 +394,14 @@ body.projector-page { background: var(--bg); }
 .program-card h3 { text-transform: none; letter-spacing: 0; color: var(--text); font-size: 1.1rem; margin: 0 0 6px; }
 .preset-desc { margin: var(--space-1) 0 var(--space-2); }
 .customize > summary, .randomizer > summary, .advanced-group > summary { cursor: pointer; }
+
+/* ---- Setup home: library, generate, build ---- */
+.mode-bar { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-2) 0 var(--space-3); }
+.mode-btn { font: inherit; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 6px 16px; cursor: pointer; }
+.mode-btn.active { background: var(--surface); color: var(--text); border-color: var(--accent); font-weight: 600; }
+.sim-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: var(--space-3); }
+.sim-cases { margin: var(--space-1) 0 var(--space-2); }
+.readiness { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 60%; }
+.readiness-list { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; text-align: left; }
+.readiness-notes summary { cursor: pointer; font-size: 0.85rem; }
+.gen-summary .readiness { align-items: flex-end; }

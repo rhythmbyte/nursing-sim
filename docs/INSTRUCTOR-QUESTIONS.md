@@ -98,6 +98,16 @@ Right now: Standard med-surg, Beginner (gentler timing, no penalties), Code-heav
 Are these useful? Anything to add or change?
 Your answer: ______________________________________________
 
+**1.19 When is a case ready to run?** [66]
+Right now: a case needs work if something in it is broken, a random variant behaves differently from the case as written, the whole case is still a draft, or it needs an assessment tool your sims won't offer. A case without a reactive script, or with some drafted details, still counts as ready (with a note).
+Is that the right line?
+Your answer: ______________________________________________
+
+**1.20 Generated sims** [67]
+Right now: Gentle = no red patients, Standard = an even mix, Challenging = mostly red; each student gets their own patients.
+Right mixes? Should Generate also make pairs of students sharing patients?
+Your answer: ______________________________________________
+
 ## 2. Scoring and flags
 
 **2.0 Debrief talking points** [63]

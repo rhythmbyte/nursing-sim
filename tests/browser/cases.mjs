@@ -7,6 +7,7 @@ await send('Runtime.enable'); await send('Page.enable'); await send('Emulation.s
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
 await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(5000);
 // 1. Run the saved starter as is → Ready: cases panel with codes; nothing unfilled.
+await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
 await ev(`(() => { const s=document.querySelector('select[aria-label="Start from"]'); s.value=s.options[1].value; s.dispatchEvent(new Event('change',{bubbles:true})); })()`);
 await click('button', 'Run the saved scenario'); await sleep(4000);
 const casesRows = () => text('.ready tbody td:nth-child(2)');
