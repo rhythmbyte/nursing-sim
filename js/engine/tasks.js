@@ -7,6 +7,7 @@
 // Student record: state.students[userId].task = { id, name, args, patientId, label, startedAt, runFrom, activeMin, endsAt, durationSec, lockSec }
 // and .pausedTask (one at a time): a task the student stepped away from, with leftMin; resuming restarts its countdown.
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import * as chart from './chart.js';
@@ -66,7 +67,7 @@ export function assertFree(state, userId, plan, now) {
 /** Student starts a timed task: busy until endsAt; the action is applied by taskProcessor then. ctx = { now, user, templatesById, catalogs }. */
 export function beginTask(state, pid, name, args, plan, ctx) {
   assertFree(state, ctx.user.userId, plan, ctx.now);
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, ctx.now);
   draft.students[ctx.user.userId] ??= { seen: {}, handoff: {} };
   const id = `t${draft.log.length + 1}`;
@@ -110,7 +111,7 @@ export function interruptTask(state, { now, user, paused = false }) {
   const rec = state.students?.[user.userId];
   const t = paused ? rec?.pausedTask : rec?.task;
   if (!t) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   if (paused) delete draft.students[user.userId].pausedTask; else draft.students[user.userId].task = null;
   append(draft, { simMin, wallTime: now, ...user, patientId: t.patientId, action: 'task-interrupted', details: { taskId: t.id, label: t.label,
@@ -124,7 +125,7 @@ export function pauseTask(state, { now, user }) {
   const t = rec?.task;
   if (!t) return state;
   if (rec.pausedTask) throw new Error(`You already paused ${rec.pausedTask.label}. Resume or drop it first.`);
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const paused = { ...t, activeMin: activeMinutes(t, simMin), leftMin: r2(Math.max(0, t.endsAt - simMin)), pausedAt: simMin, endsAt: null, runFrom: null };
   Object.assign(draft.students[user.userId], { task: null, pausedTask: paused });
@@ -138,7 +139,7 @@ export function resumeTask(state, { now, user }) {
   const p = rec?.pausedTask;
   if (!p) return state;
   if (rec.task) throw new Error(busyMessage(rec.task, simMinOf(state, now)));
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const { leftMin, pausedAt, ...rest } = p;
   Object.assign(draft.students[user.userId], { task: { ...rest, runFrom: simMin, endsAt: simMin + leftMin } });
@@ -157,7 +158,7 @@ export function pausedView(state, userId) {
 export function endTaskNow(state, userId, ctx) {
   const t = currentTask(state, userId);
   if (!t) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, ctx.now);
   append(draft, { simMin, wallTime: ctx.now, ...ctx.user, patientId: t.patientId, action: 'task-ended-early', details: { taskId: t.id, label: t.label, studentId: userId, leftMin: Math.round((t.endsAt - simMin) * 100) / 100 } });
   applyTask(draft, userId, t, simMin, ctx, 'ended-early');

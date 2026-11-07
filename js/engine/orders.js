@@ -1,5 +1,7 @@
 // Order status helpers shared by chart actions and delegation. No DOM.
 
+import { entriesFor } from './log.js';
+
 /** Work done for an order: acknowledges it if new; a one-time order becomes done. Mutates draft. */
 export function progressOrder(draft, patientId, order, simMin) {
   const os = order && draft.patients[patientId].orders[order.id];
@@ -21,8 +23,8 @@ export function firstWork(state, patientId, order) {
   const os = state.patients[patientId]?.orders[order.id];
   if (!os) return null;
   let best = null; // earliest by sim time (log order isn't strictly time order, e.g. delegated reports)
-  for (const l of state.log) {
-    if (l.patientId !== patientId || l.simMin < os.activeAtMin) continue;
+  for (const l of entriesFor(state.log, patientId)) {
+    if (l.simMin < os.activeAtMin) continue;
     if (best && l.simMin >= best.simMin) continue;
     if (countsAsWork(l, order)) best = l;
   }

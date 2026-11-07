@@ -5,7 +5,7 @@ import { openPage } from './lib.mjs';
 const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, fail, ignore, reset, out, BASE, CDP } = await openPage();
 await send('Runtime.enable'); await send('Page.enable'); await send('Emulation.setFocusEmulationEnabled', { enabled: true });
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send("Page.reload"); await sleep(7000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn")); localStorage.setItem("nursing-sim:ui.overview.showAll", "true")'); await send("Page.reload"); await sleep(7000);
 console.log('tabs:', await text('.tab'), '| phase:', await text('.phase-btn'));
 console.log('wizard step:', await text('.wizard section.panel:not([hidden]) h3'));
 await click('.home-card', 'Custom setup'); await sleep(400); // the Instructor tab opens on Home
@@ -23,7 +23,7 @@ console.log('student home patients:', await text('.patient-list .name, .sp-name,
 await click('.tab', 'Instructor'); await sleep(600);
 await click('button', 'Start sim'); await sleep(1500);
 console.log('after start tabs:', await text('.tab'), '| phase:', await text('.phase-btn.active'), '| overview h2:', await text('.overview h2'));
-console.log('alerts:', await text('.alerts-strip'));
+console.log('attention:', await text('.attention-item'));
 await click('.cc-patient', ''); await sleep(800);
 console.log('drawer:', await text('.drawer-title'), '| sections:', await text('.drawer-section > h4'));
 await shot('drawer');

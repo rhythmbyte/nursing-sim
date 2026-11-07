@@ -2,6 +2,7 @@
 // ctx = { now, user, templatesById, catalogs, refs }. None of these fight the script: they change its
 // position or switches, and the processor carries on from there.
 
+import { cloneState } from '../clone.js';
 import { simMinOf } from '../session.js';
 import { append } from '../log.js';
 import { enterState } from './effects.js';
@@ -11,7 +12,7 @@ import { earnPenalty, changePenalty } from '../penalties.js';
 function begin(state, pid, ctx) {
   const ps = state.patients[pid];
   if (!ps?.script) throw new Error(`${pid} has no reaction script`);
-  return { draft: structuredClone(state), t: simMinOf(state, ctx.now) };
+  return { draft: cloneState(state), t: simMinOf(state, ctx.now) };
 }
 
 const reactionOf = (ctx, pid, rid) => {

@@ -108,6 +108,11 @@ Right now: Gentle = no red patients, Standard = an even mix, Challenging = mostl
 Right mixes? Should Generate also make pairs of students sharing patients?
 Your answer: ______________________________________________
 
+**1.21 What should rise to the top during a sim** [68]
+Right now: the Overview's "Needs attention" list puts a code first, then monitor alarms, students rejoining, worsening vitals, call lights (higher the longer they wait), very late work, red flags, students away, recovery penalties, then late work.
+Is that your order of priorities?
+Your answer: ______________________________________________
+
 ## 2. Scoring and flags
 
 **2.0 Debrief talking points** [63]

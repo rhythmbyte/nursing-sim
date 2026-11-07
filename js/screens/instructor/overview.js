@@ -1,11 +1,15 @@
 // Instructor → Overview: the only screen while a sim runs. Clock bar (time, time left, Pause / Resume, Break, Speed,
-// Skip, End), an alerts strip (call lights, monitor alarms, rejoin requests), and the Command center group cards.
-// A click on a patient, student or group opens the side drawer (overview-drawer.js). Every other Live control panel
-// is under "More controls" (collapsed; mounted only when opened).
+// Skip, End), the attention queue (one prioritized list of what to act on now: codes, alarms, rejoin requests,
+// worsening patients, call lights, late work, red flags, away students; engine/attention.js), and the group cards,
+// exception-first: only groups and patients needing attention, the rest as "N patients stable" ("Show all" shows
+// everything; "Compact" folds on-track groups to one line). A click opens the side drawer (overview-drawer.js).
+// Every other Live control panel is under "More controls" (collapsed; mounted only when opened).
 
 import { h, clear } from '../shared/dom.js';
 import { coalesce } from '../shared/coalesce.js';
-import { simClock, elapsed } from '../shared/timer.js';
+import { simClock } from '../shared/timer.js';
+import { attentionQueue, attentionPatients, onAutopilot } from '../../engine/attention.js';
+import { evaluateRules } from '../../engine/rules/index.js';
 import { helpTip } from '../shared/help.js';
 import { instructorPatientLabel } from '../shared/labels.js';
 import { SPEEDS } from '../../engine/clock.js';
@@ -29,19 +33,20 @@ function clockBar(runner, user) {
     b('End sim', () => { if (window.confirm('End the sim for everyone? Students get their reflection and you go to the debrief.')) runner.clock('end', user); }, live, 'btn-danger'));
 }
 
-function alertsStrip(runner, drawer) {
-  const st = runner.state;
+const KIND_ICON = { code: '✚', alarm: '⚠', rejoin: '↻', worsening: '↘', callLight: '🔔', veryLate: '‼', redFlag: '⚑', away: '⌁', penalty: '▼', late: '◷' };
+
+/** The attention queue: top items (more on request), each one click to the drawer. */
+function queueList(queue, runner, drawer, { showTop, expanded, toggle }) {
   const t = runner.templates();
-  const simMin = runner.simMin();
-  const items = [
-    ...Object.entries(st.patients).filter(([, ps]) => ps.callLight).map(([pid, ps]) => ({ cls: 'alert-call', text: `🔔 ${instructorPatientLabel(t[pid])} · call light ${elapsed(simMin, ps.callLight.since)}`, open: () => drawer.show('patient', pid) })),
-    ...Object.entries(st.patients).filter(([, ps]) => ps.alarm?.active?.length).map(([pid, ps]) => ({ cls: 'alert-alarm', text: `⚠ ${instructorPatientLabel(t[pid])} · alarm: ${ps.alarm.active.join(', ')}`, open: () => drawer.show('patient', pid) })),
-    ...Object.entries(st.patients).filter(([, ps]) => ps.code && !ps.code.outcome).map(([pid]) => ({ cls: 'alert-alarm', text: `✚ ${instructorPatientLabel(t[pid])} · CODING`, open: () => drawer.show('patient', pid) })),
-    ...(st.rejoinRequests || []).filter((q) => q.status === 'pending').map((q) => ({ cls: 'alert-rejoin', text: `↻ ${q.name} is rejoining from another device: approve?`, open: () => drawer.show('student', q.userId) })),
-  ];
-  return items.length
-    ? h('ul', { class: 'alerts-strip', 'aria-label': 'Alerts' }, items.map((x) => h('li', {}, h('button', { class: `alert-item ${x.cls}`, type: 'button', onclick: x.open }, x.text))))
-    : h('p', { class: 'alerts-strip muted small' }, 'No call lights, alarms or rejoin requests.');
+  if (!queue.length) return h('p', { class: 'attention-empty muted small' }, 'Nothing needs you right now.');
+  const items = expanded ? queue : queue.slice(0, showTop);
+  return h('div', { class: 'attention' },
+    h('h3', { class: 'attention-title' }, `Needs attention (${queue.length})`),
+    h('ol', { class: 'attention-list' }, items.map((q) => h('li', {}, h('button', { class: `attention-item attention-${q.kind}`, type: 'button',
+      onclick: () => (q.patientId ? drawer.show('patient', q.patientId) : drawer.show('student', q.userId)) },
+      h('span', { class: 'attention-icon', 'aria-hidden': 'true' }, KIND_ICON[q.kind] || '•'),
+      h('strong', {}, q.patientId ? instructorPatientLabel(t[q.patientId]) : q.label.split(' ')[0]), ' ', h('span', {}, q.patientId ? q.label : q.label.split(' ').slice(1).join(' ')))))),
+    queue.length > showTop ? h('button', { class: 'btn btn-small btn-ghost', type: 'button', onclick: toggle }, expanded ? 'Show fewer' : `Show ${queue.length - showTop} more`) : null);
 }
 
 export function mountOverview(root, ctx) {
@@ -51,7 +56,25 @@ export function mountOverview(root, ctx) {
   const alerts = h('div', { 'aria-live': 'polite' });
   const cards = h('div', {});
   const drawer = createDrawer({ store, runner, scenario, catalogs, user });
-  const cc = mountCommandCenter(cards, { store, runner, scenario, embedded: true,
+  // Exception-first view (remembered): Show all / Compact.
+  let showAll = Boolean(load('ui.overview.showAll'));
+  let compact = Boolean(load('ui.overview.compact'));
+  let expanded = false;
+  const showTop = catalogs.ui?.attention?.showTop ?? 8;
+  const toggles = h('div', { class: 'controls overview-view' });
+  // Once per render: the group cards' data feeds the attention queue (shape) and the cards' filter.
+  const shape = (groups) => {
+    const ctxR = runner.rulesCtx();
+    const queue = attentionQueue(runner.state, ctxR, groups, evaluateRules(runner.state, ctxR));
+    clear(alerts).append(queueList(queue, runner, drawer, { showTop, expanded, toggle: () => { expanded = !expanded; cc.refresh(); } }));
+    return { showAll, compact, attention: attentionPatients(queue), autopilot: (pid) => onAutopilot(runner.state, pid) };
+  };
+  const renderToggles = () => clear(toggles).append(
+    h('label', { class: 'inline small' }, h('input', { type: 'checkbox', checked: showAll, onchange: (e) => { showAll = e.target.checked; save('ui.overview.showAll', showAll); cc.refresh(); } }), ' Show all patients'),
+    h('label', { class: 'inline small' }, h('input', { type: 'checkbox', checked: compact, onchange: (e) => { compact = e.target.checked; save('ui.overview.compact', compact); cc.refresh(); } }), ' Compact (on-track groups on one line)'),
+    helpTip('overview.exceptions'));
+  renderToggles();
+  const cc = mountCommandCenter(cards, { store, runner, scenario, embedded: true, shape,
     onGroup: (id) => drawer.show('group', id), onPatient: (id) => drawer.show('patient', id), onStudent: (id) => drawer.show('student', id) });
   // More controls: the full Live control (every panel), mounted only while open.
   const moreBody = h('div', {});
@@ -69,7 +92,6 @@ export function mountOverview(root, ctx) {
   function render() {
     const key = `${runner.state.clock.status}|${runner.state.clock.speed}|${Boolean(runner.state.break)}|${runner.nextEventMin()}`;
     if (key !== lastKey) { lastKey = key; clear(controls).append(clockBar(runner, user)); }
-    clear(alerts).append(alertsStrip(runner, drawer));
   }
   root.append(h('div', { class: 'overview' },
     h('header', { class: 'screen-header overview-bar' }, h('h2', {}, scenario.name), clock.el, helpTip('overview.status'),
@@ -78,7 +100,7 @@ export function mountOverview(root, ctx) {
         h('div', { class: 'overview-menu-list' },
           ctx.goHome ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => ctx.goHome() }, '⌂ Home (the sim keeps running)') : null,
           ctx.goDebrief ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => ctx.goDebrief() }, 'Debrief so far') : null))),
-    controls, alerts, cards, more), drawer.el);
+    controls, alerts, toggles, cards, more), drawer.el);
   render();
   syncMore();
   const later = coalesce(render, 250);

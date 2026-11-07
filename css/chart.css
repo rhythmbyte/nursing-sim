@@ -423,3 +423,22 @@ body.projector-page { background: var(--bg); }
 .overview-menu { position: relative; }
 .overview-menu > summary { list-style: none; cursor: pointer; }
 .overview-menu-list { position: absolute; right: 0; top: 110%; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.15); min-width: 240px; }
+
+/* ---- Overview at scale: attention queue, exception-first cards ---- */
+.attention { margin: var(--space-2) 0 var(--space-3); }
+.attention-title { margin: 0 0 6px; }
+.attention-list { list-style: none; padding: 0; margin: 0 0 6px; display: grid; gap: 4px; }
+.attention-item { font: inherit; width: 100%; text-align: left; display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border: 1px solid var(--border); border-left-width: 4px; border-radius: 6px; background: var(--surface); color: var(--text); cursor: pointer; }
+.attention-item:hover, .attention-item:focus-visible { border-color: var(--accent); outline: none; }
+.attention-code, .attention-alarm, .attention-redFlag, .attention-veryLate { border-left-color: var(--triage-red); }
+.attention-rejoin, .attention-away { border-left-color: var(--accent); }
+.attention-callLight, .attention-worsening, .attention-late, .attention-penalty { border-left-color: var(--triage-yellow); }
+.attention-icon { width: 1.2em; text-align: center; }
+.attention-empty { margin: var(--space-2) 0; }
+.overview-view { margin-bottom: var(--space-2); }
+.cc-line { padding: 8px 12px; }
+.cc-line .cc-head { gap: var(--space-3); }
+.cc-stable { margin: 4px 0 0; }
+.cc-hidden-note { grid-column: 1 / -1; margin: 0; }
+.cc-auto { font-size: 0.8rem; color: var(--muted); }
+.drawer-autopilot { margin: 0 0 var(--space-2); }

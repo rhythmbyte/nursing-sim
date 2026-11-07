@@ -6,7 +6,7 @@ const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, f
 await send('Runtime.enable'); await send('Page.enable'); await send('Network.setCacheDisabled', { cacheDisabled: true });
 await send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1100, deviceScaleFactor: 1, mobile: false });
 await send('Page.navigate', { url: `${BASE}/` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(6000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn")); localStorage.setItem("nursing-sim:ui.overview.showAll", "true")'); await send('Page.reload'); await sleep(6000);
 
 console.log('load problems banner:', (await text('.banner-error')) || 'none');
 console.log('tabs:', await text('.tab'), '| phase:', await text('.phase-btn.active'));
@@ -78,7 +78,7 @@ await click('.tab', 'Charge'); await sleep(300); console.log('charge:', await te
 await click('.tab', 'Instructor'); await sleep(500);
 for (let i = 0; i < 4; i++) { await click('button', 'Skip to next event'); await sleep(400); }
 console.log('command center after skips:', await ev(`[...document.querySelectorAll('.cc-card')].map(c=>c.querySelector('h3').textContent+': '+[...c.querySelectorAll('.cc-count')].filter(x=>/reassess/.test(x.textContent)).map(x=>x.textContent).join()).join(' | ')`));
-console.log('alerts:', await text('.alerts-strip'));
+console.log('attention:', await text('.attention-item'));
 await ev(`window.confirm = () => true`);
 await click('button', 'End sim'); await sleep(2500);
 console.log('phase after end:', await text('.phase-btn.active'), '| summary cards:', await ev(`document.querySelectorAll('.sum-card').length`), '| unlabeled:', await unl());

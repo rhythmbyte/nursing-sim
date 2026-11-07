@@ -1,4 +1,5 @@
 // Students joining the sim with the join code (SPEC §10). Pure; rng injected.
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { addAlert } from './alerts.js';
@@ -21,7 +22,7 @@ export function joinSim(state, { userId, name, code, token = null }, { scenario,
   if (existing || state.roster[userId]) {
     const [id, r] = existing || [userId, state.roster[userId]];
     const simMin = simMinOf(state, now);
-    const draft = structuredClone(state);
+    const draft = cloneState(state);
     if (id === userId || (token && state.rejoinTokens?.[id] === token)) {
       append(draft, { simMin, wallTime: now, userId: id, role: 'student', action: 'student-rejoined', details: { name: r.name, groupId: r.groupId, awayMin: awayMinutes(state, id, now), via: id === userId ? 'same device' : 'token' } });
       addAlert(draft, { simMin, kind: 'roster', message: `${r.name} rejoined.`, audience: ['instructor'] });
@@ -37,11 +38,11 @@ export function joinSim(state, { userId, name, code, token = null }, { scenario,
   const simMin = simMinOf(state, now);
   if (placed.error) {
     if (!placed.overflow) return { state, error: placed.error };
-    const draft = structuredClone(state);
+    const draft = cloneState(state);
     addAlert(draft, { simMin, kind: 'roster', message: `${name.trim()} tried to join but every group is full.`, audience: ['instructor'] });
     return { state: draft, error: placed.error };
   }
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   draft.roster[userId] = { name: name.trim(), groupId: placed.groupId, joinedAtMin: simMin };
   const tok = Array.from({ length: 16 }, () => Math.floor(rng() * 36).toString(36)).join('');
   (draft.rejoinTokens ??= {})[userId] = tok; // the device keeps it to rejoin later (full build: the login)
@@ -53,7 +54,7 @@ export function joinSim(state, { userId, name, code, token = null }, { scenario,
 export function decideRejoin(state, requestId, approve, { now, user }) {
   const req = (state.rejoinRequests || []).find((q) => q.id === requestId && q.status === 'pending');
   if (!req) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   Object.assign(draft.rejoinRequests.find((q) => q.id === requestId), { status: approve ? 'approved' : 'denied', decidedAtMin: simMin });
   append(draft, { simMin, wallTime: now, ...user, action: approve ? 'rejoin-approved' : 'rejoin-denied', details: { requestId, studentId: req.userId, name: req.name, awayMin: approve ? awayMinutes(state, req.userId, now) : undefined } });

@@ -1,5 +1,6 @@
 // What Live control (and the builder) show about a patient's script right now. Pure, no DOM.
 
+import { entriesFor } from '../log.js';
 import { armedTimers, maxFires } from '../reactions.js';
 import { names, triggerText, effectText, matcherText, reactionText, causeText } from './describe.js';
 import { strength, totalPercent } from '../penalties.js';
@@ -53,7 +54,7 @@ export function stateTimeline(state, pid, template, catalogs) {
   if (!template?.script) return [];
   const n = names(template, catalogs);
   const start = { atMin: 0, from: null, fromLabel: '', to: template.script.initialState, label: n.state(template.script.initialState), cause: { kind: 'start' }, causeText: 'start of the sim', by: 'system', nothingDone: false, note: '' };
-  return [start, ...state.log.filter((l) => l.patientId === pid && l.action === 'script-state').map((l) => {
+  return [start, ...entriesFor(state.log, pid).filter((l) => l.action === 'script-state').map((l) => {
     const d = l.details;
     return {
       atMin: l.simMin, from: d.from, fromLabel: n.state(d.from), to: d.to, label: d.label || n.state(d.to), cause: d.cause,
@@ -70,7 +71,7 @@ export function stateTimeline(state, pid, template, catalogs) {
 export function penaltyTimeline(state, pid, template, catalogs) {
   const n = template?.script ? names(template, catalogs) : null;
   const KIND = { 'penalty-earned': 'earned', 'recovery-limited': 'limited', 'penalty-changed': 'changed', 'penalty-cleared': 'cleared', 'penalty-worn-off': 'worn-off', 'penalty-skipped': 'skipped' };
-  return state.log.filter((l) => l.patientId === pid && KIND[l.action]).map((l) => {
+  return entriesFor(state.log, pid).filter((l) => KIND[l.action]).map((l) => {
     const d = l.details;
     const kind = KIND[l.action];
     const text = kind === 'earned' ? `${d.label}${d.percent ? `: recovery −${d.percent}%` : ''}${d.caps ? ` (caps ${Object.entries(d.caps).map(([k, v]) => `${k} ${v}`).join(', ')})` : ''}${d.wearOffMin ? `, wears off over ${d.wearOffMin} min once treated` : ''}`

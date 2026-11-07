@@ -1,4 +1,5 @@
 // Instructor live actions (besides clock/event control): left unattended, ad-hoc orders, codes, call lights. No DOM.
+import { cloneState } from './clone.js';
 import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
@@ -10,7 +11,7 @@ import { recordVitals } from './vitals-control.js';
 /** Mark that student(s) left an unstable patient unattended (flagged red by the left-unattended rule). */
 export function markLeftUnattended(state, patientId, { studentIds, note = '' }, { now, user }) {
   if (!studentIds?.length) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   append(draft, { simMin: simMinOf(state, now), wallTime: now, ...user, patientId, action: 'left-unattended', details: { studentIds, note } });
   return draft;
 }
@@ -27,7 +28,7 @@ export function pushOrder(state, patientId, order, { now, user }) {
   if (!order?.text?.trim()) throw new Error('Order text is required.');
   if (!ORDER_TYPES.includes(order.type)) throw new Error(`Order type must be one of ${ORDER_TYPES.join(', ')}`);
   if (![1, 2, 3].includes(Number(order.tier))) throw new Error('Tier must be 1, 2 or 3.');
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   draft.adhoc[patientId] ??= { orders: [] };
   const n = draft.adhoc[patientId].orders.length + 1;
@@ -46,7 +47,7 @@ export function pushOrder(state, patientId, order, { now, user }) {
 /** Start a code now (uses the `code` event type), e.g. when the instructor decides the patient arrests. */
 export function startCode(state, patientId, { rhythm = '', message = '' }, { now, user }) {
   if (state.patients[patientId]?.code) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   getEventType('code').apply(draft, { id: 'e-live-code', type: 'code', payload: { rhythm, message: message || state.settings.messages.codeStarted } }, { simMin, patientId });
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'code-started', details: { rhythm } });
@@ -57,7 +58,7 @@ export function startCode(state, patientId, { rhythm = '', message = '' }, { now
 export function setCodeOutcome(state, patientId, outcome, { now, user }) {
   const code = state.patients[patientId]?.code;
   if (!code || code.outcome || !['rosc', 'no-rosc'].includes(outcome)) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const ps = draft.patients[patientId];
   ps.code.outcome = outcome;
@@ -80,7 +81,7 @@ export function setCodeOutcome(state, patientId, outcome, { now, user }) {
 export function setCallLight(state, patientId, { on, message = '' }, { now, user }) {
   const ps = state.patients[patientId];
   if (!ps || Boolean(ps.callLight) === Boolean(on)) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   if (on) getEventType('call-light').apply(draft, { id: 'e-live-call-light', payload: { message: message || 'Call light on' } }, { simMin, patientId });
   else draft.patients[patientId].callLight = null;

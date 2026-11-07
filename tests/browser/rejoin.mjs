@@ -5,7 +5,7 @@ import { openPage } from './lib.mjs';
 const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, fail, ignore, reset, out, BASE, CDP } = await openPage();
 await send('Runtime.enable'); await send('Page.enable');
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(2000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn")); localStorage.setItem("nursing-sim:ui.overview.showAll", "true")'); await send('Page.reload'); await sleep(2000);
 await ev(`(async () => { const dl = await import('/js/data-loader.js'); const d = await dl.loadAll();
   const sc = { id: 'sc-rj', name: 'Rejoin test', startClock: '07:00', speed: 1, assignment: 'random', events: [], notes: '', settings: {},
     groups: [{ id: 'g1', name: 'Group 1', studentCount: 3, patients: ['p1-robert-miller', 'p4-linda-garcia'] }] };
@@ -25,14 +25,14 @@ await ev(`Object.keys(localStorage).filter(k => k.includes('rejoin.')).forEach(k
 await join('Student 3', 'Ana'); await sleep(600);
 console.log('S3 without token:', await text('.join-panel .banner, .form-error'), '| panel', await ev(`document.querySelector('.tab-panel')?.textContent.slice(0,200)`), '| lastJoin', await ev(`JSON.stringify(window.__nursingSim?.runner.lastJoin())`));
 await click('.tab', 'Instructor'); await sleep(500);
-console.log('alerts strip:', await text('.alerts-strip'));
-await click('.alert-item', '↻ Ana'); await sleep(500);
+console.log('attention list:', await text('.attention-item'));
+await ev(`[...document.querySelectorAll('.attention-item')].find(b=>b.textContent.includes('Ana'))?.click()`); await sleep(500);
 console.log('student drawer:', await text('.drawer-title'), '|', await text('.drawer .banner-review'));
 await click('.drawer button', 'Approve Ana'); await sleep(500);
 await click('.tab', 'Student 3'); await sleep(500);
 console.log('S3 after approval:', await text('.screen-header h2'), '| roster size', await ev(`Object.keys(JSON.parse(localStorage.getItem('nursing-sim:session')).roster).length`));
 await click('.tab', 'Instructor'); await sleep(500);
-console.log('alerts after approval:', await text('.alerts-strip'));
+console.log('attention after approval:', await text('.attention-item'));
 console.log('drawer still open after reload-safe save:', await text('.drawer-title'));
 console.log('connection column:', await ev(`[...document.querySelectorAll('.drawer table.data-table tr')].find(r=>r.textContent.includes('Ana'))?.textContent.slice(0,140)`));
 ignore(/Saved session discarded/); // the suite swaps the scenario under a saved session on purpose

@@ -5,6 +5,7 @@
 // - Rhythm comes from vitals (data/catalogs/rhythms.json; aliases accepted, e.g. a code's "PEA").
 // - Alarms from data: vitals.json alarmLimits, and rhythms with alarm: true.
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 
@@ -17,6 +18,19 @@ export function resolveRhythm(catalogs, name) {
   return hit ? { id: hit[0], ...hit[1] } : null;
 }
 
+// Interventions each patient's nurse charted themselves (not delegated), indexed once per log array: every patient's
+// monitor reads the same log in a tick, so this is one pass instead of one per patient.
+const chartedCache = new WeakMap();
+function chartedBy(log) {
+  let m = chartedCache.get(log);
+  if (!m) {
+    m = new Map();
+    for (const l of log) if (l.patientId && l.action === 'intervention' && !l.details.delegatedTo) { if (!m.has(l.patientId)) m.set(l.patientId, new Set()); m.get(l.patientId).add(l.details.interventionId); }
+    chartedCache.set(log, m);
+  }
+  return m;
+}
+
 /** Monitor leads connected: { ecg, spo2, nibp, temp }. */
 export function connections(state, pid, template, catalogs) {
   const ps = state.patients[pid];
@@ -26,9 +40,7 @@ export function connections(state, pid, template, catalogs) {
   for (const o of template.orders) {
     if (ps.orders[o.id] && ps.orders[o.id].status !== 'done') for (const id of o.interventionIds || []) (ivs[id]?.monitorConnects || []).forEach((l) => leads.add(l));
   }
-  for (const l of state.log) {
-    if (l.patientId === pid && l.action === 'intervention' && !l.details.delegatedTo) (ivs[l.details.interventionId]?.monitorConnects || []).forEach((x) => leads.add(x));
-  }
+  for (const id of chartedBy(state.log).get(pid) || []) (ivs[id]?.monitorConnects || []).forEach((x) => leads.add(x));
   if (ps.monitor) leads.add('nibp');
   return { ecg: leads.has('ecg'), spo2: leads.has('spo2'), nibp: leads.has('nibp'), temp: Boolean(template.monitor?.tempProbe) };
 }
@@ -70,7 +82,7 @@ export function monitorView(state, pid, template, catalogs, simMin = null) {
 /** Student connects the patient to the bedside monitor (all leads). Logged. */
 export function connectMonitor(state, patientId, _args, { now, user }) {
   if (state.patients[patientId].monitorLink) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   draft.patients[patientId].monitorLink = { atMin: simMin, by: user.userId };
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'monitor-connected' });

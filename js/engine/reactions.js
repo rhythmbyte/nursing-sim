@@ -8,7 +8,7 @@
 // Session state per patient: patients[id].script (see initScript). Every transition is logged
 // ('reaction-fired', 'script-state'); instructor overrides live in reactions/control.js.
 
-import { append, SYSTEM } from './log.js';
+import { append, SYSTEM, entriesFor } from './log.js';
 import { addAlert } from './alerts.js';
 import { activeLog } from './struck.js';
 import { fireEventGroup } from './session.js';
@@ -158,7 +158,7 @@ function onLogEntry(draft, pid, entry, t, ctx) {
 function assessmentTriggered(state, pid, entry, w) {
   const score = entry.details.score;
   if (w.rise != null) {
-    const prev = state.log.filter((l) => l.patientId === pid && l.action === 'assessment' && l.details.toolId === w.toolId && l.details.score != null && l.id !== entry.id && l.simMin <= entry.simMin && !state.struck?.[l.id]).at(-1);
+    const prev = entriesFor(state.log, pid).filter((l) => l.action === 'assessment' && l.details.toolId === w.toolId && l.details.score != null && l.id !== entry.id && l.simMin <= entry.simMin && !state.struck?.[l.id]).at(-1);
     return prev != null && score - prev.details.score >= w.rise;
   }
   return Boolean(OPS[w.op]?.(score, w.value));

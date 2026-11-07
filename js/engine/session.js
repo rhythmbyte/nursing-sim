@@ -6,6 +6,7 @@
 // interleaved with events in time order (see advance()).
 // Every transition returns a NEW state; event types mutate a structuredClone draft.
 
+import { cloneState } from './clone.js';
 import './events/index.js';
 import { getEventType } from './registry.js';
 import * as clock from './clock.js';
@@ -100,6 +101,7 @@ export function createSession(scenario, templatesById, catalogs, { joinCode = nu
     staff: initStaff(scenario), // delegation helpers per group (engine/staff.js)
     struck: {},     // logId → { atMin, by, reason } ("entered in error", engine/struck.js)
     adhoc: {},     // patientId → { orders } pushed live by the instructor (engine/templates.js)
+    autopilot: Object.fromEntries(Object.keys(patients).filter((id) => templatesById[id]?.autopilot).map((id) => [id, true])), // engine/attention.js
     students: {},
     fired: {},
     alerts: [],
@@ -193,7 +195,7 @@ function advance(state, { now, refs, templatesById, catalogs }) {
     return { state, fired: 0 };
   }
 
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   for (const { ref, at } of due) {
     runProcessors(draft, at - 1e-9, ctx); // everything strictly before this event's instant
     fireInto(draft, ref, { simMin: at, now, templatesById, user: SYSTEM, source: 'scheduled', catalogs });
@@ -211,7 +213,7 @@ function advance(state, { now, refs, templatesById, catalogs }) {
  * (each counts as its next occurrence, so the scheduled firing won't repeat it).
  */
 export function fireNow(state, ref, { now, refs = [ref], templatesById, user, catalogs = null }) {
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const members = refs.includes(ref) ? groupMembers(refs, ref) : [ref];
   for (const m of members) {
@@ -227,7 +229,7 @@ export function fireNow(state, ref, { now, refs = [ref], templatesById, user, ca
 export function fireLiveEvent(state, patientId, event, { now, templatesById, catalogs, user }) {
   const type = getEventType(event.type);
   if (!type) throw new Error(`Unknown event type ${event.type}`);
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const id = `e-live-${draft.log.length + 1}`;
   type.apply(draft, { id, ...event, payload: event.payload || {} }, { simMin, patientId, template: templatesById[patientId], catalogs, now });
@@ -257,7 +259,7 @@ export function skipToNext(state, { now, refs, templatesById, catalogs, user }) 
 export function answerCallLight(state, patientId, { now, user }) {
   const light = state.patients[patientId]?.callLight;
   if (!light) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   draft.patients[patientId].callLight = null;
   append(draft, {

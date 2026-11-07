@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: The log is append-only and shared between session copies
+- **Decision:** `engine/log.js` freezes each entry (and its details) when it's written; `engine/clone.js` copies the session for a change by deep-copying everything except the log, whose array is copied but whose entries are shared. Per-patient log lookups go through `entriesFor(log, pid)`, indexed once per log array.
+- **Why:** the soak at 60 patients spent ~90% of its time deep-copying a 3,000-entry log on every action and tick. Freezing makes the shared entries safe: any code that tried to edit one would throw (none does; the tests run with it).
+- **Also:** session saves are batched (0.25 s for actions, 1 s for clock-only changes, flushed on page close). Crash safety still has the IndexedDB mirror; the window of loss after an action is at most a quarter of a second.
+- **Alternatives:** an immutable-data library (a new dependency, no build step allowed); copying only the touched patient (many transitions touch several parts of the session; a larger, riskier change).
+
+---
+
 ## 2026-11-07: Past debriefs store seeds, not patients
 - **Decision:** when a sim ends, `js/archive.js` keeps its session state, the scenario as it was and its case seeds (`ui.cases`); opening a past debrief instantiates the patients again from those seeds and mounts the normal debrief over a read-only runner. The last 12 are kept.
 - **Why:** the seeds reproduce the patients exactly at a fraction of the size of 60 instantiated patient files, which matters in browser storage.

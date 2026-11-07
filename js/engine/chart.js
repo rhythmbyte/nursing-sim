@@ -2,6 +2,7 @@
 // Signature: fn(state, patientId, args, ctx) → new state.  ctx = { now, user, templatesById, catalogs }
 // Per-student UI state (last seen, handoff) lives in state.students[userId].
 
+import { cloneState } from './clone.js';
 import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
@@ -16,7 +17,7 @@ export { chartAssessment } from './assessments.js';
 
 function begin(state, ctx) {
   // ctx.atMin: a timed task applied when it finishes (engine/tasks.js) happens at that sim minute.
-  return { draft: structuredClone(state), simMin: ctx.atMin ?? simMinOf(state, ctx.now) };
+  return { draft: cloneState(state), simMin: ctx.atMin ?? simMinOf(state, ctx.now) };
 }
 
 function log(draft, simMin, ctx, patientId, action, details = {}) {

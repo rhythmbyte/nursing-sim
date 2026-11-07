@@ -3,6 +3,7 @@
 // patients[id].vitalsHistory [{ atMin, values }], which the monitor, delegated reports and the
 // parameter rules read via vitalsAt(), so they see what the vitals actually were at that moment.
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 
@@ -103,7 +104,7 @@ export function adjustVitals(state, patientId, { values, overMin = 0, overMinBy 
   const target = cleanValues(values);
   if (!Object.keys(target).length) return state;
   if (!(overMin >= 0)) throw new Error('Trend minutes must be 0 or more');
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const ps = draft.patients[patientId];
   const from = setVitalsTarget(ps, target, overMin, simMin, overMinBy);

@@ -17,8 +17,23 @@ export function append(draft, { simMin, wallTime, userId, role, patientId = null
     action,
     details,
   };
-  draft.log.push(entry);
+  // Append-only: entries never change once written, so copies of the session share them (engine/clone.js).
+  Object.freeze(entry.details);
+  draft.log.push(Object.freeze(entry));
   return entry;
 }
 
 export const SYSTEM = { userId: 'system', role: 'system' };
+
+// The log's entries for one patient, in log order. Indexed once per log array (a new array after every change), so
+// rules and timeliness that look at each patient's history do one pass over the log instead of one per patient.
+const byPatient = new WeakMap();
+export function entriesFor(log, patientId) {
+  let m = byPatient.get(log);
+  if (!m) {
+    m = new Map();
+    for (const l of log) { if (!l.patientId) continue; let a = m.get(l.patientId); if (!a) m.set(l.patientId, (a = [])); a.push(l); }
+    byPatient.set(log, m);
+  }
+  return m.get(patientId) || [];
+}

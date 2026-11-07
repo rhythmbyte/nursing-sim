@@ -7,6 +7,7 @@
 // - A level "matches" the instructor tag if the tag is in level.matchesTags (so non-color scales such as
 //   ESI 1–5 can be added later as data only).
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 
@@ -54,7 +55,7 @@ export function assignPriority(state, patientId, { levelId }, { now, user, catal
   if (!state.patients[patientId]) throw new Error(`Unknown patient ${patientId}`);
   const history = state.priorities?.[user.userId]?.[patientId] || [];
   if (history.at(-1)?.levelId === levelId) return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   draft.priorities[user.userId] ??= {};
   (draft.priorities[user.userId][patientId] ??= []).push({ atMin: simMin, levelId });

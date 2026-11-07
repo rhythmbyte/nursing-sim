@@ -6,6 +6,7 @@
 //         minutes, tag, logId? }
 // Tags: on-time | late | very-late (done) · open | open-late | open-very-late (not done yet).
 
+import { entriesFor } from './log.js';
 import { firstWork } from './orders.js';
 import { withoutStruck } from './struck.js';
 import { alarmEpisodes } from './monitor-alarms.js';
@@ -86,7 +87,7 @@ function medItems(state, ctx, cfg) {
       const os = ps.orders[o.id];
       if (!o.med || o.type !== 'scheduled' || !os || !th) continue;
       // Each due dose is answered by the next MAR action (given / held / not given) from earlyWindowMin before it.
-      const actions = state.log.filter((l) => l.patientId === pid && l.action === 'med' && l.details.orderId === o.id);
+      const actions = entriesFor(state.log, pid).filter((l) => l.action === 'med' && l.details.orderId === o.id);
       let next = 0;
       for (const due of medDueTimes(o, os, ctx.simMin, th.shiftStartDueMin ?? 0)) {
         while (next < actions.length && actions[next].simMin < due - (th.earlyWindowMin ?? 60)) next++;
@@ -125,9 +126,9 @@ function assessmentItems(state, ctx, cfg) {
       const os = ps.orders[o.id];
       const tools = (o.assessment?.tools || []).filter((id) => offered.has(id));
       if (!tools.length || !os) continue;
-      const done = state.log.filter((l) => l.patientId === pid && l.action === 'assessment' && tools.includes(l.details.toolId));
+      const done = entriesFor(state.log, pid).filter((l) => l.action === 'assessment' && tools.includes(l.details.toolId));
       let next = 0;
-      const doses = state.log.filter((l) => l.patientId === pid && l.action === 'med' && l.details.orderId === o.id && l.details.result === 'given').map((l) => l.simMin);
+      const doses = entriesFor(state.log, pid).filter((l) => l.action === 'med' && l.details.orderId === o.id && l.details.result === 'given').map((l) => l.simMin);
       for (const due of assessmentDueTimes(o, os, ctx.simMin, th, doses)) {
         while (next < done.length && done[next].simMin < due - (th.earlyWindowMin ?? 30)) next++;
         const a = done[next];

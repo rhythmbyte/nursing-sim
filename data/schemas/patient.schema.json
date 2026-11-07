@@ -30,6 +30,7 @@
         "review": { "$ref": "#/$defs/review" }
       }
     },
+    "autopilot": { "type": "boolean", "description": "Autopilot by default in a sim: the instructor is only alerted for a code or a red flag (engine/attention.js)" },
     "tag": { "$ref": "#/$defs/tag" },
     "priorityLabel": { "type": "string" },
     "admittingDx": { "type": "string", "minLength": 1 },

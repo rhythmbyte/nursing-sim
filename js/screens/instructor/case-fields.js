@@ -16,6 +16,7 @@ export function caseFields(work, catalogs, { settings, onChange = () => {}, curr
   const c = work.case || null;
   const classes = catalogs.medClasses?.classes || [];
   const on = h('input', { type: 'checkbox', checked: Boolean(c), 'aria-label': 'This patient is a case template' });
+  const auto = h('input', { type: 'checkbox', checked: Boolean(work.autopilot), 'aria-label': 'Autopilot by default' });
   const title = h('input', { class: 'input', value: c?.title || '', placeholder: 'e.g. Cardiac 1', 'aria-label': 'Case title' });
   // Short instructor code ("C1"), suggested from the title; instructors see "(C1) Robert Miller", students never.
   const code = h('input', { class: 'input input-small', value: c?.code || '', placeholder: suggestCode(c?.title || '', takenCodes), 'aria-label': 'Case code', maxlength: 6 });
@@ -55,6 +56,7 @@ export function caseFields(work, catalogs, { settings, onChange = () => {}, curr
     }
     for (const m of meds) { const hm = next.homeMeds?.find((y) => y.name === m.name); if (hm) { if (m.sel.value) hm.medClass = m.sel.value; else delete hm.medClass; } }
     for (const o of orders) { const ord = next.orders[o.i]; if (ord) { if (o.sel.value) ord.medClass = o.sel.value; else delete ord.medClass; } }
+    if (auto.checked) next.autopilot = true; else delete next.autopilot;
     if (!on.checked) { delete next.case; return next; }
     const ex = exclude.value();
     const cd = code.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || suggestCode(title.value.trim() || t.id, takenCodes);
@@ -87,6 +89,7 @@ export function caseFields(work, catalogs, { settings, onChange = () => {}, curr
   const el = h('section', { class: 'panel case-fields' },
     h('h3', {}, 'Case template ', helpTip('editor.case-template')),
     h('label', { class: 'inline' }, on, ' This patient is a case template: each sim makes its own patient from it (name, age, values, drugs)'),
+    h('label', { class: 'inline' }, auto, ' Autopilot by default: in a sim, its script runs and you\'re only alerted for a code or a red flag ', helpTip('overview.autopilot')),
     h('p', { class: 'muted small' }, 'Students never see the case title. Name, age and sex above are the case "as written" (the demo, and Lock). In any text use {firstName} {lastName} {fullName} {age}{sex} {room} {he/she} {his/her} {him/her} {He/She} {Mr/Ms}, any {male/female} pair like {wife/husband}, baseline {bp} {hr} {rr} {spo2} {tempF}, {lab.wbc}, and {med.<class>} / {med.<class>.Name|dose|freq}. ', helpTip('editor.placeholders')),
     h('div', { class: 'editor-grid' },
       h('label', { class: 'field' }, h('span', {}, 'Case title (instructor only)'), title),

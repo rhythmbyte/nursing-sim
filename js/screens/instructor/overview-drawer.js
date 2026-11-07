@@ -13,6 +13,7 @@ import { labsPanel } from './live-labs.js';
 import { eventsPanel } from './live-events.js';
 import { rosterPanel } from './live-roster.js';
 import { save, load } from '../../storage.js';
+import { helpTip } from '../shared/help.js';
 
 const KEY = 'ui.overview.drawer'; // { kind: patient|student|group, id } (restored after a reload)
 const section = (title, body) => h('section', { class: 'drawer-section' }, h('h4', {}, title), body);
@@ -41,6 +42,9 @@ export function createDrawer({ store, runner, scenario, catalogs, user }) {
       rebuildKeepingUi(scripts, () => scriptPanel(runner, t, user, f));
       clear(body).append(
         tpl.instance ? h('p', { class: 'muted small' }, caseLabel(tpl)) : null,
+        // Autopilot: the script carries on; the instructor is only alerted for a code or a red flag.
+        h('label', { class: 'inline small drawer-autopilot' }, h('input', { type: 'checkbox', checked: Boolean(state.autopilot?.[open.id]), onchange: (e) => runner.setAutopilot(open.id, e.target.checked, user) }),
+          ' Autopilot: only alert me for a code or a red flag ', helpTip('overview.autopilot')),
         section('Vitals and actions', patientsPanel(runner, t, catalogs, user, f)),
         scripts,
         section('Labs to release', labsPanel(runner, t, user, f)),

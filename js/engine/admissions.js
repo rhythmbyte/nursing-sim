@@ -1,4 +1,5 @@
 // Charge nurse decisions on the admissions board (SPEC §9). Pure; every decision is logged with time.
+import { cloneState } from './clone.js';
 import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
@@ -10,7 +11,7 @@ export function assignAdmission(state, patientId, { groupId }, { now, user, scen
   const a = state.patients[patientId]?.admission;
   if (!a || a.status === 'assigned') return state;
   if (!scenario.groups.some((g) => g.id === groupId)) throw new Error(`No group ${groupId}`);
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const ps = draft.patients[patientId];
   Object.assign(ps.admission, { status: 'assigned', decidedAtMin: simMin, groupId });
@@ -30,7 +31,7 @@ export function assignAdmission(state, patientId, { groupId }, { now, user, scen
 export function holdAdmission(state, patientId, { reason = '' }, { now, user }) {
   const a = state.patients[patientId]?.admission;
   if (!a || a.status !== 'pending') return state;
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   Object.assign(draft.patients[patientId].admission, { status: 'held', heldAtMin: simMin, reason });
   append(draft, { simMin, wallTime: now, ...user, patientId, action: 'admission-held', details: { reason, waitMin: round2(simMin - a.arrivedAtMin) } });

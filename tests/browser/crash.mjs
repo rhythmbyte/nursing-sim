@@ -36,7 +36,7 @@ const report = (name, ok, extra = '') => { results.push([name, ok]); console.log
 let ws = await launch(); let c = connect(ws); await c.open;
 await c.send('Runtime.enable'); await c.send('Page.enable');
 await c.send('Page.navigate', { url: `${BASE}/` }); await sleep(1500);
-await c.ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await c.send('Page.reload'); await sleep(2000);
+await c.ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn")); localStorage.setItem("nursing-sim:ui.overview.showAll", "true")'); await c.send('Page.reload'); await sleep(2000);
 await sleep(3000);
 // 0. Builder (before class): mid-editor edit + kill. The Builder is hidden while a sim runs, so this comes first.
 await c.click('.tab', 'Builder'); await sleep(400); await c.click('.subnav-btn', 'Patient editor'); await sleep(400);

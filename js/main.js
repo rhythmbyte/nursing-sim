@@ -34,6 +34,8 @@ const PROGRAM_KEY = 'ui.program'; // the instructor's program (RN, LPN…), pick
 const SESSION_KEY = 'session';
 const HEARTBEAT_KEY = 'heartbeat';
 const HEARTBEAT_MS = 5000;
+const TICK_SAVE_MS = 1000; // clock-only changes are saved at most this often
+const ACTION_SAVE_MS = 250; // a person's action is saved within this (a burst of actions is one save)
 
 // Prototype identities. Full build: these come from the logged-in user (SPEC §13).
 const INSTRUCTOR = { userId: 'instructor', role: 'instructor', name: 'Instructor' };
@@ -78,6 +80,10 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   // Settings merged with data/catalogs/scenario-defaults.json once, so engine and screens agree.
   // Case templates → this sim's concrete patients (seeded; identical across reloads, rejoins and the debrief).
   let saved = load(SESSION_KEY);
+  let pendingSave = null;
+  let saveTimer = null;
+  let saveDue = 0;
+  const flushSave = () => { clearTimeout(saveTimer); saveTimer = null; if (pendingSave && writer()) save(SESSION_KEY, pendingSave); pendingSave = null; };
   const picked = data.scenarios.find((s) => s.id === scenarioId) || data.scenarios[0];
   const inst = instantiateSim(picked, data.patients, data.catalogs, { hadSession: saved?.scenarioId === picked.id });
   const scenario = withDefaults(inst.scenario, data.catalogs);
@@ -89,7 +95,18 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   const runner = createRunner({
     store, scenario, templatesById, catalogs: data.catalogs,
     saved,
-    persist: (s) => { if (writer()) save(SESSION_KEY, s); }, // only the writer window saves
+    // Only the writer window saves, batched (the latest state wins): people's actions within ACTION_SAVE_MS, changes
+    // the clock makes on its own within TICK_SAVE_MS; flushed when the page closes or the app remounts. Saving a
+    // 60-patient session on every action and tick was most of the tick time (tests/browser/soak-large.mjs).
+    persist: (s, { fromTick = false } = {}) => {
+      if (!writer()) return;
+      pendingSave = s;
+      const due = Date.now() + (fromTick ? TICK_SAVE_MS : ACTION_SAVE_MS);
+      if (saveTimer && saveDue <= due) return;
+      clearTimeout(saveTimer);
+      saveDue = due;
+      saveTimer = setTimeout(flushSave, due - Date.now());
+    },
   });
 
   // switchScenario: used by the scenario picker and by Sim setup after creating a sim.
@@ -143,7 +160,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     if (err) console.warn('Demo student could not join:', err);
     runner.clock('start', INSTRUCTOR);
   }
-  const onPageHide = () => { if (writer()) runner.pauseForClose(Date.now()); };
+  const onPageHide = () => { flushSave(); if (writer()) runner.pauseForClose(Date.now()); };
   window.addEventListener('pagehide', onPageHide);
   const heartbeat = setInterval(() => { if (writer()) save(HEARTBEAT_KEY, Date.now()); }, HEARTBEAT_MS);
   save(HEARTBEAT_KEY, Date.now());
@@ -156,6 +173,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
       // Stop everything that writes to storage first, so nothing re-saves between clear and reload.
       clearInterval(timer);
       clearInterval(heartbeat);
+      clearTimeout(saveTimer); pendingSave = null; // a batched tick save must not write the old sim back
       window.removeEventListener('pagehide', onPageHide);
       clearAll().then(() => window.location.reload());
     },
@@ -189,6 +207,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   if (new URLSearchParams(window.location.search).has('debug')) window.__nursingSim = { runner, store, data, scenario };
   runner.tick();
   return () => {
+    flushSave();
     clearInterval(timer);
     clearInterval(heartbeat);
     window.removeEventListener('pagehide', onPageHide);

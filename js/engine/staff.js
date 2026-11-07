@@ -4,6 +4,7 @@
 // refused with "next free at…", or queued when settings.delegationQueue is on (started when a helper frees up).
 // Session: state.staff = [{ id, role, label, groupId, taskId, onBreak }]; tasks live in patients[pid].delegations.
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { taskKey, durationSec } from './tasks.js';
@@ -88,7 +89,7 @@ export function releaseHelper(draft, task) {
 
 // ---------- instructor / charge controls (logged) ----------
 function change(state, ctx, mutate, action, details) {
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, ctx.now);
   mutate(draft);
   append(draft, { simMin, wallTime: ctx.now, ...ctx.user, action, details });

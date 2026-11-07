@@ -2,6 +2,7 @@
 // watched event fired) and the required action wasn't charted within withinMin.
 // watch: "vitals.<field>" (sbp, dbp, hr, rr, spo2, tempF) | "labs.<code>" | watchEvent: "<eventId>".
 // watch: "instructor" is judged by the instructor, so it's never flagged automatically.
+import { entriesFor } from '../log.js';
 import { flag, ruleConfig, responsible, compare, mins } from './helpers.js';
 import { vitalsTimeline, vitalNumber } from '../vitals.js';
 
@@ -9,7 +10,7 @@ import { vitalsTimeline, vitalNumber } from '../vitals.js';
 export function conditionMetAt(state, pid, order, template) {
   const p = order.parameter;
   if (p.watchEvent) {
-    const fired = state.log.find((l) => l.patientId === pid && l.action === 'event-fired' && l.details.eventId === p.watchEvent);
+    const fired = entriesFor(state.log, pid).find((l) => l.action === 'event-fired' && l.details.eventId === p.watchEvent);
     return fired ? fired.simMin : null;
   }
   if (p.watch?.startsWith('vitals.')) {
@@ -31,7 +32,7 @@ export function conditionMetAt(state, pid, order, template) {
 
 /** First charting of the required action at/after `from`. */
 export function requiredActionAt(state, pid, order, from) {
-  return state.log.find((l) => l.patientId === pid && l.action === 'intervention' && !l.details.delegatedTo
+  return entriesFor(state.log, pid).find((l) => l.action === 'intervention' && !l.details.delegatedTo
     && l.details.interventionId === order.parameter.requires && l.simMin >= from) || null;
 }
 

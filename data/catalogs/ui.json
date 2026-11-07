@@ -17,5 +17,20 @@
     "scenarioId": "sc-busy-medsurg-shift",
     "studentUserId": "student-1",
     "studentName": "Demo Student"
+  },
+  "attention": {
+    "review": "proposed",
+    "_comment": "Overview attention queue (engine/attention.js): how urgent each kind of item is (higher = nearer the top). Call lights and very late work rise with minutes waited.",
+    "code": 100,
+    "alarm": 90,
+    "rejoin": 85,
+    "worsening": 70,
+    "callLight": 60,
+    "veryLate": 55,
+    "redFlag": 50,
+    "away": 45,
+    "penalty": 40,
+    "late": 30,
+    "showTop": 8
   }
 }

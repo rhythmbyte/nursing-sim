@@ -64,7 +64,7 @@ export async function openPage(ws = process.argv[2], out = process.argv[3] || 't
   /** Fresh start: the app with empty storage (no welcome popup). */
   const reset = async (path = '/?debug=1', settleMs = 5000) => {
     await send('Page.navigate', { url: `${BASE}${path}` }); await sleep(2000);
-    await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))');
+    await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn")); localStorage.setItem("nursing-sim:ui.overview.showAll", "true")');
     await send('Page.reload'); await sleep(settleMs);
   };
   process.on('exit', () => {

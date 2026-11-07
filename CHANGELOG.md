@@ -2,6 +2,17 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Overview at scale: 10 students × 6 patients (scale, Part D)
+- **Attention queue** at the top of the Overview: one prioritized list of what you might act on now, most urgent first: codes, monitor alarms, rejoin requests, worsening vitals, call lights (rising with minutes waited), very late work, red flags, away students, recovery penalties, late work. Shows the top 8 (`ui.json attention.showTop`), with "Show N more"; each item opens the patient or student drawer. Urgency weights are data (`ui.json attention`, proposed).
+- **Exception-first cards:** by default only groups and patients that need attention; the rest is "N patients stable" per group and "N groups on track · M patients stable" overall. **Show all patients** and **Compact** (on-track groups folded to one line) are remembered toggles.
+- **Autopilot** per patient (drawer) or per case by default (Builder → Case template): the script keeps running and the patient raises nothing except a code or a red flag. Logged (`autopilot-on` / `-off`).
+- **Performance at 60 patients** (new browser suite `soak-large`: 10 students × 6 patients, every feature on, 4 sim hours):
+  - Every engine change deep-copied the whole session, including the log. Log entries are now frozen once written and shared between copies (`engine/clone.js`); only the log array is copied.
+  - Per-patient log searches (order work, timeliness, flag rules, monitor leads, state timelines) use a per-patient index built once per log (`entriesFor` in `engine/log.js`).
+  - Saving the session is batched: actions within 0.25 s, clock-only changes within 1 s; flushed when the page closes or the app remounts.
+  - Results: a sim minute (engine plus every screen re-rendering) late in the sim 211 → 84 ms in the browser; pure engine tick 2 ms; attention queue 3–60 ms; Overview render 8–17 ms; drawer 45 ms; summary debrief 50 ms; memory 14 MB; save 0.8–1.2 MB.
+- Every browser suite now ticks "Show all" (they were written for it); `soak-large` tests the exception-first default.
+
 ## Instructor Home
 - **The Instructor tab opens on Home**, with big choices in three groups:
   - **Run a sim:** Resume (only when a sim is waiting to start or running), Start a saved sim, Generate a sim, Custom setup.

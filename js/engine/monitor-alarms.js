@@ -1,5 +1,6 @@
 // Monitor alarm episodes, acknowledgement (silence) and the alarm tick processor. Pure, no DOM.
 // Separate from monitor.js so session.js can list the processor without an import cycle at load time.
+import { cloneState } from './clone.js';
 import { round2 } from './time.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
@@ -37,7 +38,7 @@ export function acknowledgeAlarm(state, patientId, _args, { now, user, catalogs 
   if (!a?.active?.length) return state;
   const silence = catalogs?.vitals?.alarmSilenceMin;
   if (silence == null) throw new Error('Set alarmSilenceMin in data/catalogs/vitals.json');
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   const al = draft.patients[patientId].alarm;
   const first = al.ackAt == null;

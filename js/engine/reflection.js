@@ -1,4 +1,5 @@
 // Student reflection after the sim ends (questions are data: data/catalogs/reflection.json). Pure.
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 
@@ -9,7 +10,7 @@ export function submitReflection(state, { userId, answers }, { now, user, catalo
   const ids = new Set((catalogs?.reflection?.questions || []).map((q) => q.id));
   const clean = Object.fromEntries(Object.entries(answers || {}).filter(([k, v]) => ids.has(k) && String(v).trim()).map(([k, v]) => [k, String(v).trim()]));
   if (!Object.keys(clean).length) throw new Error('Answer at least one question');
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const simMin = simMinOf(state, now);
   draft.reflections[userId] = { atMin: simMin, answers: clean };
   append(draft, { simMin, wallTime: now, ...user, action: 'reflection-submitted', details: { answers: clean } });

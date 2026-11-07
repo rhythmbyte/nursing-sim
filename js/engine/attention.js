@@ -1,15 +1,18 @@
 // Attention queue (pure, no DOM): one prioritized list of what the instructor might act on now, built from the
 // Command center groups (engine/command-center.js) and the session. Each item is one click to the patient (or
-// student) drawer. Urgency weights are data (catalogs/vitals.json attention, else these defaults).
+// student) drawer. Urgency weights are data (data/catalogs/ui.json attention, else these defaults).
 // Autopilot patients (state.autopilot[pid]) raise nothing except a code or a red flag.
 //   attentionQueue(state, ctx, groups, flags) → [{ id, kind, patientId?, userId?, groupId, label, urgency }]
+
+import { simMinOf } from './session.js';
+import { append } from './log.js';
 
 const DEFAULT_WEIGHTS = { code: 100, alarm: 90, rejoin: 85, worsening: 70, callLight: 60, veryLate: 55, redFlag: 50, away: 45, penalty: 40, late: 30 };
 
 export const onAutopilot = (state, pid) => Boolean(state.autopilot?.[pid]);
 
 export function attentionQueue(state, ctx, groups, flags = []) {
-  const w = { ...DEFAULT_WEIGHTS, ...(ctx.catalogs?.vitals?.attention || {}) };
+  const w = { ...DEFAULT_WEIGHTS, ...(ctx.catalogs?.ui?.attention || {}) };
   const out = [];
   const add = (kind, item) => out.push({ id: `${kind}:${item.patientId || item.userId || ''}`, kind, urgency: w[kind] ?? 0, ...item });
   const redByPatient = {};
@@ -39,3 +42,12 @@ export function attentionQueue(state, ctx, groups, flags = []) {
 
 /** Patients that need attention (anything in the queue); everything else is "stable". */
 export const attentionPatients = (queue) => new Set(queue.filter((q) => q.patientId).map((q) => q.patientId));
+
+/** Autopilot on or off for a patient (logged). The script still runs; only what the instructor is shown changes. */
+export function setAutopilot(state, patientId, on, { now, user }) {
+  if (!state.patients[patientId] || Boolean(state.autopilot?.[patientId]) === Boolean(on)) return state;
+  const draft = { ...state, autopilot: { ...(state.autopilot || {}) }, log: [...state.log] };
+  if (on) draft.autopilot[patientId] = true; else delete draft.autopilot[patientId];
+  append(draft, { simMin: simMinOf(state, now), wallTime: now, ...user, patientId, action: on ? 'autopilot-on' : 'autopilot-off', details: {} });
+  return draft;
+}

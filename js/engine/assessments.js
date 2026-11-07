@@ -6,6 +6,7 @@
 //   choosing an item shows the scripted answer (else the student assesses the manikin/instructor).
 // - An order can require a tool: order.assessment = { tools: [ids], everyMin?, once? } (timeliness + rules).
 
+import { cloneState } from './clone.js';
 import { simMinOf } from './session.js';
 import { append } from './log.js';
 import { progressOrder } from './orders.js';
@@ -78,7 +79,7 @@ export function chartAssessment(state, pid, { toolId, answers = {}, delegatedTo 
   const tool = toolById(ctx.catalogs, toolId);
   if (!tool) throw new Error(`Unknown assessment tool ${toolId}`);
   if (!availableTools(state.settings, ctx.catalogs).some((t) => t.id === toolId)) throw new Error(`${tool.name} is not available in this sim`);
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const at = ctx.atMin ?? simMinOf(state, ctx.now); // atMin: finished timed task (engine/tasks.js)
   if (delegatedTo) {
     if (!tool.delegableTo.includes(delegatedTo)) throw new Error(`${tool.name} can't be delegated to ${delegatedTo}`);

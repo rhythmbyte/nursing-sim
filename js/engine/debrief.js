@@ -1,6 +1,7 @@
 // Builds the debrief for one student from the session. Pure, no DOM (the screen only renders it).
 // ctx: { templatesById, catalogs, simMin, studentIdsForGroup(groupId), groupOfStudent(userId) }
 
+import { entriesFor } from './log.js';
 import { round2 } from './time.js';
 import { evaluateRules } from './rules/index.js';
 import { isTracked, ruleConfig } from './rules/helpers.js';
@@ -38,7 +39,7 @@ export function responseTimes(state, pids, ctx) {
   const params = [];
   const codes = [];
   for (const pid of pids) {
-    const answered = state.log.filter((l) => l.patientId === pid && l.action === 'call-light-answered');
+    const answered = entriesFor(state.log, pid).filter((l) => l.action === 'call-light-answered');
     // Repeats of a lit light ring the same light, so pair each answer with the light it closed.
     for (const a of answered) lights.push({ patientId: pid, litAtMin: a.details.litAtMin, answeredAtMin: a.simMin, responseMin: a.details.responseMin, by: a.userId });
     const light = state.patients[pid].callLight;
@@ -57,7 +58,7 @@ export function responseTimes(state, pids, ctx) {
     const code = state.patients[pid].code;
     if (code) {
       const ids = ctx.catalogs?.rules?.codeResponse?.interventionIds || [];
-      const first = state.log.find((l) => l.patientId === pid && l.action === 'intervention' && ids.includes(l.details.interventionId) && l.simMin >= code.startedMin);
+      const first = entriesFor(state.log, pid).find((l) => l.action === 'intervention' && ids.includes(l.details.interventionId) && l.simMin >= code.startedMin);
       codes.push({ patientId: pid, startedAtMin: code.startedMin, firstResponseAtMin: first?.simMin ?? null, responseMin: first ? round2(first.simMin - code.startedMin) : null });
     }
   }

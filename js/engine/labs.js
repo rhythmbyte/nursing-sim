@@ -5,6 +5,7 @@
 //   STAT sepsis order). Drawing a code with no matching undrawn pending lab creates an unscripted one (value null).
 // - At resultAtMin: a scripted value results automatically; a null value waits for the instructor (Live control).
 
+import { cloneState } from './clone.js';
 import { addAlert } from './alerts.js';
 import { append, SYSTEM } from './log.js';
 
@@ -78,7 +79,7 @@ export function releaseLab(state, patientId, { uid, value = null }, { now, user,
   const lab = state.patients[patientId]?.labs.find((l) => l.uid === uid);
   if (!lab || lab.status !== 'pending') return state;
   if (lab.value == null && (value == null || value === '')) throw new Error('This lab has no scripted value; enter one to release it.');
-  const draft = structuredClone(state);
+  const draft = cloneState(state);
   const l = draft.patients[patientId].labs.find((x) => x.uid === uid);
   Object.assign(l, { status: 'resulted', resultedAtMin: simMin, awaitingValue: false, ...(value != null && value !== '' ? { value: String(value) } : {}) });
   addAlert(draft, { simMin, patientId, kind: 'lab-result', message: `Lab resulted: ${l.label || l.code}` });

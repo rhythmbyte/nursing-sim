@@ -17,7 +17,9 @@ const TREND = { worse: ['↘', 'Vitals worsening'], better: ['↗', 'Vitals impr
 const KIND = { order: '', med: 'Med: ', assessment: 'Reassess: ', callLight: '', alarm: '' };
 const FLASH_MS = 4000; // how long a card flashes after its status gets worse (CSS .cc-flash matches)
 
-export function mountCommandCenter(root, { store, runner, scenario, openLive, onGroup, onPatient, onStudent, embedded = false }) {
+// shape(groups) (the Overview): { showAll, compact, attention: Set of patient ids, autopilot(pid) } → exception-first:
+// only groups / patients needing attention, the rest summarized as "N patients stable"; compact = one line when on track.
+export function mountCommandCenter(root, { store, runner, scenario, openLive, onGroup, onPatient, onStudent, embedded = false, shape = null }) {
   const toGroup = onGroup || ((id) => openLive({ groupId: id }));
   const toPatient = onPatient || ((id) => openLive({ patientId: id }));
   const clock = simClock(store, runner);
@@ -32,8 +34,20 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive, on
     const cfg = timelinessConfig(state, runner.rulesCtx().catalogs);
     const tags = cfg.tags || {};
     const statusLabels = cfg.groupStatus?.labels || {};
-    const groups = commandCenter(state, runner.rulesCtx(), scenario);
+    const all = commandCenter(state, runner.rulesCtx(), scenario);
+    const v = shape ? shape(all) : null;
+    const needs = (g) => g.status !== 'on-track' || g.students.some((st) => st.away) || g.patients.some((p) => v.attention.has(p.patientId));
+    const groups = v && !v.showAll ? all.filter(needs) : all;
+    const hiddenGroups = all.length - groups.length;
+    const hiddenPatients = all.filter((g) => !groups.includes(g)).reduce((n, g) => n + g.patients.length, 0);
     clear(grid).append(...groups.map((g) => {
+      const shown = v && !v.showAll ? g.patients.filter((p) => v.attention.has(p.patientId)) : g.patients;
+      const stable = g.patients.length - shown.length;
+      // Compact: an on-track group with nothing needing attention is one line.
+      if (v?.compact && g.status === 'on-track' && !g.patients.some((p) => v.attention.has(p.patientId))) {
+        return h('section', { class: 'cc-card cc-on-track cc-line' }, h('button', { class: 'cc-head', onclick: () => toGroup(g.groupId), title: 'Open this group' },
+          h('h3', {}, g.name), h('span', { class: 'muted small' }, `${g.students.map((st) => st.name).join(', ') || 'nobody yet'} · ${g.patients.length} patient${g.patients.length === 1 ? '' : 's'} stable`), toneChip(statusLabels[g.status])));
+      }
       const c = g.counts;
       if (statusWorsened(lastStatus[g.groupId], g.status)) flashFrom[g.groupId] = Date.now();
       lastStatus[g.groupId] = g.status;
@@ -58,19 +72,22 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive, on
           count(c.openOrders, 'open orders'), count(c.late, 'late', 'yellow'), count(c.veryLate, 'very late', 'red'), count(c.medsOverdue, 'meds overdue', 'yellow'), count(c.assessmentsOverdue, 'reassessments overdue', 'yellow'),
           count(c.callLights, c.callLights ? `call lights (longest ${Math.round(c.longestCallLightMin)} min)` : 'call lights', c.longestCallLightMin > (cfg.callLights?.lateMin ?? 5) ? 'red' : 'yellow'),
           count(c.alarms, 'monitor alarms', 'red'), count(c.redFlags, 'red flags', 'red'), count(c.amberFlags, 'amber flags', 'yellow')),
-        h('ul', { class: 'cc-patients' }, g.patients.map((p) => {
+        h('ul', { class: 'cc-patients' }, shown.map((p) => {
           const [arrow, trendText] = TREND[p.trend];
           return h('li', {}, h('button', { class: 'cc-patient', onclick: () => toPatient(p.patientId), title: 'Open this patient' },
             h('span', { class: 'cc-room' }, instructorPatientLabel(t[p.patientId])),
             triageChip(p.tag),
             h('span', { class: `cc-trend cc-trend-${p.trend}`, title: trendText, 'aria-label': trendText }, arrow),
             p.alarm ? h('span', { class: 'cc-alarm', title: 'Monitor alarm' }, '⚠ alarm') : null,
+            v?.autopilot(p.patientId) ? h('span', { class: 'cc-auto', title: 'Autopilot: only a code or a red flag is raised' }, '✈ autopilot') : null,
             p.script ? h('span', { class: 'cc-script', title: 'Reactive script state' }, `${p.script.paused ? '⏸' : '◆'} ${p.script.label.length > 30 ? `${p.script.label.slice(0, 29)}…` : p.script.label}`) : null,
             p.script?.penalty ? h('span', { class: 'cc-penalty', title: 'Recovery penalty' }, `▼ penalty ${p.script.penalty}%`) : null,
             p.worst ? h('span', { class: 'cc-worst' }, toneChip(tags[p.worst.tag]), ` ${KIND[p.worst.kind]}${p.worst.label.length > 60 ? `${p.worst.label.slice(0, 58)}…` : p.worst.label}, ${Math.round(p.worst.minutes)} min`) : h('span', { class: 'muted' }, 'Nothing open')));
         })),
+        stable ? h('p', { class: 'cc-stable muted small' }, `${stable} patient${stable === 1 ? '' : 's'} stable`) : null,
       );
     }));
+    if (hiddenGroups) grid.append(h('p', { class: 'cc-hidden-note muted' }, `${hiddenGroups} group${hiddenGroups === 1 ? '' : 's'} on track · ${hiddenPatients} patient${hiddenPatients === 1 ? '' : 's'} stable`));
     // Re-render once the newest flash ends so the class is removed.
     const left = Math.max(0, ...Object.values(flashFrom).map((t) => FLASH_MS - (Date.now() - t)));
     clearTimeout(flashTimer);
@@ -87,5 +104,7 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive, on
   const off = store.subscribe(later.run);
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });
-  return () => { off(); offTick(); later.cancel(); clock.destroy(); clearTimeout(flashTimer); };
+  const teardown = () => { off(); offTick(); later.cancel(); clock.destroy(); clearTimeout(flashTimer); };
+  teardown.refresh = render; // the Overview's Show all / Compact toggles
+  return teardown;
 }

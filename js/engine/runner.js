@@ -3,6 +3,7 @@
 // Store events: 'tick' (simMin) on every tick; store.set({ session }) whenever state changes.
 
 import * as session from './session.js';
+import { setAutopilot } from './attention.js';
 import * as chart from './chart.js';
 import { taskPlan, beginTask, interruptTask, endTaskNow, busyView, pauseTask, resumeTask, pausedView } from './tasks.js';
 import * as staffOps from './staff.js';
@@ -35,10 +36,12 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
   let state = usable ? saved : fresh();
   let lastJoin = null;
 
-  function commit(next) {
+  // fromTick: a change the clock made on its own (vitals drifting, timers). The UI may batch saving those (main.js);
+  // anything a person did is saved at once.
+  function commit(next, { fromTick = false } = {}) {
     if (next === state) return;
     state = next;
-    persist(state); // persist first: a screen error while notifying must never lose the action
+    persist(state, { fromTick }); // persist first: a screen error while notifying must never lose the action
     store.set({ session: state });
   }
 
@@ -58,7 +61,7 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
 
     tick() {
       const { state: next } = session.tick(state, { ...ctx(), refs });
-      commit(next);
+      commit(next, { fromTick: true });
       store.emit('tick', runner.simMin());
     },
 
@@ -178,6 +181,8 @@ export function createRunner({ store, scenario, templatesById, catalogs = null, 
     submitReflection(userId, answers, user) { commit(submitReflection(state, { userId, answers }, { now: now(), user, catalogs })); },
     startCode(patientId, args, user) { commit(startCode(state, patientId, args || {}, { now: now(), user })); },
     setCodeOutcome(patientId, outcome, user) { commit(setCodeOutcome(state, patientId, outcome, { now: now(), user })); },
+    /** Autopilot (engine/attention.js): the patient raises nothing for the instructor except a code or a red flag. */
+    setAutopilot(patientId, on, user) { commit(setAutopilot(state, patientId, on, { now: now(), user })); },
     setCallLight(patientId, on, message, user) { commit(setCallLight(state, patientId, { on, message }, { now: now(), user })); },
 
     /**
