@@ -72,7 +72,13 @@ export function mountOverview(root, ctx) {
     clear(alerts).append(alertsStrip(runner, drawer));
   }
   root.append(h('div', { class: 'overview' },
-    h('header', { class: 'screen-header overview-bar' }, h('h2', {}, scenario.name), clock.el, helpTip('overview.status')), controls, alerts, cards, more), drawer.el);
+    h('header', { class: 'screen-header overview-bar' }, h('h2', {}, scenario.name), clock.el, helpTip('overview.status'),
+      // Menu: Home and the debrief so far, kept out of the way of a running sim (Home asks first).
+      h('details', { class: 'overview-menu' }, h('summary', { class: 'btn btn-small' }, 'Menu'),
+        h('div', { class: 'overview-menu-list' },
+          ctx.goHome ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => ctx.goHome() }, '⌂ Home (the sim keeps running)') : null,
+          ctx.goDebrief ? h('button', { class: 'btn btn-small', type: 'button', onclick: () => ctx.goDebrief() }, 'Debrief so far') : null))),
+    controls, alerts, cards, more), drawer.el);
   render();
   syncMore();
   const later = coalesce(render, 250);

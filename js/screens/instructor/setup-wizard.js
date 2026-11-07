@@ -23,7 +23,8 @@ const STEPS = ['Start from', 'Groups and students', 'Patients', 'Variation', 'Pr
 const STEP_KEY = 'ui.wizard.step';
 export const READY_KEY = 'ui.setup.ready'; // the scenario id the wizard just created: the Instructor tab shows Ready
 
-export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
+export function mountSetupWizard(root, { data, switchScenario, startDemo, reloadData }, { onSaved = null } = {}) {
+  let editing = null; // a saved sim being edited (Edit in the library): saves back to the same sim
   const defaults = data.catalogs.scenarioDefaults.settings;
   let step = Math.min(STEPS.length - 1, Math.max(0, Number(load(STEP_KEY)) || 0));
   let clearDraft = () => {};
@@ -103,7 +104,8 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
     const { groups: filled, warnings } = fillByTagCounts(scGroups, offeredCases, Math.random, g.simFilter());
     const manual = assignment.value === 'manual';
     const scenario = {
-      id: `sc-${name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sim'}-${Date.now().toString(36)}`,
+      id: editing || `sc-${name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sim'}-${Date.now().toString(36)}`,
+      inLibrary: true,
       name: name.value.trim() || 'New sim', ...(program ? { program: program.id } : {}), startClock: startClock.value, ...(endClock.value ? { endClock: endClock.value } : {}), speed: Number(speed.value),
       ...(chosenPreset() ? { preset: chosenPreset().id } : {}),
       settings: {
@@ -131,6 +133,8 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   }
 
   const result = h('div', {});
+  const createBtn = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => create() }, 'Create sim');
+  const createBtnLabel = (t) => { createBtn.textContent = t; };
   const review = h('div', {});
   async function create() {
     const { scenario, warnings, problems } = buildScenario();
@@ -142,6 +146,17 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
     toast(`Created "${scenario.name}"`);
     if (warnings.length) window.alert(`Created, with randomizer warnings:\n\n${warnings.join('\n')}`);
     await switchScenario(scenario.id);
+  }
+  /** Save to the sim library without starting it (Create a sim, or Edit). */
+  async function saveOnly() {
+    const { scenario, problems } = buildScenario();
+    const errors = problems.length ? problems : saveLocal('scenario', scenario, data.schemas);
+    if (errors.length) { clear(result).append(h('div', { class: 'banner banner-error', role: 'alert' }, h('strong', {}, 'Not saved:'), h('ul', {}, errors.map((e) => h('li', {}, e))))); return; }
+    clearDraft();
+    save(STEP_KEY, 0);
+    toast(`Saved "${scenario.name}" to the sim library`);
+    onSaved?.(scenario.id);
+    await reloadData?.();
   }
   async function runSaved() { save(STEP_KEY, 0); save(READY_KEY, startFrom.value); clearDraft(); await switchScenario(startFrom.value); }
 
@@ -201,7 +216,7 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
         feature('assessments') ? h('label', { class: 'inline' }, set.gradeAssessments, ' Grade reassessments and mismatches (flags) ', helpTip('setup.grade-assessments')) : null,
         feature('taskTimers') ? h('details', {}, h('summary', {}, 'Task times for this sim (optional)'), simDurs.el) : null)),
     h('section', { class: 'panel' }, h('h3', {}, '6. Review and create ', helpTip('setup.wizard-review')), field('Sim name', name), review,
-      h('div', { class: 'controls' }, h('button', { class: 'btn btn-primary', type: 'button', onclick: create }, 'Create sim')), result),
+      h('div', { class: 'controls' }, createBtn, h('button', { class: 'btn', type: 'button', title: 'Keep it in the sim library to run later', onclick: saveOnly }, 'Save to library')), result),
   ];
   const back = h('button', { class: 'btn', type: 'button', onclick: () => go(step - 1) }, '← Back');
   const next = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go(step + 1) }, 'Next →');
@@ -228,8 +243,21 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   g.add();
   usePreset(); // the program's first preset (Standard), unless a draft or a saved sim says otherwise
   // Sim library → "Edit a copy": start from that sim (every step filled in) at step 2.
-  const from = load('ui.wizard.from');
-  if (from && [...startFrom.options].some((o) => o.value === from)) { remove('ui.wizard.from'); startFrom.value = from; step = 0; go(1); }
+  // Sim library → Edit (or an older "copy" request): start from that sim with every step filled in, at step 2.
+  const fromRaw = load('ui.wizard.from');
+  const from = typeof fromRaw === 'string' ? { id: fromRaw, mode: 'copy' } : fromRaw;
+  if (from?.id && data.scenarios.some((s) => s.id === from.id)) {
+    remove('ui.wizard.from');
+    if (![...startFrom.options].some((o) => o.value === from.id)) startFrom.append(h('option', { value: from.id }, `Saved: ${data.scenarios.find((s) => s.id === from.id).name}`));
+    startFrom.value = from.id; step = 0; go(1);
+    if (from.mode === 'edit') {
+      editing = from.id;
+      const sc = data.scenarios.find((s) => s.id === from.id);
+      name.value = sc.name;
+      body.querySelector('.screen-header h3').textContent = `Editing: ${sc.name}`;
+      createBtnLabel('Save and start');
+    }
+  }
   show();
   root.append(body);
   const draft = formDraft(body, 'wizard', { extra: { get: () => ({ groups: g.plain(), prefilledFrom }), set: (saved) => { prefilledFrom = saved.prefilledFrom ?? null; g.load(saved.groups || []); } } });

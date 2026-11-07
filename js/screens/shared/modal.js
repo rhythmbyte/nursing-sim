@@ -52,10 +52,10 @@ export function confirmWarnings(title, intro, warnings, proceedLabel = 'Proceed 
 }
 
 /** Promise-based single text prompt. Resolves the text, or null if cancelled. */
-export function promptText(title, label, { required = true, okLabel = 'Save', draftKey = null } = {}) {
+export function promptText(title, label, { required = true, okLabel = 'Save', draftKey = null, value = '' } = {}) {
   return new Promise((resolve) => {
     let answer = null;
-    const input = h('input', { type: 'text', class: 'input', 'aria-label': label });
+    const input = h('input', { type: 'text', class: 'input', 'aria-label': label, value });
     const draft = draftKey ? textDraft(input, draftKey) : null;
     const err = h('p', { class: 'form-error', hidden: true }, 'Required.');
     openModal({

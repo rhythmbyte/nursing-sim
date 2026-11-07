@@ -62,6 +62,7 @@ export function mountShell(root, tabs, { headerExtra = null, banner = null } = {
   const offNav = onNav((e) => { if (e.tab && e.tab !== active && tabs.some((t) => t.id === e.tab)) activate(e.tab); });
   installNav({ tab: active });
   const teardown = () => { offNav(); runCleanup(); };
+  teardown.activate = (id) => { if (shown().some((t) => t.id === id) && id !== active && canLeave()) { activate(id); navPush({ tab: id, view: null, patient: null, section: null }); } };
   teardown.refresh = () => { if (!shown().some((t) => t.id === active)) activate(shown()[0].id); else renderBar(); };
   return teardown;
 }

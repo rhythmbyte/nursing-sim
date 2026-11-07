@@ -10,16 +10,18 @@ await send('Runtime.enable'); await send('Page.enable');
 await send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1100, deviceScaleFactor: 1, mobile: false });
 await reset('/');
 
-const mode = await text('.mode-btn.active');
-await sleep(1500); // readiness fills in after the page shows
+const landing = await text('.nav-title');
+console.log('Instructor tab opens on:', landing);
+if (landing !== 'Home') fail('the Instructor tab should open on Home');
+await click('.home-card', 'Start a saved sim'); await sleep(1500); // readiness fills in after the page shows
 const starter = await text('.sim-card');
-console.log('setup opens on:', mode, '| starter sim:', starter.slice(0, 220));
-if (mode !== 'Sim library') fail('Setup should open on the sim library');
+console.log('starter sim:', starter.slice(0, 220));
 if (!/Needs work|Ready/.test(starter)) fail('no readiness badge on the starter sim');
 if (/Needs work/.test(starter) && !/James Carter|draft|tool/.test(starter)) fail('Needs work without a reason');
 let u = await unl(); if (u !== 'none') fail(`unlabeled controls (library): ${u}`);
 
-await click('.mode-btn', 'Generate a sim'); await sleep(400);
+await click('.nav-home', '⌂ Home'); await sleep(300);
+await click('.home-card', 'Generate a sim'); await sleep(400);
 const set = (label, v) => ev(`(() => { const e=document.querySelector('[aria-label="${label}"]'); e.value=${JSON.stringify(v)}; e.dispatchEvent(new Event('change',{bubbles:true})); return e.value; })()`);
 await set('Students', '3'); await set('Patients per student', '2'); await set('Difficulty', 'standard'); await set('Preset', 'beginner');
 await click('.panel .controls button', 'Generate'); await sleep(1500);
@@ -37,8 +39,8 @@ console.log('after start:', ready, '| code', await text('.join-code-big .code'))
 if (!ready.includes(genName)) fail('Save to library and start did not open the Ready screen for the generated sim');
 
 // Back to setup: the library lists it; Start → Start sim (two clicks).
-await click('button', 'Change setup'); await sleep(800);
-await click('.mode-btn', 'Sim library'); await sleep(1500);
+await click('.nav-home', '⌂ Home'); await sleep(400);
+await click('.home-card', 'Start a saved sim'); await sleep(1500);
 const card = await ev(`[...document.querySelectorAll('.sim-card')].find(c => c.querySelector('h3').textContent === ${JSON.stringify(genName)})?.textContent`);
 console.log('in library:', (card || 'missing').slice(0, 200));
 if (!card) fail('the generated sim is not in the library');
@@ -47,7 +49,7 @@ await click('button', 'Start sim'); await sleep(1500);
 const phase = await text('.phase-btn.active');
 const cards = await ev(`document.querySelectorAll('.cc-card').length`);
 console.log('two clicks later:', phase, '| group cards', cards);
-if (phase !== '2. Overview' || cards < 3) fail('Start → Start sim did not run the sim');
+if (phase !== 'Overview' || cards < 3) fail('Start → Start sim did not run the sim');
 await ev(`window.confirm = () => true`); await click('button', 'End sim'); await sleep(1500);
 
 // Builder: case readiness on every card, reasons in the detail.

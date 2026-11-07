@@ -7,7 +7,7 @@ await send('Runtime.enable'); await send('Page.enable'); await send('Emulation.s
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
 await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(5000);
 // 1. Run the saved starter as is → Ready: cases panel with codes; nothing unfilled.
-await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
+await click('.home-card', 'Custom setup'); await sleep(400); // the Instructor tab opens on Home
 await ev(`(() => { const s=document.querySelector('select[aria-label="Start from"]'); s.value=s.options[1].value; s.dispatchEvent(new Event('change',{bubbles:true})); })()`);
 await click('button', 'Run the saved scenario'); await sleep(4000);
 const casesRows = () => text('.ready tbody td:nth-child(2)');
@@ -36,9 +36,9 @@ await click('dialog button', 'Close'); await sleep(200);
 // 7. Overview and debrief labels.
 await click('.tab', 'Instructor'); await sleep(600);
 console.log('overview rooms:', await text('.cc-room'));
-await click('.phase-btn', '3. Debrief'); await sleep(800); await click('.sum-card .btn', 'Full breakdown'); await sleep(1000);
+await click('.phase-btn', 'Debrief'); await sleep(800); await click('.sum-card .btn', 'Full breakdown'); await sleep(1000);
 console.log('debrief cases:', await text('.debrief-cases li'));
-await ev(`window.confirm = () => true`); await click('.phase-btn', '2. Overview'); await sleep(500); await click('button', 'End sim'); await sleep(1500);
+await ev(`window.confirm = () => true`); await click('.phase-btn', 'Overview'); await sleep(500); await click('button', 'End sim'); await sleep(1500);
 // 8. Builder editor: case section, warnings, check variants.
 await click('.tab', 'Builder'); await sleep(500); await click('.subnav-btn', 'Patient editor'); await sleep(800);
 await ev(`(() => { const s=document.querySelector('select[aria-label="Patient"]'); s.value='p4-linda-garcia'; s.dispatchEvent(new Event('change')); })()`); await sleep(800);

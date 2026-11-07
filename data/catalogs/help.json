@@ -172,5 +172,7 @@
   "generate.students": "How many students (2–10). Each gets their own group and patients.",
   "generate.patients-per-student": "How many patients each student cares for (1–6). If fewer cases match, each student gets as many as there are.",
   "generate.difficulty": "How many red, yellow and green patients each student gets (generate.json). Custom lets you set the weights.",
-  "generate.preset": "The settings bundle for the sim (timing, task timers, staff). Code-heavy and Beginner also steer which cases are picked."
+  "generate.preset": "The settings bundle for the sim (timing, task timers, staff). Code-heavy and Beginner also steer which cases are picked.",
+  "home.about": "Everything starts here. Run a sim (resume the one in progress, start a saved sim, generate one, or set one up step by step), build patients and sims, and review past debriefs and AI-drafted content. Home is one click away from any screen; during a running sim it's in the Overview's Menu.",
+  "home.past": "Every sim that ended in this browser is kept here with its debrief (the last 12). Open shows it exactly as it was: the same patients, flags, talking points and breakdown. In the full build these live on the server for your school."
 }

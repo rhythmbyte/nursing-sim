@@ -73,7 +73,7 @@ console.log('tick ms: first 30 avg', avg(tickTimes.slice(0, 30)), '| last 30 avg
 const timeClick = (sel, text) => ev(`(() => { const b=[...document.querySelectorAll(${JSON.stringify(sel)})].find(e => e.textContent.trim().startsWith(${JSON.stringify(text)})); if (!b) return 'MISSING ' + ${JSON.stringify(text)}; const t0 = performance.now(); b.click(); return Math.round(performance.now() - t0); })()`);
 await sleep(1500);
 console.log('phase at the end:', await text('.phase-btn.active'), '| summary cards', await ev(`document.querySelectorAll('.sum-card').length`));
-console.log('summary re-render ms:', await timeClick('.phase-btn', '3. Debrief'));
+console.log('summary re-render ms:', await timeClick('.phase-btn', 'Debrief'));
 console.log('talking points render ms:', await timeClick('.sum-card .btn', 'Talking points'), '| points', await ev(`document.querySelectorAll('.point').length`));
 console.log('full breakdown render ms:', await timeClick('.debrief-nav .btn', 'Full breakdown'));
 await send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: `${out}/dl` });

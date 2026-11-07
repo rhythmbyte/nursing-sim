@@ -10,6 +10,8 @@ import { createWindowLock } from './window-lock.js';
 import { instantiateSim, newSimSeeds, caseKey } from './case-seeds.js';
 import { createSession } from './engine/session.js';
 import { applyProgram, scenarioOffered, term } from './engine/program.js';
+import { archiveSim } from './archive.js';
+import { noteRecent } from './recent.js';
 import { restoreBackup } from './storage.js';
 import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
@@ -92,6 +94,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
 
   // switchScenario: used by the scenario picker and by Sim setup after creating a sim.
   const switchScenario = async (id, { demo = false } = {}) => {
+    const sc = data.scenarios.find((s) => s.id === id);
+    if (sc) noteRecent('sim', id, sc.name, demo ? 'Demo' : 'Set up');
     save(SCENARIO_KEY, id);
     remove(SESSION_KEY);
     newSimSeeds({ demoScenarioId: demo ? id : null }); // a new sim: new patient variants (the demo: cases as written)
@@ -105,7 +109,11 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     saveSession('pendingDemo', true);
     await switchScenario(data.scenarios.some((s) => s.id === demo.scenarioId) ? demo.scenarioId : data.scenarios[0].id, { demo: true });
   };
-  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, program: data.program, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo, programChosen: () => load(PROGRAM_KEY) != null, setProgram: (id) => save(PROGRAM_KEY, id), chooseProgram: (id) => { save(PROGRAM_KEY, id); return reloadData(scenario.id); } };
+  const shellRef = {}; // filled once the shell is mounted (gotoTab / openBuilder use it)
+  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, program: data.program, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo, gotoTab: (id) => shellRef.activate?.(id),
+    // Builder at the right place: { view: 'editor' | 'library' | 'review', patientId?, newPatient? }
+    openBuilder: ({ view = 'library', patientId = null, newPatient = false } = {}) => { save('ui.builder.view', view); if (patientId) save('ui.instructor.editorPatient', patientId); if (newPatient) save('ui.builder.newPatient', true); shellRef.activate?.('builder'); },
+    programChosen: () => load(PROGRAM_KEY) != null, setProgram: (id) => save(PROGRAM_KEY, id), chooseProgram: (id) => { save(PROGRAM_KEY, id); return reloadData(scenario.id); } };
   const picker = scenarioPicker(data.scenarios.filter((s) => s.id === scenario.id || scenarioOffered(s, data.program)), scenario.id, (id, select) => {
     const started = runner.state.clock.status !== 'ready';
     if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {
@@ -158,6 +166,12 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   const programPicker = programs.length > 1 ? h('label', { class: 'inline' }, 'Program ', h('select', { 'aria-label': 'Program', onchange: (e) => { save(PROGRAM_KEY, e.target.value); reloadData(scenario.id); } },
     programs.map((p) => h('option', { value: p.id, selected: p.id === data.program?.id }, p.label)))) : null;
   const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, programPicker, picker, resetDemo), banner: brk.el });
+  shellRef.activate = teardownShell.activate;
+  // Past debriefs: a finished sim is archived (and again if a late reflection comes in), by the writer window only.
+  let archiveTimer = null;
+  const keepDebrief = () => { if (runner.state.clock.status !== 'ended' || !writer()) return; clearTimeout(archiveTimer); archiveTimer = setTimeout(() => archiveSim({ state: runner.state, scenario: picked, seeds: load('ui.cases') }), 1500); };
+  const offArchive = store.subscribe(keepDebrief);
+  keepDebrief();
   let shellStatus = runner.state.clock.status;
   const offShell = store.subscribe(() => { if (runner.state.clock.status !== shellStatus) { shellStatus = runner.state.clock.status; teardownShell.refresh(); } });
   const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
@@ -179,6 +193,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     clearInterval(heartbeat);
     window.removeEventListener('pagehide', onPageHide);
     offShell();
+    offArchive(); clearTimeout(archiveTimer);
     teardownShell();
     brk.destroy();
     window.removeEventListener('scroll', onScroll);

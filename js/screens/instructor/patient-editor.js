@@ -22,6 +22,8 @@ import { tagChips } from './patient-tags-ui.js';
 import { durationOverrides } from './duration-overrides.js';
 import { answersEditor } from './assessment-answers.js';
 import { caseFields } from './case-fields.js';
+import { noteRecent } from '../../recent.js';
+import { load as loadKey, remove as removeKey } from '../../storage.js';
 
 const TAGS = ['red', 'yellow', 'green', 'black'];
 const field = (label, el, hint) => helpField('editor', label, el, hint); // help text: data/catalogs/help.json
@@ -116,6 +118,7 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
       dirty = false; // saved: nothing to protect any more
       clearDraft(DRAFT(work.id)); restored = false;
       toast('Saved in this browser');
+      noteRecent('patient', work.id, work.case?.title ? `${work.case.code ? `(${work.case.code}) ` : ''}${work.case.title}` : work.demographics.name, 'Edited');
       await reloadData();
     }
     async function importFile(file) {
@@ -213,6 +216,8 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
   }
 
   load(id);
+  // Home → "Create a patient": start on a new, unsaved patient.
+  if (loadKey('ui.builder.newPatient')) { removeKey('ui.builder.newPatient'); work = blankPatient(`p-new-${Date.now().toString(36)}`); id = work.id; isNew = true; dirty = true; }
   root.append(body);
   // Typing anywhere in the form counts as an unsaved change (builder/timeline/JSON changes go through update()).
   body.addEventListener('input', () => { dirty = true; keepDraft(); });

@@ -20,7 +20,7 @@ BASE="${NS_BASE:-http://localhost:8765}"
 CDP_PORT="${NS_CDP_PORT:-9333}"
 CHROMIUM="${NS_CHROMIUM:-chromium}"
 PROFILE="$OUT/profile"
-SUITES=(tour programs library-generate instructor-flow cases guided-builder patient-tags task-timers drafts away-break debrief reflection projector run-again rejoin soak crash)
+SUITES=(tour home programs library-generate instructor-flow cases guided-builder patient-tags task-timers drafts away-break debrief reflection projector run-again rejoin soak crash)
 [ $# -gt 0 ] && SUITES=("$@")
 export NS_BASE="$BASE" NS_CDP_PORT="$CDP_PORT" NS_CHROMIUM="$CHROMIUM"
 

@@ -405,3 +405,21 @@ body.projector-page { background: var(--bg); }
 .readiness-list { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; text-align: left; }
 .readiness-notes summary { cursor: pointer; font-size: 0.85rem; }
 .gen-summary .readiness { align-items: flex-end; }
+
+/* ---- Instructor Home and top bar ---- */
+.top-nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.top-nav .nav-title { font-weight: 600; margin-right: auto; }
+.nav-home.active { border-color: var(--accent); }
+.builder-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.home-group { margin-bottom: var(--space-4); }
+.home-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3); }
+.home-card { font: inherit; display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); cursor: pointer; }
+.home-card strong { font-size: 1.05rem; }
+.home-card span { color: var(--muted); font-size: 0.88rem; }
+.home-card:hover:not(:disabled), .home-card:focus-visible { border-color: var(--accent); outline: none; }
+.home-card:disabled { opacity: 0.5; cursor: default; }
+.home-primary { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.home-recent { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.overview-menu { position: relative; }
+.overview-menu > summary { list-style: none; cursor: pointer; }
+.overview-menu-list { position: absolute; right: 0; top: 110%; z-index: 20; display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.15); min-width: 240px; }

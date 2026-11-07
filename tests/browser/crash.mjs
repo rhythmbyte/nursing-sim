@@ -49,7 +49,7 @@ report('browser killed mid-editor: unsaved edit restored', (await c.ev(`[...docu
 await c.ev(`document.querySelector('.draft-note button')?.click()`); await sleep(300);
 await c.click('.tab', 'Instructor'); await sleep(400);
 await c.click('button', 'Start demo sim'); await sleep(4000);
-report('demo running: Builder tab hidden, Overview shown', !(await c.text('.tab')).includes('Builder') && (await c.text('.phase-btn.active')) === '2. Overview', await c.text('.tab'));
+report('demo running: Builder tab hidden, Overview shown', !(await c.text('.tab')).includes('Builder') && (await c.text('.phase-btn.active')) === 'Overview', await c.text('.tab'));
 await c.ev(`localStorage.setItem('nursing-sim:ui.welcomeShown','true')`);
 await c.click('.tab', 'Student 1'); await sleep(300);
 await c.ev(`document.querySelector('.sp-open').click()`); await sleep(300);
@@ -97,7 +97,7 @@ report('browser killed: half-typed O₂ form restored', (await c.ev(`document.qu
 report('browser killed: sim paused as of the last heartbeat', s3.clock === 'paused');
 // the timer resumes and finishes
 await c.click('.tab', 'Instructor'); await sleep(500);
-report('after the kill: instructor is back on the Overview (sim paused)', (await c.text('.phase-btn.active')) === '2. Overview' && (await c.text('.overview-controls button')).startsWith('Resume'), await c.text('.phase-btn.active'));
+report('after the kill: instructor is back on the Overview (sim paused)', (await c.text('.phase-btn.active')) === 'Overview' && (await c.text('.overview-controls button')).startsWith('Resume'), await c.text('.phase-btn.active'));
 await c.click('button', 'Resume'); await c.ev(`(() => { const s=document.querySelector('select[aria-label="Sim speed"]'); s.value=[...s.options].at(-1).value; s.dispatchEvent(new Event('change')); return 1; })()`);
 await sleep(60000);
 const fin = await c.ev(`JSON.parse(localStorage.getItem('nursing-sim:session')).log.filter(l => l.action === 'task-finished' || l.action === 'delegation-completed').map(l => l.action).join(',')`);

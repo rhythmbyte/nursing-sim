@@ -1,79 +1,89 @@
-// Instructor tab: Setup (wizard, then Ready) → Overview (while the sim runs) → Debrief (after End).
-// The phase follows the sim's clock (ready / running or paused / ended); the phase bar lets the instructor look at
-// the debrief so far, or start a new sim after one ended. Authoring (editor, library, review) lives in the Builder tab.
+// Instructor tab: Home (the landing screen) and the screens it opens: Sim library, Generate a sim, Custom setup (the
+// wizard), Past debriefs; and the sim's own Ready → Overview (while it runs) → Debrief (after End). The clock moves
+// between those three; "⌂ Home" is always one click away, except during a running sim, where it's in the Overview's
+// Menu (with a confirm). Authoring (editor, library, review queue) lives in the Builder tab.
 
 import { h, clear } from '../shared/dom.js';
-import { load, save } from '../../storage.js';
+import { load, save, remove } from '../../storage.js';
 import { canLeave } from '../shared/leave-guard.js';
-import { READY_KEY } from './setup-wizard.js';
-import { mountSetupHome } from './setup-home.js';
+import { READY_KEY, mountSetupWizard } from './setup-wizard.js';
 import { mountSetupReady } from './setup-ready.js';
 import { mountOverview } from './overview.js';
 import { mountDebrief } from '../debrief/index.js';
 import { navPush, onNav } from '../shared/nav.js';
 import { mountProgramPicker } from './program-picker.js';
+import { mountHome } from './home.js';
+import { mountSimLibrary } from './sim-library.js';
+import { mountGeneratePanel } from './generate-panel.js';
+import { mountPastDebriefs } from './past-debriefs.js';
 
-const PICK_KEY = 'ui.instructor.phase'; // { joinCode, status, phase }: a phase the instructor picked for this sim state
-const PHASES = [['setup', 'Setup'], ['overview', 'Overview'], ['debrief', 'Debrief']];
-const autoPhase = (status) => (status === 'ready' ? 'setup' : status === 'ended' ? 'debrief' : 'overview');
+const SCREEN_KEY = 'ui.instructor.screen'; // { screen, joinCode, status, past? }: what the instructor picked for this sim state
+const TITLES = { home: 'Home', library: 'Saved sims', generate: 'Generate a sim', custom: 'Custom setup', past: 'Past debriefs', ready: 'Ready', overview: 'Overview', debrief: 'Debrief' };
+const SIM_SCREENS = ['ready', 'overview', 'debrief'];
 
 export function mountInstructor(root, ctx) {
   const { runner, store } = ctx;
   // First visit: pick the program once (it's remembered). A running sim never waits on this.
   if (ctx.programChosen && !ctx.programChosen() && runner.state.clock.status === 'ready' && (ctx.catalogs.programs?.programs || []).length > 1) return mountProgramPicker(root, ctx);
-  const bar = h('nav', { class: 'phase-bar', 'aria-label': 'Sim phase' });
+  const bar = h('nav', { class: 'top-nav', 'aria-label': 'Instructor' });
   const body = h('div', {});
   let cleanup = null;
   let shownKey = '';
 
   const status = () => runner.state.clock.status;
-  const picked = () => { const p = load(PICK_KEY); return p && p.joinCode === runner.state.joinCode && p.status === status() ? p.phase : null; };
-  const phase = () => picked() || autoPhase(status());
-  const allowed = (p) => (p === 'setup' ? ['ready', 'ended'].includes(status()) : p === 'overview' ? ['running', 'paused'].includes(status()) : status() !== 'ready' || Object.keys(runner.state.roster).length > 0);
+  const live = () => ['running', 'paused'].includes(status());
+  const readyHere = () => status() === 'ready' && load(READY_KEY) === ctx.scenario.id;
+  const auto = () => (live() ? 'overview' : status() === 'ended' ? 'debrief' : readyHere() ? 'ready' : 'home');
+  const picked = () => { const p = load(SCREEN_KEY); return p && p.joinCode === runner.state.joinCode && p.status === status() ? p : null; };
+  const screen = () => picked()?.screen || auto();
+  const allowed = (s) => (s === 'overview' ? live() : s === 'ready' ? readyHere() : s === 'debrief' ? status() !== 'ready' || Object.keys(runner.state.roster).length > 0 : true);
 
-  function pick(p) {
-    if (!allowed(p) || !canLeave()) return;
-    if (p === 'setup' && status() === 'ended') {
-      if (!window.confirm('Start setting up a new sim? This sim\'s debrief stays available until you create the next one.')) return;
-      save(READY_KEY, null);
-      runner.reset();
-      return; // the reset re-renders (status → ready → setup)
-    }
-    save(PICK_KEY, { joinCode: runner.state.joinCode, status: status(), phase: p });
+  function go(s, past = null) {
+    if (!allowed(s) || !canLeave()) return;
+    save(SCREEN_KEY, { screen: s, joinCode: runner.state.joinCode, status: status(), ...(past ? { past } : {}) });
     render(true);
-    navPush({ tab: 'instructor', view: p });
+    navPush({ tab: 'instructor', view: s });
+    window.scrollTo(0, 0);
   }
+  const goHomeConfirmed = () => { if (window.confirm('Go to Home? The sim keeps running; the Overview is one click away from Home (Resume).')) go('home'); };
 
   function render(force = false) {
-    const p = phase();
-    const setupKind = p === 'setup' ? (load(READY_KEY) === ctx.scenario.id ? 'ready' : 'wizard') : '';
-    const key = `${p}|${setupKind}|${status()}`;
-    clear(bar).append(...PHASES.map(([id, label], i) => h('button', {
-      class: `phase-btn${id === p ? ' active' : ''}`, type: 'button', disabled: !allowed(id) && id !== p, 'aria-current': id === p ? 'step' : null,
-      onclick: () => pick(id),
-    }, `${i + 1}. ${id === 'setup' && status() === 'ended' ? 'New sim' : label}`)));
+    const s = screen();
+    const past = picked()?.past || null;
+    const key = `${s}|${status()}|${readyHere()}|${past}`;
+    // Top bar: Home (not during a running sim: that's in the Overview's Menu), where you are, and the sim's own screens.
+    clear(bar).append(
+      live() && s === 'overview' ? null : h('button', { class: `btn btn-small nav-home${s === 'home' ? ' active' : ''}`, type: 'button', onclick: () => (live() ? goHomeConfirmed() : go('home')) }, '⌂ Home'),
+      h('span', { class: 'nav-title' }, TITLES[s]),
+      ...SIM_SCREENS.filter((x) => allowed(x)).map((x) => h('button', { class: `phase-btn${x === s ? ' active' : ''}`, type: 'button', 'aria-current': x === s ? 'page' : null, onclick: () => go(x) }, TITLES[x])));
     if (!force && key === shownKey) return;
     shownKey = key;
     if (typeof cleanup === 'function') cleanup();
     clear(body);
-    if (p === 'overview') cleanup = mountOverview(body, ctx);
-    else if (p === 'debrief') cleanup = mountDebrief(body, ctx);
-    else if (setupKind === 'ready') cleanup = mountSetupReady(body, ctx, { onChangeSetup: () => { save(READY_KEY, null); render(true); } });
-    else cleanup = mountSetupHome(body, ctx);
+    if (s === 'overview') cleanup = mountOverview(body, { ...ctx, goHome: goHomeConfirmed, goDebrief: () => go('debrief') });
+    else if (s === 'debrief') cleanup = mountDebrief(body, ctx);
+    else if (s === 'ready') cleanup = mountSetupReady(body, ctx, { onChangeSetup: () => { save(READY_KEY, null); go('custom'); } });
+    else if (s === 'library') cleanup = mountSimLibrary(body, ctx, { onEdit: () => go('custom') });
+    else if (s === 'generate') cleanup = mountGeneratePanel(body, ctx);
+    else if (s === 'custom') cleanup = mountSetupWizard(body, ctx, { onSaved: () => save(SCREEN_KEY, { screen: 'library', joinCode: runner.state.joinCode, status: status() }) });
+    else if (s === 'past') cleanup = mountPastDebriefs(body, ctx, { openId: past, onOpen: (id) => save(SCREEN_KEY, { screen: 'past', joinCode: runner.state.joinCode, status: status(), ...(id ? { past: id } : {}) }) });
+    else cleanup = mountHome(body, ctx, { go, resume: live() ? () => go('overview') : readyHere() ? () => go('ready') : null, resumeLabel: live() ? `Sim ${status()} · join code ${runner.state.joinCode}` : readyHere() ? `Ready to start · join code ${runner.state.joinCode}` : '' });
   }
 
-  // Data problems (schema or broken references) show on every instructor phase.
+  // Data problems (schema or broken references) show on every instructor screen.
   const problems = ctx.data.problems || [];
   if (problems.length) {
     root.append(h('details', { class: 'banner banner-error', role: 'alert' },
       h('summary', {}, `${problems.length} data problem${problems.length > 1 ? 's' : ''} (what was skipped or left out, and why). Details`),
       h('ul', {}, problems.map((pr) => h('li', {}, h('code', {}, pr.file), h('ul', {}, pr.errors.slice(0, 8).map((e) => h('li', {}, e))))))));
   }
+  // The Builder's Home button lands here.
+  if (load('ui.instructor.goHome')) { remove('ui.instructor.goHome'); save(SCREEN_KEY, { screen: 'home', joinCode: runner.state.joinCode, status: status() }); }
   root.append(bar, body);
   render(true);
-  // The clock moves the phase (Start → Overview, End → Debrief); other store changes are the views' own business.
+  // The clock moves the sim's screens (Start → Overview, End → Debrief); other store changes are the screens' own.
   let lastStatus = status();
   const off = store.subscribe(() => { if (status() !== lastStatus) { lastStatus = status(); render(); } });
-  const offNav = onNav((e) => { if (e.tab === 'instructor' && e.view && PHASES.some(([id]) => id === e.view) && e.view !== phase()) pick(e.view); });
+  const offNav = onNav((e) => { if (e.tab === 'instructor' && e.view && TITLES[e.view] && e.view !== screen()) go(e.view); });
   return () => { off(); offNav(); if (typeof cleanup === 'function') cleanup(); };
 }

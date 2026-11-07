@@ -2,6 +2,18 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Instructor Home
+- **The Instructor tab opens on Home**, with big choices in three groups:
+  - **Run a sim:** Resume (only when a sim is waiting to start or running), Start a saved sim, Generate a sim, Custom setup.
+  - **Build:** Create a patient, Edit patients, Create a sim, Edit saved sims. Each opens the Builder or the sim library at the right place; the Builder parts are disabled while a sim runs, since the Builder is closed then.
+  - **Review:** Past debriefs, Review queue.
+  - **Recent:** the last sims set up, patients edited and debriefs opened, one click each.
+- **"⌂ Home" is one click away** on every screen and in the Builder. During a running sim it's in the Overview's **Menu**, which asks first; Home then offers **Resume**. The Overview menu also has "Debrief so far".
+- **Saved sims:** Start, **Edit** (the wizard filled in, saving back to the same sim, with "Save and start" or "Save to library"), **Duplicate**, **Rename**, **Delete** (asks first; a starter sim from the files is hidden rather than deleted). The wizard's last step has **Save to library** next to Create sim, for building a sim to run later.
+- **Past debriefs:** every sim that ends is kept in this browser (the last 12) with its session, scenario and case seeds. Open shows the full three-tier debrief with the same patients. Delete asks first.
+- Replaces the short-lived setup landing (Sim library / Generate / Build tabs): those are now Home's choices.
+- Tests: 243 unit; new browser suite `home`; every suite updated for the new landing screen.
+
 ## Ready-to-run sims and Generate (scale, Part C)
 - **Readiness check** (`engine/readiness.js`, rules in `data/catalogs/readiness.json`, proposed). A case is **Needs work** when it has broken references, a variant behaving differently from the case as written, a range that could break its script, the whole case still a draft, or an order needing an assessment tool the sim won't offer. Notes that don't block: no reactive script, drafted items. A sim is Ready when every case is, no group is empty and every case exists.
 - **Sim library** (Setup now opens on it): saved sims for the program with a Ready / Needs work badge and reasons; **Start** → the join code → **Start sim** (two clicks); **Edit a copy** opens the wizard filled in; Remove hides a browser-made sim.

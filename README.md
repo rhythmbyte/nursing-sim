@@ -43,6 +43,8 @@ See `docs/ARCHITECTURE.md` §5 for what each suite covers.
 
 Live: https://rhythmbyte.github.io/nursing-sim/
 
+**Home:** the Instructor tab opens on Home: run a sim (resume, start a saved sim, generate one, custom setup), build patients and sims, review past debriefs and the review queue, and Recent. ⌂ Home is at the top of every screen (during a running sim, in the Overview's Menu).
+
 **First visit:** the Instructor tab asks which program you teach (RN or LPN / LVN; change it later with **Program** at the top), or **Just looking? Start the demo sim**.
 
 **Fastest start:** Instructor → Setup → **Start demo sim** (starter scenario with the cases as written, a joined test student, clock running).

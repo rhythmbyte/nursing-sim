@@ -1,6 +1,7 @@
-// Setup → Sim library: saved, complete sims for this program (groups, patients, settings, preset), each with a
+// Instructor → Sim library: saved, complete sims for this program (groups, patients, settings, preset), each with a
 // Ready / Needs work badge from the readiness check (engine/readiness.js) and its reasons. Start → the Ready screen
-// (join code) → Start sim: two clicks. "Edit a copy" opens it in the wizard; "Remove" hides a browser-made sim.
+// (join code) → Start sim: two clicks. Edit opens the wizard filled in (saving back to the same sim); Duplicate,
+// Rename and Delete (with a confirm; a starter sim from the files is hidden rather than deleted).
 
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
@@ -8,11 +9,13 @@ import { helpTip } from '../shared/help.js';
 import { simReadiness } from '../../engine/readiness.js';
 import { scenarioOffered } from '../../engine/program.js';
 import { codeName } from '../../engine/cases.js';
-import { saveLocal } from '../../data-loader.js';
+import { saveLocal, removeLocal } from '../../data-loader.js';
+import { promptText } from '../shared/modal.js';
+import { forgetRecent } from '../../recent.js';
 import { save } from '../../storage.js';
 import { READY_KEY } from './setup-wizard.js';
 
-export const WIZARD_FROM_KEY = 'ui.wizard.from'; // a saved sim the wizard should start from (Edit a copy)
+export const WIZARD_FROM_KEY = 'ui.wizard.from'; // { id, mode: 'edit' | 'copy' }: a saved sim the wizard starts from
 
 /** Ready / Needs work badge and the reasons (shared with Generate's summary). */
 export function readinessBlock(r) {
@@ -29,6 +32,7 @@ export function mountSimLibrary(root, ctx, { onEdit }) {
   const byId = Object.fromEntries(data.patients.map((t) => [t.id, t]));
   const list = h('div', { class: 'sim-list' });
   const start = async (sc) => { save(READY_KEY, sc.id); await switchScenario(sc.id); };
+  const change = async (fn) => { const errors = fn() || []; if (errors.length) { window.alert(`Could not save:\n${errors.join('\n')}`); return; } await ctx.reloadData(); };
   for (const sc of sims) {
     const ids = sc.groups.flatMap((g) => [...(g.patients || []), ...(g.admissions || [])]);
     const students = sc.groups.reduce((n, g) => n + (g.studentCount || 0), 0);
@@ -39,13 +43,16 @@ export function mountSimLibrary(root, ctx, { onEdit }) {
       h('p', { class: 'small sim-cases' }, [...new Set(ids)].map((id) => (byId[id] ? codeName(byId[id]) : id)).join(' · ')),
       h('div', { class: 'controls' },
         h('button', { class: 'btn btn-primary', type: 'button', onclick: () => start(sc) }, 'Start'),
-        h('button', { class: 'btn', type: 'button', onclick: () => { save(WIZARD_FROM_KEY, sc.id); onEdit(); } }, 'Edit a copy'),
-        data.local.scenarios?.has(sc.id) ? h('button', { class: 'btn btn-ghost', type: 'button', onclick: async () => { if (window.confirm(`Remove "${sc.name}" from the library?`)) { saveLocal('scenario', { ...sc, inLibrary: false }, data.schemas); await ctx.reloadData(); } } }, 'Remove') : null)));
+        h('button', { class: 'btn', type: 'button', onclick: () => { save(WIZARD_FROM_KEY, { id: sc.id, mode: 'edit' }); onEdit(); } }, 'Edit'),
+        h('button', { class: 'btn', type: 'button', onclick: () => change(() => saveLocal('scenario', { ...structuredClone(sc), id: `sc-${Date.now().toString(36)}`, name: `${sc.name} (copy)`, inLibrary: true }, data.schemas)) }, 'Duplicate'),
+        h('button', { class: 'btn', type: 'button', onclick: async () => { const name = await promptText('Rename sim', 'Name', { value: sc.name, okLabel: 'Rename' }); if (name?.trim()) change(() => saveLocal('scenario', { ...sc, name: name.trim() }, data.schemas)); } }, 'Rename'),
+        h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => { if (!window.confirm(`Delete "${sc.name}"? This can't be undone.`)) return; forgetRecent('sim', sc.id); change(() => (data.fileIds.scenarios?.has(sc.id) ? saveLocal('scenario', { ...sc, inLibrary: false }, data.schemas) : (removeLocal('scenario', sc.id), []))); } }, 'Delete'))));
     // The check runs dry runs, so each card fills in after the page shows.
     setTimeout(() => clear(status).append(readinessBlock(simReadiness(sc, data.patients, { catalogs: data.catalogs, program: data.program }))), 0);
   }
   root.append(h('div', {},
-    h('p', { class: 'muted' }, 'Saved sims for your program. Start shows the join code; Start sim on the next screen begins. ', helpTip('setup.library')),
-    sims.length ? list : h('p', { class: 'muted' }, 'No saved sims yet. Generate one or build one step by step.')));
+    h('header', { class: 'screen-header' }, h('h2', {}, 'Saved sims'), helpTip('setup.library')),
+    h('p', { class: 'muted' }, 'Saved sims for your program. Start shows the join code; Start sim on the next screen begins.'),
+    sims.length ? list : h('p', { class: 'muted' }, 'No saved sims yet. Generate one or use Custom setup.')));
   return () => {};
 }

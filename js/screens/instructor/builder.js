@@ -34,7 +34,8 @@ export function mountBuilder(root, ctx) {
     if (typeof cleanup === 'function') cleanup();
     cleanup = views.find((v) => v.id === active).mount(clear(body));
   }
-  root.append(h('p', { class: 'muted small builder-note' }, 'Builder: prepare cases before class. It closes while a sim is running.'), nav, body);
+  const home = h('button', { class: 'btn btn-small nav-home', type: 'button', onclick: () => { save('ui.instructor.goHome', true); ctx.gotoTab?.('instructor'); } }, '⌂ Home');
+  root.append(h('div', { class: 'builder-top' }, home, h('span', { class: 'muted small builder-note' }, 'Builder: prepare cases and sims before class. It closes while a sim is running.')), nav, body);
   render();
   const offNav = onNav((e) => { if (e.tab === 'builder' && e.view && e.view !== active && views.some((v) => v.id === e.view) && canLeave()) { active = e.view; save(VIEW_KEY, active); render(); } });
   return () => { offNav(); if (typeof cleanup === 'function') cleanup(); };

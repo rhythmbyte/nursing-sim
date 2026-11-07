@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Past debriefs store seeds, not patients
+- **Decision:** when a sim ends, `js/archive.js` keeps its session state, the scenario as it was and its case seeds (`ui.cases`); opening a past debrief instantiates the patients again from those seeds and mounts the normal debrief over a read-only runner. The last 12 are kept.
+- **Why:** the seeds reproduce the patients exactly at a fraction of the size of 60 instantiated patient files, which matters in browser storage.
+- **Caveat:** if a case file is edited afterwards, an old debrief shows the edited case's texts (the students' actions and flags are unchanged). The full build stores the instantiated patients with the session (SPEC §13).
+- **Alternatives:** storing every instantiated patient (several hundred KB per sim); keeping only the newest debrief (the old behaviour: it was replaced by the next sim).
+
+---
+
 ## 2026-11-07: A program changes defaults and what's offered, never the content
 - **Decision:** `engine/program.js` applies the chosen program when data loads: scenario defaults get the program's settings, and tools, interventions and helper roles it doesn't use are marked `offered: false` instead of removed. Cases and saved sims are offered by patient tags / the sim's `program`.
 - **Why:** removing catalog entries would break any case or sim that uses them (a shared case, an older sim, a different program's demo). Marking keeps one engine for every program and puts the scoping where instructors see it.

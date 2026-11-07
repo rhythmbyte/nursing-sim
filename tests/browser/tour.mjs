@@ -11,7 +11,7 @@ await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase
 console.log('load problems banner:', (await text('.banner-error')) || 'none');
 console.log('tabs:', await text('.tab'), '| phase:', await text('.phase-btn.active'));
 // ---- Wizard: every step, unlabeled controls
-await click('.mode-btn', 'Build step by step'); await sleep(400); // Setup opens on the sim library
+await click('.home-card', 'Custom setup'); await sleep(400); // the Instructor tab opens on Home
 for (let i = 0; i < 6; i++) { console.log(`[wizard ${i + 1}] unlabeled: ${await unl()}`); await click('button', 'Next'); await sleep(250); }
 console.log('setup tools:', await ev(`document.querySelectorAll('input[aria-label^="Offer "]').length`), 'ticked', await ev(`[...document.querySelectorAll('input[aria-label^="Offer "]')].filter(x=>x.checked).length`));
 // ---- Builder (before the sim)
