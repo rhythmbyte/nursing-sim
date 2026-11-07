@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Projector view
+- **Ready → Projector view** opens `index.html?projector=1` for the classroom screen: the sim name, where to join, the join code huge, and who has joined by group, updating live (Full screen button). It shows no patient or case information, since students see it. Display-only, like the bedside monitor page: it never writes or takes the window lock.
+- A brand-new sim is now saved at once, so display-only pages see it before the first student joins.
+- Browser suites ported to the new screens and all passing: crash and kill tests (16/16, now including "Builder editor restored after a kill before class" and "instructor back on the Overview after a kill"), rejoin (approval from the alerts strip and student drawer), and the 4-hour soak (heap 5–8 MB, tick 7 ms average late in the sim, drawer 13 ms, full breakdown 14 ms).
+- Tests: 229 passing.
+
 ## Three-tier debrief (restructure, Part C)
 - **Tier 1, Summary** (the default; one screen; **Print summary** prints one page): a card per group with tasks on time (green), late (amber), very late, misprioritized and missed / never done (red), red and amber flags, call light and alarm response averages, the overall status (same rule as the Command center) and its patients as "(C1) Robert Miller". Every number opens the full breakdown at its section.
 - **Tier 2, Talking points** (per group): plain-language prompts generated from the group's flags, very late and missed work, delegation waits, recovery penalties and each case's "should recognize" items, grouped by theme (prioritization, recognition, delegation, communication, timeliness). Example: "(S1) Linda Garcia: Did "Insert indwelling urinary catheter…" (tier 3) before higher-priority "Lactated Ringer's 30 mL/kg IV bolus now" (tier 1)… Ask what drove that order." Tick as discussed, hide, or **Evidence →** (opens the breakdown at the right section, highlighted). Ticks and hides are remembered per sim. The wording and themes are data (`data/catalogs/debrief-points.json`, proposed).

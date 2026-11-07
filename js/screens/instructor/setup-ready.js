@@ -1,5 +1,6 @@
 // Instructor → Ready (after "Create sim", before Start): the join code big, who has joined, this sim's patients
-// ("(C1) Robert Miller" with Reroll / Lock), and Start sim. "Change setup" goes back to the wizard.
+// ("(C1) Robert Miller" with Reroll / Lock), and Start sim. "Projector view" opens the join screen for the classroom
+// (screens/projector.js). "Change setup" goes back to the wizard.
 
 import { h, clear } from '../shared/dom.js';
 import { coalesce } from '../shared/coalesce.js';
@@ -24,6 +25,7 @@ export function mountSetupReady(root, ctx, { onChangeSetup }) {
     code,
     h('div', { class: 'controls' },
       h('button', { class: 'btn btn-primary btn-large', type: 'button', onclick: () => runner.clock('start', user) }, 'Start sim'),
+      h('button', { class: 'btn', type: 'button', title: 'Join code and who has joined, for the classroom screen (no patient information)', onclick: () => window.open(`${window.location.pathname}?projector=1`, 'nursing-sim-projector') }, 'Projector view'),
       h('button', { class: 'btn', type: 'button', onclick: onChangeSetup }, 'Change setup'),
       ctx.startDemo ? h('button', { class: 'btn btn-ghost', type: 'button', onclick: () => ctx.startDemo() }, 'Start demo sim instead') : null),
     h('section', { class: 'panel' }, h('h3', {}, 'Students'), roster),

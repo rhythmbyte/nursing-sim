@@ -5,6 +5,7 @@ import { loadAll } from './data-loader.js';
 import { createStore } from './state.js';
 import { load, save, remove, clearAll, loadSession, saveSession, onSaveFailure, onExternalChange } from './storage.js';
 import { mountStandaloneMonitor } from './screens/monitor/standalone.js';
+import { mountProjector } from './screens/projector.js';
 import { createWindowLock } from './window-lock.js';
 import { instantiateSim, newSimSeeds, caseKey } from './case-seeds.js';
 import { createSession } from './engine/session.js';
@@ -115,6 +116,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   // Pause-on-close (scenario setting, default on). On boot, a sim still "running" means the page
   // closed without warning (crash/freeze): pause it as of the last heartbeat.
   // Only at a real page load: an in-page remount (after an edit, approval or new sim) must not pause or rewind.
+  // A brand-new sim is saved at once, so display-only pages (projector, bedside monitor) see it before anything happens.
+  if (writer() && !load(SESSION_KEY)) save(SESSION_KEY, runner.state);
   const lastBeat = load(HEARTBEAT_KEY);
   if (pageLoad && writer()) runner.pauseForClose(lastBeat);
   // Rejoin at the same spot: log who came back on this screen and how long it was away (reload, crash, closed tab).
@@ -248,6 +251,13 @@ async function boot() {
       const sc = data.scenarios.find((s) => s.id === load(SCENARIO_KEY)) || data.scenarios[0];
       mountStandaloneMonitor(root, { pid: monitorPid, templatesById: { ...Object.fromEntries(data.patients.map((p) => [p.id, p])), ...instantiateSim(sc, data.patients, data.catalogs, { hadSession: true }).templatesById }, catalogs: data.catalogs,
         loadSession: () => load(SESSION_KEY), onSessionChange: (fn) => onExternalChange(SESSION_KEY, fn) });
+      return;
+    }
+    // index.html?projector=1: join code + who has joined, for the classroom screen (display-only, no patient info).
+    if (new URLSearchParams(window.location.search).has('projector')) {
+      const sc = data.scenarios.find((s) => s.id === load(SCENARIO_KEY)) || data.scenarios[0];
+      mountProjector(root, { scenario: sc, joinUrl: `${window.location.origin}${window.location.pathname}`, loadSession: () => load(SESSION_KEY), onSessionChange: (fn) => onExternalChange(SESSION_KEY, fn) });
+      onExternalChange(SCENARIO_KEY, () => window.location.reload()); // a new sim in the main window: show it
       return;
     }
     if (data.problems.length) console.warn('Data validation problems:', data.problems);
