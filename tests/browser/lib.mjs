@@ -34,9 +34,13 @@ export async function openPage(ws = process.argv[2], out = process.argv[3] || 't
     if (r.result?.exceptionDetails) { const e = `EXC ${r.result.exceptionDetails.exception?.description?.slice(0, 200)}`; problems.push(e); return e; }
     return r.result?.result?.value;
   };
+  // Screenshots are for people looking at the output, not checks. Headless Chromium has stalled on a capture now and
+  // then, so it gets 10 s and is skipped (with a note) rather than hanging the suite.
   const shot = async (name, { full = false } = {}) => {
-    const r = await send('Page.captureScreenshot', { format: 'png', ...(full ? { captureBeyondViewport: true } : {}) });
-    writeFileSync(`${out}/${name}.png`, Buffer.from(r.result.data, 'base64'));
+    await send('Page.bringToFront');
+    const r = await Promise.race([send('Page.captureScreenshot', { format: 'png', ...(full ? { captureBeyondViewport: true } : {}) }), sleep(10000).then(() => null)]);
+    if (r?.result?.data) writeFileSync(`${out}/${name}.png`, Buffer.from(r.result.data, 'base64'));
+    else console.log(`(screenshot ${name} skipped: no answer in 10 s)`);
   };
   const click = async (sel, label) => {
     const r = await ev(`(() => { const b=[...document.querySelectorAll(${JSON.stringify(sel)})].find(e => e.textContent.trim().startsWith(${JSON.stringify(label)}) && !e.disabled); if(!b) return 'MISSING ${label.replace(/'/g, '')}'; b.click(); return 'ok'; })()`);

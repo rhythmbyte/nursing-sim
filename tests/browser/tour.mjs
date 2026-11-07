@@ -54,9 +54,15 @@ await click('.pill', 'Numeric pain'); await sleep(200);
 await ev(`[...document.querySelectorAll('button')].filter(b=>b.textContent==='Check patient').forEach(b=>b.click())`); await sleep(200);
 console.log('pain hints:', await text('.assess-hint'), '| total:', await text('.assess-total'));
 await click('form button', 'Save'); await sleep(300);
+// Task timers (manikin mode): the student is busy for a short lockout; the pain score is charted when it ends.
+for (let i = 0; i < 60 && await ev(`!!document.querySelector('.busy-banner')`); i++) await sleep(1000);
+if (await ev(`!!document.querySelector('.busy-banner')`)) fail('still busy 60 s after saving the pain score');
 console.log('charted list:', await ev(`[...document.querySelectorAll('.feed li')].map(l=>l.textContent).filter(t=>/pain/i.test(t)).slice(0,2).join(' || ')`));
-await click('.pill', 'NEWS2'); await sleep(200);
-console.log('news2:', await text('.assess-score'));
+// NEWS2's license is unconfirmed, so it isn't offered by default (only public tools are).
+const news2 = await ev(`[...document.querySelectorAll('.pill')].some(p=>/NEWS2/.test(p.textContent))`);
+console.log('NEWS2 offered (should be false until its license is confirmed):', news2);
+if (news2) fail('NEWS2 offered although its license is not confirmed');
+if (!/pain/i.test(await ev(`[...document.querySelectorAll('.feed li')].map(l=>l.textContent).join(' ')`))) fail('pain score not in the charted list');
 await shot('student-assess');
 console.log('assess unlabeled:', await unl());
 await click('.chart-tab', 'Interventions'); await sleep(300);
