@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Debrief talking points are generated from evidence, worded from data
+- **Decision:** `engine/talking-points.js` turns the group's existing evidence (flag rules, timeliness rows, delegation waits, penalty log, the cases' should-recognize items) into points; the sentence for each kind and the theme it belongs to come from `data/catalogs/debrief-points.json`. Each point has a stable id (for ticks and hides, stored per join code) and an evidence link (student + breakdown section).
+- **Why:** no new scoring logic, so the talking points can't disagree with the flags and tables; the instructor can rewrite the prompts without code (B1).
+- **Alternatives:** hand-written prompts per case (doesn't cover what actually happened); free-text AI summaries (not reproducible, not available offline in the prototype).
+
+---
+
 ## 2026-11-07: The Instructor tab is phases, not views; authoring is a separate tab
 - **Decision:** the Instructor tab shows one phase picked from the clock (ready → Setup wizard / Ready, running or paused → Overview, ended → Debrief); the instructor can still open the debrief early. Patient editor, library and review queue moved to a **Builder** tab hidden while a sim runs. The Overview reuses the Live control panels with a patient / student / group filter inside a drawer, and keeps the whole Live control under a collapsed "More controls", so no feature was removed.
 - **Why:** instructors running a class need one calm screen; authoring tools mid-sim were a way to get lost (and edits mid-sim don't reach the running sim anyway). Reusing the panels keeps one implementation per action.

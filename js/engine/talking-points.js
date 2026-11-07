@@ -62,7 +62,7 @@ export function talkingPoints(state, group, ctx) {
   for (const f of flags) {
     const r = cat.rules[f.ruleId] || cat.fallback;
     add(`flag:${f.ruleId}:${f.patientId || ''}:${f.atMin}:${(f.userIds || []).join(',')}`, r.theme, fill(r.text, { patient: name(f.patientId), message: f.message, student: student(f.userIds?.[0]) }),
-      { patientId: f.patientId, userId: f.userIds?.[0], section: PRIORITY_RULES.includes(f.ruleId) ? 'priorities' : 'flags', atMin: f.atMin });
+      { patientId: f.patientId, userId: f.userIds?.[0], section: f.ruleId === 'priority-mismatch' ? 'priorities' : f.ruleId === 'priority-order' ? 'sequence' : 'flags', atMin: f.atMin });
   }
   // Timeliness: very late and never-done orders, meds and reassessments.
   if (cat.timeliness) {

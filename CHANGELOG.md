@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Three-tier debrief (restructure, Part C)
+- **Tier 1, Summary** (the default; one screen; **Print summary** prints one page): a card per group with tasks on time (green), late (amber), very late, misprioritized and missed / never done (red), red and amber flags, call light and alarm response averages, the overall status (same rule as the Command center) and its patients as "(C1) Robert Miller". Every number opens the full breakdown at its section.
+- **Tier 2, Talking points** (per group): plain-language prompts generated from the group's flags, very late and missed work, delegation waits, recovery penalties and each case's "should recognize" items, grouped by theme (prioritization, recognition, delegation, communication, timeliness). Example: "(S1) Linda Garcia: Did "Insert indwelling urinary catheter…" (tier 3) before higher-priority "Lactated Ringer's 30 mL/kg IV bolus now" (tier 1)… Ask what drove that order." Tick as discussed, hide, or **Evidence →** (opens the breakdown at the right section, highlighted). Ticks and hides are remembered per sim. The wording and themes are data (`data/catalogs/debrief-points.json`, proposed).
+- **Tier 3, Full breakdown** (per group, drill down to each student): everything the debrief had (flags, timeliness, tasks, delegation, patient states, assessments, reflection, priorities, response times, order sequence, charted vs scripted vitals, handoff, should recognize, timeline, CSV export).
+- Tests: 228 passing; browser check of summary → talking points (tick, hide, reload) → evidence → breakdown.
+
 ## Instructor: setup wizard → Overview → debrief; Builder tab (restructure, Part B)
 - **Instructor tab follows the sim:** Setup → Overview → Debrief (a phase bar shows where you are; the debrief so far is one click away; after End, "New sim" starts the next setup).
 - **Setup wizard**, one step per screen with Back / Next and a progress bar: start from a saved scenario (or run it as is) or new; groups and students; patients (pick cases, or randomize by patient tags and triage counts with match counts); variation toggles; sim options (handoff, charge nurse, task timers, staff per group, assessments, shift times, speed; everything else under More options); review → **Create sim**. Then **Ready**: the join code big, who has joined, this sim's patients with Reroll / Lock, **Start sim**. Defaults make a quick setup Next, Next, Create, Start. Every Sim setup option is still there.

@@ -29,7 +29,8 @@ function casesLine(runner, templatesById, groupId) {
 
 export function mountBreakdown(root, { store, runner, templatesById, scenario, catalogs }, nav) {
   let userId = nav.userId;
-  let scrollTo = nav.section ? `sec-${nav.section}` : null;
+  const target = nav.section ? `sec-${nav.section}` : null; // an evidence link: highlighted on every render, scrolled to once
+  let scrolled = false;
   const labelOf = (id) => catalogs.interventions.interventions.find((i) => i.id === id)?.label || id;
   const orderText = (pid, oid) => templatesById[pid]?.orders.find((o) => o.id === oid)?.text || oid;
   const patientName = (pid) => (templatesById[pid] ? codeName(templatesById[pid]) : pid || '');
@@ -53,6 +54,14 @@ export function mountBreakdown(root, { store, runner, templatesById, scenario, c
   }
 
   function render() {
+    draw();
+    const el = target && document.getElementById(target);
+    if (!el) return;
+    el.classList.add('debrief-target');
+    if (!scrolled) { scrolled = true; el.scrollIntoView({ block: 'start' }); }
+  }
+
+  function draw() {
     const roster = Object.entries(runner.state.roster).filter(([, r]) => !nav.groupId || r.groupId === nav.groupId);
     const back = h('div', { class: 'controls debrief-nav' }, h('button', { class: 'btn', type: 'button', onclick: nav.onSummary }, '← Summary'),
       nav.onPoints ? h('button', { class: 'btn', type: 'button', onclick: nav.onPoints }, 'Talking points') : null);
@@ -123,8 +132,6 @@ export function mountBreakdown(root, { store, runner, templatesById, scenario, c
 
   root.append(body);
   render();
-  // An evidence link: scroll to its section once (and flash it).
-  if (scrollTo) { const el = document.getElementById(scrollTo); if (el) { el.scrollIntoView({ block: 'start' }); el.classList.add('debrief-target'); } scrollTo = null; }
   const off = store.subscribe(render);
   let lastMin = -1;
   const offTick = store.on('tick', (m) => { if (Math.floor(m) !== lastMin) { lastMin = Math.floor(m); render(); } });

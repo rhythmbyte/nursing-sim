@@ -90,6 +90,12 @@ Your answer: ______________________________________________
 
 ## 2. Scoring and flags
 
+**2.0 Debrief talking points** [63]
+Right now: after the sim, each group gets discussion prompts grouped as prioritization, recognition, delegation, communication and timeliness, written from what happened (e.g. "Foley placed before the fluid bolus… ask what drove that order") plus each case's "should recognize" list. A summary card counts tasks on time, late, misprioritized and missed.
+Are these the right themes and questions? Anything you'd count differently?
+Your answer: ______________________________________________
+
+
 **2.1 Extra PRN doses: warn or block?** [1]
 Right now: the sim warns (for example a 4th nitro, or nitro without a BP first), lets the student give it anyway, and flags it red.
 Should it block instead?

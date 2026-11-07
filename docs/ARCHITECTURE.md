@@ -115,6 +115,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/session.js` | Live session state + pure transitions (`createSession`, `tick`, `fireNow` (whole group), `skipToNext`, `pauseForClose`, `answerCallLight`, `controlClock`) | built |
 | `js/engine/runner.js` | Stateful controller: owns the session, calls `session.*`, pushes to the store (`set({ session })`, `emit('tick')`), persists via an injected `persist` | built |
 | `js/engine/rules/` | One file per flag rule (10: SPEC §7 + priority-mismatch + alarm-response) + `helpers.js` (config merge, tracked orders, responsibility) + `index.js` (`evaluateRules`) | built |
+| `js/engine/talking-points.js` | Group debrief: `groupSummary` (on time / late / very late / misprioritized / missed, flags, call light and alarm averages, status) and `talkingPoints` (prompts from flags, timeliness, delegation waits, penalties and should-recognize items; wording from `data/catalogs/debrief-points.json`) | built |
 | `js/engine/debrief.js` | `buildDebrief(state, userId, ctx)`: flags, response times, order sequences, charted vs scripted, handoffs, should-recognize, timeline | built |
 | `js/engine/instructor.js` | `markLeftUnattended`, `pushOrder`, `startCode`, `setCodeOutcome`, `setCallLight` | built |
 | `js/engine/vitals.js` | Monitor cycle (processor), device vs manual vitals, `measureManual` (respects `revealManualVitals`), scripted snapshots for the debrief | built |
@@ -155,7 +156,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/screens/shared/help.js` | `helpTip(key)` / `helpField(screen, label, …)`: "?" help from `data/catalogs/help.json` | built |
 | `js/screens/chart/search.js` | `searchInterventions` (label/id/synonyms), `recentInterventions` | built |
 | `js/screens/chart/` | `index.js` (section order) + one file per section: summary, monitor, orders, flowsheet, mar, labs, interventions, notes, handoff (mode "always"); `vitals-form.js` (shared vitals inputs with Measure); `strike.js` ("Entered in error" button + struck display); `search.js`; `util.js` display helpers | built |
-| `js/screens/debrief/` | `index.js` (student picker, export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
+| `js/screens/debrief/` | three tiers: `index.js` (which tier, discussed / hidden points per sim), `summary.js` (Tier 1 group cards, print one page), `points.js` (Tier 2 talking points by theme), `breakdown.js` (Tier 3 per student of a group: every section with `sec-*` anchors for evidence links, CSV export, print), `sections.js`, `describe.js` (log entry → text), `csv.js` (`toCsv` pure, `downloadCsv`) | built |
 | `js/screens/charge/` | `index.js` (tab; acts as `charge` or the instructor in role `charge`), `admissions-board.js` (report, Assign / Hold), `unit-overview.js` (live tags, students, call lights, codes, flags) | built |
 | `data/manifest.json` | Lists every data file (GitHub Pages can't list folders) | built |
 | `data/schemas/` | JSON schemas for patients, scenarios, and each catalog | built |

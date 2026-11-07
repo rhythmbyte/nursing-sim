@@ -47,7 +47,7 @@ test('Tier 2: talking points grouped by theme, worded from data, with "(S1) Lind
   assert.ok(foley, 'priority-order point');
   assert.match(foley.text, /^\(S1\) Linda Garcia: .*Foley|catheter.*Ask what drove that order\.$/);
   assert.equal(foley.theme, 'prioritization');
-  assert.equal(foley.evidence.section, 'priorities');
+  assert.equal(foley.evidence.section, 'sequence');
   assert.equal(foley.userId, 's1');
   assert.ok(pts.some((p) => p.theme === 'timeliness' && /never done/.test(p.text)));
   assert.ok(pts.some((p) => p.id.startsWith('sr:p4-linda-garcia') && /Ask whether they saw this/.test(p.text)));

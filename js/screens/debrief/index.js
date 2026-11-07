@@ -20,7 +20,7 @@ export function mountDebrief(root, ctx) {
   let cleanup = null;
   const body = h('div', { class: 'debrief-body' });
 
-  const open = (next) => { view = next; save(VIEW_KEY, { ...next, section: null }); render(true); window.scrollTo(0, 0); };
+  const open = (next) => { view = next; save(VIEW_KEY, { ...next, section: null }); window.scrollTo(0, 0); render(true); }; // an evidence section scrolls itself into view
   const setPoint = (id, state) => { if (state) pointsState[id] = state; else delete pointsState[id]; save(POINTS_KEY, pointsState); render(true); };
 
   function render(force = false) {

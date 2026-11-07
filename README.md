@@ -34,9 +34,18 @@ These validate every data file against `data/schemas/` and cover the pure module
 
 Live: https://rhythmbyte.github.io/nursing-sim/
 
-**Fastest start:** Instructor → Live control → **Start demo sim** (starter scenario, a joined test student, clock running).
+**Fastest start:** Instructor → Setup → **Start demo sim** (starter scenario with the cases as written, a joined test student, clock running).
 
-**Case templates:** the demo uses each case as written (Robert Miller, Linda Garcia, …). Any other new sim makes new patients from the cases: Live control → **Cases** shows "Cardiac 1 — *name, age, drugs*" with **Reroll** (before Start) and **Lock variant**. Patient editor → **Case template** has the ranges, medication classes, warnings and **Check variants**.
+**The instructor flow in 3 minutes (wizard → Overview → debrief)**
+
+1. **Instructor → Setup** is a six-step wizard: **Start from** (pick "Saved: The Busy Med-Surg Shift" or New sim) → **Groups and students** → **Patients** (pick cases, or "Random by patient tags and triage counts" with live match counts) → **Variation** (randomize names / vitals & labs / meds; off = the case as written) → **Sim options** (handoff, charge nurse, task timers, staff per group, assessments, shift times, speed; the rest under More options) → **Review** → **Create sim**. Defaults are fine: Next, Next, Next, Next, Next, Create.
+2. **Ready** shows the join code big, who has joined and this sim's patients as "(C1) Cardiac 1 — *name, age, drugs*" with **Reroll** and **Lock variant**. Join on the **Student 1** tab with the code and a name, then **Start sim**.
+3. **Overview** is the only screen while the sim runs: the clock bar (Pause, Break 5/10/15, Speed, Skip, End sim), the alerts strip (call lights, alarms, codes, rejoin requests) and one card per group. **Click a patient** for the drawer with everything for them: Adjust vitals, push order, call light, Add event, code / ROSC, script state with armed reactions and penalties, labs to release, events. **Click a student** for their status and rejoin approval. Everything else from the old Live control is under **More controls**. The **Builder** tab (editor, library, review queue) hides while the sim runs.
+4. **End sim** goes straight to the **Debrief**: a **Summary** card per group (on time, late, very late, misprioritized, missed, flags, response averages; **Print summary** for one page), **Talking points** per group (prompts grouped by theme; tick as discussed, hide, or **Evidence →**), and the **Full breakdown** per student (every table, timeline and CSV export). After that, **1. New sim** starts the next setup.
+
+**The deeper tour (The Busy Med-Surg Shift)** below uses the older panel names in places: "Live control" is now the Overview's patient drawer or **More controls**, "Sim setup" is the wizard, the Patient editor and library are in the **Builder** tab, and the Debrief tab is the Instructor tab's **Debrief**.
+
+**Case templates:** the demo uses each case as written (Robert Miller, Linda Garcia, …). Any other new sim makes new patients from the cases (per the wizard's Variation step); instructors always see the case code, e.g. "(C1) Robert Miller". The Ready screen lists them with **Reroll** and **Lock variant**. Builder → Patient editor → **Case template** has the code, ranges, medication classes, warnings and **Check variants**.
 
 **One window at a time.** If you open the sim in a second window of the same browser, that window is read-only and offers **Take over here** (the bedside monitor page is the exception: it only displays).
 
@@ -44,7 +53,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 
 **5-minute click-through (The Busy Med-Surg Shift)**
 
-1. **Instructor → Live control.** Point out the join code, the unit strip (triage tags), and the event timeline with linked events.
+1. **Instructor → Setup → Start demo sim**, or create a sim with the wizard and **Start sim** on the Ready screen. On the Overview, open **More controls** to point out the join code, the unit strip (triage tags), and the event timeline with linked events.
 2. **Student 1 tab.** Type the join code and a name, then **Join**. Five patients appear (James is an admission later).
 3. **Instructor → Start.** Then **Skip to next event** twice to jump to 08:15. Robert's call light comes on: his chest pain is back.
 4. **Student 1 → Robert.**
@@ -76,7 +85,7 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - **Assessment tools:** in Dorothy's chart, open **Assessments** → **Glasgow Coma Scale** and use **Check patient** on each item (scripted answers fill in). The score and interpretation update as you go; **Save**. After her 08:45 decline, GCS drops to 14 and NIHSS rises to 4. Her neuro checks q2h show under **Due**, and late ones show on the Command center ("reassessments overdue"). To try Morse or Braden, tick them in **Sim setup → Assessment tools** (they're marked License check needed). The debrief's **Assessments** section compares what was charted with what the patient was.
    - **Recovery penalties:** leave Linda hypoxic past 08:10 and she earns a penalty (−20%). At 08:21 she earns a second one, which takes her to 40%, and the charge nurse calls rapid response. O₂ at 6 L then brings her only to about 84% instead of 90%, and it takes longer. The first penalty wears off over 30 min. Live control shows the penalty with **Add / −10% / Clear**. The dry run adds a "Without penalties" column, and the debrief lists each penalty and how it limited recovery.
 6. **Charge tab.** Skip to 09:30. James waits on the **Admissions board**. **Assign now** to the group. He appears on Student 1's list.
-7. **End the shift** (Live control → **End**, or let it reach 15:00). The student gets a short **reflection** form. Then the **Debrief tab.** Walk through:
+7. **End the shift** (Overview → **End sim**, or let it reach 15:00). The student gets a short **reflection** form, and the Instructor tab goes to the **Debrief**: Summary → Talking points → Full breakdown. In the full breakdown, walk through:
    - the red/amber flags (nitro override, Foley before bolus, missed notifications);
    - the student's reflection answers beside each patient's "should recognize" list (possible mentions marked);
    - **Print summary** for a one-page-style handout per student;
@@ -86,9 +95,9 @@ Live: https://rhythmbyte.github.io/nursing-sim/
    - the timeline.
    - Then **Export CSV**.
 8. Optional:
-   - **Instructor → Review queue:** every AI-drafted item with Approve.
+   - **Builder → Review queue:** every AI-drafted item with Approve.
    - **Monitor-only event:** in the patient editor, add a scenario change with "Silent" and a new **Rhythm (monitor)**, and see who notices.
-   - **Command center** (Instructor, the default while a sim runs): one card per group, worst first, with late / very late work, overdue meds, call lights, alarms and flags. Click a group or patient to jump to Live control. A card flashes for a few seconds when its status gets worse. The debrief adds a **Timeliness** table.
+   - **Overview group cards** (the Command center): one card per group, worst first, with late / very late work, overdue meds, call lights, alarms and flags. Click a group, patient or student to open the drawer. A card flashes for a few seconds when its status gets worse. The debrief adds a **Timeliness** table.
    - **Keyboard:** on Live control, Space pauses/resumes, N skips to the next event, ? lists shortcuts.
    - **Help:** every Sim setup and editor field has a ? with a plain-language explanation.
    - **Reactive script** (Patient editor → Linda → Reactive script): the state diagram (click a box or an arrow to edit it), When / If / Then reaction forms, **Add from template** (O₂ response, fluid bolus) and **Test this patient** (a dry run: wait, chart O₂ at 12 L, see what fires).

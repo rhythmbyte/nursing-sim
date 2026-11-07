@@ -33,7 +33,7 @@ export function summaryView({ runner, scenario, catalogs }, { open, pointsState 
         num(s.red, 'red flags', 'red', 'flags'),
         num(s.amber, 'amber flags', 'amber', 'flags')),
       h('p', { class: 'small' }, h('button', { class: 'btn-link', type: 'button', onclick: () => open({ tier: 'full', groupId: g.id, section: 'responses' }) },
-        `Call lights answered in ${mins(s.callLightAvgMin)} on average · alarms silenced in ${mins(s.alarmAvgMin)}`)),
+        `Call lights: ${s.callLightAvgMin == null ? 'none answered' : `answered in ${mins(s.callLightAvgMin)} on average`} · Alarms: ${s.alarmAvgMin == null ? 'none silenced' : `silenced in ${mins(s.alarmAvgMin)} on average`}`)),
       h('ul', { class: 'sum-patients' }, s.patientIds.map((pid) => h('li', {}, instructorPatientLabel(t[pid])))),
       h('div', { class: 'controls' },
         h('button', { class: 'btn btn-primary', type: 'button', onclick: () => open({ tier: 'points', groupId: g.id }) }, `Talking points (${pts.length}${done ? `, ${done} discussed` : ''})`),
