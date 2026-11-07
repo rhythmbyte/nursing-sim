@@ -54,3 +54,34 @@ test('Tier 2: talking points grouped by theme, worded from data, with "(S1) Lind
   assert.equal(new Set(pts.map((p) => p.id)).size, pts.length, 'stable unique ids (for ticking and hiding)');
   assert.ok(!pts.some((p) => /\{[a-z]+\}/.test(p.text)), 'no unfilled placeholders');
 });
+
+test('should-recognize points the reflections already mention are skipped (all / any / off), and labeled with who', () => {
+  const sc = { ...scenario, groups: scenario.groups.map((g) => ({ ...g, studentCount: 2 })) };
+  let now = 0;
+  const runner = createRunner({ store: createStore(), scenario: sc, templatesById, catalogs, now: () => now });
+  const I = { userId: 'instructor', role: 'instructor' };
+  runner.join('s1', 'Ana', runner.state.joinCode);
+  runner.join('s2', 'Ben', runner.state.joinCode);
+  runner.clock('start', I); now = 5 * MIN; runner.tick(); runner.clock('end', I);
+  const SEPSIS = 'Linda is deteriorating and developing septic shock, so I escalated.';
+  runner.submitReflection('s1', { recognized: SEPSIS }, { userId: 's1', role: 'student' });
+  const find = (pts) => pts.find((p) => p.id === 'sr:p4-linda-garcia:0');
+  const withMode = (mode) => ({ ...runner.rulesCtx(), catalogs: { ...catalogs, debriefPoints: { ...catalogs.debriefPoints, shouldRecognize: { ...catalogs.debriefPoints.shouldRecognize, skipIfMentioned: mode } } } });
+  // Only Ana has reflected, and she mentions it: skipped under "all" (everyone who reflected) and "any".
+  let p = find(talkingPoints(runner.state, sc.groups[0], runner.rulesCtx()));
+  assert.deepEqual(p.mentionedBy, ['Ana']);
+  assert.equal(p.skipped, true);
+  assert.equal(p.evidence.section, 'reflection');
+  assert.equal(p.userId, 's1');
+  // Ben reflects without mentioning it: no longer skipped under "all", still under "any"; never under "off".
+  runner.submitReflection('s2', { recognized: 'I answered call lights quickly.' }, { userId: 's2', role: 'student' });
+  p = find(talkingPoints(runner.state, sc.groups[0], runner.rulesCtx()));
+  assert.deepEqual(p.mentionedBy, ['Ana']);
+  assert.equal(p.skipped, undefined);
+  assert.equal(find(talkingPoints(runner.state, sc.groups[0], withMode('any'))).skipped, true);
+  assert.equal(find(talkingPoints(runner.state, sc.groups[0], withMode('off'))).skipped, undefined);
+  // An item nobody mentioned is a normal point with no label.
+  const other = talkingPoints(runner.state, sc.groups[0], runner.rulesCtx()).find((x) => x.id.startsWith('sr:p1-robert-miller'));
+  assert.equal(other.mentionedBy, undefined);
+  assert.equal(other.evidence.section, 'recognize');
+});

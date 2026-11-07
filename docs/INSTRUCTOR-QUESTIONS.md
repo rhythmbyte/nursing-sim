@@ -92,7 +92,7 @@ Your answer: ______________________________________________
 
 **2.0 Debrief talking points** [63]
 Right now: after the sim, each group gets discussion prompts grouped as prioritization, recognition, delegation, communication and timeliness, written from what happened (e.g. "Foley placed before the fluid bolus… ask what drove that order") plus each case's "should recognize" list. A summary card counts tasks on time, late, misprioritized and missed.
-Are these the right themes and questions? Anything you'd count differently?
+Items from a case's "should recognize" list that every student already wrote about in their reflection (matched by keywords) are left out, one click away. Are these the right themes and questions? Should items the reflections cover still be listed?
 Your answer: ______________________________________________
 
 

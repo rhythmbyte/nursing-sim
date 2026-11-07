@@ -384,3 +384,4 @@ body.projector-page { background: var(--bg); }
 .projector-group h2 { margin: 0 0 6px; font-size: 1.2rem; }
 .projector-group ul { margin: 0; padding-left: 1.2rem; font-size: 1.25rem; columns: 2; }
 .projector-wait { font-size: 1.5rem; color: var(--muted); margin-top: 20vh; }
+.point-mentioned { color: var(--muted); font-size: 0.85rem; }

@@ -18,6 +18,7 @@ export function mountDebrief(root, ctx) {
   let view = load(VIEW_KEY) || { tier: 'summary' };
   let pointsState = load(POINTS_KEY) || {};
   let showHidden = false;
+  let showMentioned = false;
   let cleanup = null;
   const body = h('div', { class: 'debrief-body' });
 
@@ -44,7 +45,7 @@ export function mountDebrief(root, ctx) {
     }
     if (cleanup) { cleanup(); cleanup = null; }
     clear(body).append(view.tier === 'points'
-      ? pointsView(ctx, { groupId: view.groupId, open, pointsState, setPoint, showHidden, toggleHidden: () => { showHidden = !showHidden; render(true); } })
+      ? pointsView(ctx, { groupId: view.groupId, open, pointsState, setPoint, showHidden, toggleHidden: () => { showHidden = !showHidden; render(true); }, showMentioned, toggleMentioned: () => { showMentioned = !showMentioned; render(true); } })
       : summaryView(ctx, { open, pointsState, runAgain }));
   }
 

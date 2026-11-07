@@ -17,7 +17,7 @@ export function summaryView({ runner, scenario, catalogs }, { open, pointsState,
   const t = runner.templates();
   const cards = scenario.groups.map((g) => {
     const s = groupSummary(runner.state, g, ctx);
-    const pts = talkingPoints(runner.state, g, ctx).filter((p) => pointsState[p.id] !== 'hidden');
+    const pts = talkingPoints(runner.state, g, ctx).filter((p) => pointsState[p.id] !== 'hidden' && !p.skipped);
     const done = pts.filter((p) => pointsState[p.id] === 'done').length;
     const num = (n, label, tone, section) => h('button', { class: `sum-num sum-${tone}${n ? '' : ' sum-zero'}`, type: 'button', title: `Open the full breakdown: ${label}`,
       onclick: () => open({ tier: 'full', groupId: g.id, section }) }, h('strong', {}, String(n)), h('span', {}, label));

@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Skip should-recognize points only when every reflecting student mentions them
+- **Decision:** a should-recognize talking point is left out when all students in the group who submitted a reflection mention it (keyword match), and stays visible on request with who mentioned it. Configurable (`all` / `any` / `off`) in `debrief-points.json`.
+- **Why:** the match is a reading aid with false positives; skipping only when everyone covered it keeps the discussion when one student missed it, and nothing is ever lost (one click brings it back).
+- **Alternatives:** skip if anyone mentions it (shorter list, but hides the student who missed it); never skip (the original behaviour, a long list).
+
+---
+
 ## 2026-11-07: Debrief talking points are generated from evidence, worded from data
 - **Decision:** `engine/talking-points.js` turns the group's existing evidence (flag rules, timeliness rows, delegation waits, penalty log, the cases' should-recognize items) into points; the sentence for each kind and the theme it belongs to come from `data/catalogs/debrief-points.json`. Each point has a stable id (for ticks and hides, stored per join code) and an evidence link (student + breakdown section).
 - **Why:** no new scoring logic, so the talking points can't disagree with the flags and tables; the instructor can rewrite the prompts without code (B1).

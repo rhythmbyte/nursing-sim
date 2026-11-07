@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Talking points skip what the reflections already cover
+- A "should recognize" item that every student in the group who wrote a reflection already mentions is left out of the talking points (and the summary's count). **Show N already in reflections** brings them back, labeled "✓ in Ana's reflection (keyword match)", with Evidence opening the reflection. Items only some students mention stay, labeled with who did.
+- The rule is data: `debrief-points.json` `shouldRecognize.skipIfMentioned` = `all` (default, proposed) / `any` / `off`. The match is the existing keyword overlap, a reading aid, not a grade.
+- Tests: 231 passing; browser check (a reflection about Linda's septic shock leaves out 3 points).
+
 ## Run again
 - **Debrief → Run again** (after End): the same scenario (cases, groups, settings) as a new sim, with a new join code and fresh patient variants (per its variation toggles; all off = the same patients as written), straight to the Ready screen. It asks first, because this sim's debrief is replaced (print or export it before).
 - Tests: 230 passing; browser check (same cases, new code, new names and drugs).

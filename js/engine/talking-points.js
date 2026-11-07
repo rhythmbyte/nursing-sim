@@ -2,12 +2,14 @@
 // (data/catalogs/debrief-points.json); this file only gathers the evidence. ctx = runner.rulesCtx().
 //   groupSummary(state, group, ctx) → { groupId, name, students, patientIds, onTime, late, veryLate, never, open,
 //     misprioritized, red, amber, callLightAvgMin, alarmAvgMin, status }
-//   talkingPoints(state, group, ctx) → [{ id, theme, text, patientId, userId, evidence: { section, atMin } }]
+//   talkingPoints(state, group, ctx) → [{ id, theme, text, patientId, userId, evidence: { section, atMin }, mentionedBy?, skipped? }]
+//   A should-recognize item the group's reflections already mention gets mentionedBy (names) and, per the catalog's
+//   shouldRecognize.skipIfMentioned (all / any / off), skipped: true (the screen shows it on request).
 // Patients read "(C1) Robert Miller" (instructor only).
 
 import { evaluateRules } from './rules/index.js';
 import { debriefTimeliness, timelinessConfig } from './timeliness.js';
-import { responseTimes } from './debrief.js';
+import { responseTimes, reflectionCoverage } from './debrief.js';
 import { penaltyTimeline } from './reactions/view.js';
 import { delegationReview } from './staff-review.js';
 import { groupStatus } from './command-center.js';
@@ -53,10 +55,10 @@ export function talkingPoints(state, group, ctx) {
   const student = (uid) => students.find((s) => s.userId === uid)?.name || '';
   const out = [];
   const used = new Map(); // the same evidence twice (e.g. two identical orders) gets #2, #3… so ids stay unique and stable
-  const add = (base, theme, text, { patientId = null, userId = null, section, atMin = null }) => {
+  const add = (base, theme, text, { patientId = null, userId = null, section, atMin = null, ...extra }) => {
     const n = (used.get(base) || 0) + 1;
     used.set(base, n);
-    out.push({ id: n > 1 ? `${base}#${n}` : base, theme, text, patientId, userId: userId ?? students[0]?.userId ?? null, evidence: { section, atMin } });
+    out.push({ id: n > 1 ? `${base}#${n}` : base, theme, text, patientId, userId: userId ?? students[0]?.userId ?? null, evidence: { section, atMin }, ...extra });
   };
   // Flags (one point each), worded per rule.
   for (const f of flags) {
@@ -93,10 +95,18 @@ export function talkingPoints(state, group, ctx) {
   }
   // Each case's "should recognize" items (patient-level and per scenario change).
   if (cat.shouldRecognize) {
+    const mode = cat.shouldRecognize.skipIfMentioned || 'off';
+    const reflecting = students.filter((s) => state.reflections?.[s.userId]);
     for (const pid of pids.filter((x) => state.patients[x].present)) {
       const d = ctx.templatesById[pid]?.debrief || {};
-      [...(d.shouldRecognize || []), ...Object.values(d.byChange || {}).flat()].forEach((item, i) => {
-        add(`sr:${pid}:${i}`, cat.shouldRecognize.theme, fill(cat.shouldRecognize.text, { patient: name(pid), item }), { patientId: pid, section: 'recognize' });
+      const items = [...(d.shouldRecognize || []), ...Object.values(d.byChange || {}).flat()];
+      // Who mentions each item in their reflection (keyword match, engine/debrief.js reflectionCoverage).
+      const cover = reflecting.map((s) => ({ s, c: reflectionCoverage(state.reflections[s.userId].answers, items) }));
+      items.forEach((item, i) => {
+        const by = cover.filter((x) => x.c[i].mentioned).map((x) => x.s);
+        const skipped = by.length > 0 && (mode === 'any' || (mode === 'all' && by.length === reflecting.length));
+        add(`sr:${pid}:${i}`, cat.shouldRecognize.theme, fill(cat.shouldRecognize.text, { patient: name(pid), item }),
+          { patientId: pid, userId: by[0]?.userId, section: by.length ? 'reflection' : 'recognize', ...(by.length ? { mentionedBy: by.map((s) => s.name) } : {}), ...(skipped ? { skipped: true } : {}) });
       });
     }
   }

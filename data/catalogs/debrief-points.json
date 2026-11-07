@@ -101,6 +101,8 @@
   },
   "shouldRecognize": {
     "theme": "recognition",
-    "text": "{patient}: {item} Ask whether they saw this, and when."
+    "text": "{patient}: {item} Ask whether they saw this, and when.",
+    "skipIfMentioned": "all",
+    "_comment": "skipIfMentioned: 'all' = skip the point when every student in the group who wrote a reflection mentions it (keyword match, a reading aid); 'any' = when at least one does; 'off' = always show. Skipped points stay one click away (\"Show … already in reflections\")."
   }
 }
