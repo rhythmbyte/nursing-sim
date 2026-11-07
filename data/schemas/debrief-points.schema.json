@@ -1,0 +1,15 @@
+{
+  "title": "Debrief talking points",
+  "type": "object",
+  "required": ["themes", "rules", "fallback"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "themes": { "type": "array", "items": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string" }, "label": { "type": "string" } } } },
+    "rules": { "type": "object" },
+    "fallback": { "type": "object", "required": ["theme", "text"], "properties": { "theme": { "type": "string" }, "text": { "type": "string" } } },
+    "timeliness": { "type": "object" },
+    "delegationWait": { "type": "object" },
+    "penalty": { "type": "object" },
+    "shouldRecognize": { "type": "object" }
+  }
+}

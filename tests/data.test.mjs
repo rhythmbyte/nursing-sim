@@ -31,6 +31,7 @@ const schemaFor = {
   taskTiming: load('schemas/task-timing.schema.json'),
   names: load('schemas/names.schema.json'),
   medClasses: load('schemas/med-classes.schema.json'),
+  debriefPoints: load('schemas/debrief-points.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

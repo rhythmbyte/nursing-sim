@@ -39,6 +39,7 @@ const SCHEMAS = {
   taskTiming: 'schemas/task-timing.schema.json',
   names: 'schemas/names.schema.json',
   medClasses: 'schemas/med-classes.schema.json',
+  debriefPoints: 'schemas/debrief-points.schema.json',
 };
 
 async function fetchJson(base, rel) {

@@ -1,0 +1,106 @@
+{
+  "review": "proposed",
+  "_comment": "Debrief talking points (engine/talking-points.js): plain-language discussion prompts built from a group's flags, timeliness, priorities (the priority-mismatch flag), delegation, penalties and the cases' should-recognize items. {patient} = \"(C1) Robert Miller\", {message} = the flag's own text, {label}, {minutes}, {student}, {item}. Themes order the list. All wording is a draft for the instructor (SPEC §14).",
+  "themes": [
+    {
+      "id": "prioritization",
+      "label": "Prioritization"
+    },
+    {
+      "id": "recognition",
+      "label": "Recognition"
+    },
+    {
+      "id": "delegation",
+      "label": "Delegation"
+    },
+    {
+      "id": "communication",
+      "label": "Communication"
+    },
+    {
+      "id": "timeliness",
+      "label": "Timeliness"
+    }
+  ],
+  "rules": {
+    "priority-order": {
+      "theme": "prioritization",
+      "text": "{patient}: {message} Ask what drove that order."
+    },
+    "priority-mismatch": {
+      "theme": "prioritization",
+      "text": "{patient}: {message} Ask how they ranked this patient and what would have changed it."
+    },
+    "tier-timeout": {
+      "theme": "timeliness",
+      "text": "{patient}: {message} Ask what was competing for their time."
+    },
+    "call-light-response": {
+      "theme": "communication",
+      "text": "{patient}: {message} Ask what they were doing when the light came on."
+    },
+    "alarm-response": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask how they decided whether the alarm was real."
+    },
+    "parameter-breach": {
+      "theme": "communication",
+      "text": "{patient}: {message} Ask when they noticed the change and how they would phrase the call (SBAR)."
+    },
+    "inappropriate-delegation": {
+      "theme": "delegation",
+      "text": "{patient}: {message} Ask what made this task delegable or not."
+    },
+    "delegation-overload": {
+      "theme": "delegation",
+      "text": "{message} Ask how they decided what to keep and what to hand off."
+    },
+    "left-unattended": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask what told them it was safe to step away."
+    },
+    "prn-limit": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask what they checked before giving it."
+    },
+    "allergy-conflict": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask where they look for allergies before giving a medication."
+    },
+    "assessment-mismatch": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask what they saw that led to their score."
+    },
+    "assessment-overdue": {
+      "theme": "timeliness",
+      "text": "{patient}: {message} Ask how they keep track of reassessments."
+    },
+    "required-assessment-missing": {
+      "theme": "recognition",
+      "text": "{patient}: {message} Ask why this assessment matters for this patient."
+    }
+  },
+  "fallback": {
+    "theme": "recognition",
+    "text": "{patient}: {message}"
+  },
+  "timeliness": {
+    "theme": "timeliness",
+    "veryLate": "{patient}: \"{label}\" was done {minutes} min late. Ask what was competing for their time.",
+    "never": "{patient}: \"{label}\" was never done. Ask whether they saw it and what got in the way."
+  },
+  "delegationWait": {
+    "theme": "delegation",
+    "text": "{patient}: \"{label}\" waited {minutes} min for a helper. Ask whether doing it themselves would have been faster.",
+    "minWaitMin": 10
+  },
+  "penalty": {
+    "theme": "recognition",
+    "text": "{patient} lost ground ({label}). Ask when they first noticed the change and what they did."
+  },
+  "shouldRecognize": {
+    "theme": "recognition",
+    "text": "{patient}: {item} Ask whether they saw this, and when."
+  }
+}

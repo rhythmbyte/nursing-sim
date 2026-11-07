@@ -343,3 +343,30 @@ body.standalone-monitor { background: #000; }
 .drawer-section > h4 { margin: 0 0 var(--space-1); }
 .drawer .data-table { font-size: 0.88rem; }
 .builder-note { margin: 0 0 var(--space-2); }
+
+/* ---- Debrief tiers ---- */
+.sum-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--space-3); }
+.sum-card { border-left: 4px solid var(--border); }
+.sum-card.cc-needs-attention { border-left-color: var(--triage-red); }
+.sum-card.cc-falling-behind { border-left-color: var(--triage-yellow); }
+.sum-card.cc-on-track { border-left-color: var(--triage-green, #2e7d32); }
+.sum-nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: var(--space-1); margin: var(--space-2) 0; }
+.sum-num { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-2); color: var(--text); cursor: pointer; }
+.sum-num strong { font-size: 1.4rem; }
+.sum-num span { font-size: 0.75rem; color: var(--muted); text-align: center; }
+.sum-green strong { color: var(--triage-green, #2e7d32); }
+.sum-amber strong { color: #a86b00; }
+.sum-red strong { color: var(--triage-red); }
+.sum-zero strong { color: var(--muted); }
+.sum-patients { margin: var(--space-1) 0 var(--space-2); padding-left: 1.2rem; font-size: 0.9rem; }
+.points { list-style: none; padding: 0; margin: 0; }
+.point { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-2); padding: 8px 0; border-bottom: 1px solid var(--border); }
+.point-done label { color: var(--muted); text-decoration: line-through; }
+.point-hidden { opacity: 0.5; }
+.point-actions { display: flex; gap: var(--space-1); flex-shrink: 0; }
+.debrief-target { outline: 3px solid var(--accent); outline-offset: 4px; }
+@media print {
+  .app-header, .tab-bar, .phase-bar, .debrief-nav, .debrief-actions, .help, .sum-card .controls { display: none !important; }
+  .sum-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .sum-card { break-inside: avoid; padding: 8px; }
+}

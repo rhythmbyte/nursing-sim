@@ -18,7 +18,8 @@
     "patientTags": "catalogs/patient-tags.json",
     "taskTiming": "catalogs/task-timing.json",
     "names": "catalogs/names.json",
-    "medClasses": "catalogs/med-classes.json"
+    "medClasses": "catalogs/med-classes.json",
+    "debriefPoints": "catalogs/debrief-points.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

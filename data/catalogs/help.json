@@ -159,5 +159,7 @@
   "overview.status": "Each card is a group, worst first, with its late items, call lights, alarms and flags. Click a patient for everything about them (vitals, Adjust vitals, script state, Add event, orders, call light, code, labs). Click a student for their status and rejoin approvals. Alerts across the top need you now.",
   "overview.more": "Everything from the old Live control, folded away so the main screen stays calm: the join code and student table, flags, every patient's actions, scripts, staff, labs, the event timeline, Reset sim and End of sim on this computer.",
   "setup.start-from": "A saved scenario fills every step with its values; New sim starts from the defaults.",
-  "setup.sim-name": "What students and the debrief call this sim, e.g. \"Tuesday med-surg lab\"."
+  "setup.sim-name": "What students and the debrief call this sim, e.g. \"Tuesday med-surg lab\".",
+  "debrief.summary": "One card per group. Green = tasks done on time; amber = late; red = very late, misprioritized (a priority-order or priority flag) and missed (never done by the end). Response averages are for call lights and monitor alarms. The status uses the same rule as the Command center. Click any number for the details, Talking points for discussion prompts, Print summary for a one-page handout.",
+  "debrief.points": "Discussion prompts written from this group's flags, late and missed work, delegation waits, recovery penalties and each case's \"should recognize\" items, grouped by theme. Tick a point when you've discussed it, Hide one you'll skip, and Evidence opens the details in the full breakdown. Ticks are remembered for this sim. The wording is a draft (data/catalogs/debrief-points.json)."
 }

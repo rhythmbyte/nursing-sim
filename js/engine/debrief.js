@@ -33,7 +33,7 @@ export function reflectionCoverage(answers, items) {
   });
 }
 
-function responseTimes(state, pids, ctx) {
+export function responseTimes(state, pids, ctx) {
   const lights = [];
   const params = [];
   const codes = [];
