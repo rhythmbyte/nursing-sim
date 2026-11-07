@@ -36,7 +36,7 @@ export function casesPanel(runner, templatesById, ctx) {
       h('thead', {}, h('tr', {}, ['Room', 'Case and this variant', 'Actions'].map((x) => h('th', {}, x)))),
       h('tbody', {}, rows.map((t) => h('tr', {},
         h('td', {}, t.demographics.room),
-        h('td', {}, h('strong', {}, t.instance.caseTitle), ` — ${caseLabel(t).split(' — ').slice(1).join(' — ')}`, rerolled[t.id] ? h('span', { class: 'muted small' }, ' (rerolled)') : null),
+        h('td', {}, h('strong', {}, `${t.instance.code ? `(${t.instance.code}) ` : ''}${t.instance.caseTitle}`), ` — ${caseLabel(t).split(' — ').slice(1).join(' — ')}`, rerolled[t.id] ? h('span', { class: 'muted small' }, ' (rerolled)') : null),
         h('td', { class: 'row-actions' },
           h('button', { class: 'btn btn-small', disabled: !ready, title: ready ? 'New name, values and drugs for this patient' : 'Only before the sim starts', onclick: () => { reroll(t.id); ctx.reloadData(); } }, 'Reroll'),
           rerolled[t.id] ? h('button', { class: 'btn btn-small btn-ghost', disabled: !ready, onclick: () => { clearReroll(t.id); ctx.reloadData(); } }, 'Undo reroll') : null,

@@ -1,6 +1,7 @@
 // Instructor → Command center: one card per group, worst first, so you can see who's struggling at a glance.
 // Data: engine/command-center.js (built on engine/timeliness.js and the flag rules). Updates live.
-// Click a group → Live control filtered to it; click a patient → Live control filtered to that patient.
+// Click a group, a patient or a student → onGroup / onPatient / onStudent (the Overview opens its drawer). Embedded
+// (in the Overview): no header of its own.
 
 import { h, clear } from '../shared/dom.js';
 import { coalesce } from '../shared/coalesce.js';
@@ -16,7 +17,9 @@ const TREND = { worse: ['↘', 'Vitals worsening'], better: ['↗', 'Vitals impr
 const KIND = { order: '', med: 'Med: ', assessment: 'Reassess: ', callLight: '', alarm: '' };
 const FLASH_MS = 4000; // how long a card flashes after its status gets worse (CSS .cc-flash matches)
 
-export function mountCommandCenter(root, { store, runner, scenario, openLive }) {
+export function mountCommandCenter(root, { store, runner, scenario, openLive, onGroup, onPatient, onStudent, embedded = false }) {
+  const toGroup = onGroup || ((id) => openLive({ groupId: id }));
+  const toPatient = onPatient || ((id) => openLive({ patientId: id }));
   const clock = simClock(store, runner);
   const grid = h('div', { class: 'cc-grid' });
   const lastStatus = {}; // groupId → status at the previous render
@@ -39,10 +42,10 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
       const count = (n, label, warn) => h('div', { class: `cc-count${warn && n ? ` cc-warn-${warn}` : ''}` }, h('strong', {}, String(n)), h('span', {}, label));
       // A re-render mid-flash rebuilds the card, so a negative delay resumes the animation where it was.
       return h('section', { class: `cc-card cc-${g.status}${flashing ? ' cc-flash' : ''}`, style: flashing ? `animation-delay: -${since}ms` : null },
-        h('button', { class: 'cc-head', onclick: () => openLive({ groupId: g.groupId }), title: 'Open this group in Live control' },
+        h('button', { class: 'cc-head', onclick: () => toGroup(g.groupId), title: 'Open this group' },
           h('h3', {}, g.name), toneChip(statusLabels[g.status])),
         h('div', { class: 'cc-students' }, g.students.length
-          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${instructorPatientLabel(t[st.inPatient])}` : 'on home screen'}`,
+          ? g.students.map((st) => h(onStudent ? 'button' : 'span', onStudent ? { class: 'cc-student', type: 'button', onclick: () => onStudent(st.userId), title: 'Open this student' } : {}, `${st.name}: ${st.inPatient ? `in ${instructorPatientLabel(t[st.inPatient])}` : 'on home screen'}`,
             st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null,
             st.away ? h('span', { class: 'away' }, ` · ⚠ Away / reconnecting (${st.away.awayMin} min)`) : null,
             st.back && !st.away ? h('span', { class: 'muted' }, ` · ↻ reconnected${st.back.awayMin != null ? ` after ${st.back.awayMin} min` : ''}`) : null))
@@ -57,7 +60,7 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
           count(c.alarms, 'monitor alarms', 'red'), count(c.redFlags, 'red flags', 'red'), count(c.amberFlags, 'amber flags', 'yellow')),
         h('ul', { class: 'cc-patients' }, g.patients.map((p) => {
           const [arrow, trendText] = TREND[p.trend];
-          return h('li', {}, h('button', { class: 'cc-patient', onclick: () => openLive({ patientId: p.patientId }), title: 'Open this patient in Live control' },
+          return h('li', {}, h('button', { class: 'cc-patient', onclick: () => toPatient(p.patientId), title: 'Open this patient' },
             h('span', { class: 'cc-room' }, instructorPatientLabel(t[p.patientId])),
             triageChip(p.tag),
             h('span', { class: `cc-trend cc-trend-${p.trend}`, title: trendText, 'aria-label': trendText }, arrow),
@@ -74,11 +77,11 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
     flashTimer = left > 0 ? setTimeout(render, left + 50) : null;
   }
 
-  root.append(
+  root.append(...(embedded ? [grid] : [
     h('header', { class: 'screen-header' }, h('h2', {}, 'Command center'), helpTip('command.status'), clock.el),
     h('p', { class: 'muted small' }, 'Worst first. Click a group or a patient to open it in Live control.'),
     grid,
-  );
+  ]));
   render();
   const later = coalesce(render, 250); // at most ~4 renders a second however busy the sim is
   const off = store.subscribe(later.run);

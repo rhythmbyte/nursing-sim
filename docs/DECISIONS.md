@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: The Instructor tab is phases, not views; authoring is a separate tab
+- **Decision:** the Instructor tab shows one phase picked from the clock (ready → Setup wizard / Ready, running or paused → Overview, ended → Debrief); the instructor can still open the debrief early. Patient editor, library and review queue moved to a **Builder** tab hidden while a sim runs. The Overview reuses the Live control panels with a patient / student / group filter inside a drawer, and keeps the whole Live control under a collapsed "More controls", so no feature was removed.
+- **Why:** instructors running a class need one calm screen; authoring tools mid-sim were a way to get lost (and edits mid-sim don't reach the running sim anyway). Reusing the panels keeps one implementation per action.
+- **Alternatives:** a new drawer UI written from scratch (duplicated logic and drift); keeping the sub-view tabs and hiding some (still too many places to look).
+
+---
+
 ## 2026-11-07: Case templates are instantiated upstream of the engine
 - **Decision:** `engine/cases.js` turns each case into a concrete patient (seeded PRNG, placeholders filled, ranges and classes resolved, relative changes made absolute) *before* the runner is created. Everything downstream (engine, rules, timeliness, screens, debrief) sees an ordinary patient. Seeds: the sim's seed (`ui.cases`, via `js/case-seeds.js`), a per-patient reroll, or the case's locked seed.
 - **Why:** no engine module had to learn about variation, so allergy checks, PRN rules, hold parameters and timeliness all use the instantiated drug and values automatically. The variant check can reuse the real dry run.

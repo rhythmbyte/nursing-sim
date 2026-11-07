@@ -6,10 +6,10 @@ import { h } from '../shared/dom.js';
 import { promptText } from '../shared/modal.js';
 import { formatShiftTime } from '../../engine/time.js';
 
-export function labsPanel(runner, templatesById, user) {
+export function labsPanel(runner, templatesById, user, filter = null) {
   const state = runner.state;
   const at = (m) => formatShiftTime(state.startClock, m);
-  const rows = Object.entries(state.patients).flatMap(([pid, ps]) => (ps.present ? ps.labs : [])
+  const rows = Object.entries(state.patients).filter(([pid]) => !filter?.patientId || pid === filter.patientId).flatMap(([pid, ps]) => (ps.present ? ps.labs : [])
     .filter((l) => l.status === 'pending').map((l) => ({ pid, l })));
   if (!rows.length) return h('p', { class: 'muted' }, 'No pending labs.');
 

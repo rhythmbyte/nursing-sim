@@ -311,3 +311,35 @@ body.standalone-monitor { background: #000; }
 .break-banner { background: var(--surface-2); border: 2px solid var(--accent); font-weight: 600; text-align: center; }
 .draft-note { color: var(--muted); margin: 0 0 4px; font-style: italic; }
 .away { color: var(--error-text); font-weight: 700; }
+
+/* ---- Instructor: phase bar, setup wizard, Ready, Overview + drawer ---- */
+.phase-bar { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+.phase-btn { font: inherit; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 4px 16px; cursor: pointer; }
+.phase-btn.active { background: var(--surface); color: var(--text); border-color: var(--accent); font-weight: 600; }
+.phase-btn:disabled { opacity: 0.45; cursor: default; }
+.wizard progress { width: 100%; height: 8px; accent-color: var(--accent); }
+.wizard-steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: var(--space-2) 0 var(--space-3); font-size: 0.9rem; }
+.wizard-steps li.current .btn-link { font-weight: 700; color: var(--text); }
+.wizard-steps li.done .btn-link::before { content: "✓ "; }
+.btn-link { all: unset; cursor: pointer; color: var(--muted); }
+.btn-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wizard-nav { justify-content: space-between; }
+.review-list { margin: var(--space-2) 0; padding-left: 1.2rem; }
+.join-code-big { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3); margin: var(--space-3) 0; }
+.join-code-big .code { font-size: 3rem; letter-spacing: 0.2em; font-variant-numeric: tabular-nums; }
+.btn-large { font-size: 1.1rem; padding: 10px 28px; }
+.overview-bar { flex-wrap: wrap; }
+.alerts-strip { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: var(--space-2) 0 var(--space-3); }
+.alert-item { font: inherit; font-size: 0.9rem; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; background: var(--surface); color: var(--text); cursor: pointer; }
+.alert-call { border-left: 4px solid var(--triage-yellow); }
+.alert-alarm { border-left: 4px solid var(--triage-red, #c62828); }
+.alert-rejoin { border-left: 4px solid var(--accent); }
+.cc-student { font: inherit; background: none; border: none; padding: 0; color: inherit; text-align: left; cursor: pointer; text-decoration: underline dotted; }
+.more-controls > summary { cursor: pointer; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(720px, 100vw); background: var(--surface); border-left: 1px solid var(--border); box-shadow: -8px 0 24px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: var(--space-3) var(--space-4); z-index: 50; }
+.drawer-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); position: sticky; top: calc(-1 * var(--space-3)); background: var(--surface); padding: var(--space-2) 0; }
+.drawer-title { margin: 0; text-transform: none; letter-spacing: 0; color: var(--text); font-size: 1.1rem; }
+.drawer-section { margin-top: var(--space-3); }
+.drawer-section > h4 { margin: 0 0 var(--space-1); }
+.drawer .data-table { font-size: 0.88rem; }
+.builder-note { margin: 0 0 var(--space-2); }

@@ -1,5 +1,8 @@
 /* Tokens, layout, shared components. Dark mode follows the OS. */
 
+/* The hidden attribute always wins (a component's own display: block must not show a hidden element). */
+[hidden] { display: none !important; }
+
 :root {
   --bg: #f4f6f9;
   --surface: #ffffff;

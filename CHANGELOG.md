@@ -2,6 +2,15 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Instructor: setup wizard → Overview → debrief; Builder tab (restructure, Part B)
+- **Instructor tab follows the sim:** Setup → Overview → Debrief (a phase bar shows where you are; the debrief so far is one click away; after End, "New sim" starts the next setup).
+- **Setup wizard**, one step per screen with Back / Next and a progress bar: start from a saved scenario (or run it as is) or new; groups and students; patients (pick cases, or randomize by patient tags and triage counts with match counts); variation toggles; sim options (handoff, charge nurse, task timers, staff per group, assessments, shift times, speed; everything else under More options); review → **Create sim**. Then **Ready**: the join code big, who has joined, this sim's patients with Reroll / Lock, **Start sim**. Defaults make a quick setup Next, Next, Create, Start. Every Sim setup option is still there.
+- **Overview** (the only screen while the sim runs): clock bar (time, time left, Pause / Resume, Break 5/10/15 or Extend, Speed, Skip, End sim), an alerts strip (call lights, alarms, codes, rejoin requests), and the Command center cards. Click a patient → a side drawer with the case and variant, vitals and Adjust vitals, push order, call light, Add event, code / ROSC, script state with armed reactions and the penalty, labs to release and the patient's events. Click a student → status, End task now and rejoin approval. Click a group → its patients and events. The full Live control is under **More controls** (collapsed). End → straight to the debrief.
+- **Builder tab** (Patient editor, Patient library, Review queue): preparing cases before class; hidden while a sim runs. The separate Debrief tab is now the Instructor tab's Debrief phase.
+- Fixed: the "?" help explanations were always open (a component style overrode `hidden`); a global `[hidden]` rule fixes them and every other hidden element.
+- Hardened: the IndexedDB crash-safety mirror closes when something deletes or upgrades it (Reset demo) and boot waits at most 4 s for it, so a stuck database can't hold the app on "Loading…".
+- Tests: 225 passing; browser check of wizard → Ready → Start → Overview + drawers + More controls → End → Debrief.
+
 ## Variation toggles and case codes (restructure, Part A)
 - **Three toggles per sim** (scenario settings, defaults on, proposed): **Randomize names**, **Randomize vitals & labs within ranges**, **Randomize meds within class**. Off = that part of each case exactly as written (the file's name, age and sex; the written values; the written drug). Set in the setup wizard.
 - **Case codes:** each case has a short instructor code (`case.code`: C1, PO1, D1, S1, N1, HF1), suggested from the title and editable in the Patient editor. Every instructor screen shows "(C1) Robert Miller"; student and charge-nurse screens never show it.

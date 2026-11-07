@@ -58,7 +58,7 @@ function clockControls(runner, user, startDemo) {
   );
 }
 
-function skipButton(runner, user) {
+export function skipButton(runner, user) {
   const s = runner.state.clock.status;
   const next = runner.nextEventMin();
   const can = (s === 'running' || s === 'paused') && next != null;
@@ -183,6 +183,6 @@ export function mountLiveControl(root, ctx) {
       rebuildKeepingUi(scripts, () => scriptPanel(runner, runner.templates(), instructorUser, filter)); // countdowns can start or end
     }
   });
-  const offKeys = installShortcuts(runner, instructorUser);
+  const offKeys = ctx.noShortcuts ? () => {} : installShortcuts(runner, instructorUser); // the Overview installs its own
   return () => { offKeys(); clock.destroy(); offSet(); offTick(); later.cancel(); };
 }

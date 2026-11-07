@@ -5,23 +5,23 @@ import { formatShiftTime } from '../../engine/time.js';
 import { printReportSheets, studentSheets } from '../student/report-sheet.js';
 import { studentView } from '../../engine/student-view.js';
 
-export function rosterPanel(runner, templatesById, scenario, user = null) {
+export function rosterPanel(runner, templatesById, scenario, user = null, filter = null) {
   const state = runner.state;
   const at = (m) => formatShiftTime(state.startClock, m);
   const slots = scenario.groups.reduce((n, g) => n + g.studentCount, 0);
-  const joined = Object.entries(state.roster);
+  const joined = Object.entries(state.roster).filter(([uid]) => !filter?.userId || uid === filter.userId);
   const groupName = (gid) => scenario.groups.find((g) => g.id === gid)?.name || gid;
   const last = (uid, action) => [...state.log].reverse().find((l) => l.userId === uid && (!action || l.action === action));
 
   // Connection: the latest reconnect / rejoin per student (time away), and rejoin requests waiting for approval.
   const conn = (uid) => [...state.log].reverse().find((l) => (l.action === 'reconnected' || l.action === 'student-rejoined' || l.action === 'rejoin-approved') && (l.userId === uid || l.details?.studentId === uid));
-  const pending = (state.rejoinRequests || []).filter((q) => q.status === 'pending');
+  const pending = (state.rejoinRequests || []).filter((q) => q.status === 'pending' && (!filter?.userId || q.userId === filter.userId));
   return h('div', {},
     pending.length ? h('div', { class: 'banner banner-review', role: 'status' }, h('strong', {}, 'Rejoin requests: '),
       pending.map((q) => h('span', { class: 'pick-row' }, `${q.name} is rejoining from another device (${at(q.atMin)}) `,
         user ? h('button', { class: 'btn btn-small btn-primary', onclick: () => runner.decideRejoin(q.id, true, user) }, `Approve ${q.name}`) : null,
         user ? h('button', { class: 'btn btn-small btn-ghost', onclick: () => runner.decideRejoin(q.id, false, user) }, 'Deny') : null))) : null,
-    h('div', { class: 'join-code' }, h('span', { class: 'muted' }, 'Join code'), h('strong', { class: 'code' }, state.joinCode || '—'),
+    filter?.userId || filter?.noCode ? null : h('div', { class: 'join-code' }, h('span', { class: 'muted' }, 'Join code'), h('strong', { class: 'code' }, state.joinCode || '—'),
       h('span', { class: 'muted' }, `${joined.length} of ${slots} joined · ${scenario.assignment} placement`),
       joined.length ? h('button', { class: 'btn btn-small', onclick: () => {
         const views = Object.fromEntries(Object.keys(state.patients).map((pid) => [pid, studentView(templatesById[pid])]));

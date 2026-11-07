@@ -19,8 +19,8 @@ import { studentSlots } from './engine/assignment.js';
 import { withDefaults } from './engine/settings.js';
 import { mountShell } from './screens/shell.js';
 import { mountInstructor } from './screens/instructor/index.js';
+import { mountBuilder } from './screens/instructor/builder.js';
 import { mountStudentTab } from './screens/student/join.js';
-import { mountDebrief } from './screens/debrief/index.js';
 import { mountCharge } from './screens/charge/index.js';
 import { h } from './screens/shared/dom.js';
 
@@ -35,7 +35,12 @@ const INSTRUCTOR = { userId: 'instructor', role: 'instructor', name: 'Instructor
 const studentUser = (n) => ({ userId: `student-${n}`, role: 'student', name: `Student ${n}` });
 
 function buildTabs(ctx) {
-  const tabs = [{ id: 'instructor', label: 'Instructor', mount: (root) => mountInstructor(root, ctx) }];
+  // Instructor: Setup → Overview → Debrief. Builder (authoring) is hidden while a sim runs.
+  const running = () => ['running', 'paused'].includes(ctx.runner.state.clock.status);
+  const tabs = [
+    { id: 'instructor', label: 'Instructor', mount: (root) => mountInstructor(root, ctx) },
+    { id: 'builder', label: 'Builder', mount: (root) => mountBuilder(root, ctx), visible: () => !running() },
+  ];
 
   // Prototype: one tab per student slot; each tab joins with the code like a real device would.
   for (const slot of studentSlots(ctx.scenario)) {
@@ -54,11 +59,6 @@ function buildTabs(ctx) {
     });
   }
 
-  tabs.push({
-    id: 'debrief',
-    label: 'Debrief',
-    mount: (root) => mountDebrief(root, ctx),
-  });
   return tabs;
 }
 
@@ -149,6 +149,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   }, 'Reset demo');
   const brk = breakBanner(store, () => runner.state);
   const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo), banner: brk.el });
+  let shellStatus = runner.state.clock.status;
+  const offShell = store.subscribe(() => { if (runner.state.clock.status !== shellStatus) { shellStatus = runner.state.clock.status; teardownShell.refresh(); } });
   const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
   // Remember the scroll position per screen (tab / view / patient / section) and put it back after a reload or Back.
   const placeKey = () => `ui.scroll.${JSON.stringify(history.state?.nav || {})}`;
@@ -165,6 +167,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     clearInterval(timer);
     clearInterval(heartbeat);
     window.removeEventListener('pagehide', onPageHide);
+    offShell();
     teardownShell();
     brk.destroy();
     window.removeEventListener('scroll', onScroll);

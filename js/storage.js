@@ -13,9 +13,17 @@ function db() {
   dbp = new Promise((resolve) => {
     try {
       const req = indexedDB.open('nursing-sim', 1);
+      // Never let the backup hold up the app: no answer in 4 s (e.g. a pending delete) → run without it.
+      const giveUp = setTimeout(() => { console.warn('IndexedDB backup unavailable (no answer in 4 s); running without it.'); dbp = Promise.resolve(null); resolve(null); }, 4000);
       req.onupgradeneeded = () => req.result.createObjectStore('kv');
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => resolve(null);
+      req.onsuccess = () => {
+        clearTimeout(giveUp);
+        const d = req.result;
+        d.onversionchange = () => { d.close(); dbp = null; }; // Reset demo / another tab deleting it: let it go
+        resolve(d);
+      };
+      req.onerror = () => { clearTimeout(giveUp); resolve(null); };
+      req.onblocked = () => { /* the timeout covers it */ };
     } catch { resolve(null); }
   });
   return dbp;
