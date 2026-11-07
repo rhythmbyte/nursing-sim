@@ -161,6 +161,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
   const onScroll = () => { clearTimeout(scrollTimer); scrollTimer = setTimeout(() => save(placeKey(), Math.round(window.scrollY)), 300); };
   const restoreScroll = () => setTimeout(() => { const y = load(placeKey()); if (y) window.scrollTo(0, y); }, 60);
   window.addEventListener('scroll', onScroll, { passive: true });
+  const saveScrollNow = () => { clearTimeout(scrollTimer); save(placeKey(), Math.round(window.scrollY)); }; // leaving the page: no debounce
+  window.addEventListener('pagehide', saveScrollNow);
   window.addEventListener('popstate', restoreScroll);
   if (pageLoad) restoreScroll();
   // Soak / automated checks only: ?debug=1 exposes the runner to the page (never linked from the app).
@@ -174,6 +176,7 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     teardownShell();
     brk.destroy();
     window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('pagehide', saveScrollNow);
     window.removeEventListener('popstate', restoreScroll);
   };
 }

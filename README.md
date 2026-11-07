@@ -33,7 +33,7 @@ These validate every data file against `data/schemas/` and cover the pure module
 Browser suites (the real app in headless Chromium; needs Node 22+, Chromium, Python 3):
 
 ```
-tests/browser/all.sh              # all suites, about 15 minutes
+tests/browser/all.sh              # all suites, about 20 minutes
 tests/browser/all.sh debrief      # one suite
 ```
 

@@ -2,7 +2,7 @@
 # Runs the browser suites (tests/browser/*.mjs) against the real app in headless Chromium, each on a fresh browser
 # profile (no cached modules, no leftover storage). Starts a static server for the repo if none is answering.
 #
-#   tests/browser/all.sh                 every suite (about 15 minutes; the soak alone is ~5)
+#   tests/browser/all.sh                 every suite (about 20 minutes; the soak alone is ~5)
 #   tests/browser/all.sh debrief rejoin  just those (names = file names without .mjs; "crash" too)
 #
 # Needs: Node 22+ (built-in WebSocket), Chromium, Python 3, curl, coreutils timeout. Settings (all optional):
@@ -20,7 +20,7 @@ BASE="${NS_BASE:-http://localhost:8765}"
 CDP_PORT="${NS_CDP_PORT:-9333}"
 CHROMIUM="${NS_CHROMIUM:-chromium}"
 PROFILE="$OUT/profile"
-SUITES=(tour instructor-flow cases debrief reflection projector run-again rejoin soak crash)
+SUITES=(tour instructor-flow cases guided-builder patient-tags task-timers drafts away-break debrief reflection projector run-again rejoin soak crash)
 [ $# -gt 0 ] && SUITES=("$@")
 export NS_BASE="$BASE" NS_CDP_PORT="$CDP_PORT" NS_CHROMIUM="$CHROMIUM"
 

@@ -3,7 +3,9 @@
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
 ## Browser suites in the repo
-- The browser suites now live in `tests/browser/` (they were outside the repo): `tour`, `instructor-flow`, `cases`, `debrief`, `reflection`, `projector`, `run-again`, `rejoin`, `soak`, `crash`. They share one DevTools helper (`lib.mjs`). Paths, ports and the browser are settings, not hard-coded.
+- The browser suites now live in `tests/browser/` (they were outside the repo): `tour`, `instructor-flow`, `cases`, `guided-builder`, `patient-tags`, `task-timers`, `drafts`, `away-break`, `debrief`, `reflection`, `projector`, `run-again`, `rejoin`, `soak`, `crash`. They share one DevTools helper (`lib.mjs`). Paths, ports and the browser are settings, not hard-coded. Five older feature suites (guided builder, patient tags, task timers, drafts, away/break) were ported to the new screens too, with real pass/fail checks instead of printed values.
+- Fixed (found by the stricter suites): the scroll position was saved 300 ms after scrolling, so a reload or crash right after scrolling lost it; it's now also saved when the page is left.
+- The tour now waits out the manikin lockout after charting a pain score and checks it was charted (the old version read the list while the task was still running), and checks that NEWS2 isn't offered until its license is confirmed.
 - `tests/browser/all.sh` runs them all (or the ones named), starting a static server if needed and a fresh browser for each suite, and ends with a PASS/FAIL summary (exit code 1 on any failure). A suite now fails on any page error or warning, a click that finds nothing, or an evaluation that throws, instead of relying on someone reading the output.
 - Output goes to `tests/browser/.out/` (gitignored); `_config.yml` keeps `tests/browser` out of the deployed site.
 - CLAUDE.md: run the unit tests and every browser suite before committing any big change.

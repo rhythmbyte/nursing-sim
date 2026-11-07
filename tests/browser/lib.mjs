@@ -21,12 +21,14 @@ export async function openPage(ws = process.argv[2], out = process.argv[3] || 't
   const pending = new Map();
   const errors = [];
   const problems = [];
+  const dialogs = []; // messages of alert / confirm / beforeunload dialogs the page opened
+  let accept = true;
   sock.onmessage = (m) => {
     const msg = JSON.parse(m.data);
     if (msg.id && pending.has(msg.id)) { pending.get(msg.id)(msg); pending.delete(msg.id); }
     if (msg.method === 'Runtime.exceptionThrown') errors.push(msg.params.exceptionDetails.exception?.description);
     if (msg.method === 'Runtime.consoleAPICalled' && ['error', 'warning'].includes(msg.params.type)) errors.push(`${msg.params.type}: ${msg.params.args.map((a) => a.value ?? a.description).join(' ')}`);
-    if (msg.method === 'Page.javascriptDialogOpening') send('Page.handleJavaScriptDialog', { accept: true });
+    if (msg.method === 'Page.javascriptDialogOpening') { dialogs.push(msg.params.message); send('Page.handleJavaScriptDialog', { accept }); }
   };
   const send = (method, params = {}) => new Promise((r) => { const i = ++id; pending.set(i, r); sock.send(JSON.stringify({ id: i, method, params })); });
   const ev = async (expr) => {
@@ -55,6 +57,8 @@ export async function openPage(ws = process.argv[2], out = process.argv[3] || 't
   const braces = () => ev(`(document.body.innerText.match(/\\{[A-Za-z][A-Za-z0-9./-]*\\}/g) || []).join(' ')`);
   const fail = (why) => problems.push(why);
   const ignored = [];
+  /** Answer the page's dialogs with OK (true, the default) or Cancel (false). */
+  const answerDialogs = (ok) => { accept = ok; };
   /** A page warning this suite expects (e.g. /Saved session discarded/) doesn't fail it. */
   const ignore = (re) => ignored.push(re);
   /** Fresh start: the app with empty storage (no welcome popup). */
@@ -68,5 +72,5 @@ export async function openPage(ws = process.argv[2], out = process.argv[3] || 't
     if (bad.length) { console.log(`PROBLEMS (${bad.length}):\n  ${bad.slice(0, 12).join('\n  ')}`); process.exitCode = 1; }
   });
   await new Promise((r) => { sock.onopen = r; });
-  return { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, problems, fail, ignore, reset, out, BASE, CDP };
+  return { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, problems, fail, ignore, reset, dialogs, answerDialogs, out, BASE, CDP };
 }

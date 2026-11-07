@@ -249,10 +249,15 @@ Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passe
   - every data file against its schema, plus the manifest matching the files on disk;
   - the pure modules (time, review helpers, store);
   - engine modules as they're added.
-- **Browser suites:** `tests/browser/all.sh` runs every suite against the real app in headless Chromium (about 15 minutes); `tests/browser/all.sh debrief rejoin` runs just those. It starts a static server on port 8765 if none is running and launches a fresh browser profile per suite, so no cached modules or leftover storage carry over. Needs Node 22+ (built-in WebSocket), Chromium, Python 3 and curl; settings `NS_BASE`, `NS_CDP_PORT`, `NS_CHROMIUM`, `NS_OUT` are listed at the top of `all.sh`. A suite fails on any page error or warning, a click that finds nothing, an evaluation that throws, or a failed check; logs and screenshots go to `tests/browser/.out/`. The suites:
+- **Browser suites:** `tests/browser/all.sh` runs every suite against the real app in headless Chromium (about 20 minutes); `tests/browser/all.sh debrief rejoin` runs just those. It starts a static server on port 8765 if none is running and launches a fresh browser profile per suite, so no cached modules or leftover storage carry over. Needs Node 22+ (built-in WebSocket), Chromium, Python 3 and curl; settings `NS_BASE`, `NS_CDP_PORT`, `NS_CHROMIUM`, `NS_OUT` are listed at the top of `all.sh`. A suite fails on any page error or warning, a click that finds nothing, an evaluation that throws, or a failed check; logs and screenshots go to `tests/browser/.out/`. The suites:
   - `tour`: every wizard step and Builder view, the Overview, drawer and More controls, the student chart, charge, End and all debrief tiers, with an unlabeled-controls check on each screen;
   - `instructor-flow`: wizard → Ready → join → Start → Overview → End → Debrief;
   - `cases`: case templates (Reroll, Lock, codes never shown to students, editor warnings, Check variants);
+  - `guided-builder`: the guided event builder in a scenario change, a reaction and a state, and Add event from the Overview drawer;
+  - `patient-tags`: library filter and search, editor tag chips, the wizard's randomizer counts and warning;
+  - `task-timers`: busy banner, Interrupt, the staff pool ("No CNA free" → queue), staff on the Overview, More controls and charge tab, Task time and Delegation in the debrief;
+  - `drafts`: editor, handoff, note and form drafts and the chart section and scroll position through reloads; Back through sections, then "leave the app?";
+  - `away-break`: away status on the Overview card and drawer, Break / Extend / Resume, reconnect logged, End of sim on this computer;
   - `debrief`, `reflection`: the three tiers, evidence links, ticks and hides, reflection skipping;
   - `projector`, `run-again`, `rejoin`;
   - `soak`: a 4-hour sim on a simulated clock (memory, storage, tick and render times);
