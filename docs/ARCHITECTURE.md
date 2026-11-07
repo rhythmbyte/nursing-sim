@@ -64,6 +64,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/storage.js` | **Only** persistence layer (`load`, `save`, `remove`, `clearAll`, per-session `loadSession`/`saveSession`; keys prefixed `nursing-sim:`). Every save is mirrored to IndexedDB for crash safety; `restoreBackup()` at boot. `onSaveFailure(fn)` reports full or blocked storage (main.js shows a banner) | built |
 | `js/state.js` | `createStore()`: `get`, `set(patch)`, `subscribe`, `on`/`emit` named events | built |
 | `js/window-lock.js` | One writer window: `lockState` (pure), `createWindowLock` (check / takeOver / release / isWriter), used by `main.js` to gate ticking and saving | built |
+| `js/case-seeds.js` | This sim's case seeds (`ui.cases` through `storage.js`): `instantiateSim`, `newSimSeeds` (a new sim / the demo as written), `reroll`, `clearReroll`, `caseKey` (a reroll before Start rebuilds patient states, keeping the join code and roster) | built |
 | `js/data-loader.js` | `loadAll()`: manifest → fetch → schema-validate → cross-field checks → overlay this browser's edits → `{ patients, scenarios, catalogs, schemas, local, fileIds, problems }`. Also `validateItem`, `saveLocal`, `removeLocal` (instructor edits via `storage.js`) | built |
 | `js/validate.js` | Small JSON Schema validator (subset; see header comment for supported keywords) | built |
 | `js/review.js` | Helpers for `"review": "proposed"/"partial"` content (`countNeedsReview`, `needsReview`) | built |
@@ -87,6 +88,8 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `js/engine/task-review.js` | `taskReview` (debrief: task times, busy vs idle, what went late while busy) | built |
 | `js/screens/student/busy-banner.js` | Busy banner with progress and Interrupt task | built |
 | `js/screens/instructor/duration-overrides.js` | Task duration overrides with a seconds / minutes dropdown | built |
+| `js/engine/cases.js` | Case templates: `instantiate` (seeded name/age/sex, vital and lab ranges, teaching points, `valuesRel`, one drug per `medClass`, placeholders), `instantiateScenario` (instance ids `id`, `id~2`; rooms; seeds), `fileIdentity`, `allowedDrugs`, `fillText`, `caseLabel` | built |
+| `js/engine/case-check.js` | Variant integrity: `rangeWarnings` (static, for the editor), `variantProblems` (samples variants and compares dry runs with the case as written), `thresholds`, `vitalOf` | built |
 | `js/engine/staff.js` | Delegation staff pool: `initStaff`, `placeDelegation` (free helper or `NoHelperError` / queue), `startQueued`, `releaseHelper`, `helperSec`, `moveHelper`, `setOnBreak`, `setStaffCount`, `staffView` | built |
 | `js/engine/staff-review.js` | `delegationReview` (debrief: to whom, waits, queued, utilization) | built |
 | `js/engine/rules/delegation-overload.js` | Flag: too many delegations in a window (rules.json) | built |

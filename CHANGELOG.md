@@ -2,6 +2,17 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Case templates with randomized variation (Part B)
+- **Patients are now reusable cases** ("Cardiac 1", "Sepsis 1"). Each sim makes its own patient from a seed: a name from `data/catalogs/names.json`, an age in the case's range, the sex (fixed or either), baseline vitals and labs within their ranges, and one drug per medication class (`data/catalogs/med-classes.json`). The patient is identical through the sim, reloads, rejoins and the debrief. The same case in two groups gets a different name and variant.
+- **Texts use placeholders:** `{firstName}` `{fullName}` `{age}{sex}` `{room}` `{he/she}` `{his/her}`, any `{male/female}` pair (`{wife/husband}`), baseline `{bp}` `{hr}` `{spo2}`…, `{lab.wbc}`, and `{med.doac}` / `{med.doac.Name|dose|freq}`. A class drug is used everywhere: home meds, the order's medication and text, MAR, PRN and hold rules, allergy checks, timeliness. Never a drug the patient is allergic to; the case can exclude drugs.
+- **Scripted changes can be relative to the baseline** (`valuesRel`, e.g. SBP −30). The guided builder has "changes by (from baseline)" on vitals rows (not in Live control).
+- **Variant integrity check** (`engine/case-check.js`): the editor warns live when a range could put a variant past a threshold the case reacts to, outside the patient's target, or across a lab's reference range, and **Check variants** dry-runs 24 variants and compares every reaction, state, event and threshold with the case as written. The tests run it on all six starter cases. It found two of my own starter ranges (Margaret's WBC, Linda's sodium) crossing the reference range; both were narrowed.
+- **Teaching points stay fixed** (Linda's lactate 2.8 and creatinine 1.4, Robert's first troponin, Dorothy's platelets and INR, James's K, Cr and Mg).
+- **Live control → Cases (instructor only):** "Cardiac 1 — Robert Miller, 68M, atorvastatin, lisinopril"; **Reroll** a patient before Start (keeps the join code and who joined); **Lock variant** to reuse it in new sims. The Command center and the debrief show the same labels. Students never see case titles.
+- **Patient editor → Case template:** title, sex, age range, fixed / range per vital, lab range or teaching point, "fixed / any from class" per home med and medication order, excluded drugs, warnings, sample variants, Check variants. The Patient library groups cases by category (first topic tag).
+- **Starter patients converted** to cases with proposed ranges, placeholders and med classes; with the file's own name, age and sex they reproduce the original files exactly (tested). **Start demo sim** uses the cases as written, so the demo guide's names still apply; other new sims get fresh variants.
+- Tests: 224 passing.
+
 ## Away status, time away, shared computers, break presets (Part A)
 - **Away / reconnecting:** while a student's screen is open it checks in every 10 s (presence, not logged). Live control → Students and the Command center show "⚠ Away / reconnecting (2 min)" when it has been silent longer than `awayAfterSec` (45 s) during the sim. When it checks in again, `reconnected` is logged with the time away. Live control's Students table now refreshes every sim minute.
 - **Debrief:** a "↻ away N min (k×)" total per student (reconnects, rejoins and approvals).

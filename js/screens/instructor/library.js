@@ -21,6 +21,12 @@ function firstEventLine(p, startClock) {
   return h('div', { class: 'card-next' }, `First event ${formatShiftTime(startClock, e.atMin)} · ${e.type.replaceAll('-', ' ')}`);
 }
 
+/** Library category: the patient's first topic tag (cases are grouped by it, e.g. "Cardiac"), else "Other". */
+function categoryOf(p, catalogs) {
+  const id = p.patientTags?.topic?.[0];
+  return (id && catalogs.patientTags?.groups.find((g) => g.id === 'topic')?.tags.find((t) => t.id === id)?.label) || id || 'Other';
+}
+
 function patientCard(p, selected, onSelect, startClock) {
   const pending = countNeedsReview(p);
   return h('button', {
@@ -32,8 +38,9 @@ function patientCard(p, selected, onSelect, startClock) {
       h('span', { class: 'room' }, `Rm ${p.demographics.room}`),
       triageChip(p.tag),
     ),
-    h('div', { class: 'card-name' }, p.demographics.name),
-    h('div', { class: 'muted' }, `${p.demographics.age}${p.demographics.sex} · ${p.admittingDx}`),
+    p.case ? h('div', { class: 'card-name' }, p.case.title, ' ', badge('Case', 'neutral', 'Case template: each sim makes its own patient (name, values, drugs) from it')) : h('div', { class: 'card-name' }, p.demographics.name),
+    h('div', { class: 'muted' }, p.case ? `As written: ${p.demographics.name}, ${p.demographics.age}${p.demographics.sex} · ages ${p.case.ageRange?.join('–') ?? p.demographics.age}` : `${p.demographics.age}${p.demographics.sex} · ${p.admittingDx}`),
+    p.case ? h('div', { class: 'muted small' }, p.admittingDx) : null,
     firstEventLine(p, startClock),
     h('div', { class: 'card-badges' },
       pending ? badge(`Needs review (${pending})`, 'review', `${pending} item(s) drafted by AI await instructor approval`) : badge('Approved', 'ok'),
@@ -73,7 +80,11 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
   function render() {
     const vis = shown();
     count.textContent = `${vis.length} of ${sorted.length} match ${filterText(tagFilter, catalogs.patientTags)}`;
-    clear(list).append(...(vis.length ? vis.map((p) => patientCard(p, p.id === selectedId, select, startClock)) : [h('p', { class: 'muted' }, 'No patients match these patient tags.')]));
+    const groups = new Map();
+    for (const p of vis) { const c = categoryOf(p, catalogs); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(p); }
+    const byTitle = (a, b) => (a.case?.title || a.demographics.name).localeCompare(b.case?.title || b.demographics.name, undefined, { numeric: true });
+    clear(list).append(...(vis.length ? [...groups.entries()].sort(([a], [b]) => (a === 'Other') - (b === 'Other') || a.localeCompare(b)).flatMap(([c, ps]) => [
+      h('h4', { class: 'library-group' }, c), ...ps.sort(byTitle).map((p) => patientCard(p, p.id === selectedId, select, startClock))]) : [h('p', { class: 'muted' }, 'No patients match these patient tags.')]));
     const p = sorted.find((x) => x.id === selectedId);
     clear(detail).append(p ? patientDetail(p, { catalogs, startClock }) : h('p', { class: 'muted' }, 'No patients loaded.'));
   }

@@ -4,6 +4,14 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Case templates are instantiated upstream of the engine
+- **Decision:** `engine/cases.js` turns each case into a concrete patient (seeded PRNG, placeholders filled, ranges and classes resolved, relative changes made absolute) *before* the runner is created. Everything downstream (engine, rules, timeliness, screens, debrief) sees an ordinary patient. Seeds: the sim's seed (`ui.cases`, via `js/case-seeds.js`), a per-patient reroll, or the case's locked seed.
+- **Why:** no engine module had to learn about variation, so allergy checks, PRN rules, hold parameters and timeliness all use the instantiated drug and values automatically. The variant check can reuse the real dry run.
+- **Alternatives:** resolving placeholders at render time (every screen and rule would need the context, and a missed one would leak `{firstName}` or the wrong drug); storing the generated patients in the session (bigger saves, and edits to the case wouldn't reach a sim that hasn't started).
+- **Round trip:** instantiating with the file's own name, age and sex and the written values reproduces the original file exactly, so tests and the demo keep their known patients.
+
+---
+
 ## 2026-11-07: Every save is mirrored to IndexedDB
 - **Decision:** `storage.save` writes localStorage (synchronous, what the app reads) and also IndexedDB (best effort), with a timestamp for each. At boot, `restoreBackup()` copies IndexedDB entries newer than localStorage's back.
 - **Why:** the kill tests lost the last seconds of work because Chromium flushes localStorage to disk in ~5 s batches; IndexedDB commits at once. This keeps the one-file storage boundary (B2) and the synchronous API.

@@ -63,6 +63,26 @@ Right now: the sim treats SpO₂ 94–100, HR 60–100, RR 12–20, systolic 100
 Right? Any other patient who needs their own normal?
 Your answer: ______________________________________________
 
+**1.12 Random names** [58]
+Right now: each sim picks names from a list of 30 first names per sex and 40 last names (data/catalogs/names.json), never the same full name twice in a sim.
+Add or remove names? Should some cases limit the names used?
+Your answer: ______________________________________________
+
+**1.13 Ranges for each case** [59]
+Right now: each case varies age and baseline vitals within a range, e.g. Sepsis 1 ages 56–70, HR 100–108, BP 98–106 systolic, SpO₂ 90–92%. Any of the six cases can be a man or a woman.
+Are the ranges realistic? Should any case keep a fixed sex?
+Your answer: ______________________________________________
+
+**1.14 Values that never change** [60]
+Right now: Linda's lactate 2.8 and creatinine 1.4, Robert's first troponin, Dorothy's platelets and INR, and James's potassium, creatinine and magnesium always stay as written.
+Any others the case depends on?
+Your answer: ______________________________________________
+
+**1.15 Medication swaps** [61]
+Right now: Dorothy's anticoagulant is apixaban or rivaroxaban and her beta blocker metoprolol or carvedilol; home ACE inhibitors, ARBs and statins vary within their class. Margaret's oxycodone and James's metoprolol succinate never change.
+Are the drug lists and doses right?
+Your answer: ______________________________________________
+
 ## 2. Scoring and flags
 
 **2.1 Extra PRN doses: warn or block?** [1]

@@ -36,6 +36,8 @@ Live: https://rhythmbyte.github.io/nursing-sim/
 
 **Fastest start:** Instructor → Live control → **Start demo sim** (starter scenario, a joined test student, clock running).
 
+**Case templates:** the demo uses each case as written (Robert Miller, Linda Garcia, …). Any other new sim makes new patients from the cases: Live control → **Cases** shows "Cardiac 1 — *name, age, drugs*" with **Reroll** (before Start) and **Lock variant**. Patient editor → **Case template** has the ranges, medication classes, warnings and **Check variants**.
+
 **One window at a time.** If you open the sim in a second window of the same browser, that window is read-only and offers **Take over here** (the bedside monitor page is the exception: it only displays).
 
 **Reset first.** Click **Reset demo** (top right) and confirm. That clears this browser's running sim, edits, approvals and created sims. Everything in the demo lives in your browser only, so it never affects anyone else.
