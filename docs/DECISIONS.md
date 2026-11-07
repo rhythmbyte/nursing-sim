@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: A program changes defaults and what's offered, never the content
+- **Decision:** `engine/program.js` applies the chosen program when data loads: scenario defaults get the program's settings, and tools, interventions and helper roles it doesn't use are marked `offered: false` instead of removed. Cases and saved sims are offered by patient tags / the sim's `program`.
+- **Why:** removing catalog entries would break any case or sim that uses them (a shared case, an older sim, a different program's demo). Marking keeps one engine for every program and puts the scoping where instructors see it.
+- **Alternatives:** separate catalogs per program (duplicated content that drifts); hiding by CSS (not testable, leaks into dropdowns).
+
+---
+
 ## 2026-11-07: Browser suites use raw DevTools from Node, no test framework
 - **Decision:** the browser suites in `tests/browser/` drive headless Chromium over the Chrome DevTools Protocol with Node's built-in WebSocket (`lib.mjs`), run by a shell script (`all.sh`). A suite fails on any page error or warning, a missing click target, or a throwing evaluation, as well as its own checks.
 - **Why:** no npm dependencies or build step (the project has none), and the suites can kill and relaunch the browser for the crash tests, which test runners make awkward. Failing on any page warning catches problems a check didn't look for.

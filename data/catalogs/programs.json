@@ -1,0 +1,35 @@
+{
+  "review": "proposed",
+  "_comment": "Program profiles (engine/program.js). The instructor picks a program once; it sets defaults for every sim (settings, staff, assessment tools), which cases and saved sims are offered (patient tags), what's offered in pickers, which features the setup screens show, and wording. A program never removes content the engine needs: a case or sim from another program still runs. Everything here is a draft for the instructor (SPEC §14). Room for EMT / Paramedic: add a profile with its own terms (e.g. clinician 'medic'), staff roles and features.",
+  "default": "rn",
+  "programs": [
+    {
+      "id": "rn",
+      "label": "RN (registered nurse)",
+      "description": "Registered nursing: full assessment, delegation to LPNs and CNAs, every feature.",
+      "review": "proposed",
+      "terms": { "learner": "student", "learners": "students", "clinician": "nurse", "charge": "charge nurse", "helpers": "staff" },
+      "cases": { "license": ["rn", "lpn"] },
+      "assessmentTools": "public",
+      "interventions": { "excludeCategories": [], "exclude": [] },
+      "staffRoles": ["CNA", "LPN"],
+      "features": { "chargeNurse": true, "delegation": true, "assessments": true, "taskTimers": true, "recoveryPenalties": true, "variation": true },
+      "settings": { "staffPool": { "CNA": 2, "LPN": 1 } },
+      "presets": ["standard-med-surg", "beginner", "code-heavy", "delegation-focus", "manikin-lab", "screen-only"]
+    },
+    {
+      "id": "lpn",
+      "label": "LPN / LVN (practical nurse)",
+      "description": "Practical nursing: cases tagged LPN, delegation to CNAs only, focused assessment tools.",
+      "review": "proposed",
+      "terms": { "learner": "student", "learners": "students", "clinician": "nurse", "charge": "charge nurse", "helpers": "staff" },
+      "cases": { "license": ["lpn"] },
+      "assessmentTools": ["pain-nrs", "gcs", "pupils", "befast", "ciwa", "head-to-toe"],
+      "interventions": { "excludeCategories": [], "exclude": [] },
+      "staffRoles": ["CNA"],
+      "features": { "chargeNurse": false, "delegation": true, "assessments": true, "taskTimers": true, "recoveryPenalties": true, "variation": true },
+      "settings": { "staffPool": { "CNA": 2 }, "chargeNurse": "off" },
+      "presets": ["standard-med-surg", "beginner", "delegation-focus", "manikin-lab", "screen-only"]
+    }
+  ]
+}

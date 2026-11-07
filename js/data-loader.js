@@ -40,6 +40,8 @@ const SCHEMAS = {
   names: 'schemas/names.schema.json',
   medClasses: 'schemas/med-classes.schema.json',
   debriefPoints: 'schemas/debrief-points.schema.json',
+  programs: 'schemas/programs.schema.json',
+  presets: 'schemas/presets.schema.json',
 };
 
 async function fetchJson(base, rel) {

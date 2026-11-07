@@ -6,7 +6,7 @@ const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, f
 await send('Runtime.enable'); await send('Page.enable'); await send('Network.setCacheDisabled', { cacheDisabled: true });
 await send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1100, deviceScaleFactor: 1, mobile: false });
 await send('Page.navigate', { url: `${BASE}/` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true")'); await send('Page.reload'); await sleep(6000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(6000);
 
 console.log('load problems banner:', (await text('.banner-error')) || 'none');
 console.log('tabs:', await text('.tab'), '| phase:', await text('.phase-btn.active'));

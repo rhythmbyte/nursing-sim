@@ -14,7 +14,7 @@ const field = (label, el, hint) => helpField('setup', label, el, hint);
 export function createGroups(data, { pool, onChange = () => {} }) {
   const groups = [];
   const lib = [...data.patients].sort((a, b) => (a.case?.code || a.demographics.room).localeCompare(b.case?.code || b.demographics.room, undefined, { numeric: true }));
-  const staffRoles = (data.catalogs.staff?.staff || []).filter((s) => s.speedFactor != null).map((s) => s.role);
+  const staffRoles = (data.catalogs.staff?.staff || []).filter((s) => s.speedFactor != null && s.offered !== false).map((s) => s.role); // the program's helper roles
   const boxes = { students: h('div', {}), patients: h('div', {}), staff: h('div', { class: 'editor-grid' }) };
   let simFilter = {};
   let manual = () => false;

@@ -1,0 +1,30 @@
+{
+  "title": "Program profiles",
+  "type": "object",
+  "required": ["default", "programs"],
+  "properties": {
+    "review": { "enum": ["approved", "proposed", "partial"] },
+    "default": { "type": "string" },
+    "programs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "terms", "staffRoles", "features", "presets"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "label": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "review": { "enum": ["approved", "proposed", "partial"] },
+          "terms": { "type": "object", "required": ["learner", "learners", "clinician", "charge"] },
+          "cases": { "type": "object", "description": "Patient tags (group → tag ids): a case is offered if it has any of them in every listed group. Empty = all cases." },
+          "assessmentTools": { "type": ["string", "array"], "description": "'public', 'all' or a list of tool ids: the tools a new sim offers" },
+          "interventions": { "type": "object", "properties": { "excludeCategories": { "type": "array", "items": { "type": "string" } }, "exclude": { "type": "array", "items": { "type": "string" } } } },
+          "staffRoles": { "type": "array", "items": { "type": "string" } },
+          "features": { "type": "object" },
+          "settings": { "type": "object" },
+          "presets": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -385,3 +385,10 @@ body.projector-page { background: var(--bg); }
 .projector-group ul { margin: 0; padding-left: 1.2rem; font-size: 1.25rem; columns: 2; }
 .projector-wait { font-size: 1.5rem; color: var(--muted); margin-top: 20vh; }
 .point-mentioned { color: var(--muted); font-size: 0.85rem; }
+
+/* ---- Program picker ---- */
+.program-picker { max-width: 900px; }
+.program-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); }
+.program-card { font: inherit; text-align: left; cursor: pointer; color: var(--text); }
+.program-card:hover, .program-card:focus-visible { border-color: var(--accent); outline: none; }
+.program-card h3 { text-transform: none; letter-spacing: 0; color: var(--text); font-size: 1.1rem; margin: 0 0 6px; }

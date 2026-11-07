@@ -14,6 +14,7 @@ import { fillByTagCounts } from '../../engine/assignment.js';
 import { effectiveSettings } from '../../engine/settings.js';
 import { durationOverrides } from './duration-overrides.js';
 import { createGroups } from './setup-groups.js';
+import { scenarioOffered, caseOffered } from '../../engine/program.js';
 import { SPEEDS } from '../../engine/clock.js';
 import { load, save } from '../../storage.js';
 
@@ -26,10 +27,13 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   const defaults = data.catalogs.scenarioDefaults.settings;
   let step = Math.min(STEPS.length - 1, Math.max(0, Number(load(STEP_KEY)) || 0));
   let clearDraft = () => {};
-  const g = createGroups(data, { pool: defaults.staffPool });
+  const g = createGroups({ ...data, patients: data.patients.filter((p) => caseOffered(p, data.program)) }, { pool: defaults.staffPool });
 
   // ---- controls (kept across steps) ----
-  const startFrom = h('select', { 'aria-label': 'Start from' }, h('option', { value: 'new' }, 'New sim (defaults)'), data.scenarios.map((s) => h('option', { value: s.id }, `Saved: ${s.name}`)));
+  const program = data.program;
+  const feature = (f) => program?.features?.[f] !== false; // the program shows this part of setup
+  const offeredCases = data.patients.filter((p) => caseOffered(p, program));
+  const startFrom = h('select', { 'aria-label': 'Start from' }, h('option', { value: 'new' }, 'New sim (defaults)'), data.scenarios.filter((s) => scenarioOffered(s, program)).map((s) => h('option', { value: s.id }, `Saved: ${s.name}`)));
   const name = h('input', { class: 'input', value: 'New sim', 'aria-label': 'Sim name' });
   const startClock = h('input', { class: 'input', type: 'time', value: '07:00' });
   const endClock = h('input', { class: 'input', type: 'time', value: '15:00' });
@@ -54,7 +58,7 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
     taskTimerMinLockoutSec: h('input', { class: 'input', type: 'number', min: 0, value: defaults.taskTimerMinLockoutSec }),
   };
   const simDurs = durationOverrides(data.catalogs, {}, { label: 'Sim task time' });
-  const toolBoxes = (data.catalogs.assessmentTools?.tools || []).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
+  const toolBoxes = (data.catalogs.assessmentTools?.tools || []).filter((t) => t.offered !== false).map((t) => ({ t, box: h('input', { type: 'checkbox', checked: t.license?.status === 'public', 'aria-label': `Offer ${t.name}` }) }));
 
   /** A saved scenario as the starting point: every step shows its values. */
   function prefill(sc) {
@@ -74,11 +78,11 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
   function buildScenario() {
     const scGroups = g.groups.map((x) => ({ id: x.id, name: x.name, studentCount: x.studentCount, staff: { ...x.staff },
       ...(x.mode === 'pick' ? { patients: [...x.patients].filter((id) => !x.admissions.has(id)), admissions: [...x.admissions] } : { tagCounts: x.tagCounts, tagFilter: x.tagFilter || {} }) }));
-    const { groups: filled, warnings } = fillByTagCounts(scGroups, data.patients, Math.random, g.simFilter());
+    const { groups: filled, warnings } = fillByTagCounts(scGroups, offeredCases, Math.random, g.simFilter());
     const manual = assignment.value === 'manual';
     const scenario = {
       id: `sc-${name.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'sim'}-${Date.now().toString(36)}`,
-      name: name.value.trim() || 'New sim', startClock: startClock.value, ...(endClock.value ? { endClock: endClock.value } : {}), speed: Number(speed.value),
+      name: name.value.trim() || 'New sim', ...(program ? { program: program.id } : {}), startClock: startClock.value, ...(endClock.value ? { endClock: endClock.value } : {}), speed: Number(speed.value),
       settings: {
         randomizeNames: set.randomizeNames.checked, randomizeValues: set.randomizeValues.checked, randomizeMeds: set.randomizeMeds.checked,
         handoffMode: set.handoffMode.value, chargeNurse: set.chargeNurse.value, showTagsTo: ['instructor', ...(set.tagsStudent.checked ? ['student'] : []), ...(set.tagsCharge.checked ? ['charge'] : [])], priorityScale: set.priorityScale.value,
@@ -153,10 +157,10 @@ export function mountSetupWizard(root, { data, switchScenario, startDemo }) {
       h('label', { class: 'inline' }, set.randomizeMeds, ' Randomize meds within their class (never a drug the patient is allergic to)')),
     h('section', { class: 'panel' }, h('h3', {}, '5. Sim options ', helpTip('setup.wizard-options')),
       h('div', { class: 'editor-grid' }, field('Shift start', startClock), field('Shift end (sim stops; blank = no end)', endClock), field('Speed', speed),
-        field('Handoff', set.handoffMode), field('Charge nurse', set.chargeNurse), field('Task timer mode', set.taskTimerMode)),
-      h('h4', {}, 'Staff per group ', helpTip('setup.wizard-staff')), g.boxes.staff,
-      h('h4', {}, 'Assessments available ', helpTip('setup.assessment-tools')),
-      h('div', { class: 'check-grid' }, toolBoxes.map(({ t, box }) => h('label', { class: 'inline' }, box, ` ${t.name} `, t.license?.status !== 'public' ? badge('License check needed', 'review') : null))),
+        field('Handoff', set.handoffMode), feature('chargeNurse') ? field('Charge nurse', set.chargeNurse) : null, feature('taskTimers') ? field('Task timer mode', set.taskTimerMode) : null),
+      feature('delegation') ? h('h4', {}, 'Staff per group ', helpTip('setup.wizard-staff')) : null, feature('delegation') ? g.boxes.staff : null,
+      feature('assessments') ? h('h4', {}, 'Assessments available ', helpTip('setup.assessment-tools')) : null,
+      feature('assessments') && h('div', { class: 'check-grid' }, toolBoxes.map(({ t, box }) => h('label', { class: 'inline' }, box, ` ${t.name} `, t.license?.status !== 'public' ? badge('License check needed', 'review') : null))),
       h('details', {}, h('summary', {}, 'More options'),
         h('div', { class: 'editor-grid' }, field('Student priority scale', set.priorityScale), field('PRN pre-check window (min)', set.prnPreCheckWindowMin),
           field('Manikin lockout (fraction of the task time)', set.taskTimerManikinFactor), field('Shortest lockout (seconds)', set.taskTimerMinLockoutSec)),

@@ -9,6 +9,7 @@ import { mountProjector } from './screens/projector.js';
 import { createWindowLock } from './window-lock.js';
 import { instantiateSim, newSimSeeds, caseKey } from './case-seeds.js';
 import { createSession } from './engine/session.js';
+import { applyProgram, scenarioOffered, term } from './engine/program.js';
 import { restoreBackup } from './storage.js';
 import { breakBanner } from './screens/shared/break-banner.js';
 import { openModal } from './screens/shared/modal.js';
@@ -27,6 +28,7 @@ import { h } from './screens/shared/dom.js';
 
 const TICK_MS = 250;
 const SCENARIO_KEY = 'ui.scenario';
+const PROGRAM_KEY = 'ui.program'; // the instructor's program (RN, LPN…), picked once (engine/program.js)
 const SESSION_KEY = 'session';
 const HEARTBEAT_KEY = 'heartbeat';
 const HEARTBEAT_MS = 5000;
@@ -55,7 +57,7 @@ function buildTabs(ctx) {
   if (ctx.scenario.settings.chargeNurse !== 'off') {
     tabs.push({
       id: 'charge',
-      label: 'Charge',
+      label: term(ctx.data.program, 'charge').replace(/^./, (c) => c.toUpperCase()),
       mount: (root) => mountCharge(root, ctx),
     });
   }
@@ -103,8 +105,8 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     saveSession('pendingDemo', true);
     await switchScenario(data.scenarios.some((s) => s.id === demo.scenarioId) ? demo.scenarioId : data.scenarios[0].id, { demo: true });
   };
-  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo };
-  const picker = scenarioPicker(data.scenarios, scenario.id, (id, select) => {
+  const ctx = { store, runner, data, scenario, templatesById, catalogs: data.catalogs, program: data.program, instructorUser: INSTRUCTOR, reloadData: () => reloadData(scenario.id), switchScenario, startDemo, programChosen: () => load(PROGRAM_KEY) != null, setProgram: (id) => save(PROGRAM_KEY, id), chooseProgram: (id) => { save(PROGRAM_KEY, id); return reloadData(scenario.id); } };
+  const picker = scenarioPicker(data.scenarios.filter((s) => s.id === scenario.id || scenarioOffered(s, data.program)), scenario.id, (id, select) => {
     const started = runner.state.clock.status !== 'ready';
     if (started && !window.confirm('Switching scenario ends and clears the current sim. Continue?')) {
       select.value = scenario.id;
@@ -151,7 +153,11 @@ function startApp(root, data, scenarioId, restart, reloadData, { pageLoad = fals
     },
   }, 'Reset demo');
   const brk = breakBanner(store, () => runner.state);
-  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, picker, resetDemo), banner: brk.el });
+  // Program (RN, LPN…): what new sims default to and what the screens offer. Changing it reloads the data.
+  const programs = data.catalogs.programs?.programs || [];
+  const programPicker = programs.length > 1 ? h('label', { class: 'inline' }, 'Program ', h('select', { 'aria-label': 'Program', onchange: (e) => { save(PROGRAM_KEY, e.target.value); reloadData(scenario.id); } },
+    programs.map((p) => h('option', { value: p.id, selected: p.id === data.program?.id }, p.label)))) : null;
+  const teardownShell = mountShell(root, buildTabs(ctx), { headerExtra: h('div', { class: 'controls' }, programPicker, picker, resetDemo), banner: brk.el });
   let shellStatus = runner.state.clock.status;
   const offShell = store.subscribe(() => { if (runner.state.clock.status !== shellStatus) { shellStatus = runner.state.clock.status; teardownShell.refresh(); } });
   const timer = setInterval(() => { if (writer()) runner.tick(); }, TICK_MS);
@@ -245,7 +251,7 @@ async function boot() {
   window.addEventListener('beforeunload', onBeforeUnload);
   const root = document.getElementById('app');
   try {
-    let data = await loadAll();
+    let data = applyProgram(await loadAll(), load(PROGRAM_KEY));
     setHelp(data.catalogs.help);
     setTagStyles(data.catalogs.priorityScales);
     // index.html?monitor=<patientId>: standalone bedside monitor only (display-only, no app, no welcome).
@@ -271,7 +277,7 @@ async function boot() {
       // Stop the current app (tick timer, heartbeat) first, so it can't re-save the old session while loading.
       if (teardown) { teardown(); teardown = null; }
       root.replaceChildren(h('p', { class: 'loading', role: 'status' }, 'Loading…'));
-      data = await loadAll();
+      data = applyProgram(await loadAll(), load(PROGRAM_KEY));
       restart(id);
     };
     const restart = (id, opts) => {

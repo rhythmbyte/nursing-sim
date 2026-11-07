@@ -1,0 +1,58 @@
+{
+  "review": "proposed",
+  "_comment": "Setting presets (the setup wizard starts with 'Choose a preset'; individual settings are under 'Customize'). settings override the program's defaults (scenario-defaults.json, then programs.json); a preset may also set speed and hint which cases Generate prefers (cases: patient tags, mix: triage counts per student). Programs list which presets they offer. All drafts for the instructor (SPEC §14).",
+  "presets": [
+    {
+      "id": "standard-med-surg",
+      "label": "Standard med-surg",
+      "description": "The usual defaults: manikin task timers, delegation with queueing, recovery penalties, graded reassessments.",
+      "settings": {}
+    },
+    {
+      "id": "beginner",
+      "label": "Beginner – gentle timing",
+      "description": "Late and very-late limits doubled, no recovery penalties, the handoff report every time, reassessments not graded. For a first sim.",
+      "settings": {
+        "handoffMode": "always",
+        "recoveryPenalties": false,
+        "gradeAssessments": false,
+        "prnPreCheckWindowMin": 20,
+        "rules": {
+          "timeliness": {
+            "orders": { "1": { "lateMin": 10, "veryLateMin": 30 }, "2": { "lateMin": 30, "veryLateMin": 60 }, "3": { "lateMin": 120, "veryLateMin": 240 } },
+            "scheduledMeds": { "lateMin": 60, "veryLateMin": 120 },
+            "assessments": { "lateMin": 60, "veryLateMin": 120 },
+            "callLights": { "lateMin": 10, "veryLateMin": 20 },
+            "alarms": { "lateMin": 4, "veryLateMin": 10 }
+          }
+        }
+      },
+      "generate": { "mix": { "red": 0, "yellow": 1, "green": 1 } }
+    },
+    {
+      "id": "code-heavy",
+      "label": "Code-heavy",
+      "description": "Sicker patients (Generate prefers red cardiac and sepsis cases) and recovery penalties on. Codes still come from each case's own script or Add event.",
+      "settings": { "recoveryPenalties": true, "scriptedVitalsAfterInstructor": "apply" },
+      "generate": { "cases": { "topic": ["cardiac", "sepsis", "heart-failure"] }, "mix": { "red": 2, "yellow": 1, "green": 0 } }
+    },
+    {
+      "id": "delegation-focus",
+      "label": "Delegation focus",
+      "description": "Full task times on screen (so delegating matters), an extra CNA per group, queueing allowed; delegation overload is flagged.",
+      "settings": { "taskTimerMode": "screen-only", "delegationQueue": true, "staffPool": { "CNA": 3 } }
+    },
+    {
+      "id": "manikin-lab",
+      "label": "Manikin lab",
+      "description": "Tasks happen on the manikin: short screen lockouts, and temperature, RR and pain come from the manikin or you (the Measure button doesn't reveal them).",
+      "settings": { "taskTimerMode": "manikin", "revealManualVitals": false }
+    },
+    {
+      "id": "screen-only",
+      "label": "Screen-only",
+      "description": "No manikins: tasks take their full time on screen and the Measure button reveals every vital.",
+      "settings": { "taskTimerMode": "screen-only", "revealManualVitals": true }
+    }
+  ]
+}

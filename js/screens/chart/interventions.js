@@ -24,6 +24,9 @@ export default {
     const { pid, catalogs, act, runner, scenario } = ctx;
     const reveal = scenario.settings.revealManualVitals;
     const cat = catalogs.interventions;
+    // The program's interventions (programs.json), plus any this patient's orders call for.
+    const needed = new Set((runner.templates()[pid]?.orders || []).flatMap((o) => o.interventionIds || []));
+    const shown = (i) => i.offered !== false || needed.has(i.id);
     let category = cat.categories[0].id;
     // A form in progress is a draft (shared/drafts.js): which intervention, and what was typed.
     const SEL = `ivsel.${ctx.user.userId}.${pid}`;
@@ -47,7 +50,7 @@ export default {
       clear(recentRow).append(...(recent.length ? [h('span', { class: 'muted small' }, 'Recent:'), ...recent.map((i) => h('button', { class: 'pill pill-iv', onclick: () => { selected = i; search.value = ''; renderBars(); renderForm(); } }, i.label))] : []));
       const q = search.value.trim();
       catBar.hidden = Boolean(q);
-      const list = q ? searchInterventions(cat, q) : cat.interventions.filter((i) => i.category === category);
+      const list = (q ? searchInterventions(cat, q) : cat.interventions.filter((i) => i.category === category)).filter(shown);
       clear(ivBar).append(...(q && !list.length ? [h('span', { class: 'muted' }, 'No match. Try another word.')] : []), ...list.map((i) => h('button', {
         class: `pill pill-iv${selected?.id === i.id ? ' active' : ''}`,
         'aria-pressed': selected?.id === i.id ? 'true' : 'false',

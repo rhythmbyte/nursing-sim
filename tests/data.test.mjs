@@ -32,6 +32,8 @@ const schemaFor = {
   names: load('schemas/names.schema.json'),
   medClasses: load('schemas/med-classes.schema.json'),
   debriefPoints: load('schemas/debrief-points.schema.json'),
+  programs: load('schemas/programs.schema.json'),
+  presets: load('schemas/presets.schema.json'),
 };
 
 for (const [name, rel] of Object.entries(manifest.catalogs)) {

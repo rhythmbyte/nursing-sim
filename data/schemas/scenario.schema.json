@@ -48,6 +48,9 @@
     },
     "staffAvailable": { "type": "array", "items": {"type": "string"} },
     "assignment": { "enum": ["manual", "random"] },
+    "program": { "type": "string", "description": "The program the sim was made for (programs.json)" },
+    "preset": { "type": "string", "description": "The settings preset it started from (presets.json)" },
+    "inLibrary": { "type": "boolean", "description": "false = made for one run (Generate → Start) and not listed in the sim library" },
     "groups": {
       "type": "array",
       "items": {

@@ -19,7 +19,9 @@
     "taskTiming": "catalogs/task-timing.json",
     "names": "catalogs/names.json",
     "medClasses": "catalogs/med-classes.json",
-    "debriefPoints": "catalogs/debrief-points.json"
+    "debriefPoints": "catalogs/debrief-points.json",
+    "programs": "catalogs/programs.json",
+    "presets": "catalogs/presets.json"
   },
   "patients": [
     "patients/p1-robert-miller.json",

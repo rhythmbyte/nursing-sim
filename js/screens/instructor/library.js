@@ -12,6 +12,7 @@ import { formatShiftTime } from '../../engine/time.js';
 import { matchesTags, filterText } from '../../engine/patient-tags.js';
 import { tagChips } from './patient-tags-ui.js';
 import { helpTip } from '../shared/help.js';
+import { caseOffered } from '../../engine/program.js';
 
 const SELECTED_KEY = 'ui.library.selected';
 
@@ -58,7 +59,7 @@ function toolsPanel(catalogs) {
         h('td', {}, t.license?.status === 'public' ? badge('Public', 'neutral') : badge('License check needed', 'review')), h('td', { class: 'small muted' }, t.license?.note || ''))))));
 }
 
-export function mountLibrary(root, { data: { patients, catalogs, problems }, scenario }) {
+export function mountLibrary(root, { data: { patients, catalogs, problems, program }, scenario }) {
   const sorted = [...patients].sort((a, b) => a.demographics.room.localeCompare(b.demographics.room, undefined, { numeric: true }));
   const startClock = scenario?.startClock || '07:00';
   let selectedId = load(SELECTED_KEY);
@@ -73,9 +74,12 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
   const tagLabels = (p) => Object.entries(p.patientTags || {}).flatMap(([g, ids]) => ids.map((id) => catalogs.patientTags?.groups.find((x) => x.id === g)?.tags.find((x) => x.id === id)?.label || id));
   const count = h('span', { class: 'muted small' });
   const chips = catalogs.patientTags ? tagChips(catalogs.patientTags, tagFilter, { label: 'Filter by patient tags', onChange: (v) => { tagFilter = v; save('ui.library.tagFilter', v); render(); } }) : null;
+  // Only the program's cases unless "every program" is ticked (remembered).
+  let everyProgram = Boolean(load('ui.library.everyProgram'));
+  const allPrograms = h('label', { class: 'inline small' }, h('input', { type: 'checkbox', checked: everyProgram, onchange: (e) => { everyProgram = e.target.checked; save('ui.library.everyProgram', everyProgram); render(); } }), ` Show cases from every program (not just ${program?.label || 'yours'})`);
   const shown = () => {
     const q = search.value.trim().toLowerCase();
-    return sorted.filter((p) => matchesTags(p, tagFilter) && (!q || [p.demographics.name, p.demographics.room, p.admittingDx, ...tagLabels(p)].join(' ').toLowerCase().includes(q)));
+    return sorted.filter((p) => (everyProgram || caseOffered(p, program)) && matchesTags(p, tagFilter) && (!q || [p.demographics.name, p.demographics.room, p.admittingDx, ...tagLabels(p)].join(' ').toLowerCase().includes(q)));
   };
   function render() {
     const vis = shown();
@@ -101,7 +105,7 @@ export function mountLibrary(root, { data: { patients, catalogs, problems }, sce
       h('span', { class: 'muted' }, `${sorted.length} patient template${sorted.length === 1 ? '' : 's'} · read-only`),
     ),
     problems.length ? problemsBanner(problems) : null,
-    h('details', { class: 'panel', open: Object.keys(tagFilter).length > 0 }, h('summary', {}, h('strong', {}, 'Find patients '), helpTip('library.patient-tags'), ' ', count), search, chips?.el),
+    h('details', { class: 'panel', open: Object.keys(tagFilter).length > 0 }, h('summary', {}, h('strong', {}, 'Find patients '), helpTip('library.patient-tags'), ' ', count), search, program ? allPrograms : null, chips?.el),
     h('div', { class: 'library' }, list, detail),
     toolsPanel(catalogs),
   ];

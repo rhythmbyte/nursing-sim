@@ -43,6 +43,8 @@ See `docs/ARCHITECTURE.md` §5 for what each suite covers.
 
 Live: https://rhythmbyte.github.io/nursing-sim/
 
+**First visit:** the Instructor tab asks which program you teach (RN or LPN / LVN; change it later with **Program** at the top), or **Just looking? Start the demo sim**.
+
 **Fastest start:** Instructor → Setup → **Start demo sim** (starter scenario with the cases as written, a joined test student, clock running).
 
 **The instructor flow in 3 minutes (wizard → Overview → debrief)**

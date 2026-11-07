@@ -88,6 +88,16 @@ Right now: a new sim varies names, vitals and labs (within each case's ranges), 
 Should any of them be off by default?
 Your answer: ______________________________________________
 
+**1.17 Your program's defaults** [64]
+Right now: RN sims offer every case, CNA and LPN helpers, the usual assessment tools and a charge nurse. LPN / LVN sims offer cases tagged LPN, CNA helpers only, six assessment tools (pain, GCS, pupils, BE-FAST, CIWA, head-to-toe) and no charge nurse.
+Right for your programs? What should differ for LPN students?
+Your answer: ______________________________________________
+
+**1.18 Ready-made setting bundles** [65]
+Right now: Standard med-surg, Beginner (gentler timing, no penalties), Code-heavy, Delegation focus, Manikin lab, Screen-only.
+Are these useful? Anything to add or change?
+Your answer: ______________________________________________
+
 ## 2. Scoring and flags
 
 **2.0 Debrief talking points** [63]

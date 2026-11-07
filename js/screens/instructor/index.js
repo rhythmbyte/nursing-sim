@@ -10,6 +10,7 @@ import { mountSetupReady } from './setup-ready.js';
 import { mountOverview } from './overview.js';
 import { mountDebrief } from '../debrief/index.js';
 import { navPush, onNav } from '../shared/nav.js';
+import { mountProgramPicker } from './program-picker.js';
 
 const PICK_KEY = 'ui.instructor.phase'; // { joinCode, status, phase }: a phase the instructor picked for this sim state
 const PHASES = [['setup', 'Setup'], ['overview', 'Overview'], ['debrief', 'Debrief']];
@@ -17,6 +18,8 @@ const autoPhase = (status) => (status === 'ready' ? 'setup' : status === 'ended'
 
 export function mountInstructor(root, ctx) {
   const { runner, store } = ctx;
+  // First visit: pick the program once (it's remembered). A running sim never waits on this.
+  if (ctx.programChosen && !ctx.programChosen() && runner.state.clock.status === 'ready' && (ctx.catalogs.programs?.programs || []).length > 1) return mountProgramPicker(root, ctx);
   const bar = h('nav', { class: 'phase-bar', 'aria-label': 'Sim phase' });
   const body = h('div', {});
   let cleanup = null;

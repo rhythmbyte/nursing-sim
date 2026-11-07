@@ -8,7 +8,7 @@ await send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 1100, de
 // Controllable clock: Date.now() = real start + offset (the app ticks normally; the soak moves time forward).
 await send('Page.addScriptToEvaluateOnNewDocument', { source: `(() => { const real = Date.now.bind(Date); const base = real(); window.__off = Number(sessionStorage.getItem('__off') || 0); Date.now = () => base + window.__off + (real() - base) * 0; window.__advance = (ms) => { window.__off += ms; sessionStorage.setItem('__off', window.__off); }; })();` });
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true")'); await send('Page.reload'); await sleep(5000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(5000);
 // 3-group sim with every feature on
 console.log('create:', await ev(`(async () => {
   const dl = await import('/js/data-loader.js'); const d = await dl.loadAll();

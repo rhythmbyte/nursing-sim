@@ -5,7 +5,7 @@ import { openPage } from './lib.mjs';
 const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, fail, ignore, reset, out, BASE, CDP } = await openPage();
 await send('Runtime.enable'); await send('Page.enable');
 await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(1500);
-await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true")'); await send('Page.reload'); await sleep(2000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true"); localStorage.setItem("nursing-sim:ui.program", JSON.stringify("rn"))'); await send('Page.reload'); await sleep(2000);
 await ev(`(async () => { const dl = await import('/js/data-loader.js'); const d = await dl.loadAll();
   const sc = { id: 'sc-rj', name: 'Rejoin test', startClock: '07:00', speed: 1, assignment: 'random', events: [], notes: '', settings: {},
     groups: [{ id: 'g1', name: 'Group 1', studentCount: 3, patients: ['p1-robert-miller', 'p4-linda-garcia'] }] };

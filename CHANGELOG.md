@@ -2,6 +2,13 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Program profiles (scale, Part A)
+- **Programs** (`data/catalogs/programs.json`, proposed): RN and LPN / LVN, with room for EMT / Paramedic. A program sets what new sims default to (helper roles and staff pool, assessment tools, charge nurse) and which cases and saved sims are offered (by patient tags). It also sets which parts of setup show (charge nurse, delegation, assessments, task timers) and its wording.
+- The instructor **picks a program once** (first visit to the Instructor tab; "Just looking? Start the demo sim" skips it). It's remembered, and **Program** at the top changes it.
+- A program never removes anything a sim needs: tools, interventions and helper roles it doesn't use are only marked as not offered, so a case or sim from another program still runs. The student's intervention picker shows the program's interventions plus any the patient's orders call for. The Builder library shows the program's cases, with "Show cases from every program".
+- Setting **presets** catalog added (`presets.json`), used by the wizard in Part B.
+- Tests: 236 unit; new browser suite `programs`.
+
 ## Browser suites in the repo
 - The browser suites now live in `tests/browser/` (they were outside the repo): `tour`, `instructor-flow`, `cases`, `guided-builder`, `patient-tags`, `task-timers`, `drafts`, `away-break`, `debrief`, `reflection`, `projector`, `run-again`, `rejoin`, `soak`, `crash`. They share one DevTools helper (`lib.mjs`). Paths, ports and the browser are settings, not hard-coded. Five older feature suites (guided builder, patient tags, task timers, drafts, away/break) were ported to the new screens too, with real pass/fail checks instead of printed values.
 - Fixed (found by the stricter suites): the scroll position was saved 300 ms after scrolling, so a reload or crash right after scrolling lost it; it's now also saved when the page is left.
