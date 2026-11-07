@@ -449,6 +449,14 @@ What the full build needs so a 1–4 hour sim never loses a student, a minute or
 - **Log size and data retention per sim.** A 4-hour sim logs a few thousand entries (see the soak test in DECISIONS.md). Keep the full log for the debrief and export, then archive or delete per the school's retention policy.
 
 
+### Many schools and programs (central case library)
+
+- **Tenancy:** each school has its own programs (RN, LPN, EMT…), instructors, students, cases, sims, settings, presets and past debriefs. Nothing crosses schools unless it's shared on purpose. A program profile (`programs.json` today) becomes a per-school record with the same fields; presets and readiness rules likewise.
+- **Central case library:** a shared catalogue that schools can browse and import from. A case is copied into the school (with a link back to its source and version), so a school can adapt it without changing anyone else's copy. Updates to the source are offered, never forced.
+- **Per-case metadata when sharing:** author and owning school, license (e.g. CC BY-NC, all rights reserved, school-only), review status (draft / reviewed by whom, for which program and scope), readiness result, version history, and what it requires (assessment tools, interventions, program scope). The case's `review` fields and the readiness check (`engine/readiness.js`) carry over as the server-side gate.
+- **Assessment tool licensing:** each tool (`assessment-tools.json` `license`) records its licence status per school. A shared case that needs a tool the school hasn't licensed shows Needs work ("tools-unavailable") and can't run until the school confirms a licence or swaps the order. Tool content itself is never copied into another school without a licence.
+- **Debriefs and student data stay with the school** (see the past-debriefs row above); the central library never receives student data.
+
 ## 14. Questions for the instructor
 
 Open questions to confirm with the instructor. Answers update the relevant section and DECISIONS.md. A printable plain-language version for the instructor is `docs/INSTRUCTOR-QUESTIONS.md`; update both when a question is added or answered.

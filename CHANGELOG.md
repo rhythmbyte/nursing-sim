@@ -2,6 +2,9 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Full-build notes (scale, Part E)
+- SPEC §13 now covers many schools and programs: per-school tenancy (programs, presets, cases, sims, past debriefs), a central case library that schools import from (copy with a link back, updates offered not forced), per-case sharing metadata (license, review status per program, readiness, version, requirements), assessment-tool licensing per school, and student data never leaving the school.
+
 ## Overview at scale: 10 students × 6 patients (scale, Part D)
 - **Attention queue** at the top of the Overview: one prioritized list of what you might act on now, most urgent first: codes, monitor alarms, rejoin requests, worsening vitals, call lights (rising with minutes waited), very late work, red flags, away students, recovery penalties, late work. Shows the top 8 (`ui.json attention.showTop`), with "Show N more"; each item opens the patient or student drawer. Urgency weights are data (`ui.json attention`, proposed).
 - **Exception-first cards:** by default only groups and patients that need attention; the rest is "N patients stable" per group and "N groups on track · M patients stable" overall. **Show all patients** and **Compact** (on-track groups folded to one line) are remembered toggles.
