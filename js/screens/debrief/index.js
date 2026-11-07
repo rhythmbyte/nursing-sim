@@ -8,6 +8,7 @@ import { load, save } from '../../storage.js';
 import { summaryView } from './summary.js';
 import { pointsView } from './points.js';
 import { mountBreakdown } from './breakdown.js';
+import { READY_KEY } from '../instructor/setup-wizard.js';
 
 const VIEW_KEY = 'ui.debrief.view'; // { tier: summary|points|full, groupId, userId, section }
 
@@ -21,6 +22,14 @@ export function mountDebrief(root, ctx) {
   const body = h('div', { class: 'debrief-body' });
 
   const open = (next) => { view = next; save(VIEW_KEY, { ...next, section: null }); window.scrollTo(0, 0); render(true); }; // an evidence section scrolls itself into view
+  // Run again: the same scenario (cases, groups, settings) as a new sim: new join code, fresh patient variants (per its
+  // variation toggles), straight to the Ready screen. This sim's debrief is replaced.
+  const runAgain = ctx.switchScenario ? async () => {
+    if (!window.confirm('Run this sim again with the same setup and new patients? Students join again with a new code, and this debrief is cleared (print or export it first).')) return;
+    save(VIEW_KEY, { tier: 'summary' });
+    save(READY_KEY, ctx.scenario.id);
+    await ctx.switchScenario(ctx.scenario.id);
+  } : null;
   const setPoint = (id, state) => { if (state) pointsState[id] = state; else delete pointsState[id]; save(POINTS_KEY, pointsState); render(true); };
 
   function render(force = false) {
@@ -36,7 +45,7 @@ export function mountDebrief(root, ctx) {
     if (cleanup) { cleanup(); cleanup = null; }
     clear(body).append(view.tier === 'points'
       ? pointsView(ctx, { groupId: view.groupId, open, pointsState, setPoint, showHidden, toggleHidden: () => { showHidden = !showHidden; render(true); } })
-      : summaryView(ctx, { open, pointsState }));
+      : summaryView(ctx, { open, pointsState, runAgain }));
   }
 
   root.append(body);

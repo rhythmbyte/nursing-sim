@@ -11,7 +11,7 @@ import { timelinessConfig } from '../../engine/timeliness.js';
 
 const mins = (x) => (x == null ? '—' : `${x} min`);
 
-export function summaryView({ runner, scenario, catalogs }, { open, pointsState }) {
+export function summaryView({ runner, scenario, catalogs }, { open, pointsState, runAgain }) {
   const ctx = runner.rulesCtx();
   const labels = timelinessConfig(runner.state, catalogs).groupStatus?.labels || {};
   const t = runner.templates();
@@ -42,6 +42,8 @@ export function summaryView({ runner, scenario, catalogs }, { open, pointsState 
   return h('div', { class: 'debrief-summary' },
     h('header', { class: 'screen-header' }, h('h2', {}, 'Debrief summary'), helpTip('debrief.summary'),
       h('span', { class: 'muted' }, runner.state.clock.status === 'ended' ? 'Sim ended' : 'So far (the sim is still going)'),
-      h('div', { class: 'debrief-actions' }, h('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print summary'))),
+      h('div', { class: 'debrief-actions' },
+        runAgain && runner.state.clock.status === 'ended' ? h('button', { class: 'btn btn-primary', type: 'button', title: 'Same scenario and settings, a new join code and new patient variants', onclick: runAgain }, 'Run again') : null,
+        h('button', { class: 'btn', type: 'button', onclick: () => window.print() }, 'Print summary'))),
     h('div', { class: 'sum-grid' }, cards));
 }

@@ -2,6 +2,10 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Run again
+- **Debrief → Run again** (after End): the same scenario (cases, groups, settings) as a new sim, with a new join code and fresh patient variants (per its variation toggles; all off = the same patients as written), straight to the Ready screen. It asks first, because this sim's debrief is replaced (print or export it before).
+- Tests: 230 passing; browser check (same cases, new code, new names and drugs).
+
 ## Projector view
 - **Ready → Projector view** opens `index.html?projector=1` for the classroom screen: the sim name, where to join, the join code huge, and who has joined by group, updating live (Full screen button). It shows no patient or case information, since students see it. Display-only, like the bedside monitor page: it never writes or takes the window lock.
 - A brand-new sim is now saved at once, so display-only pages see it before the first student joins.
