@@ -6,7 +6,7 @@
   ],
   "source": "Drafted to fill Patient 6 slot of The Busy Med-Surg Shift",
   "demographics": { "name": "James Carter", "age": 76, "sex": "M", "room": "206" },
-  "case": { "title": "Heart failure 1", "sex": "either", "ageRange": [68, 84], "review": "proposed" },
+  "case": { "title": "Heart failure 1", "code": "HF1", "sex": "either", "ageRange": [68, 84], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – unexpected admission",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "heart-failure", "admission"], "age": ["geriatric"]},

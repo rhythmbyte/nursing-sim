@@ -6,6 +6,7 @@
 
 import { load, save, remove } from './storage.js';
 import { instantiateScenario } from './engine/cases.js';
+import { effectiveSettings } from './engine/settings.js';
 
 const KEY = 'ui.cases';
 const randomSeed = () => Math.random().toString(36).slice(2, 10);
@@ -23,7 +24,8 @@ export function caseSeeds(scenario, { hadSession = false } = {}) {
 /** Scenario → { scenario, templatesById } with this sim's seeds applied. */
 export function instantiateSim(scenario, patients, catalogs, opts) {
   const c = caseSeeds(scenario, opts);
-  return instantiateScenario({ ...scenario, seed: c.seed, variants: { ...(scenario.variants || {}), ...c.variants } }, patients, catalogs, { nominal: Boolean(c.nominal) });
+  // Variation toggles (randomizeNames / Values / Meds) come from the merged settings; the demo is the cases as written.
+  return instantiateScenario({ ...scenario, settings: effectiveSettings(scenario.settings, catalogs), seed: c.seed, variants: { ...(scenario.variants || {}), ...c.variants } }, patients, catalogs, { nominal: Boolean(c.nominal) });
 }
 
 /** A new sim: forget the seeds (the next instantiation picks fresh ones). `demo`: the cases as written in their files. */

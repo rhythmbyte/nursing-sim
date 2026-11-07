@@ -1,7 +1,7 @@
 // Review queue: every item drafted by AI (review: proposed/partial) in one list, per patient, with
 // Approve (instructor's call) and Edit. Approvals save in this browser; export to publish.
 
-import { patientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
 import { toast } from '../shared/toast.js';
@@ -19,7 +19,7 @@ export function mountReviewQueue(root, { data, reloadData, openEditor }) {
     const total = patients.reduce((n, p) => n + reviewItems(p).length, 0)
       + catalogNames.reduce((n, k) => n + reviewItems(data.catalogs[k], 'Whole catalog').length, 0);
     const filter = h('select', { 'aria-label': 'Patient', onchange: (e) => { onlyPatient = e.target.value; render(); } },
-      h('option', { value: '' }, 'Everything'), h('option', { value: '@catalogs', selected: onlyPatient === '@catalogs' }, 'Catalogs only'), patients.map((p) => h('option', { value: p.id, selected: p.id === onlyPatient }, patientLabel(p))));
+      h('option', { value: '' }, 'Everything'), h('option', { value: '@catalogs', selected: onlyPatient === '@catalogs' }, 'Catalogs only'), patients.map((p) => h('option', { value: p.id, selected: p.id === onlyPatient }, instructorPatientLabel(p))));
 
     clear(body).append(
       h('header', { class: 'screen-header' }, h('h2', {}, 'Review queue'), badge(`${total} item${total === 1 ? '' : 's'} need review`, total ? 'review' : 'ok'), filter),
@@ -31,7 +31,7 @@ export function mountReviewQueue(root, { data, reloadData, openEditor }) {
         const items = reviewItems(p);
         return h('section', { class: 'panel' },
           h('div', { class: 'panel-head' },
-            h('h3', {}, patientLabel(p), ' ', data.local.patients.has(p.id) ? badge('Edited in this browser', 'pending') : null),
+            h('h3', {}, instructorPatientLabel(p), ' ', data.local.patients.has(p.id) ? badge('Edited in this browser', 'pending') : null),
             h('div', { class: 'row-actions' },
               h('button', { class: 'btn btn-small', onclick: () => openEditor(p.id) }, 'Edit patient'),
               h('button', { class: 'btn btn-small', onclick: () => downloadJson(`${p.id}.json`, p) }, 'Export JSON'))),

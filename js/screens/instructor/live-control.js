@@ -1,7 +1,8 @@
 // Instructor → Live control: clock controls (+ keyboard shortcuts), Start demo sim, unit strip, call lights,
 // activity, students (join code), flags, patients (adjust vitals, push order, call light, code), labs, events.
 
-import { patientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
+import { codeName } from '../../engine/cases.js';
 import { coalesce } from '../shared/coalesce.js';
 import { openModal } from '../shared/modal.js';
 import { sharedComputerButton, instructorKeys } from '../shared/shared-computer.js';
@@ -77,7 +78,7 @@ function callLights(runner, templatesById) {
     const t = templatesById[pid];
     return h('li', { class: 'call-light-item' },
       h('span', { class: 'call-light-dot', 'aria-hidden': 'true' }),
-      h('strong', {}, patientLabel(t)),
+      h('strong', {}, instructorPatientLabel(t)),
       ` · lit ${elapsed(simMin, ps.callLight.since)}`,
       ps.callLight.rings > 1 ? ` · rang ${ps.callLight.rings}x` : '',
       h('div', { class: 'muted' }, ps.callLight.message),
@@ -100,7 +101,7 @@ function unitChips(state, templatesById) {
   return Object.entries(state.patients).map(([pid, ps]) => {
     const d = templatesById[pid].demographics;
     return h('span', { class: `unit-chip${ps.present ? '' : ' is-incoming'}` },
-      triageChip(ps.tag), ` ${d.room} ${d.name}`, ps.present ? '' : ' (incoming)');
+      triageChip(ps.tag), ` ${d.room} ${codeName(templatesById[pid])}`, ps.present ? '' : ' (incoming)');
   });
 }
 
@@ -111,7 +112,7 @@ export function mountLiveControl(root, ctx) {
   let filter = load('ui.live.filter');
   const filterBar = h('div', {});
   function renderFilter() {
-    const label = filter?.patientId ? patientLabel(templatesById[filter.patientId]) : filter?.groupId ? scenario.groups.find((g) => g.id === filter.groupId)?.name : null;
+    const label = filter?.patientId ? instructorPatientLabel(templatesById[filter.patientId]) : filter?.groupId ? scenario.groups.find((g) => g.id === filter.groupId)?.name : null;
     clear(filterBar).append(...(label ? [h('div', { class: 'banner banner-review live-filter' }, `Showing ${label} (patients and events). `,
       h('button', { class: 'btn btn-small', onclick: () => { filter = null; save('ui.live.filter', null); renderFilter(); render(); } }, 'Show all'))] : []));
   }

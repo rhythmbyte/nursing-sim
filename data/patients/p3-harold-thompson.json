@@ -6,7 +6,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 3",
   "demographics": { "name": "Harold Thompson", "age": 71, "sex": "M", "room": "203" },
-  "case": { "title": "Discharge 1", "sex": "either", "ageRange": [64, 80], "review": "proposed" },
+  "case": { "title": "Discharge 1", "code": "D1", "sex": "either", "ageRange": [64, 80], "review": "proposed" },
   "tag": "green",
   "priorityLabel": "Lower priority – discharge planning",
   "patientTags": {"license": ["lpn", "rn"], "unit": ["med-surg"], "topic": ["respiratory", "discharge"], "age": ["geriatric"]},

@@ -83,6 +83,11 @@ Right now: Dorothy's anticoagulant is apixaban or rivaroxaban and her beta block
 Are the drug lists and doses right?
 Your answer: ______________________________________________
 
+**1.16 What varies by default** [62]
+Right now: a new sim varies names, vitals and labs (within each case's ranges), and medications (within their class). You can turn each one off in the setup wizard to run the cases exactly as written.
+Should any of them be off by default?
+Your answer: ______________________________________________
+
 ## 2. Scoring and flags
 
 **2.1 Extra PRN doses: warn or block?** [1]

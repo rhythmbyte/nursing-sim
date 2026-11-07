@@ -5,18 +5,21 @@
 import { h, clear } from '../shared/dom.js';
 import { helpTip } from '../shared/help.js';
 import { checkList } from './script-parts.js';
-import { instantiate, caseLabel } from '../../engine/cases.js';
+import { instantiate, caseLabel, suggestCode } from '../../engine/cases.js';
 import { rangeWarnings, variantProblems, vitalOf } from '../../engine/case-check.js';
 
 const VITALS = [['hr', 'HR'], ['sbp', 'SBP'], ['dbp', 'DBP'], ['rr', 'RR'], ['spo2', 'SpO₂'], ['tempF', 'Temp °F']];
 const num = (el) => (el.value === '' ? null : Number(el.value));
 const small = (attrs) => h('input', { class: 'input input-small', type: 'number', step: 'any', ...attrs });
 
-export function caseFields(work, catalogs, { settings, onChange = () => {}, current = null }) {
+export function caseFields(work, catalogs, { settings, onChange = () => {}, current = null, takenCodes = [] }) {
   const c = work.case || null;
   const classes = catalogs.medClasses?.classes || [];
   const on = h('input', { type: 'checkbox', checked: Boolean(c), 'aria-label': 'This patient is a case template' });
   const title = h('input', { class: 'input', value: c?.title || '', placeholder: 'e.g. Cardiac 1', 'aria-label': 'Case title' });
+  // Short instructor code ("C1"), suggested from the title; instructors see "(C1) Robert Miller", students never.
+  const code = h('input', { class: 'input input-small', value: c?.code || '', placeholder: suggestCode(c?.title || '', takenCodes), 'aria-label': 'Case code', maxlength: 6 });
+  title.addEventListener('input', () => { code.placeholder = suggestCode(title.value, takenCodes); });
   const sex = h('select', { 'aria-label': 'Case sex' }, [['either', 'Either (random)'], ['M', 'Male'], ['F', 'Female']].map(([v, l]) => h('option', { value: v, selected: (c?.sex || 'either') === v }, l)));
   const ageLo = small({ value: c?.ageRange?.[0] ?? work.demographics.age, 'aria-label': 'Age from' });
   const ageHi = small({ value: c?.ageRange?.[1] ?? work.demographics.age, 'aria-label': 'Age to' });
@@ -54,7 +57,8 @@ export function caseFields(work, catalogs, { settings, onChange = () => {}, curr
     for (const o of orders) { const ord = next.orders[o.i]; if (ord) { if (o.sel.value) ord.medClass = o.sel.value; else delete ord.medClass; } }
     if (!on.checked) { delete next.case; return next; }
     const ex = exclude.value();
-    next.case = { ...(t.case || { review: 'proposed' }), title: title.value.trim() || t.id, sex: sex.value, ageRange: [num(ageLo) ?? t.demographics.age, num(ageHi) ?? t.demographics.age], ...(ex.length ? { excludeDrugs: ex } : {}) };
+    const cd = code.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '') || suggestCode(title.value.trim() || t.id, takenCodes);
+    next.case = { ...(t.case || { review: 'proposed' }), title: title.value.trim() || t.id, code: cd, sex: sex.value, ageRange: [num(ageLo) ?? t.demographics.age, num(ageHi) ?? t.demographics.age], ...(ex.length ? { excludeDrugs: ex } : {}) };
     if (!ex.length) delete next.case.excludeDrugs;
     return next;
   }
@@ -86,6 +90,7 @@ export function caseFields(work, catalogs, { settings, onChange = () => {}, curr
     h('p', { class: 'muted small' }, 'Students never see the case title. Name, age and sex above are the case "as written" (the demo, and Lock). In any text use {firstName} {lastName} {fullName} {age}{sex} {room} {he/she} {his/her} {him/her} {He/She} {Mr/Ms}, any {male/female} pair like {wife/husband}, baseline {bp} {hr} {rr} {spo2} {tempF}, {lab.wbc}, and {med.<class>} / {med.<class>.Name|dose|freq}. ', helpTip('editor.placeholders')),
     h('div', { class: 'editor-grid' },
       h('label', { class: 'field' }, h('span', {}, 'Case title (instructor only)'), title),
+      h('label', { class: 'field' }, h('span', {}, 'Code (instructor only) ', helpTip('editor.case-code')), code),
       h('label', { class: 'field' }, h('span', {}, 'Sex'), sex),
       h('div', { class: 'field' }, h('span', {}, 'Age range'), row(ageLo, '–', ageHi))),
     h('h4', {}, 'Baseline vitals ', helpTip('editor.vital-ranges')),

@@ -2,6 +2,11 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Variation toggles and case codes (restructure, Part A)
+- **Three toggles per sim** (scenario settings, defaults on, proposed): **Randomize names**, **Randomize vitals & labs within ranges**, **Randomize meds within class**. Off = that part of each case exactly as written (the file's name, age and sex; the written values; the written drug). Set in the setup wizard.
+- **Case codes:** each case has a short instructor code (`case.code`: C1, PO1, D1, S1, N1, HF1), suggested from the title and editable in the Patient editor. Every instructor screen shows "(C1) Robert Miller"; student and charge-nurse screens never show it.
+- Tests: 225 passing.
+
 ## Case templates with randomized variation (Part B)
 - **Patients are now reusable cases** ("Cardiac 1", "Sepsis 1"). Each sim makes its own patient from a seed: a name from `data/catalogs/names.json`, an age in the case's range, the sex (fixed or either), baseline vitals and labs within their ranges, and one drug per medication class (`data/catalogs/med-classes.json`). The patient is identical through the sim, reloads, rejoins and the debrief. The same case in two groups gets a different name and variant.
 - **Texts use placeholders:** `{firstName}` `{fullName}` `{age}{sex}` `{room}` `{he/she}` `{his/her}`, any `{male/female}` pair (`{wife/husband}`), baseline `{bp}` `{hr}` `{spo2}`…, `{lab.wbc}`, and `{med.doac}` / `{med.doac.Name|dose|freq}`. A class drug is used everywhere: home meds, the order's medication and text, MAR, PRN and hold rules, allergy checks, timeliness. Never a drug the patient is allergic to; the case can exclude drugs.

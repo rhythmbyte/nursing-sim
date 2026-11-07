@@ -1,6 +1,7 @@
 // Live flags (all students) + "Mark left unattended" for the left-unattended rule.
 
 import { h } from '../shared/dom.js';
+import { codeName } from '../../engine/cases.js';
 import { promptText } from '../shared/modal.js';
 import { formatShiftTime } from '../../engine/time.js';
 
@@ -10,12 +11,12 @@ export function flagsPanel(runner, templatesById, user) {
   const room = (pid) => `Rm ${templatesById[pid].demographics.room}`;
   const ctx = runner.rulesCtx();
   const present = Object.entries(runner.state.patients).filter(([, ps]) => ps.present);
-  const pick = h('select', { 'aria-label': 'Patient' }, present.map(([pid]) => h('option', { value: pid }, `${room(pid)} ${templatesById[pid].demographics.name}`)));
+  const pick = h('select', { 'aria-label': 'Patient' }, present.map(([pid]) => h('option', { value: pid }, `${room(pid)} ${codeName(templatesById[pid])}`)));
 
   async function mark() {
     const pid = pick.value;
     const studentIds = ctx.studentIdsForGroup(runner.state.patients[pid].groupId);
-    const note = await promptText(`Left unattended: ${templatesById[pid].demographics.name}`, `Note (applies to ${studentIds.join(', ')})`, { required: false, okLabel: 'Mark' });
+    const note = await promptText(`Left unattended: ${codeName(templatesById[pid])}`, `Note (applies to ${studentIds.join(', ')})`, { required: false, okLabel: 'Mark' });
     if (note == null) return;
     runner.markLeftUnattended(pid, studentIds, note, user);
   }

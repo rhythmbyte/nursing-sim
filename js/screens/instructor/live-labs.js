@@ -1,7 +1,7 @@
 // Pending labs with "Release now". Labs with no scripted value (or unscripted repeat draws)
 // ask the instructor for a value first.
 
-import { patientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
 import { h } from '../shared/dom.js';
 import { promptText } from '../shared/modal.js';
 import { formatShiftTime } from '../../engine/time.js';
@@ -25,7 +25,7 @@ export function labsPanel(runner, templatesById, user) {
   return h('table', { class: 'data-table' },
     h('thead', {}, h('tr', {}, ['Patient', 'Lab', 'Status', 'Scripted value', ''].map((c) => h('th', {}, c)))),
     h('tbody', {}, rows.map(({ pid, l }) => h('tr', { class: l.awaitingValue ? 'needs-attention' : '' },
-      h('td', {}, patientLabel(templatesById[pid])),
+      h('td', {}, instructorPatientLabel(templatesById[pid])),
       h('td', {}, l.label || l.code),
       h('td', {}, l.awaitingValue ? 'Ready: needs a value'
         : l.drawnAtMin == null ? 'Not drawn' : `Drawn ${at(l.drawnAtMin)} · due ${at(l.resultAtMin)}`),

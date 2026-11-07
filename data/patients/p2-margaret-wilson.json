@@ -7,7 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 2",
   "demographics": { "name": "Margaret Wilson", "age": 74, "sex": "F", "room": "202" },
-  "case": { "title": "Post-op ortho 1", "sex": "either", "ageRange": [66, 80], "review": "proposed" },
+  "case": { "title": "Post-op ortho 1", "code": "PO1", "sex": "either", "ageRange": [66, 80], "review": "proposed" },
   "tag": "yellow",
   "priorityLabel": "Moderate priority – pain and mobility management",
   "patientTags": {"license": ["lpn", "rn"], "unit": ["med-surg", "surgical", "rehab"], "topic": ["post-op", "pain", "falls"], "age": ["geriatric"]},

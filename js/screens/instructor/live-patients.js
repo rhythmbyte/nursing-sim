@@ -2,7 +2,7 @@
 // and record ROSC / no ROSC. Clinical choices stay with the instructor; nothing here judges them.
 
 import { formDraft } from '../shared/drafts.js';
-import { caseLabel } from '../../engine/cases.js';
+import { caseLabel, codeName } from '../../engine/cases.js';
 import { h } from '../shared/dom.js';
 import { openModal, promptText } from '../shared/modal.js';
 import { triageChip } from '../shared/triage-chip.js';
@@ -78,7 +78,7 @@ export function patientsPanel(runner, templatesById, catalogs, user, filter = nu
     h('thead', {}, h('tr', {}, ['Patient', 'Tag', 'Vitals', 'Student priorities', 'Status', 'Actions'].map((c) => h('th', {}, c)))),
     h('tbody', {}, rows.map(([pid, ps]) => {
       const d = templatesById[pid].demographics;
-      const name = `Rm ${d.room} ${d.name}`;
+      const name = `Rm ${d.room} ${codeName(templatesById[pid])}`;
       const status = [
         ps.callLight ? `call light since ${at(ps.callLight.since)}` : null,
         ps.code ? (ps.code.outcome ? `code ${at(ps.code.startedMin)}–${at(ps.code.endedMin)}: ${ps.code.outcome === 'rosc' ? 'ROSC' : 'no ROSC'}` : `CODING since ${at(ps.code.startedMin)}`) : null,

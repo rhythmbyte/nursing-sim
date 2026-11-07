@@ -16,7 +16,7 @@
         "revealManualVitals",
         "staffPool", "delegationQueue", "awayAfterSec",
         "prnPreCheckWindowMin",
-        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "taskTimerMode", "taskTimerManikinFactor", "taskTimerMinLockoutSec", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
+        "delegatedAssessmentRevealsFindings", "codeTag", "scriptedVitalsAfterInstructor", "reactionMaxFires", "reactionMaxPerInstant", "recoveryPenalties", "recoveryPenaltyMaxPercent", "assessmentTools", "revealAssessmentFindings", "gradeAssessments", "randomizeNames", "randomizeValues", "randomizeMeds", "taskTimerMode", "taskTimerManikinFactor", "taskTimerMinLockoutSec", "roscTag", "roscRhythm", "noRoscRhythm", "messages"
       ],
       "properties": {
         "handoffMode": { "enum": ["once", "always", "never"] },
@@ -41,6 +41,9 @@
         "assessmentTools": { "type": ["string", "array"] },
         "revealAssessmentFindings": { "type": "boolean" },
         "gradeAssessments": { "type": "boolean" },
+        "randomizeNames": { "type": "boolean" },
+        "randomizeValues": { "type": "boolean" },
+        "randomizeMeds": { "type": "boolean" },
         "taskTimerMode": { "enum": ["screen-only", "manikin", "off"] },
         "taskTimerManikinFactor": { "type": "number", "minimum": 0, "maximum": 1 },
         "taskTimerMinLockoutSec": { "type": "number", "minimum": 0 },

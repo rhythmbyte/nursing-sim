@@ -82,7 +82,8 @@ export function mountPatientEditor(root, { data, reloadData, editorTarget, scena
     const nr = Object.fromEntries(Object.keys(defaults).map((k) => [k, ['lo', 'hi'].map((side, i) => h('input', { class: 'input input-small', type: 'number', 'aria-label': `${k} normal ${side === 'lo' ? 'low' : 'high'}`, value: work.normalRanges?.[k]?.[i] ?? '', placeholder: String(defaults[k][i]) }))]));
     const durs = durationOverrides(catalogs, work.taskDurations || {}, { label: 'Patient task time' });
     const baselineAssess = answersEditor(catalogs, work.assessments?.baseline || {}, { title: 'Baseline', blankMeans: 'not scripted' });
-    const cases = caseFields(work, catalogs, { settings: scenario.settings, onChange: () => { dirty = true; }, current: () => collect() });
+    const takenCodes = data.patients.filter((p) => p.id !== work.id).map((p) => p.case?.code).filter(Boolean);
+    const cases = caseFields(work, catalogs, { settings: scenario.settings, onChange: () => { dirty = true; }, current: () => collect(), takenCodes });
     const jsonBox = h('textarea', { class: 'input', rows: 16, 'aria-label': 'Patient JSON (advanced)' });
     jsonBox.value = JSON.stringify(work, null, 2);
     const errBox = h('div', {});

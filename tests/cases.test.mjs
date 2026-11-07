@@ -149,3 +149,31 @@ test('variant integrity catches a range or a relative change that breaks the scr
   lab.labs.find((l) => l.code === 'na').range = [132, 137];
   assert.ok(rangeWarnings(lab, catalogs).some((x) => /na range 132–137 crosses the reference range/.test(x.message)));
 });
+
+test('variation toggles: names / values / meds off = that part exactly as written; codes "(C1) Robert Miller"', async () => {
+  const { varyFrom, codeName, suggestCode } = await import('../js/engine/cases.js');
+  const all = { names: false, values: false, meds: false };
+  const asWritten = instantiate(dorothy, { seed: 'v1', catalogs, vary: all });
+  assert.equal(asWritten.demographics.name, 'Dorothy Evans');
+  assert.equal(asWritten.vitals.baseline.bp, '142/80');
+  assert.equal(asWritten.instance.meds.doac, 'apixaban');
+  for (let i = 0; i < 12; i++) {
+    const n = instantiate(dorothy, { seed: `v${i}`, catalogs, vary: { names: true, values: false, meds: false } });
+    assert.equal(n.vitals.baseline.bp, '142/80'); assert.equal(n.instance.meds.doac, 'apixaban');
+    const v = instantiate(dorothy, { seed: `v${i}`, catalogs, vary: { names: false, values: true, meds: false } });
+    assert.equal(v.demographics.name, 'Dorothy Evans'); assert.equal(v.instance.meds.doac, 'apixaban');
+    const m = instantiate(dorothy, { seed: `v${i}`, catalogs, vary: { names: false, values: false, meds: true } });
+    assert.equal(m.demographics.name, 'Dorothy Evans'); assert.equal(m.vitals.baseline.bp, '142/80');
+  }
+  assert.deepEqual(varyFrom({ randomizeNames: false }), { names: false, values: true, meds: true });
+  // Scenario settings drive instantiateScenario.
+  const sc = { ...scenario, settings: { ...scenario.settings, randomizeNames: false, randomizeValues: false, randomizeMeds: false } };
+  const out = instantiateScenario(sc, library, catalogs);
+  assert.equal(out.templatesById['p1-robert-miller'].demographics.name, 'Robert Miller');
+  assert.equal(codeName(out.templatesById['p1-robert-miller']), '(C1) Robert Miller');
+  assert.equal(codeName(out.templatesById['p4-linda-garcia']), '(S1) Linda Garcia');
+  assert.equal(suggestCode('Cardiac 1'), 'C1');
+  assert.equal(suggestCode('Heart failure 1'), 'HF1');
+  assert.equal(suggestCode('Cardiac 1', ['C1', 'C2']), 'C3');
+  assert.equal(new Set(library.map((t) => t.case.code)).size, library.length, 'starter codes are unique');
+});

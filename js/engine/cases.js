@@ -1,14 +1,15 @@
 // Case templates (pure, no DOM). A patient file with `case` is a reusable case ("Cardiac 1"); a sim instantiates it
 // into a concrete patient from a seed, so the patient is identical through the sim, reloads, rejoins and the debrief.
 // Everything downstream (engine, rules, screens) works on the instantiated patient, so its values are used everywhere.
-//   case: { title, sex: 'M'|'F'|'either', ageRange: [lo, hi], excludeDrugs?: [drugIds], locked?: [{ seed, label }] }
+//   case: { title, code: 'C1', sex: 'M'|'F'|'either', ageRange: [lo, hi], excludeDrugs?: [drugIds], locked?: [{ seed, label }] }
+// Variation per sim: settings randomizeNames / randomizeValues / randomizeMeds (off = that part exactly as written).
 //   vitals.ranges: { hr: [lo, hi], sbp, dbp, rr, spo2, tempF }      labs[i].range: [lo, hi] (unless teachingPoint)
 //   valuesRel on keyframes / state vitals / vitals effects: relative to the instantiated baseline ({ sbp: -30 })
 //   homeMeds[i].medClass / orders[i].medClass: 'beta-blocker' → one drug per class per patient (med-classes.json)
 //   Text placeholders anywhere: {firstName} {lastName} {fullName} {age} {sex} {room}, any {male/female} word pair
 //   ({he/she} {His/Her} {Mr/Ms} {wife/husband}…), this patient's baseline {bp} {hr} {rr} {spo2} {tempF}, first lab value
 //   {lab.<code>}, and the class drug {med.<class>} {med.<class>.Name|dose|route|freq}
-// Instance meta on the result: t.instance = { caseId, caseTitle, seed, nominal, meds: { class: drugName } } (instructor-only).
+// Instance meta on the result: t.instance = { caseId, caseTitle, code, seed, nominal, meds: { class: drugName } } (instructor-only).
 
 import { allergyMatch } from './rules/allergy-conflict.js';
 
@@ -88,11 +89,24 @@ export function allowedDrugs(t, classId, catalogs) {
   return cls.drugs.filter((d) => !excl.has(d.id) && !(t.allergies || []).some((a) => allergyMatch(a.agent, d.name, allergyClasses(catalogs))));
 }
 
+/** The drug a class resolves to "as written": the home med / order drug the file names, else the first allowed one. */
+function writtenDrug(t, cls, ok) {
+  const named = [...(t.homeMeds || []).filter((m) => m.medClass === cls).map((m) => m.name), ...t.orders.filter((o) => o.medClass === cls).map((o) => String(o.med || '').split(' ')[0])];
+  return ok.find((d) => named.some((n) => norm(n) === norm(d.name))) || ok[0];
+}
+
+/** Which parts of a case vary in this sim (scenario settings randomizeNames / randomizeValues / randomizeMeds). */
+export const varyFrom = (settings = {}) => ({ names: settings.randomizeNames !== false, values: settings.randomizeValues !== false, meds: settings.randomizeMeds !== false });
+
 /**
  * Instantiate one case. opts: { seed, instanceId, catalogs, room?, usedNames?: Set, identity?: { first, last, sex, age },
- * nominal?: true (baseline and lab values as written, first allowed drug) }. Returns a concrete patient template.
+ * nominal?: true (values and drugs as written), vary?: { names, values, meds } (false = that part as written) }.
+ * Returns a concrete patient template.
  */
-export function instantiate(template, { seed, instanceId = template.id, catalogs, room = null, usedNames = new Set(), identity = null, nominal = false }) {
+export function instantiate(template, { seed, instanceId = template.id, catalogs, room = null, usedNames = new Set(), identity = null, nominal = false, vary = null }) {
+  if (vary) { nominal = nominal || (!vary.values && !vary.meds); if (!vary.names && !identity && template.case) identity = fileIdentity(template); }
+  const sameValues = nominal || vary?.values === false;
+  const sameMeds = nominal || vary?.meds === false;
   const t = structuredClone(template);
   t.id = instanceId;
   if (room != null) t.demographics.room = String(room);
@@ -114,11 +128,11 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
   const meds = {};
   for (const cls of classes) {
     const ok = allowedDrugs(template, cls, catalogs);
-    if (ok.length) meds[cls] = nominal ? ok[0] : pick(rng, ok);
+    if (ok.length) meds[cls] = sameMeds ? writtenDrug(template, cls, ok) : pick(rng, ok);
   }
   // Baseline ranges and labs (teaching-point values stay as written).
   const base = t.vitals.baseline;
-  if (!nominal) {
+  if (!sameValues) {
     const r = t.vitals.ranges || {};
     for (const k of ['hr', 'rr', 'spo2', 'tempF']) if (r[k]) base[k] = between(rng, r[k], k === 'tempF' ? 1 : 0);
     if (r.sbp || r.dbp) { const bp = parseBp(base.bp) || [120, 80]; base.bp = `${r.sbp ? between(rng, r.sbp) : bp[0]}/${r.dbp ? between(rng, r.dbp) : bp[1]}`; }
@@ -142,7 +156,7 @@ export function instantiate(template, { seed, instanceId = template.id, catalogs
   }
   const out = fillAll(t, ctx);
   out.demographics = { ...out.demographics, name: `${first} ${last}`, age, sex };
-  out.instance = { caseId: template.id, caseTitle: c.title || template.id, seed: String(seed), nominal, meds: Object.fromEntries(Object.entries(meds).map(([k, d]) => [k, d.name])) };
+  out.instance = { caseId: template.id, caseTitle: c.title || template.id, seed: String(seed), nominal, ...(c.code ? { code: c.code } : {}), meds: Object.fromEntries(Object.entries(meds).map(([k, d]) => [k, d.name])) };
   return out;
 }
 
@@ -156,6 +170,7 @@ export const fileIdentity = (t) => ({ first: t.demographics.name.split(' ')[0], 
  * (made unique). opts.nominal (the demo): each case's first use is the case as written (file name, values, first drug).
  */
 export function instantiateScenario(scenario, library, catalogs, { nominal = false } = {}) {
+  const vary = varyFrom(scenario.settings);
   const byId = Object.fromEntries(library.map((p) => [p.id, p]));
   const used = new Set(); const rooms = new Set(); const count = {}; const templatesById = {};
   const roomPool = [...(scenario.rooms || [])];
@@ -172,7 +187,7 @@ export function instantiateScenario(scenario, library, catalogs, { nominal = fal
     const seed = v?.seed ?? lock?.seed ?? `${scenario.seed ?? scenario.id}:${iid}`;
     // As written (the demo, or a locked "as written" variant): file name and values, first allowed drug.
     const asWritten = t.case && count[cid] === 1 && !v?.seed && (lock ? lock.nominal : nominal);
-    templatesById[iid] = instantiate(t, { seed, instanceId: iid, catalogs, room, usedNames: used, ...(asWritten ? { identity: fileIdentity(t), nominal: true } : {}) });
+    templatesById[iid] = instantiate(t, { seed, instanceId: iid, catalogs, room, usedNames: used, vary, ...(asWritten ? { identity: fileIdentity(t), nominal: true } : {}) });
     return iid;
   };
   const groups = scenario.groups.map((g) => {
@@ -181,6 +196,20 @@ export function instantiateScenario(scenario, library, catalogs, { nominal = fal
   });
   return { scenario: { ...scenario, groups }, templatesById };
 }
+
+/** Short instructor code for a case title: "Cardiac 1" → "C1", "Heart failure 1" → "HF1" (unique against `taken`). */
+export function suggestCode(title, taken = []) {
+  const words = String(title || '').split(/[\s-]+/).filter(Boolean);
+  const letters = words.filter((w) => !/^\d+$/.test(w)).map((w) => w[0].toUpperCase()).join('').slice(0, 2) || 'P';
+  let n = Number(words.find((w) => /^\d+$/.test(w)) || 1);
+  const used = new Set(taken.map((x) => String(x).toUpperCase()));
+  while (used.has(`${letters}${n}`)) n++;
+  return `${letters}${n}`;
+}
+/** The case's instructor code ("C1"), or null for a fixed patient. */
+export const caseCode = (t) => t?.instance?.code ?? t?.case?.code ?? null;
+/** INSTRUCTOR only: "(C1) Robert Miller" (a fixed patient: just the name). Students never see the code. */
+export const codeName = (t) => (t ? `${caseCode(t) ? `(${caseCode(t)}) ` : ''}${t.demographics.name}` : '');
 
 /** Instructor-facing label: "Cardiac 1 — Robert Miller, 68M, metoprolol tartrate". Students never see it. */
 export function caseLabel(t) {

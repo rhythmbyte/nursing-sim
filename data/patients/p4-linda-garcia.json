@@ -7,7 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 4",
   "demographics": { "name": "Linda Garcia", "age": 63, "sex": "F", "room": "204" },
-  "case": { "title": "Sepsis 1", "sex": "either", "ageRange": [56, 70], "review": "proposed" },
+  "case": { "title": "Sepsis 1", "code": "S1", "sex": "either", "ageRange": [56, 70], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – possible clinical deterioration",
   "patientTags": {"license": ["rn"], "unit": ["med-surg"], "topic": ["respiratory", "sepsis"], "age": ["adult"]},

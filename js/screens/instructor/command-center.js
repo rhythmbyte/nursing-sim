@@ -7,7 +7,7 @@ import { coalesce } from '../shared/coalesce.js';
 import { simClock } from '../shared/timer.js';
 import { triageChip } from '../shared/triage-chip.js';
 import { toneChip } from '../shared/tone-chip.js';
-import { patientLabel, instructorPatientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
 import { helpTip } from '../shared/help.js';
 import { commandCenter, statusWorsened } from '../../engine/command-center.js';
 import { timelinessConfig } from '../../engine/timeliness.js';
@@ -42,7 +42,7 @@ export function mountCommandCenter(root, { store, runner, scenario, openLive }) 
         h('button', { class: 'cc-head', onclick: () => openLive({ groupId: g.groupId }), title: 'Open this group in Live control' },
           h('h3', {}, g.name), toneChip(statusLabels[g.status])),
         h('div', { class: 'cc-students' }, g.students.length
-          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${patientLabel(t[st.inPatient])}` : 'on home screen'}`,
+          ? g.students.map((st) => h('span', {}, `${st.name}: ${st.inPatient ? `in ${instructorPatientLabel(t[st.inPatient])}` : 'on home screen'}`,
             st.busy ? h('span', { class: 'cc-busy' }, ` · ⏳ ${st.busy.label} (${Math.ceil(st.busy.leftMin)} min left)`) : null,
             st.away ? h('span', { class: 'away' }, ` · ⚠ Away / reconnecting (${st.away.awayMin} min)`) : null,
             st.back && !st.away ? h('span', { class: 'muted' }, ` · ↻ reconnected${st.back.awayMin != null ? ` after ${st.back.awayMin} min` : ''}`) : null))

@@ -3,7 +3,7 @@
 // Display + runner calls only; the rules are in engine/reactions*.
 
 import { h } from '../shared/dom.js';
-import { patientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
 import { helpTip } from '../shared/help.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { select } from './script-parts.js';
@@ -22,7 +22,7 @@ function patientScript(runner, pid, t, user) {
   const reactSel = h('select', { 'aria-label': `Reaction to fire for ${t.demographics.name}` }, v.reactions.map((r) => h('option', { value: r.id }, r.label)));
   return h('div', { class: `script-row${v.paused ? ' is-paused' : ''}` },
     h('div', { class: 'script-head' },
-      h('strong', {}, patientLabel(t)),
+      h('strong', {}, instructorPatientLabel(t)),
       h('span', { class: 'script-state' }, v.stateLabel),
       h('span', { class: 'muted small' }, `since ${at(v.since)}`),
       v.paused ? h('span', { class: 'badge' }, '⏸ Scripting paused') : null,

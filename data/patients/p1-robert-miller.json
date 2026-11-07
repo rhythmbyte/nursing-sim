@@ -7,7 +7,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 1",
   "demographics": { "name": "Robert Miller", "age": 68, "sex": "M", "room": "201" },
-  "case": { "title": "Cardiac 1", "sex": "either", "ageRange": [62, 74], "review": "proposed" },
+  "case": { "title": "Cardiac 1", "code": "C1", "sex": "either", "ageRange": [62, 74], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – immediate assessment",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "cardiology"], "topic": ["cardiac", "pain"], "age": ["geriatric"]},

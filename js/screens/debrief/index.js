@@ -1,7 +1,7 @@
 // Debrief (instructor): per-student flags, response times, order sequence, charted vs scripted vitals,
 // handoff notes, "should recognize", and the full timeline with flags inline. CSV export + print view.
 
-import { patientLabel, instructorPatientLabel } from '../shared/labels.js';
+import { instructorPatientLabel } from '../shared/labels.js';
 import { h, clear } from '../shared/dom.js';
 import { formatShiftTime } from '../../engine/time.js';
 import { load, save } from '../../storage.js';
@@ -30,7 +30,7 @@ export function mountDebrief(root, { store, runner, templatesById, scenario, cat
   const labelOf = (id) => catalogs.interventions.interventions.find((i) => i.id === id)?.label || id;
   const orderText = (pid, oid) => templatesById[pid]?.orders.find((o) => o.id === oid)?.text || oid;
   const patientName = (pid) => templatesById[pid]?.demographics.name || pid || '';
-  const room = (pid) => (pid ? patientLabel(templatesById[pid]) : 'Unit');
+  const room = (pid) => (pid ? instructorPatientLabel(templatesById[pid]) : 'Unit');
   const body = h('div', { class: 'debrief-body' });
 
   function csvFor(d, at) {

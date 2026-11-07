@@ -22,6 +22,7 @@
       "description": "Case template (engine/cases.js): the sim instantiates a concrete patient from a seed.",
       "properties": {
         "title": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "pattern": "^[A-Z0-9]{1,6}$" },
         "sex": { "enum": ["M", "F", "either"] },
         "ageRange": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
         "excludeDrugs": { "type": "array", "items": { "type": "string" } },

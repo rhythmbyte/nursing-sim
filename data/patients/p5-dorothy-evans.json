@@ -8,7 +8,7 @@
   ],
   "source": "Instructor case: The Busy Med-Surg Shift — Patient 5 (partial)",
   "demographics": { "name": "Dorothy Evans", "age": 82, "sex": "F", "room": "205" },
-  "case": { "title": "Neuro 1", "sex": "either", "ageRange": [76, 90], "review": "proposed" },
+  "case": { "title": "Neuro 1", "code": "N1", "sex": "either", "ageRange": [76, 90], "review": "proposed" },
   "tag": "red",
   "priorityLabel": "High priority – immediate post-fall assessment",
   "patientTags": {"license": ["rn"], "unit": ["med-surg", "neuro"], "topic": ["neuro", "falls"], "age": ["geriatric"]},

@@ -3,6 +3,7 @@
 // the scenario in this browser, and switches to it (a new join code is generated).
 
 import { formDraft } from '../shared/drafts.js';
+import { codeName } from '../../engine/cases.js';
 import { helpField, helpTip } from '../shared/help.js';
 import { h, clear } from '../shared/dom.js';
 import { badge } from '../shared/badge.js';
@@ -93,7 +94,7 @@ export function mountSimSetup(root, { data, switchScenario }) {
       g.mode === 'pick'
         ? h('div', { class: 'pick-list' }, lib.map((p) => h('div', { class: 'pick-row' },
           h('label', { class: 'inline' }, h('input', { type: 'checkbox', checked: g.patients.has(p.id), onchange: (e) => { e.target.checked ? g.patients.add(p.id) : g.patients.delete(p.id); } }),
-            ` Rm ${p.demographics.room} ${p.demographics.name} `, triageChip(p.tag)),
+            ` Rm ${p.demographics.room} ${codeName(p)} `, triageChip(p.tag)),
           h('label', { class: 'inline muted small' }, h('input', { type: 'checkbox', checked: g.admissions.has(p.id), onchange: (e) => { e.target.checked ? g.admissions.add(p.id) : g.admissions.delete(p.id); } }), ' as admission'))))
         : h('div', {}, h('div', { class: 'editor-grid' }, TAGS.map((t) => field(`${t} patients`, h('input', { class: 'input', type: 'number', min: 0, value: g.tagCounts[t], oninput: (e) => { g.tagCounts[t] = Number(e.target.value); refreshCounts(); } })))),
           data.catalogs.patientTags ? h('details', { open: Object.keys(g.tagFilter || {}).length > 0 }, h('summary', {}, 'This group\'s own patient tags (optional) ', helpTip('setup.group-patient-tags')),
