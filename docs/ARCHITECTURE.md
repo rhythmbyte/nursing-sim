@@ -165,6 +165,7 @@ data/**/*.json ──► data-loader.js ──► store (state.js) ──► eng
 | `data/scenarios/` | Saved sim setups | built |
 | `data/catalogs/` | `interventions.json`, `labs.json` (incl. `fallbackDelayMin`), `staff.json`, `rules.json` (flag thresholds/severities, allergy classes, code-response ids, vitals tolerances), `vitals.json` (monitor vs. manual fields, NIBP cycles), `scenario-defaults.json` (default for every scenario setting), `priority-scales.json` (student priority scales), `vitals-presets.json` (Live control quick vitals changes), `ui.json` (prototype-only UI text: welcome popup), `reaction-templates.json` (reusable script pieces for the builder), `assessment-tools.json` (scored nursing tools with licenses), `patient-tags.json` (patient tag groups for finding and randomizing), `task-timing.json` (MAR task times, default, what's allowed while busy), `rhythms.json` (monitor rhythms and how they're drawn) | built |
 | `tests/` | Node tests (`node --test tests/`); dev-only, not loaded by the site | built |
+| `tests/browser/` | Browser suites against the real app in headless Chromium: `all.sh` (runner: static server, a fresh browser per suite, PASS/FAIL summary), `lib.mjs` (DevTools helpers), one `.mjs` per suite; output in `tests/browser/.out/` (gitignored). Excluded from the deployed site (`_config.yml`) | built |
 | `.claude/` | Claude Code settings, the autosave Stop hook, and the PreToolUse hook that blocks commands mentioning env files | built |
 | `docs/` | This file, `DECISIONS.md`, `INSTRUCTOR-QUESTIONS.md` (printable plain-language version of SPEC §14 + review and license lists; keep it in step with §14) | built |
 
@@ -248,4 +249,13 @@ Tabs are built in `js/main.js` as `{ id, label, mount(root) }` objects and passe
   - every data file against its schema, plus the manifest matching the files on disk;
   - the pure modules (time, review helpers, store);
   - engine modules as they're added.
+- **Browser suites:** `tests/browser/all.sh` runs every suite against the real app in headless Chromium (about 15 minutes); `tests/browser/all.sh debrief rejoin` runs just those. It starts a static server on port 8765 if none is running and launches a fresh browser profile per suite, so no cached modules or leftover storage carry over. Needs Node 22+ (built-in WebSocket), Chromium, Python 3 and curl; settings `NS_BASE`, `NS_CDP_PORT`, `NS_CHROMIUM`, `NS_OUT` are listed at the top of `all.sh`. A suite fails on any page error or warning, a click that finds nothing, an evaluation that throws, or a failed check; logs and screenshots go to `tests/browser/.out/`. The suites:
+  - `tour`: every wizard step and Builder view, the Overview, drawer and More controls, the student chart, charge, End and all debrief tiers, with an unlabeled-controls check on each screen;
+  - `instructor-flow`: wizard → Ready → join → Start → Overview → End → Debrief;
+  - `cases`: case templates (Reroll, Lock, codes never shown to students, editor warnings, Check variants);
+  - `debrief`, `reflection`: the three tiers, evidence links, ticks and hides, reflection skipping;
+  - `projector`, `run-again`, `rejoin`;
+  - `soak`: a 4-hour sim on a simulated clock (memory, storage, tick and render times);
+  - `crash`: kills and relaunches its own browser (editor draft, task timer, delegation, half-typed forms, reload, closed tab, Back).
+  - To add a suite: copy a short one (`run-again.mjs`), use `openPage()` from `lib.mjs`, and add its name to `SUITES` in `all.sh`.
 - **Live site:** https://rhythmbyte.github.io/nursing-sim/ (GitHub Pages, deploys from `main`, root folder, on every push).

@@ -30,6 +30,15 @@ node --test tests/
 
 These validate every data file against `data/schemas/` and cover the pure modules. They're dev-only; the site itself has no build step.
 
+Browser suites (the real app in headless Chromium; needs Node 22+, Chromium, Python 3):
+
+```
+tests/browser/all.sh              # all suites, about 15 minutes
+tests/browser/all.sh debrief      # one suite
+```
+
+See `docs/ARCHITECTURE.md` §5 for what each suite covers.
+
 ## Demo guide
 
 Live: https://rhythmbyte.github.io/nursing-sim/

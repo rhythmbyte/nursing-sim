@@ -1,0 +1,4 @@
+# GitHub Pages (legacy Jekyll build from main): files the deployed site doesn't need.
+# tests/browser holds the dev-only browser suites and their runner (tests/browser/all.sh).
+exclude:
+  - tests/browser

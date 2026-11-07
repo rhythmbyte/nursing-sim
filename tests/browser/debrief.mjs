@@ -1,0 +1,42 @@
+// Browser suite: Debrief tiers: demo with a Foley-before-bolus mistake → End → summary card → talking points (prioritization first), tick and hide (remembered after reload) → Evidence opens the breakdown at its section.
+// Run with tests/browser/all.sh (or: node tests/browser/debrief.mjs <page websocket url> <output dir>).
+import { openPage } from './lib.mjs';
+
+const { sock, send, ev, click, text, unl, setSel, braces, shot, sleep, errors, fail, ignore, reset, out, BASE, CDP } = await openPage();
+await send('Runtime.enable'); await send('Page.enable'); await send('Emulation.setFocusEmulationEnabled', { enabled: true });
+await send('Page.navigate', { url: `${BASE}/?debug=1` }); await sleep(2000);
+await ev('localStorage.clear(); sessionStorage.clear(); indexedDB.deleteDatabase("nursing-sim"); sessionStorage.setItem("nursing-sim:welcomeShown","true")'); await send('Page.reload'); await sleep(5000);
+await click('button', 'Start demo sim'); await sleep(5000);
+console.log('phase:', await text('.phase-btn.active'), '| demo names:', await text('.cc-room'));
+const S = `window.__nursingSim`;
+console.log(await ev(`(() => { const { runner } = ${S}; const I={userId:'instructor',role:'instructor'};
+  runner.skipToNext(I); runner.skipToNext(I);
+  const k = runner.refs.find(r => String(r.key).includes('e-p4-sepsis-orders')).key; runner.fireNow(k, I);
+  return 'fired'; })()`));
+await sleep(3000);
+console.log(await ev(`(() => { const { runner } = ${S}; const I={userId:'instructor',role:'instructor'};
+  const u = Object.keys(runner.state.roster)[0];
+  runner.chart('chartIntervention', 'p4-linda-garcia', { interventionId: 'foley', orderId: 'o-p4-foley' }, { userId: u, role: 'student' });
+  runner.endTaskNow(u, I);
+  return 'acted as ' + u + ' at ' + runner.simMin(); })()`));
+await sleep(1500);
+await ev(`window.confirm = () => true`);
+await click('button', 'End sim'); await sleep(2500);
+console.log('after end:', await text('.phase-btn.active'), '|', await text('.debrief-summary h2'));
+console.log('card:', (await text('.sum-card')).slice(0, 400));
+await shot('summary');
+await click('.sum-card .btn', 'Talking points'); await sleep(1200);
+console.log('points header:', await text('.debrief-points h2'), '| themes:', await text('.debrief-points section h3'));
+console.log('first points:', (await text('.point label')).slice(0, 500));
+await ev(`document.querySelector('.point input').click()`); await sleep(400);
+await ev(`document.querySelectorAll('.point')[1].querySelector('.btn-ghost').click()`); await sleep(400);
+console.log('after tick/hide:', await text('.debrief-points header .muted'), '|', await text('.debrief-points header button'));
+await shot('points');
+await ev(`(() => { const b=[...document.querySelectorAll('.point')].find(p=>/drove that order/.test(p.textContent)).querySelector('.btn'); setTimeout(() => b.click(), 20); return 1; })()`); await sleep(1500);
+await sleep(1500); console.log('full:', await text('.debrief-header h2'), '| target:', await ev(`document.querySelector('.debrief-target')?.id`), '| scrollY', await ev('Math.round(scrollY)'));
+await shot('full');
+await click('.debrief-nav .btn', '← Summary'); await sleep(800);
+console.log('back on summary; points label:', await text('.sum-card .btn-primary'));
+await send('Page.reload'); await sleep(5000);
+console.log('after reload:', await text('.phase-btn.active'), '|', await text('.debrief-summary h2'), '|', await text('.sum-card .btn-primary'));
+console.log('errors', JSON.stringify(errors)); sock.close();

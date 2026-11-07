@@ -2,6 +2,12 @@
 
 Newest first. One entry per phase or feature. Update it in the same commit as the change.
 
+## Browser suites in the repo
+- The browser suites now live in `tests/browser/` (they were outside the repo): `tour`, `instructor-flow`, `cases`, `debrief`, `reflection`, `projector`, `run-again`, `rejoin`, `soak`, `crash`. They share one DevTools helper (`lib.mjs`). Paths, ports and the browser are settings, not hard-coded.
+- `tests/browser/all.sh` runs them all (or the ones named), starting a static server if needed and a fresh browser for each suite, and ends with a PASS/FAIL summary (exit code 1 on any failure). A suite now fails on any page error or warning, a click that finds nothing, or an evaluation that throws, instead of relying on someone reading the output.
+- Output goes to `tests/browser/.out/` (gitignored); `_config.yml` keeps `tests/browser` out of the deployed site.
+- CLAUDE.md: run the unit tests and every browser suite before committing any big change.
+
 ## Talking points skip what the reflections already cover
 - A "should recognize" item that every student in the group who wrote a reflection already mentions is left out of the talking points (and the summary's count). **Show N already in reflections** brings them back, labeled "✓ in Ana's reflection (keyword match)", with Evidence opening the reflection. Items only some students mention stay, labeled with who did.
 - The rule is data: `debrief-points.json` `shouldRecognize.skipIfMentioned` = `all` (default, proposed) / `any` / `off`. The match is the existing keyword overlap, a reading aid, not a grade.

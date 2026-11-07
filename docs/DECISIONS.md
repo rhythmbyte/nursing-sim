@@ -4,6 +4,13 @@ A running log, newest first. Add an entry for any non-obvious choice, in the sam
 
 ---
 
+## 2026-11-07: Browser suites use raw DevTools from Node, no test framework
+- **Decision:** the browser suites in `tests/browser/` drive headless Chromium over the Chrome DevTools Protocol with Node's built-in WebSocket (`lib.mjs`), run by a shell script (`all.sh`). A suite fails on any page error or warning, a missing click target, or a throwing evaluation, as well as its own checks.
+- **Why:** no npm dependencies or build step (the project has none), and the suites can kill and relaunch the browser for the crash tests, which test runners make awkward. Failing on any page warning catches problems a check didn't look for.
+- **Alternatives:** Playwright or Puppeteer (a large dependency and a package.json for a static prototype); keeping the suites outside the repo (they drifted when screens changed).
+
+---
+
 ## 2026-11-07: Skip should-recognize points only when every reflecting student mentions them
 - **Decision:** a should-recognize talking point is left out when all students in the group who submitted a reflection mention it (keyword match), and stays visible on request with who mentioned it. Configurable (`all` / `any` / `off`) in `debrief-points.json`.
 - **Why:** the match is a reading aid with false positives; skipping only when everyone covered it keeps the discussion when one student missed it, and nothing is ever lost (one click brings it back).

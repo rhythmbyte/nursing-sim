@@ -27,6 +27,7 @@ Read `SPEC.md` before starting any work. It is the source of truth for the data 
 - If a task will take more than ~15 minutes, commit and push partial progress at sensible checkpoints, even if unfinished (prefix the message with `wip:`).
 - A Stop hook (`.claude/hooks/autosave.sh`) also commits and pushes anything left uncommitted at the end of every turn. It is a safety net, not a replacement for real commits with real messages.
 - At the start of every session, run `git status` and `git pull` so you never build on stale files.
+- Before committing any big change (a restructure, a new screen or flow, storage, the engine, or anything touching many files), run `node --test tests/` and every browser suite with `tests/browser/all.sh`. All must pass; fix what they find before committing. When a screen or flow changes, update the suites in `tests/browser/` in the same commit.
 - Commit messages: short, imperative, plain. Do NOT add `Co-Authored-By`, session links, or "Generated with Claude Code" lines to commits or PR descriptions.
 
 ## Modularity rules
